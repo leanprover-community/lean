@@ -46,11 +46,17 @@ instance : has_repr dependency :=
 ⟨λ d, d.name ++ " = " ++ repr d.src⟩
 end dependency
 
+structure nightly_store :=
+(user : string)
+(repo : string)
+(ar_prefix : string)
+
 structure manifest :=
 (name : string) (version : string)
 (lean_version : string := lean_version_string)
 (timeout : option nat := none)
 (path : option string := none)
+(nightly : option nightly_store := none)
 (dependencies : list dependency := [])
 
 namespace manifest
@@ -78,11 +84,21 @@ path ← match pkg.lookup "path" with
        | none := some none
        | _ := none
        end,
+nightly ← match pkg.lookup "nightly" with
+          | some (toml.value.table repo) :=
+            some <$> (nightly_store.mk
+                      <$> (toml.Lookup "repo" repo >>= toml.String')
+                      <*> (toml.Lookup "user" repo >>= toml.String')
+                      <*> (toml.Lookup "archive_prefix" repo >>= toml.String'))
+          | none := some none
+          | _ := none
+          end,
 toml.value.table deps ← t.lookup "dependencies" <|> some (toml.value.table []) | none,
 deps ← deps.mmap (λ ⟨n, src⟩, do src ← source.from_toml src,
                                        return $ dependency.mk n src),
 return { name := n, version := ver, lean_version := lean_ver,
-         path := path, dependencies := deps, timeout := tm }
+         path := path, dependencies := deps, timeout := tm,
+         nightly := nightly }
 
 def to_toml (d : manifest) : toml.value :=
 let pkg := [("name", toml.value.str d.name), ("version", toml.value.str d.version),

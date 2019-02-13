@@ -8,6 +8,8 @@ import data.buffer.parser
 -- I'd like to contribute a new naming convention:
 -- CamelCase for non-terminals.
 
+universes u v
+
 def join (sep : string) : list string → string
 | [x]     := x
 | []      := ""
@@ -146,6 +148,35 @@ def Expression := Table Val
 
 def File : parser value :=
 Ws *> (value.table <$> many Expression)
+
+variables {m : Type → Type v} [alternative m]
+
+def Object : value → m (list (string × value))
+| (value.table xs) := pure xs
+| _ := failure
+
+def String' : value → m string
+| (value.str s) := pure s
+| _ := failure
+
+def Nat' : value → m ℕ
+| (value.nat n) := pure n
+| _ := failure
+
+def Bool : value → m bool
+| (value.bool b) := pure b
+| _ := failure
+
+def Lookup (k : string) : list (string × value) → m value
+| [] := failure
+| ((k',x) :: xs) :=
+ if k = k' then pure x
+ else Lookup xs
+
+def Find (f : value → m unit) : list value → m value
+| [] := failure
+| (x :: xs) :=
+x <$ f x <|> Find xs
 
 /-
 #eval run_string File $

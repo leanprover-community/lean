@@ -41,20 +41,13 @@ def which (fn : string) : io (option string) := do
 out ← io.cmd { cmd := "which", args := [fn] },
 pure $ (out.split (= '\n')).nth 0
 
-def update_mathlib : io unit := do
-some cmd ← which "update-mathlib" | pure (),
-ch ← io.proc.spawn { cmd := cmd },
-io.proc.wait ch,
-pure ()
-
 def configure : io unit := do
 d ← read_manifest,
 io.put_str_ln $ "configuring " ++ d.name ++ " " ++ d.version,
 when (d.path ≠ some "src") $ io.put_str_ln "WARNING: leanpkg configurations not specifying `path = \"src\"` are deprecated.",
 assg ← solve_deps d,
 path_file_cnts ← mk_path_file <$> construct_path assg,
-write_file "leanpkg.path" path_file_cnts,
-update_mathlib
+write_file "leanpkg.path" path_file_cnts
 
 def make (lean_args : list string) : io unit := do
 manifest ← read_manifest,

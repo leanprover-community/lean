@@ -3,7 +3,7 @@ Copyright (c) 2017 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Author: Gabriel Ebner
 -/
-import leanpkg.manifest system.io leanpkg.proc leanpkg.git
+import leanpkg.manifest system.io leanpkg.proc leanpkg.git leanpkg.json
 
 namespace leanpkg
 
@@ -53,6 +53,57 @@ if abs_or_rel.front = '/' then
 else
   base ++ "/" ++ abs_or_rel
 
+-- GET /repos/:owner/:repo/releases
+
+def run_cm (cmd : io.process.spawn_args) : io string := do
+h ← io.proc.spawn { stdout := io.process.stdio.piped, .. cmd },
+io.iterate "" $ λ out,
+do { done ← io.fs.is_eof h.stdout,
+    if done
+    then return none
+    else do
+     xs ← buffer.to_string <$> io.fs.get_line h.stdout,
+     return $ some $ out ++ xs } <*
+io.proc.wait h
+
+
+def binary_archive_url (nightly : nightly_store) (commit : string) : io (string × string) := do
+tok ← io.cmd { cmd := "git", args := ["config","--get","github.oauthtoken"] },
+let tok := (tok.to_list.filter (λ c : char, ¬ c.is_whitespace)).as_string,
+let url := "https://" ++ tok ++ "@api.github.com/repos/" ++ nightly.user ++ "/" ++ nightly.repo,
+tags ← run_cm { cmd := "curl", args := ["-s",url ++ "/tags"] },
+tags ← (parser.run_string json.parse_json tags : io json.value),
+releases ← run_cm { cmd := "curl", args := ["-s",url ++ "/releases"] },
+releases ← (parser.run_string json.parse_json releases : io json.value),
+tags ← json.List tags,
+t ← json.Find (json.Object >=> json.Lookup "commit" >=> json.Object >=> json.Lookup "sha" >=> json.String >=> λ s, guard $ s = commit) tags >>= json.Object >>= json.Lookup "name" >>= json.String,
+rel ← json.List releases >>= json.Find (json.Object >=> json.Lookup "tag_name" >=> json.String >=> λ s, guard $ s = t)
+  >>= json.Object >>= json.Lookup "assets" >>= json.List
+  >>= json.Find (json.Object >=> json.Lookup "name" >=> json.String >=> λ s, guard $ nightly.ar_prefix.to_list.is_prefix_of s.to_list)
+  >>= json.Object,
+io.print_ln $ rel.map prod.fst,
+name ← json.Lookup "name" rel >>= json.String,
+url ← json.Lookup "browser_download_url" rel >>= json.String,
+pure $ prod.mk name $ url -- ++ "/" ++ name
+
+def insert_token (url tok : string) : string :=
+"https://" ++ tok ++ "@" ++ list.as_string (url.to_list.drop  "https://".length)
+
+def download_archive (n url : string) : io unit := do
+tok ← io.cmd { cmd := "git", args := ["config","--get","github.oauthtoken"] },
+let tok := (tok.to_list.filter (λ c : char, ¬ c.is_whitespace)).as_string,
+h ← io.proc.spawn { cmd := "wget", args := ["-O",n,"-q","--auth-no-challenge","--header='Accept:application/octet-stream'",insert_token url tok ] },
+io.proc.wait h, pure ()
+
+def expand_archive (n dest : string) : io unit := do
+run_cm { cmd := "tar", args := ["-C",dest,"-zxvf",n] } >>= io.print_ln
+
+def fetch_olean (m : manifest) (commit out_path : string) : io unit :=
+do { some store ← pure m.nightly,
+     (n,url) ← binary_archive_url  store commit,
+     download_archive n url,
+     expand_archive n out_path } <|> pure ()
+
 def materialize (relpath : string) (dep : dependency) : solver punit :=
 match dep.src with
 | (source.path dir) := do
@@ -76,6 +127,8 @@ match dep.src with
   },
   hash ← git_parse_origin_revision depdir rev,
   exec_cmd {cmd := "git", args := ["checkout", "--detach", hash], cwd := depdir},
+  d' ← manifest.from_file $ depdir ++ "/" ++ "leanpkg.toml",
+  fetch_olean d' hash depdir,
   modify $ λ assg, assg.insert dep.name depdir
 end
 
