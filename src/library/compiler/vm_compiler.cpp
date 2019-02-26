@@ -18,6 +18,7 @@ Author: Leonardo de Moura
 #include "library/replace_visitor.h"
 #include "library/vm/vm.h"
 #include "library/vm/optimize.h"
+#include "library/vm/vm_override.h"
 #include "library/compiler/simp_inductive.h"
 #include "library/compiler/erase_irrelevant.h"
 #include "library/compiler/nat_value.h"

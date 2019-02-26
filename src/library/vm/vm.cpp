@@ -30,6 +30,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm.h"
 #include "library/vm/vm_name.h"
 #include "library/vm/vm_option.h"
+#include "library/vm/vm_override.h"
 #include "library/vm/vm_expr.h"
 #include "library/normalize.h"
 
@@ -1472,7 +1473,11 @@ environment add_vm_code(environment const & env, name const & fn, unsigned arity
     return update_vm_code(new_env, fn, code_sz, code, args_info, pos);
 }
 
-optional<vm_decl> get_vm_decl(environment const & env, name const & n) {
+optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
+    name n = decl_name;
+    if (auto override_name = get_vm_override_name(env, n)) {
+        n = override_name.value();
+    }
     vm_decls const & ext = get_extension(env);
     if (auto decl = ext.m_decls.find(get_vm_index(n)))
         return optional<vm_decl>(*decl);

@@ -7,15 +7,23 @@ Author: E.W.Ayers
 #include <string>
 #include "util/optional.h"
 #include "util/name.h"
+#include "util/sexpr/option_declarations.h"
 #include "library/attribute_manager.h"
 #include "library/vm/vm_name.h"
 #include "library/vm/vm.h"
 #include "frontends/lean/parser.h"
 
+#define LEAN_DEFAULT_VM_OVERRIDE_ENABLED true
+
 namespace lean {
 static name * g_vm_override;
+static name * g_vm_override_enabled;
+
+
 struct vm_override_attribute_data : public attr_data {
+    /** name of the override declaration. */
     name m_name;
+    /** namespace */
     optional<name> m_ns;
     vm_override_attribute_data() {}
     vm_override_attribute_data(name const & n) : m_name(n) {}
@@ -48,8 +56,23 @@ static vm_override_attribute const & get_vm_override_attribute() {
     return static_cast<vm_override_attribute const &>(get_system_attribute(*g_vm_override));
 }
 
+bool get_vm_override_enabled(options const & opts) {
+    return opts.get_bool(*g_vm_override_enabled, LEAN_DEFAULT_VM_OVERRIDE_ENABLED);
+}
+
+optional<name> get_vm_override_name(environment const & env, name const & n) {
+    bool is_enabled = get_vm_override_enabled(get_global_ios().get_options());
+    if (!is_enabled) {return lean::optional<name>();}
+    if (auto data = get_vm_override_attribute().get(env, n)) {
+        return lean::optional<name>(data->m_name);
+    } else {
+        return lean::optional<name>();
+    }
+}
+
 void initialize_vm_override() {
     g_vm_override = new name("vm_override");
+    g_vm_override_enabled = new name("vm_override", "enabled");
     register_system_attribute(
       vm_override_attribute(*g_vm_override, "Override this declaration with the given declaration when evaluating in the VM."
         , [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
@@ -57,7 +80,12 @@ void initialize_vm_override() {
           auto data = get_vm_override_attribute().get(env, d);
           return add_override(env, d, data->m_name, data->m_ns);
         } ) );
+    register_bool_option(
+        *g_vm_override_enabled,
+        LEAN_DEFAULT_VM_OVERRIDE_ENABLED,
+        "Enable/disable using VM overrides when compiling bytecode.");
 }
 
-void finalize_vm_override() {}
+void finalize_vm_override() {
+}
 }
