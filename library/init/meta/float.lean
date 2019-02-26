@@ -1,6 +1,6 @@
 /- Authors: E.W.Ayers -/
 prelude
-import init.data.nat init.data.string init.data.int
+import init.data
 namespace native
 /- [TODO](easy) replace this with the IEEE specification of floats.  -/
 meta constant float : Type
