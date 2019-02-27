@@ -142,6 +142,7 @@ bool has_dep_elim(environment const & env, name const & n);
 
 /** \brief Return the eliminator/recursor associated with an inductive datatype */
 name get_elim_name(name const & n);
+name get_destr_name(name const & n);
 }
 void initialize_inductive_module();
 void finalize_inductive_module();

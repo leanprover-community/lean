@@ -269,6 +269,9 @@ inline bool is_not(expr const & e) { expr a; return is_not(e, a); }
 bool is_not_or_ne(expr const & e, expr & a);
 expr mk_not(expr const & e);
 
+/** \brief Is `e` a type or a function to type? */
+bool is_type(expr const & e);
+
 /** \brief Create the term <tt>absurd e not_e : t</tt>. */
 expr mk_absurd(abstract_type_context & ctx, expr const & t, expr const & e, expr const & not_e);
 

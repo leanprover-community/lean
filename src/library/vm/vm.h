@@ -533,12 +533,16 @@ enum class vm_decl_kind { Bytecode, Builtin, CFun };
 struct vm_decl_cell {
     MK_LEAN_RC();
     vm_decl_kind          m_kind;
+    /** The Lean name that the declaration corresponds to */
     name                  m_name;
+    /** The index used to store this declaration in the declaration map. */
     unsigned              m_idx;
     unsigned              m_arity;
     list<vm_local_info>   m_args_info;
     optional<pos_info>    m_pos;
     optional<std::string> m_olean;
+    /** If this declaration has been overridden using `@[vm_override]`, then this has the index of the override decalaration. */
+    optional<unsigned>    m_overridden;
     union {
         struct {
             unsigned   m_code_size;
@@ -551,6 +555,7 @@ struct vm_decl_cell {
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfunction fn);
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                  list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                 optional<unsigned> const & overridden,
                  optional<std::string> const & olean);
     ~vm_decl_cell();
     void dealloc();
@@ -568,8 +573,9 @@ public:
         vm_decl(new vm_decl_cell(n, idx, arity, fn)) {}
     vm_decl(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
             list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+            optional<unsigned> const & overridden = optional<unsigned>(),
             optional<std::string> const & olean = optional<std::string>()):
-        vm_decl(new vm_decl_cell(n, idx, arity, code_sz, code, args_info, pos, olean)) {}
+        vm_decl(new vm_decl_cell(n, idx, arity, code_sz, code, args_info, pos, overridden, olean)) {}
     vm_decl(vm_decl const & s):m_ptr(s.m_ptr) { if (m_ptr) m_ptr->inc_ref(); }
     vm_decl(vm_decl && s):m_ptr(s.m_ptr) { s.m_ptr = nullptr; }
     ~vm_decl() { if (m_ptr) m_ptr->dec_ref(); }
@@ -589,13 +595,19 @@ public:
     name get_name() const { lean_assert(m_ptr); return m_ptr->m_name; }
     unsigned get_arity() const { lean_assert(m_ptr); return m_ptr->m_arity; }
     unsigned get_code_size() const { lean_assert(is_bytecode()); return m_ptr->m_code_size; }
-    vm_instr const * get_code() const { lean_assert(is_bytecode()); return m_ptr->m_code; }
+    vm_instr const * get_code() const {
+        lean_assert(is_bytecode());
+        return m_ptr->m_code;
+    }
     vm_function get_fn() const { lean_assert(is_builtin()); return m_ptr->m_fn; }
     vm_cfunction get_cfn() const { lean_assert(is_cfun()); return m_ptr->m_cfn; }
     list<vm_local_info> const & get_args_info() const { lean_assert(is_bytecode()); return m_ptr->m_args_info; }
     optional<pos_info> const & get_pos_info() const { lean_assert(is_bytecode()); return m_ptr->m_pos; }
+    optional<unsigned> const & get_overridden() const { lean_assert(m_ptr); return m_ptr->m_overridden; }
     optional<std::string> const & get_olean() const { lean_assert(is_bytecode()); return m_ptr->m_olean; }
 };
+
+vm_decl set_overridden(vm_decl const & d, unsigned idx_override);
 
 /** \brief Virtual machine for executing VM bytecode. */
 class vm_state {
@@ -669,6 +681,7 @@ public:
     vm_obj invoke_closure(vm_obj const & fn, unsigned nargs);
 
     vm_decl const & get_decl(unsigned idx) const;
+    vm_decl const & get_decl_no_override(unsigned idx) const;
 
     vm_cases_function const & get_builtin_cases(unsigned idx) const;
 
@@ -748,6 +761,8 @@ public:
     vm_obj const & top() const { return m_stack.back(); }
 
     optional<vm_decl> get_decl(name const & n) const;
+    optional<vm_decl> get_decl_no_override(name const & n) const;
+    optional<vm_decl> get_decl_no_override_of_idx(unsigned int idx) const;
 
     optional<name> curr_fn() const;
 
@@ -885,6 +900,9 @@ void declare_vm_cases_builtin(name const & n, char const * internal_name, vm_cas
 
 /** \brief Return builtin cases internal index. */
 optional<unsigned> get_vm_builtin_cases_idx(environment const & env, name const & n);
+
+/** Replace the vm declaration of `n` with the vm declaration at `n_override`. */
+environment add_override(environment const & env, name const & n, name const & n_override, optional<name> const & override_ns);
 
 /** Register in the given environment \c fn as the implementation for function \c n.
     These APIs should be used when we dynamically load native code stored in a shared object (aka DLL)

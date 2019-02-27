@@ -1490,6 +1490,8 @@ bool type_context_old::solve_u_eq_max_u_v(level const & lhs, level const & rhs) 
 }
 
 lbool type_context_old::is_def_eq_core(level const & l1, level const & l2, bool partial) {
+    if (m_ignore_universes) return l_true;
+
     if (is_equivalent(l1, l2))
         return l_true;
 
@@ -1560,16 +1562,19 @@ lbool type_context_old::is_def_eq_core(level const & l1, level const & l2, bool 
 }
 
 lbool type_context_old::partial_is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return l_true;
     return is_def_eq_core(l1, l2, true);
 }
 
 bool type_context_old::full_is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return true;
     lbool r = is_def_eq_core(l1, l2, false);
     lean_assert(r != l_undef);
     return r == l_true;
 }
 
 bool type_context_old::is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return true;
     lbool success = partial_is_def_eq(l1, l2);
     if (success == l_undef) {
         m_postponed.emplace_back(l1, l2);
@@ -1584,6 +1589,7 @@ bool type_context_old::is_def_eq(level const & l1, level const & l2) {
 }
 
 bool type_context_old::is_def_eq(levels const & ls1, levels const & ls2) {
+    if (m_ignore_universes) return true;
     if (is_nil(ls1) && is_nil(ls2)) {
         return true;
     } else if (!is_nil(ls1) && !is_nil(ls2)) {

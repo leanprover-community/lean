@@ -185,6 +185,11 @@ name get_elim_name(name const & n) {
     return n + name("rec");
 }
 
+/**\ brief Return recursor name */
+name get_destr_name(name const & n) {
+    return n + name("cases_on");
+}
+
 environment certified_inductive_decl::add_constant(environment const & env, name const & n, level_param_names const & ls,
                                                    expr const & t) const {
     return env.add(certify_unchecked::certify_or_check(env, mk_constant_assumption(n, ls, t, m_is_trusted)));
