@@ -32,7 +32,7 @@ structure projection_info :=
        | three : foo -> foo    -- implicit (default)
 -/
 inductive implicit_infer_kind | implicit | relaxed_implicit | none
-instance : inhabited implicit_infer_kind := ⟨implicit_infer_kind.implicit⟩
+instance implicit_infer_kind.inhabited : inhabited implicit_infer_kind := ⟨implicit_infer_kind.implicit⟩
 
 /-- One introduction rule in an inductive declaration -/
 meta structure intro_rule :=
