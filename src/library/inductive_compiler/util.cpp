@@ -72,7 +72,7 @@ void assert_def_eq(environment const & DEBUG_CODE(env), expr const & DEBUG_CODE(
         // TODO(dhs): this is only for debugging
         // We prefer to enter GDB than to throw an exception
         lean_assert(false);
-        throw ex;
+        throw std::move(ex);
     }
 }
 
@@ -84,7 +84,7 @@ void assert_type_correct(environment const & env, expr const & e) {
         // TODO(dhs): this is only for debugging
         // We prefer to enter GDB than to throw an exception
         lean_assert(false);
-        throw ex;
+        throw std::move(ex);
     }
 }
 
