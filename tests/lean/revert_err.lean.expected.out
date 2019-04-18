@@ -1,4 +1,4 @@
-1100.lean:3:3: error: revert tactic failed, expecting local variable, found 'and a b'
+revert_err.lean:3:3: error: revert tactic failed, expecting local variable, found 'and a b'
 state:
 a b : Prop
 ⊢ true
