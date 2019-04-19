@@ -45,7 +45,6 @@ vm_obj revert(list<expr> const & ls, tactic_state const & s, bool preserve_local
                 return tactic::mk_exception(sstream() << "revert tactic failed, expecting local variable, found '"
                                             << l << "'", s);
             }
-
         }
         tactic_state new_s = revert(locals, s, preserve_locals_order);
         return tactic::mk_success(mk_vm_nat(locals.size()), new_s);
