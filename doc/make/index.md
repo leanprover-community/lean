@@ -38,6 +38,24 @@ cmake -D CMAKE_BUILD_TYPE=DEBUG ../../src
 make
 ```
 
+Building JS / wasm binaries with Emscripten
+------------------------
+
+- Install Emscripten, following the instructions [here](https://emscripten.org/docs/getting_started/downloads.html)
+
+Setting up a basic release build using `make`:
+
+```bash
+git clone https://github.com/leanprover/lean
+cd lean
+mkdir -p build/emscripten
+cd build/emscripten
+emconfigure cmake ../../src/ -DCMAKE_BUILD_TYPE=Emscripten
+NODE_OPTIONS="--max-old-space-size=4096" make
+```
+
+- To use the result in [lean-web-editor](https://github.com/leanprover/lean-web-editor), copy `shell/lean_js_js.js`, `shell/lean_js_wasm.js`, and `shell/lean_js_wasm.wasm` to `dist/` in the `lean-web-editor` directory.
+
 Useful CMake Configuration Settings
 -----------------------------------
 
@@ -48,9 +66,9 @@ Pass these along with the `cmake ../../src` command.
   [Some people report][ninja_work] that using
   Ninja can reduce the build time, esp when a build is
   incremental. Call `ninja` instead of `make` to build the project.
-  
+
   [ninja_work]: https://plus.google.com/108996039294665965197/posts/SfhrFAhRyyd
-  
+
 * `-D CMAKE_BUILD_TYPE=`
   Select the build type. Valid values are `RELEASE` (default), `DEBUG`,
   `RELWITHDEBINFO`, and `MINSIZEREL`.

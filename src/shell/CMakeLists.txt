@@ -29,14 +29,13 @@ if(${EMSCRIPTEN})
     add_custom_target(lean_js_library
         COMMAND "${CMAKE_COMMAND}" -E remove_directory ${CMAKE_CURRENT_BINARY_DIR}/library
         COMMAND mkdir -p ${CMAKE_CURRENT_BINARY_DIR}/library
-        COMMAND bash -c "(cd ${LEAN_JS_LIBRARY}; tar c `find -name '*.olean'`) | (cd ${CMAKE_CURRENT_BINARY_DIR}/library; tar x)"
+        COMMAND bash -c "(cd ${LEAN_JS_LIBRARY}; tar c `find . -name '*.olean'`) | (cd ${CMAKE_CURRENT_BINARY_DIR}/library; tar x)"
         VERBATIM)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lean_js.html DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
     target_link_libraries(lean_js
             "--embed-file library
              --bind
-             -s WASM=0
-             -s \"BINARYEN_METHOD='native-wasm,asmjs'\"")
+             -s WASM=0")
     add_dependencies(lean_js lean_js_library)
     set_target_properties(lean_js PROPERTIES COMPILE_FLAGS --bind -s NO_EXIT_RUNTIME=1)
 
@@ -45,7 +44,7 @@ if(${EMSCRIPTEN})
     target_link_libraries(lean_js_wasm leanstatic)
     add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
     target_link_libraries(lean_js_js leanstatic)
-    set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS} -s \"BINARYEN_METHOD='native-wasm'\"")
+    set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS}")
     set_target_properties(lean_js_js PROPERTIES LINK_FLAGS "${LEAN_JS_OPTS}")
 else()
   if (MSVC)
