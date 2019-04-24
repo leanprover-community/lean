@@ -51,7 +51,7 @@ cd lean
 mkdir -p build/emscripten
 cd build/emscripten
 emconfigure cmake ../../src/ -DCMAKE_BUILD_TYPE=Emscripten
-NODE_OPTIONS="--max-old-space-size=4096" make
+NODE_OPTIONS="--max-old-space-size=4096" emmake make
 ```
 
 - To use the result in [lean-web-editor](https://github.com/leanprover/lean-web-editor), copy `shell/lean_js_js.js`, `shell/lean_js_wasm.js`, and `shell/lean_js_wasm.wasm` to `dist/` in the `lean-web-editor` directory.
