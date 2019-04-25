@@ -100,6 +100,18 @@ matrix:
        CMAKE_CXX_COMPILER=g++
        CMAKE_BUILD_TYPE=Debug
 
+   - os: linux
+     services:
+       - docker
+     sudo: required
+     env:
+       NODE_OPTIONS="--max-old-space-size=4096"
+       CMAKE_BUILD_TYPE=Emscripten
+     before_install:
+       - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
+     script:
+       - docker exec -it emscripten script/ci_emscripten.sh
+
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME == osx ]]; then
