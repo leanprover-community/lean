@@ -3,26 +3,25 @@ target_link_libraries(lean leanstatic)
 install(TARGETS lean DESTINATION bin)
 
 add_executable(lean_js lean_js.cpp lean_js_main.cpp server.cpp leandoc.cpp)
-target_link_libraries(lean_js leanstatic)
-
+if(${EMSCRIPTEN})
+    target_link_libraries(lean_js leanstatic_browser)
+else()
+    target_link_libraries(lean_js leanstatic)
+endif()
 add_library(shell_js OBJECT lean_js.cpp server.cpp leandoc.cpp)
 
 if(${EMSCRIPTEN})
     set(NODE_JS "node --stack_size=8192")
 
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lean_with_path
-            "#!/bin/sh\nLEAN_PATH=${CMAKE_CURRENT_SOURCE_DIR}/../../library ${NODE_JS} ${CMAKE_CURRENT_BINARY_DIR}/lean.js \"$@\"\n")
-    execute_process(COMMAND chmod +x ${CMAKE_CURRENT_BINARY_DIR}/lean_with_path)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lean
+            "#!/bin/sh\nLEAN_EMSCRIPTEN_PATH=${CMAKE_CURRENT_SOURCE_DIR}/../../library ${NODE_JS} ${CMAKE_CURRENT_BINARY_DIR}/lean.js \"$@\"\n")
+     execute_process(COMMAND chmod +x ${CMAKE_CURRENT_BINARY_DIR}/lean)
 
     ADD_CUSTOM_TARGET(bin_lean ALL
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${LEAN_SOURCE_DIR}/../bin"
-        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_BINARY_DIR}/lean_with_path" "${LEAN_SOURCE_DIR}/../bin/lean"
+        COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_BINARY_DIR}/lean" "${LEAN_SOURCE_DIR}/../bin/lean"
         DEPENDS lean
         )
-
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lean
-            "#!/bin/sh\n${NODE_JS} ${CMAKE_CURRENT_BINARY_DIR}/lean.js \"$@\"\n")
-    execute_process(COMMAND chmod +x ${CMAKE_CURRENT_BINARY_DIR}/lean)
 
     # legacy code for mkleanbook
     # copy olean files from the library into build/emscripten/shell/library/...
@@ -37,15 +36,17 @@ if(${EMSCRIPTEN})
              --bind
              -s WASM=0")
     add_dependencies(lean_js lean_js_library)
-    set_target_properties(lean_js PROPERTIES COMPILE_FLAGS --bind -s NO_EXIT_RUNTIME=1)
+    target_compile_options(lean_js PRIVATE --bind -s NO_EXIT_RUNTIME=1)
 
     set(LEAN_JS_OPTS "-s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"FS\"]'")
+
     add_executable(lean_js_wasm lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
-    target_link_libraries(lean_js_wasm leanstatic)
+    target_link_libraries(lean_js_wasm leanstatic_browser)
+    target_link_options(lean_js_wasm PRIVATE "-s WASM=1 ${LEAN_JS_OPTS}")
+
     add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
-    target_link_libraries(lean_js_js leanstatic)
-    set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS}")
-    set_target_properties(lean_js_js PROPERTIES LINK_FLAGS "${LEAN_JS_OPTS}")
+    target_link_libraries(lean_js_js leanstatic_browser)
+    target_link_options(lean_js_js PRIVATE "-s WASM=0 ${LEAN_JS_OPTS}")
 else()
   if (MSVC)
     ADD_CUSTOM_TARGET(bin_lean ALL

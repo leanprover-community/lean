@@ -221,7 +221,7 @@ std::vector<std::string> read_dir(std::string const &dirname) {
 }
 
 std::string lrealpath(std::string const & fname) {
-#if defined(LEAN_EMSCRIPTEN)
+#if defined(LEAN_EMSCRIPTEN_BROWSER)
     return fname;
 #elif defined(LEAN_WINDOWS) && !defined(LEAN_CYGWIN)
     constexpr unsigned BufferSize = 8192;
