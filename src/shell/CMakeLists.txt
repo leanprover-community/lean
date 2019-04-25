@@ -36,17 +36,17 @@ if(${EMSCRIPTEN})
              --bind
              -s WASM=0")
     add_dependencies(lean_js lean_js_library)
-    target_compile_options(lean_js PRIVATE --bind -s NO_EXIT_RUNTIME=1)
+    set_target_properties(lean_js PROPERTIES COMPILE_FLAGS --bind -s NO_EXIT_RUNTIME=1)
 
     set(LEAN_JS_OPTS "-s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"FS\"]'")
 
     add_executable(lean_js_wasm lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
     target_link_libraries(lean_js_wasm leanstatic_browser)
-    target_link_options(lean_js_wasm PRIVATE "-s WASM=1 ${LEAN_JS_OPTS}")
+    set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS}")
 
     add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
     target_link_libraries(lean_js_js leanstatic_browser)
-    target_link_options(lean_js_js PRIVATE "-s WASM=0 ${LEAN_JS_OPTS}")
+    set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=0 ${LEAN_JS_OPTS}")
 else()
   if (MSVC)
     ADD_CUSTOM_TARGET(bin_lean ALL
