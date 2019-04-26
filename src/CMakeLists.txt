@@ -284,8 +284,8 @@ if (EMSCRIPTEN)
     # The plethory of configure arguments only makes sure that gmp thinks sizeof(mp_limb_t) == sizeof(long) == 4
     ExternalProject_Add(
             gmp
-            URL https://gmplib.org/download/gmp/gmp-6.1.1.tar.bz2 https://ftp.gnu.org/gnu/gmp/gmp-6.1.1.tar.bz2
-            URL_HASH SHA256=a8109865f2893f1373b0a8ed5ff7429de8db696fc451b1036bd7bdf95bbeffd6
+            URL https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2
+            URL_HASH SHA256=5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2
             BUILD_IN_SOURCE 1
             CONFIGURE_COMMAND emconfigure ./configure "CC_FOR_BUILD=gcc" "CCAS=gcc -c" "CFLAGS=-m32 -DPIC ${CFLAGS_EMSCRIPTEN}" --host=x86_64-pc-linux-gnu --build=i686-pc-linux-gnu --disable-assembly --prefix=${gmp_install_prefix}
             BUILD_COMMAND emmake make -j4

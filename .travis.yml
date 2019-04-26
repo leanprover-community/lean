@@ -105,7 +105,6 @@ matrix:
        - docker
      sudo: required
      env:
-       NODE_OPTIONS="--max-old-space-size=4096"
        CMAKE_BUILD_TYPE=Emscripten
      before_install:
        - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
