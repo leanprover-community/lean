@@ -5,10 +5,9 @@ install(TARGETS lean DESTINATION bin)
 add_executable(lean_js lean_js.cpp lean_js_main.cpp server.cpp leandoc.cpp)
 if(${EMSCRIPTEN})
     target_link_libraries(lean_js leanstatic_browser)
-    if(DEFINED ENV{CI}) # This currently fails to build in the docker container
-        # skip it for now so that tests can proceed
-        set_target_properties(lean_js PROPERTIES EXCLUDE_FROM_ALL 1)
-    endif()
+    # This currently fails to build in the docker container
+    # skip it for now so that tests can proceed
+    set_target_properties(lean_js PROPERTIES EXCLUDE_FROM_ALL 1)
 else()
     target_link_libraries(lean_js leanstatic)
 endif()

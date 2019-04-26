@@ -58,7 +58,7 @@ Here's a brief description of the build output. The paths given below are relati
 
 - `shell/lean.js` and `shell/lean.wasm` constitute a JS / wasm version of the main `lean` executable. Similarly, `checker/leanchecker.js` and `checker/leanchecker.wasm` are the JS / wasm version of `leanchecker`. There are also various testing binaries in the subdirectories `test`. All of these are primarily meant for use with `ctest`, though they can also be run from the command-line using `node`.
 
-- `shell/lean_js.js` is an obsolete browser version of the `lean_js` server which seems to be tricky to build. You can disable building it by prepending `CI=true` to the `emconfigure` line above. This file can be quite large as it contains an uncompressed bundle of lean's core library `.olean` files. The file `shell/lean_js.html` demonstrates its use.
+- `shell/lean_js.js` is an obsolete browser version of the `lean_js` server which seems to be tricky to build. It is not built by default; you can try building it by running `NODE_OPTIONS="--max-old-space-size=4096" emmake make lean_js`. This file can be quite large as it contains an uncompressed bundle of lean's core library `.olean` files. The file `shell/lean_js.html` demonstrates its use.
 
 - The files `shell/lean_js_js.js`, `shell/lean_js_wasm.js`, and `shell/lean_js_wasm.wasm` are a browser versions of the lean server, suitable for use with the [lean-web-editor](https://github.com/leanprover/lean-web-editor). Copy these three files to the `dist/` in the `lean-web-editor` directory.
 
