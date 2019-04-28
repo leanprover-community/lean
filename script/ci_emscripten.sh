@@ -5,6 +5,6 @@ apt-get install -y m4
 mkdir build
 cd build
 emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten
-NODE_OPTIONS="--max-old-space-size=4096" emmake make # -j2 doesn't work here because libgmp has to be built
+NODE_OPTIONS="--max-old-space-size=4096" emmake make # -j2 leads to intermittent build errors
 travis_wait 60 ctest -j2 --output-on-failure
 cd ..

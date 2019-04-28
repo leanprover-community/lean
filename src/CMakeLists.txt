@@ -443,17 +443,6 @@ if(EMSCRIPTEN)
     target_link_libraries(leanstatic_browser ${EXTRA_LIBS})
 endif()
 add_subdirectory(api)
-# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
-# For some strange reason, it contains a copy of pthread_equal.
-# Remark: this problem does not happen when we generate the DLL using msys2 on Windows.
-if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
-  if ("${STATIC}" MATCHES "OFF")
-    add_library(leanshared SHARED shared/init.cpp $<TARGET_OBJECTS:api> ${LEAN_OBJS})
-    target_link_libraries(leanshared ${EXTRA_LIBS})
-    install(TARGETS leanshared DESTINATION lib)
-  endif()
-  install(TARGETS leanstatic DESTINATION lib)
-endif()
 
 if(EMSCRIPTEN)
   set(EMSCRIPTEN_BUILD $ENV{LEAN_EMSCRIPTEN_BUILD})
@@ -486,6 +475,18 @@ add_subdirectory(tests/frontends/lean)
 
 # The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
 # For some strange reason, it contains a copy of pthread_equal.
+# Remark: this problem does not happen when we generate the DLL using msys2 on Windows.
+if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
+  if ("${STATIC}" MATCHES "OFF")
+    add_library(leanshared SHARED shared/init.cpp $<TARGET_OBJECTS:api> ${LEAN_OBJS})
+    target_link_libraries(leanshared ${EXTRA_LIBS})
+    install(TARGETS leanshared DESTINATION lib)
+  endif()
+  install(TARGETS leanstatic DESTINATION lib)
+endif()
+
+# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
+# For some strange reason, it contains a copy of pthread_equal.
 if (NOT("${CROSS_COMPILE}" MATCHES "ON") AND ("${STATIC}" MATCHES "OFF"))
   add_subdirectory(tests/shared)
 endif()
@@ -512,11 +513,22 @@ if ((${MULTI_THREAD} MATCHES "ON") AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
   set(LEAN_EXTRA_MAKE_OPTS -s40000 ${LEAN_EXTRA_MAKE_OPTS})
 endif ()
 
-if(${EMSCRIPTEN})
+if(EMSCRIPTEN)
   # emscripten lean make yields too much output
-  set(LEAN_EXTRA_MAKE_OPTS ${LEAN_EXTRA_MAKE_OPTS} &> /dev/null)
-endif()
+add_custom_target(
+    standard_lib ALL
+    COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS} > /dev/null
+    DEPENDS bin_lean
+    WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../library"
+    )
 
+add_custom_target(
+    leanpkg ALL
+    COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS} > /dev/null
+    DEPENDS standard_lib
+    WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../leanpkg"
+)
+else()
 add_custom_target(
     standard_lib ALL
     COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS}
@@ -530,6 +542,7 @@ add_custom_target(
     DEPENDS standard_lib
     WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../leanpkg"
 )
+endif()
 endif()
 
 add_custom_target(clean-std-lib

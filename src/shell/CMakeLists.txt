@@ -14,6 +14,7 @@ endif()
 add_library(shell_js OBJECT lean_js.cpp server.cpp leandoc.cpp)
 
 if(${EMSCRIPTEN})
+    add_dependencies(shell_js gmp)
     set(NODE_JS "node --stack_size=8192")
 
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lean
