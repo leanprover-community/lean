@@ -391,6 +391,11 @@ configure_file("${LEAN_SOURCE_DIR}/../library/init/version.lean.in" "${LEAN_SOUR
 
 include_directories("${LEAN_BINARY_DIR}")
 add_subdirectory(util)
+if(EMSCRIPTEN)
+   set(LIB_OBJ_UTIL $<TARGET_OBJECTS:util_shared> $<TARGET_OBJECTS:util_path>)
+else()
+   set(LIB_OBJ_UTIL $<TARGET_OBJECTS:util>)
+endif()
 add_subdirectory(util/numerics)
 set(LEAN_OBJS_ ${LEAN_OBJS_} $<TARGET_OBJECTS:numerics>)
 add_subdirectory(util/sexpr)
@@ -429,11 +434,11 @@ if(EMSCRIPTEN)
 else()
    set(LEAN_LIBRARY_TYPE STATIC)
 endif()
-set(LEAN_OBJS $<TARGET_OBJECTS:util> ${LEAN_OBJS_})
+set(LEAN_OBJS ${LIB_OBJ_UTIL} ${LEAN_OBJS_})
 add_library(leanstatic ${LEAN_LIBRARY_TYPE} ${LEAN_OBJS})
 target_link_libraries(leanstatic ${EXTRA_LIBS})
 if(EMSCRIPTEN)
-    set(LEAN_OBJS_BROWSER $<TARGET_OBJECTS:util_browser> ${LEAN_OBJS_})
+    set(LEAN_OBJS_BROWSER $<TARGET_OBJECTS:util_shared> $<TARGET_OBJECTS:util_path_browser> ${LEAN_OBJS_})
     add_library(leanstatic_browser ${LEAN_LIBRARY_TYPE} ${LEAN_OBJS_BROWSER})
     target_link_libraries(leanstatic_browser ${EXTRA_LIBS})
 endif()
@@ -450,10 +455,19 @@ if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
   install(TARGETS leanstatic DESTINATION lib)
 endif()
 
+if(EMSCRIPTEN)
+  set(EMSCRIPTEN_BUILD $ENV{LEAN_EMSCRIPTEN_BUILD})
+endif()
+
+if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Test)
+# skip building main files
+else()
 add_subdirectory(shell)
+add_subdirectory(tests/shell)
+endif()
 
 function(add_exec_test name tgt)
-    if(${EMSCRIPTEN})
+    if(EMSCRIPTEN)
         target_link_libraries(${tgt} "--memory-init-file 0")
         add_test(NAME ${name} COMMAND node --stack_size=8192 ${CMAKE_CURRENT_BINARY_DIR}/${tgt}.js)
     else()
@@ -461,12 +475,14 @@ function(add_exec_test name tgt)
     endif()
 endfunction()
 
+if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Main)
+# skip building standalone test binaries
+else()
 add_subdirectory(tests/util)
 add_subdirectory(tests/util/numerics)
 add_subdirectory(tests/kernel)
 add_subdirectory(tests/library)
 add_subdirectory(tests/frontends/lean)
-add_subdirectory(tests/shell)
 
 # The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
 # For some strange reason, it contains a copy of pthread_equal.
@@ -474,6 +490,11 @@ if (NOT("${CROSS_COMPILE}" MATCHES "ON") AND ("${STATIC}" MATCHES "OFF"))
   add_subdirectory(tests/shared)
 endif()
 
+endif()
+
+if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Test)
+# skip building tests for main files
+else()
 # Include style check
 if (NOT(${CMAKE_SYSTEM_NAME} MATCHES "Windows") AND PYTHONINTERP_FOUND)
 include(StyleCheck)
@@ -491,6 +512,11 @@ if ((${MULTI_THREAD} MATCHES "ON") AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
   set(LEAN_EXTRA_MAKE_OPTS -s40000 ${LEAN_EXTRA_MAKE_OPTS})
 endif ()
 
+if(${EMSCRIPTEN})
+  # emscripten lean make yields too much output
+  set(LEAN_EXTRA_MAKE_OPTS ${LEAN_EXTRA_MAKE_OPTS} &> /dev/null)
+endif()
+
 add_custom_target(
     standard_lib ALL
     COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS}
@@ -504,6 +530,7 @@ add_custom_target(
     DEPENDS standard_lib
     WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../leanpkg"
 )
+endif()
 
 add_custom_target(clean-std-lib
   WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../library"

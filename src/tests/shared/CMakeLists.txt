@@ -1,5 +1,6 @@
 function(add_exec_test_working name tgt)
     if(${EMSCRIPTEN})
+        set_target_properties(${tgt} PROPERTIES LINK_FLAGS "-s ASSERTIONS=1")
         target_link_libraries(${tgt} "--memory-init-file 0")
         add_test(NAME ${name}
         WORKING_DIRECTORY "${LEAN_BINARY_DIR}"
