@@ -28,8 +28,10 @@ matrix:
         LEAN_EMSCRIPTEN_BUILD=Main
      before_install:
        - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
-     script:
-       - travis_wait 60 docker exec -it -e LEAN_EMSCRIPTEN_BUILD=Main emscripten script/ci_emscripten.sh
+     script: # https://blog.humphd.org/building-large-code-on-travis/
+       - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done &
+       - docker exec -it -e LEAN_EMSCRIPTEN_BUILD=Main emscripten script/ci_emscripten.sh
+       - kill %1
 
    - os: linux
      services:
@@ -40,7 +42,9 @@ matrix:
      before_install:
        - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
      script:
-       - travis_wait 60 docker exec -it -e LEAN_EMSCRIPTEN_BUILD=Test emscripten script/ci_emscripten.sh
+       - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done &
+       - docker exec -it -e LEAN_EMSCRIPTEN_BUILD=Test emscripten script/ci_emscripten.sh
+       - kill %1
 
    - os: linux
      dist: precise
