@@ -24,5 +24,4 @@ add_library(util OBJECT debug.cpp name.cpp name_set.cpp fresh_name.cpp
   timeit.cpp timer.cpp task.cpp task_builder.cpp cancellable.cpp
   log_tree.cpp small_object_allocator.cpp subscripted_name_set.cpp
   parser_exception.cpp name_generator.cpp)
-add_dependencies(util gmp)
 endif()

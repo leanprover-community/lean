@@ -444,11 +444,7 @@ if(EMSCRIPTEN)
 endif()
 add_subdirectory(api)
 
-if(EMSCRIPTEN)
-  set(EMSCRIPTEN_BUILD $ENV{LEAN_EMSCRIPTEN_BUILD})
-endif()
-
-if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Test)
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
 # skip building main files
 else()
 add_subdirectory(shell)
@@ -464,7 +460,7 @@ function(add_exec_test name tgt)
     endif()
 endfunction()
 
-if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Main)
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main)
 # skip building standalone test binaries
 else()
 add_subdirectory(tests/util)
@@ -493,7 +489,7 @@ endif()
 
 endif()
 
-if(EMSCRIPTEN AND EMSCRIPTEN_BUILD STREQUAL Test)
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
 # skip building tests for main files
 else()
 # Include style check
