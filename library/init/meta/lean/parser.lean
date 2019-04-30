@@ -121,5 +121,8 @@ meta instance optional {α : Type} [reflected α] (p : parser α)
 
 end reflectable
 
+meta def reflect (p : parser α) [r : reflectable p] : parser expr :=
+r.expr
+
 end parser
 end lean
