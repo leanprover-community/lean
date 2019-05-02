@@ -113,7 +113,6 @@ before_install:
     fi
 
 script:
-  - set -e
   - mkdir -p build
   - cd build
   - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi

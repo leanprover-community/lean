@@ -122,7 +122,7 @@ protected:
     virtual std::tuple<expr, expr, name> parse_definition(buffer<name> & lp_names, buffer<expr> & params,
                                                           bool is_example, bool is_instance, bool, bool) = 0;
 
-    friend environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta);
+    friend environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta, bool recover);
 public:
     void updt_options();
     options get_options() const { return m_ios.get_options(); }

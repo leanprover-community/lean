@@ -894,6 +894,7 @@ struct structural_rec_fn {
                         expr rec_arg_type     = m_ctx.relaxed_whnf(m_ctx.infer(rec_arg));
                         buffer<expr> I_args;
                         expr const & I        = get_app_args(rec_arg_type, I_args);
+                        std::cout << "I: " << I << "\n";
                         lean_assert(is_constant(I));
                         name I_name           = const_name(I);
                         lean_assert(inductive::is_inductive_decl(env(), I_name));

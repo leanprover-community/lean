@@ -761,7 +761,7 @@ static bool is_rfl_preexpr(expr const & e) {
     return is_constant(e, get_rfl_name());
 }
 
-environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta) {
+environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta, bool recover) {
     buffer<name> lp_names;
     buffer<expr> params;
     expr fn, val;
@@ -876,25 +876,29 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
         /* Apply attributes last so that they may access any information on the new decl */
         return meta.m_attrs.apply(new_env, p.ios(), c_real_name);
     };
-
-    try {
-        return process(val);
-    } catch (throwable & ex) {
-        // Even though we catch exceptions during elaboration, there can still be other exceptions,
-        // e.g. when adding a declaration to the environment.
-
-        // If we have already logged an error during elaboration, don't
-        // bother showing the less helpful kernel exception
-        if (!lt.get().has_entry_now(is_error_message))
-            p.mk_message(header_pos, ERROR).set_exception(ex).report();
-        // As a last resort, try replacing the definition body with `sorry`.
-        // If that doesn't work either, just silently give up since we have
-        // already logged at least one error.
+    if (recover) {
         try {
-            return process(p.mk_sorry(header_pos, true));
-        } catch (...) {
-            return env;
+            return process(val);
+        } catch (throwable & ex) {
+            // Even though we catch exceptions during elaboration, there can still be other exceptions,
+            // e.g. when adding a declaration to the environment.
+
+            // If we have already logged an error during elaboration, don't
+            // bother showing the less helpful kernel exception
+            if (!lt.get().has_entry_now(is_error_message))
+                p.mk_message(header_pos, ERROR).set_exception(ex).report();
+            // As a last resort, try replacing the definition body with `sorry`.
+            // If that doesn't work either, just silently give up since we have
+            // already logged at least one error.
+            try {
+                return process(p.mk_sorry(header_pos, true));
+            } catch (...) {
+                return env;
+            }
         }
+    } else {
+        std::cout << "process\n";
+        return process(val);
     }
 }
 
@@ -902,6 +906,6 @@ environment definition_cmd_core(parser & p, decl_cmd_kind kind, cmd_meta const &
     if (meta.m_modifiers.m_is_mutual)
         return mutual_definition_cmd_core(p, kind, meta);
     else
-        return single_definition_cmd_core(p, kind, meta);
+        return single_definition_cmd_core(p, kind, meta, true);
 }
 }

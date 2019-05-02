@@ -1326,11 +1326,39 @@ updateex_env $ λe, e.add_inductive n ls p ty is is_meta
 meta def add_meta_definition (n : name) (lvls : list name) (type value : expr) : tactic unit :=
 add_decl (declaration.defn n lvls type value reducibility_hints.abbrev ff)
 
-meta def add_defn_equations (n : name) (params : list expr) (t : expr)
-(eqns : expr → list (list expr × expr)) (is_meta : bool) : tactic unit :=
+/-- `add_defn_equations` adds a definition specified by a list of equations.
+
+  The arguments:
+    * `lp`: list of universe parameters
+    * `params`: list of parameters (binders before the colon);
+    * `fn`: a local constant giving the name and type of the declaration
+      (with `params` in the local context);
+    * `eqns`: a list of equations, each of which is a list of patterns
+      (constructors applied to new local constants) and the branch
+      expression;
+    * `is_meta`: is the definition meta?
+
+
+  `add_defn_equations` can be used as:
+
+      do my_add ← mk_local_def `my_add `(ℕ → ℕ),
+          a ← mk_local_def `a ℕ,
+          b ← mk_local_def `b ℕ,
+          add_defn_equations [a] my_fun
+              [ ([`(nat.zero)], a),
+                ([expr.app `(nat.succ) x], my_add b) ])
+              ff -- non-meta
+
+  to create the following definition:
+
+      def my_add (a : ℕ) : ℕ → ℕ
+      | nat.zero := a
+      | (nat.succ b) := my_add b
+-/
+meta def add_defn_equations (lp : list name) (params : list expr) (fn : expr)
+                            (eqns : list (list expr × expr)) (is_meta : bool) : tactic unit :=
 do opt ← get_options,
-   fn ← mk_local_def n t,
-   updateex_env $ λ e, e.add_defn_eqns opt [] params fn (eqns fn) is_meta
+   updateex_env $ λ e, e.add_defn_eqns opt lp params fn eqns is_meta
 
 meta def rename (curr : name) (new : name) : tactic unit :=
 do h ← get_local curr,
