@@ -3,7 +3,12 @@ sudo: true
 cache:
   apt: true
   directories:
-    - build
+    - build/library/
+    - build/kernel/
+    - build/init/
+    - build/frontends/
+    - build/api/
+    - build/util/
 dist: trusty
 branches:
   only:
