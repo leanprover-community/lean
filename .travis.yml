@@ -1,6 +1,9 @@
 language: cpp
 sudo: true
-cache: apt
+cache:
+  apt: true
+  directories:
+    - build
 dist: trusty
 branches:
   only:
@@ -117,7 +120,7 @@ before_install:
     fi
 
 script:
-  - set -e
+  # - set -e
   - mkdir -p build
   - cd build
   - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi
