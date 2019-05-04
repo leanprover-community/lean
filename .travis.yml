@@ -147,7 +147,7 @@ script:
           ../src
   - make -j2
   - if [[ $TEST != OFF ]]; then yes "A" | travis_wait 60 ctest -j2 --output-on-failure; fi
-  - ctest -j2 --rerun-failed
+  # - ctest -j2 --rerun-failed
   - |
     # don't test packages when building nightly
     if [[ $TEST_LEANPKG_REGISTRY == ON && -z $LEAN_VERSION_STRING ]]; then
