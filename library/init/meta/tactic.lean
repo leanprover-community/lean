@@ -1344,9 +1344,9 @@ add_decl (declaration.defn n lvls type value reducibility_hints.abbrev ff)
       do my_add ← mk_local_def `my_add `(ℕ → ℕ),
           a ← mk_local_def `a ℕ,
           b ← mk_local_def `b ℕ,
-          add_defn_equations [a] my_fun
-              [ ([`(nat.zero)], a),
-                ([expr.app `(nat.succ) x], my_add b) ])
+          add_defn_equations [a] my_add
+              [ ([``(nat.zero)], a),
+                ([``(nat.succ %%b)], my_add b) ])
               ff -- non-meta
 
   to create the following definition:
@@ -1356,7 +1356,7 @@ add_decl (declaration.defn n lvls type value reducibility_hints.abbrev ff)
       | (nat.succ b) := my_add b
 -/
 meta def add_defn_equations (lp : list name) (params : list expr) (fn : expr)
-                            (eqns : list (list expr × expr)) (is_meta : bool) : tactic unit :=
+                            (eqns : list (list pexpr × expr)) (is_meta : bool) : tactic unit :=
 do opt ← get_options,
    updateex_env $ λ e, e.add_defn_eqns opt lp params fn eqns is_meta
 

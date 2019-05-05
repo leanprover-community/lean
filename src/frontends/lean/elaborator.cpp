@@ -4314,14 +4314,13 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
         dummy_def_parser p(env, lean::to_options(_opts));
         expr sig = to_expr(_sig);
         p.m_name = mlocal_pp_name(sig);
-        p.m_type = mk_as_is( mlocal_type(sig) );
+        p.m_type = mk_as_is(mlocal_type(sig));
         lean::to_buffer_name(_lp_names, p.m_lp_params);
         to_buffer_expr(_params, p.m_params);
         for (vm_obj const * it = &_eqns; !is_simple(*it); it = &cfield(*it, 1)) {
             auto o = cfield(*it, 0);
             buffer<expr> pat;
             to_buffer_expr(cfield(o, 0), pat);
-            for (auto & e : pat) { e = mk_as_is(e); }
             p.m_val.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
         }
 

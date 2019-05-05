@@ -5,8 +5,8 @@ run_cmd do
   b ← mk_local_def `b `(bool),
   a ← mk_local_def `a `(bool),
   add_defn_equations [] [a,b] n
-         [ ([`(tt)], `(ff)),
-           ([`(ff)], `(tt))  ]
+         [ ([``(tt)], `(ff)),
+           ([``(ff)], `(tt))  ]
          ff
 
 #print n._main
@@ -15,8 +15,8 @@ run_cmd do
 run_cmd do
   m ← mk_local_def  `m `(bool → bool),
   add_defn_equations [] [] m
-         [ ([`(tt)], `(ff)),
-           ([`(ff)], `(tt))  ]
+         [ ([``(tt)], `(ff)),
+           ([``(ff)], `(tt))  ]
          tt
 
 #print m
@@ -29,8 +29,8 @@ run_cmd do
   b ← mk_local_def `b `(bool),
   a ← mk_local_def `a `(bool),
   add_defn_equations [] [a,b] m
-     [ ([`(tt)], m `(ff)),
-       ([`(ff)], m `(tt))  ]
+     [ ([``(tt)], m `(ff)),
+       ([``(ff)], m `(tt))  ]
      ff
 
 run_cmd do
@@ -49,8 +49,8 @@ run_cmd do
   a ← mk_local_def `a `(nat),
   b ← mk_local_def `b `(nat),
   add_defn_equations [] [a,b] plus
-    [ ([ `(nat.zero) ], b),
-      ([ (`(nat.succ) : expr) x ], plus x) ] ff
+    [ ([ ``(nat.zero) ], b),
+      ([ ``(nat.succ %%x) ], plus x) ] ff
 
 #print plus'
 
@@ -65,13 +65,10 @@ run_cmd do
   xs ← mk_local_def `xs list_t,
   y ← mk_local_def `y α,
   ys ← mk_local_def `ys list_t,
-  let list_nil := @const tt ``list.nil [zero],   -- notice: we are not applying `nil` and `cons` to `α`
-  let list_cons := @const tt ``list.cons [zero], -- because `α` is not a variable bound by those constructors
+  let list_cons := @const tt ``list.cons [zero],
   add_defn_equations [`u] [α,xs] append
-    [ ([ list_nil ], xs),
-      ([ list_cons y ys ], list_cons α y $ append ys) ] ff
-    -- in `list_cons y $ append ys`, we do not apply `α` presumably
-    -- because we are dealing with a preterm
+    [ ([ ``(@list.nil %%α) ], xs),
+      ([ ``(%%y :: %%ys) ], list_cons α y $ append ys) ] ff
 
 #print foo_append._main
 
