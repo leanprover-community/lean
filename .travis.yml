@@ -1,7 +1,19 @@
 language: cpp
 sudo: true
-cache: apt
+cache:
+  apt: true
+  directories:
+    - build/library/
+    - build/kernel/
+    - build/init/
+    - build/frontends/
+    - build/api/
+    - build/util/
+    - build/checker/
 dist: trusty
+branches:
+  only:
+    - master
 group: deprecated-2017Q3
 addons:
   apt:
@@ -30,6 +42,7 @@ matrix:
        FIRST=1
 
    - os: linux
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=clang++-3.4
        CMAKE_BUILD_TYPE=Release
@@ -44,6 +57,7 @@ matrix:
            - *default_packages
            - g++-6
            - gcc-6
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -51,6 +65,7 @@ matrix:
 
    - os: linux
      addons: *gcc6_addons
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -58,6 +73,7 @@ matrix:
 
    - os: linux
      addons: *gcc6_addons
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -70,6 +86,7 @@ matrix:
          packages:
            - *default_packages
            - z3
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-4.9
        CMAKE_BUILD_TYPE=Release
@@ -77,6 +94,7 @@ matrix:
        TEST_LEANPKG_REGISTRY=ON
 
    - os: linux
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=clang++-3.4
        CMAKE_BUILD_TYPE=Debug
@@ -84,6 +102,7 @@ matrix:
 
    - os: linux
      dist: precise
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-4.9
        CMAKE_BUILD_TYPE=Debug
@@ -96,6 +115,7 @@ matrix:
        TEST_LEANPKG_REGISTRY=ON
 
    - os: osx
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++
        CMAKE_BUILD_TYPE=Debug
@@ -113,7 +133,6 @@ before_install:
     fi
 
 script:
-  - set -e
   - mkdir -p build
   - cd build
   - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi
@@ -125,7 +144,7 @@ script:
     if [[ $TRAVIS_EVENT_TYPE == cron ]]
     then
       # trigger AppVeyor build from first Travis job because they can't be bothered to let us set up a cron build
-      [[ -n $FIRST ]] && curl -H "Authorization: Bearer $APPVEYOR_TOKEN" -H "Content-Type: application/json" https://ci.appveyor.com/api/builds -d '{"accountName": "leodemoura", "projectSlug": "lean", "branch": "master", "environmentVariables": {"APPVEYOR_SCHEDULED_BUILD": "True"}}'
+      [[ -n $FIRST ]] && curl -H "Authorization: Bearer $APPVEYOR_TOKEN" -H "Content-Type: application/json" https://ci.appveyor.com/api/account/cipher1024/builds -d '{"accountName": "cipher1024", "projectSlug": "lean", "branch": "master", "environmentVariables": {"APPVEYOR_SCHEDULED_BUILD": "True"}}'
       git fetch --unshallow --tags origin
       . ../script/setup_nightly.sh
     fi
@@ -171,5 +190,5 @@ deploy:
   overwrite: true
   on:
     condition: $UPLOAD = ON && $GH_TOKEN
-    repo: leanprover/lean
+    repo: leanprover-community/lean
     tags: true
