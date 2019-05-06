@@ -1,6 +1,8 @@
 language: cpp
 sudo: true
-cache: apt
+cache:
+  apt: true
+  ccache: true
 dist: trusty
 group: deprecated-2017Q3
 addons:
