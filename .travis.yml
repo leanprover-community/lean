@@ -4,6 +4,9 @@ cache:
   apt: true
   ccache: true
 dist: trusty
+branches:
+  only:
+    - master
 group: deprecated-2017Q3
 addons:
   apt:
@@ -32,6 +35,7 @@ matrix:
        FIRST=1
 
    - os: linux
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=clang++-3.4
        CMAKE_BUILD_TYPE=Release
@@ -46,6 +50,7 @@ matrix:
            - *default_packages
            - g++-6
            - gcc-6
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -53,6 +58,7 @@ matrix:
 
    - os: linux
      addons: *gcc6_addons
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -60,6 +66,7 @@ matrix:
 
    - os: linux
      addons: *gcc6_addons
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-6
        CMAKE_BUILD_TYPE=Release
@@ -72,6 +79,7 @@ matrix:
          packages:
            - *default_packages
            - z3
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-4.9
        CMAKE_BUILD_TYPE=Release
@@ -79,6 +87,7 @@ matrix:
        TEST_LEANPKG_REGISTRY=ON
 
    - os: linux
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=clang++-3.4
        CMAKE_BUILD_TYPE=Debug
@@ -86,6 +95,7 @@ matrix:
 
    - os: linux
      dist: precise
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-4.9
        CMAKE_BUILD_TYPE=Debug
@@ -98,6 +108,7 @@ matrix:
        TEST_LEANPKG_REGISTRY=ON
 
    - os: osx
+     if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++
        CMAKE_BUILD_TYPE=Debug
