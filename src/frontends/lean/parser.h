@@ -57,6 +57,9 @@ protected:
     // noncomputable definitions not tagged as noncomputable.
     bool                   m_ignore_noncomputable;
 
+    // error recovery
+    bool                   m_error_recovery = true;
+
 public:
     parser_info(environment const & env, io_state const & ios) :
        m_env(env), m_ios(ios) {}
@@ -122,7 +125,7 @@ protected:
     virtual std::tuple<expr, expr, name> parse_definition(buffer<name> & lp_names, buffer<expr> & params,
                                                           bool is_example, bool is_instance, bool, bool) = 0;
 
-    friend environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta, bool recover);
+    friend environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta);
 public:
     void updt_options();
     options get_options() const { return m_ios.get_options(); }
@@ -140,6 +143,7 @@ public:
     virtual optional<pos_info> const & get_break_at_pos() const = 0;
     virtual parser_pos_provider get_parser_pos_provider(pos_info const & some_pos) const = 0;
     expr mk_sorry(pos_info const & p, bool synthetic = false);
+    bool has_error_recovery() const { return m_error_recovery; }
 };
 
 class parser : public abstract_parser, public parser_info {
@@ -164,8 +168,6 @@ class parser : public abstract_parser, public parser_info {
     // auto completing
     bool                    m_complete{false};
 
-    // error recovery
-    bool                   m_error_recovery = true;
     bool                   m_error_since_last_cmd = false;
     pos_info               m_last_recovered_error_pos {0, 0};
     optional<pos_info>     m_backtracking_pos;
@@ -537,7 +539,6 @@ public:
     expr parser_error_or_expr(parser_error && err);
     void throw_invalid_open_binder(pos_info const & pos);
 
-    bool has_error_recovery() const { return m_error_recovery; }
     flet<bool> error_recovery_scope(bool enable_recovery) {
         return flet<bool>(m_error_recovery, enable_recovery);
     }
@@ -610,7 +611,7 @@ public:
 public:
   dummy_def_parser(environment const & env, options const & opts) :
     parser_info(env, io_state(io_state(), opts))
-  { }
+      { m_error_recovery = false; }
   char const * get_file_name() const override { return m_file_name.c_str(); }
   bool ignore_noncomputable() const { return m_ignore_noncomputable; }
   options get_options() const { return m_ios.get_options(); }

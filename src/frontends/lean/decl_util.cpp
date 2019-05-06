@@ -45,7 +45,8 @@ bool parse_univ_params(parser & p, buffer<name> & lp_names) {
     }
 }
 
-expr parse_single_header(parser & p, declaration_name_scope & scope, buffer <name> & lp_names, buffer <expr> & params,
+expr parse_single_header(parser & p, declaration_name_scope & scope,
+                         buffer <name> & lp_names, buffer <expr> & params,
                          bool is_example, bool is_instance) {
     auto c_pos  = p.pos();
     name c_name;

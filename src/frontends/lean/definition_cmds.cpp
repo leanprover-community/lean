@@ -522,7 +522,7 @@ static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cm
 */
 std::tuple<expr, expr, name>
 parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
-                                                     bool is_example, bool is_instance, bool is_meta, bool is_abbrev) {
+                         bool is_example, bool is_instance, bool is_meta, bool is_abbrev) {
     parser & p = *this;
     parser::local_scope scope1(p);
     auto header_pos = p.pos();
@@ -761,7 +761,7 @@ static bool is_rfl_preexpr(expr const & e) {
     return is_constant(e, get_rfl_name());
 }
 
-environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta, bool recover) {
+environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta) {
     buffer<name> lp_names;
     buffer<expr> params;
     expr fn, val;
@@ -793,7 +793,7 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
     if (p.get_break_at_pos())
         return p.env();
 
-    bool recover_from_errors = true;
+    bool recover_from_errors = p.m_error_recovery;
     elaborator elab(env, p.get_options(), get_namespace(env) + mlocal_pp_name(fn), metavar_context(), local_context(), recover_from_errors);
     buffer<expr> new_params;
     elaborate_params(elab, params, new_params);
@@ -876,7 +876,7 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
         /* Apply attributes last so that they may access any information on the new decl */
         return meta.m_attrs.apply(new_env, p.ios(), c_real_name);
     };
-    if (recover) {
+    if (p.m_error_recovery) {
         try {
             return process(val);
         } catch (throwable & ex) {
@@ -897,8 +897,16 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
             }
         }
     } else {
-        std::cout << "process\n";
-        return process(val);
+        auto r = process(val);
+        lt.get().for_each([&] (log_tree::node const & n) {
+                for (auto & e : n.get_entries()) {
+                    if (auto msg = dynamic_cast<message const *>(e.get())) {
+                        if (msg->is_error()) {
+                            throw throwable(msg->get_text());
+                        } } }
+                return true; } );
+
+        return r;
     }
 }
 
@@ -906,6 +914,6 @@ environment definition_cmd_core(parser & p, decl_cmd_kind kind, cmd_meta const &
     if (meta.m_modifiers.m_is_mutual)
         return mutual_definition_cmd_core(p, kind, meta);
     else
-        return single_definition_cmd_core(p, kind, meta, true);
+        return single_definition_cmd_core(p, kind, meta);
 }
 }
