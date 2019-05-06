@@ -596,7 +596,7 @@ dummy_def_parser::parse_definition(buffer<name> & lp_names, buffer<expr> & param
                 for (auto p : pat) {
                     collect_locals(p, cl); }
                 eqns.push_back(lean::Fun(cl.get_collected(),
-                                         mk_equation(mk_app(fn, pat),
+                                         mk_equation(mk_app(mk_explicit(fn), pat),
                                                      lean::instantiate(rhs, fn)),
                                          p));
             }
