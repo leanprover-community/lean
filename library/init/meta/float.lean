@@ -6,6 +6,7 @@ namespace native
 meta constant float : Type
 namespace float
 
+-- fixed values based on the underlying C++ float implementation.
 namespace specification
     /-- The base. Either 2 or 10. -/
     meta constant radix : nat
@@ -17,27 +18,25 @@ namespace specification
     meta constant emin : int
 end specification
 
-/-- Smallest strictly positive number. -/
-meta constant positive_epsilon : float
-/-- Smallest strictly negative number. -/
-meta constant negative_epsilon : float
-meta constant positive_infinity : float
-meta constant is_positive_infinity : float → bool
-meta constant negative_infinity : float
-meta constant is_negative_infinity : float → bool
+
+meta constant epsilon : float
+meta constant infinity : float
+meta constant is_infinite : float → bool
+meta constant is_finite : float → bool
+meta constant is_nan : float → bool
+meta constant is_normal : float → bool
+
 /-- Quiet NaN. -/
 meta constant qNaN : float
-meta constant is_qNaN : float → bool
 /-- Signalling NaN. -/
 meta constant sNaN : float
-meta constant is_sNaN : float → bool
-/-- The sign `s` of the float. Either 0 or 1-/
-meta constant sign : float → nat
-/-- The exponent `e` of the float. `emax ≤ e ≤ emax`  -/
+/-- The sign `s` of the float. `tt` if negative. -/
+meta constant sign : float → bool
+/-- The exponent `e` of the float in the base given by `specification.radix`. `emin ≤ e ≤ emax`.  -/
 meta constant exponent : float → int
 /-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
     The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
-    The head of the list is the most significant digit. 
+    The head of the list is the most significant digit.
      -/
 meta constant mantissa : float → array specification.precision nat
 
@@ -58,7 +57,7 @@ meta constant sqrt : float → float
 /-- Exponential function. -/
 meta constant exp : float → float
 /-- Natural logarithm. -/
-meta constant log : float → float 
+meta constant log : float → float
 
 meta constant pi : float
 

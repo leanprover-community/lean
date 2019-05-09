@@ -6,13 +6,13 @@
 #include <math.h>
 
 namespace lean{
-
+// [TODO] make a typedef or template for `float` so can generalise to other IEEE-754 impls.
 struct vm_float : public vm_external {
     float m_val;
     vm_float(float const & v) : m_val(v) {}
     virtual ~vm_float() {}
     virtual void dealloc() override {
-        this->~vm_float(); 
+        this->~vm_float();
         get_vm_allocator().deallocate(sizeof(vm_float), this);
     }
     virtual vm_external * ts_clone(vm_clone_fn const &) override {return new vm_float(m_val);}
@@ -36,6 +36,25 @@ optional<float> try_to_float(vm_obj const & o) {
 float to_float(vm_obj const & o) {
     return try_to_float(o).value();
 }
+
+vm_obj spec_radix() { return mk_vm_nat(std::numeric_limits<float>::radix); }
+vm_obj spec_precision() {  return mk_vm_nat(std::numeric_limits<float>::digits);}
+vm_obj spec_emax() {  return mk_vm_nat(std::numeric_limits<float>::max_exponent);}
+vm_obj spec_emin() {  return mk_vm_int(std::numeric_limits<float>::min_exponent);}
+
+vm_obj float_epsilon() {return mk_vm_float(std::numeric_limits<float>::epsilon()); }
+vm_obj float_infinity() {return mk_vm_float(std::numeric_limits<float>::infinity()); }
+vm_obj float_is_infinite(vm_obj const & f) {return mk_vm_bool(isinf(to_float(f))); }
+vm_obj float_is_finite(vm_obj const & f) {return mk_vm_bool(isfinite(to_float(f))); }
+vm_obj float_is_nan(vm_obj const & f) {return mk_vm_bool(isnan(to_float(f))); }
+vm_obj float_is_normal(vm_obj const & f) {return mk_vm_bool(isnormal(to_float(f))); }
+vm_obj float_sign(vm_obj const & f) {return mk_vm_bool(signbit(to_float(f))); }
+
+vm_obj float_exponent(vm_obj const & f) {return mk_vm_int(ilogb(to_float(f))); }
+
+vm_obj float_qNaN() {return mk_vm_float(std::numeric_limits<float>::quiet_NaN()); }
+vm_obj float_sNaN() {return mk_vm_float(std::numeric_limits<float>::signaling_NaN()); }
+
 vm_obj float_add(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) + to_float(a2));}
 vm_obj float_sub(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) - to_float(a2));}
 vm_obj float_neg(vm_obj const & a1) {return mk_vm_float(-to_float(a1));}
@@ -71,7 +90,7 @@ vm_obj float_dec_eq(vm_obj const & a1, vm_obj const & a2) {return mk_vm_bool(to_
 
 vm_obj float_of_nat(vm_obj const & a) {
     //[TODO] check that the nat isn't too big to fit in an unsigned
-    return mk_vm_float((float)(to_unsigned(a))); 
+    return mk_vm_float((float)(to_unsigned(a)));
 }
 vm_obj float_of_int(vm_obj const & i) {
     return mk_vm_float(to_int(i));
@@ -85,6 +104,33 @@ vm_obj float_repr(vm_obj const & a) {
 }
 
 void initialize_vm_float() {
+
+    DECLARE_VM_BUILTIN(name({"native","float","specification","radix"}), spec_radix);
+    DECLARE_VM_BUILTIN(name({"native","float","specification","precision"}), spec_precision);
+    DECLARE_VM_BUILTIN(name({"native","float","specification","emax"}), spec_emax);
+    DECLARE_VM_BUILTIN(name({"native","float","specification","emin"}), spec_emin);
+
+    DECLARE_VM_BUILTIN(name({"native","float","epsilon"}), float_epsilon);
+    DECLARE_VM_BUILTIN(name({"native","float","infinity"}), float_infinity);
+    DECLARE_VM_BUILTIN(name({"native","float","is_infinite"}), float_is_infinite);
+    DECLARE_VM_BUILTIN(name({"native","float","is_finite"}), float_is_finite);
+    DECLARE_VM_BUILTIN(name({"native","float","is_nan"}), float_is_nan);
+    DECLARE_VM_BUILTIN(name({"native","float","is_normal"}), float_is_normal);
+    DECLARE_VM_BUILTIN(name({"native","float","sign"}), float_sign);
+
+    DECLARE_VM_BUILTIN(name({"native","float","exponent"}), float_exponent);
+
+    DECLARE_VM_BUILTIN(name({"native","float","qNaN"}), float_qNaN);
+    DECLARE_VM_BUILTIN(name({"native","float","sNaN"}), float_sNaN);
+    // DECLARE_VM_BUILTIN(name({"native","float","is_qNaN"}), _);
+    // DECLARE_VM_BUILTIN(name({"native","float","sNaN"}), _);
+    // DECLARE_VM_BUILTIN(name({"native","float","is_sNaN"}), _);
+
+    // DECLARE_VM_BUILTIN(name({"native","float","sign"}), _);
+    // DECLARE_VM_BUILTIN(name({"native","float","exponent"}), _);
+    // DECLARE_VM_BUILTIN(name({"native","float","mantissa"}), _);
+
+
     DECLARE_VM_BUILTIN(name({"native","float","add"}), float_add);
     DECLARE_VM_BUILTIN(name({"native","float","sub"}), float_sub);
     DECLARE_VM_BUILTIN(name({"native","float","neg"}), float_neg);
@@ -104,7 +150,7 @@ void initialize_vm_float() {
 
     DECLARE_VM_BUILTIN(name({"native","float","asin"}), float_asin);
     DECLARE_VM_BUILTIN(name({"native","float","acos"}), float_acos);
-    DECLARE_VM_BUILTIN(name({"native","float","atan"}), float_atan);    
+    DECLARE_VM_BUILTIN(name({"native","float","atan"}), float_atan);
     DECLARE_VM_BUILTIN(name({"native","float","atan2"}), float_atan2);
 
     DECLARE_VM_BUILTIN(name({"native","float","sinh"}), float_sinh);
