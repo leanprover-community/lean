@@ -2,9 +2,45 @@
 prelude
 import init.data
 namespace native
-/- [TODO](easy) replace this with the IEEE specification of floats.  -/
+
 meta constant float : Type
 namespace float
+
+namespace specification
+    /-- The base. Either 2 or 10. -/
+    meta constant radix : nat
+    /-- The length of the mantissa. -/
+    meta constant precision : nat
+    /-- The maximum exponent. -/
+    meta constant emax : nat
+    /-- The minimum exponent. `= 1 - emax` -/
+    meta constant emin : int
+end specification
+
+/-- Smallest strictly positive number. -/
+meta constant positive_epsilon : float
+/-- Smallest strictly negative number. -/
+meta constant negative_epsilon : float
+meta constant positive_infinity : float
+meta constant is_positive_infinity : float → bool
+meta constant negative_infinity : float
+meta constant is_negative_infinity : float → bool
+/-- Quiet NaN. -/
+meta constant qNaN : float
+meta constant is_qNaN : float → bool
+/-- Signalling NaN. -/
+meta constant sNaN : float
+meta constant is_sNaN : float → bool
+/-- The sign `s` of the float. Either 0 or 1-/
+meta constant sign : float → nat
+/-- The exponent `e` of the float. `emax ≤ e ≤ emax`  -/
+meta constant exponent : float → int
+/-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
+    The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
+    The head of the list is the most significant digit. 
+     -/
+meta constant mantissa : float → array specification.precision nat
+
 meta constant add : float → float → float
 meta instance : has_add float := ⟨add⟩
 meta constant sub : float → float → float
