@@ -32,13 +32,17 @@ meta constant qNaN : float
 meta constant sNaN : float
 /-- The sign `s` of the float. `tt` if negative. -/
 meta constant sign : float → bool
-/-- The exponent `e` of the float in the base given by `specification.radix`. `emin ≤ e ≤ emax`.  -/
-meta constant exponent : float → int
+/-- The exponent `e` of the float in the base given by `specification.radix`. `emin ≤ e ≤ emax`. Returns none if the number is not finite.  -/
+meta constant exponent : float → option int
+
+/-- Decompose the number `f` in to `(s,e)` where `0.5 ≤ s < 1.0` and `emin ≤ e ≤ emax` such that `f = s * radix ^ e`. -/
+meta constant frexp : float → float × int
+meta def mantissa := prod.fst ∘ frexp
 /-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
     The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
     The head of the list is the most significant digit.
      -/
-meta constant mantissa : float → array specification.precision nat
+meta constant mantissa_digits : float → array specification.precision nat
 
 meta constant add : float → float → float
 meta instance : has_add float := ⟨add⟩
@@ -50,6 +54,10 @@ meta constant mul : float → float → float
 meta instance : has_mul float := ⟨mul⟩
 meta constant div : float → float → float
 meta instance : has_div float := ⟨div⟩
+
+/-- Round to the nearest integer. -/
+meta constant round : float → float
+meta constant nextafter : float → float → float
 
 meta constant pow : float → float → float
 meta instance : has_pow float float := ⟨pow⟩

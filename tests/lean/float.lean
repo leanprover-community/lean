@@ -13,6 +13,7 @@ open native  native.float
 #eval infinity
 #eval exponent infinity
 #eval exponent epsilon
+#eval exponent qNaN
 #eval sign infinity
 #eval - infinity
 #eval sign $ - infinity
@@ -23,3 +24,7 @@ open native  native.float
 #eval is_infinite infinity
 #eval is_infinite $ -infinity
 #eval is_infinite 4
+
+#eval frexp 123.45
+#eval frexp qNaN
+#eval frexp infinity

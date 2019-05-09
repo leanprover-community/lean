@@ -2,6 +2,7 @@
 #include "library/vm/vm.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_nat.h"
+#include "library/vm/vm_option.h"
 #include "library/vm/vm_int.h"
 #include <math.h>
 
@@ -50,7 +51,18 @@ vm_obj float_is_nan(vm_obj const & f) {return mk_vm_bool(isnan(to_float(f))); }
 vm_obj float_is_normal(vm_obj const & f) {return mk_vm_bool(isnormal(to_float(f))); }
 vm_obj float_sign(vm_obj const & f) {return mk_vm_bool(signbit(to_float(f))); }
 
-vm_obj float_exponent(vm_obj const & f) {return mk_vm_int(ilogb(to_float(f))); }
+vm_obj float_exponent(vm_obj const & a) {
+    float f = to_float(a);
+    return isfinite(f) ? mk_vm_some(mk_vm_int(ilogb(f))) : mk_vm_none();
+}
+vm_obj float_frexp(vm_obj const & f) {
+    int i;
+    float m = frexp(to_float(f),&i);
+    return mk_vm_pair(mk_vm_float(m), mk_vm_int(i));
+}
+vm_obj float_mantissa(vm_obj const & f) {
+    return mk_vm_int(ilogb(to_float(f)));
+}
 
 vm_obj float_qNaN() {return mk_vm_float(std::numeric_limits<float>::quiet_NaN()); }
 vm_obj float_sNaN() {return mk_vm_float(std::numeric_limits<float>::signaling_NaN()); }
@@ -60,6 +72,8 @@ vm_obj float_sub(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_fl
 vm_obj float_neg(vm_obj const & a1) {return mk_vm_float(-to_float(a1));}
 vm_obj float_mul(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) * to_float(a2));}
 vm_obj float_div(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) / to_float(a2));}
+vm_obj float_round(vm_obj const & a) {return mk_vm_float(rint(to_float(a)));}
+vm_obj float_nextafter(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(nextafter(to_float(a1),to_float(a2)));}
 
 vm_obj float_pow(vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(pow(to_float(a1), to_float(a2)));}
 vm_obj float_sqrt(vm_obj const & a1) {return mk_vm_float(sqrt(to_float(a1)));}
@@ -119,23 +133,18 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native","float","sign"}), float_sign);
 
     DECLARE_VM_BUILTIN(name({"native","float","exponent"}), float_exponent);
+    DECLARE_VM_BUILTIN(name({"native","float","frexp"}), float_frexp);
 
     DECLARE_VM_BUILTIN(name({"native","float","qNaN"}), float_qNaN);
     DECLARE_VM_BUILTIN(name({"native","float","sNaN"}), float_sNaN);
-    // DECLARE_VM_BUILTIN(name({"native","float","is_qNaN"}), _);
-    // DECLARE_VM_BUILTIN(name({"native","float","sNaN"}), _);
-    // DECLARE_VM_BUILTIN(name({"native","float","is_sNaN"}), _);
-
-    // DECLARE_VM_BUILTIN(name({"native","float","sign"}), _);
-    // DECLARE_VM_BUILTIN(name({"native","float","exponent"}), _);
-    // DECLARE_VM_BUILTIN(name({"native","float","mantissa"}), _);
-
 
     DECLARE_VM_BUILTIN(name({"native","float","add"}), float_add);
     DECLARE_VM_BUILTIN(name({"native","float","sub"}), float_sub);
     DECLARE_VM_BUILTIN(name({"native","float","neg"}), float_neg);
     DECLARE_VM_BUILTIN(name({"native","float","mul"}), float_mul);
     DECLARE_VM_BUILTIN(name({"native","float","div"}), float_div);
+    DECLARE_VM_BUILTIN(name({"native","float","round"}), float_round);
+    DECLARE_VM_BUILTIN(name({"native","float","nextafter"}), float_nextafter);
 
     DECLARE_VM_BUILTIN(name({"native","float","pow"}), float_pow);
     DECLARE_VM_BUILTIN(name({"native","float","sqrt"}), float_sqrt);
