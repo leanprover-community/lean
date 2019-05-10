@@ -1,4 +1,5 @@
-/* Author: E.W.Ayers */
+/* Copyright 2019 E.W.Ayers
+Authors: E.W.Ayers, R.Y.Lewis */
 #pragma once
 #include <limits>
 #include "library/vm/vm.h"

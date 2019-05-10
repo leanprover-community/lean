@@ -16,33 +16,47 @@ namespace specification
     meta constant emax : nat
     /-- The minimum exponent. `= 1 - emax` -/
     meta constant emin : int
+
 end specification
 
-
+/-- Returns the difference between 1.0 and the next representable value of the given floating-point type.
+    Reference: https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+ -/
 meta constant epsilon : float
+/-- returns the maximum rounding error -/
+meta constant round_error : float
+/-- Positive infinity. -/
 meta constant infinity : float
-meta constant is_infinite : float → bool
-meta constant is_finite : float → bool
-meta constant is_nan : float → bool
-meta constant is_normal : float → bool
-
 /-- Quiet NaN. -/
 meta constant qNaN : float
 /-- Signalling NaN. -/
 meta constant sNaN : float
+
+/-- Returns true when the value is positive or negative infinity.-/
+meta constant is_infinite : float → bool
+meta constant is_finite : float → bool
+/-- Returns true when the value is qNaN or sNaN-/
+meta constant is_nan : float → bool
+/-- Reference: https://en.cppreference.com/w/cpp/numeric/math/isnormal
+    https://stackoverflow.com/questions/8341395/what-is-a-subnormal-floating-point-number
+-/
+meta constant is_normal : float → bool
 /-- The sign `s` of the float. `tt` if negative. -/
 meta constant sign : float → bool
+
 /-- The exponent `e` of the float in the base given by `specification.radix`. `emin ≤ e ≤ emax`. Returns none if the number is not finite.  -/
 meta constant exponent : float → option int
-
-/-- Decompose the number `f` in to `(s,e)` where `0.5 ≤ s < 1.0` and `emin ≤ e ≤ emax` such that `f = s * radix ^ e`. -/
+/-- Decompose the number `f` in to `(s,e)` where `0.5 ≤ s < 1.0` and `emin ≤ e ≤ emax` such that `f = s * 2 ^ e`. -/
 meta constant frexp : float → float × int
+/-- Decompose in to integer `fst` and fractional `snd` parts. -/
+meta constant modf : float → float × float
 meta def mantissa := prod.fst ∘ frexp
-/-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
-    The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
-    The head of the list is the most significant digit.
-     -/
-meta constant mantissa_digits : float → array specification.precision nat
+-- [TODO]
+-- /-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
+--     The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
+--     The head of the list is the most significant digit.
+--      -/
+-- meta constant mantissa_digits : float → array specification.precision nat
 
 meta constant add : float → float → float
 meta instance : has_add float := ⟨add⟩
@@ -55,17 +69,33 @@ meta instance : has_mul float := ⟨mul⟩
 meta constant div : float → float → float
 meta instance : has_div float := ⟨div⟩
 
-/-- Round to the nearest integer. -/
-meta constant round : float → float
-meta constant nextafter : float → float → float
+/-- remainder of the floating point division operation. -/
+meta constant fmod : float → float → float
+/-- signed remainder of the division operation. -/
+meta constant remainder : float → float → float
+
+meta constant max : float → float → float
+meta constant min : float → float → float
 
 meta constant pow : float → float → float
-meta instance : has_pow float float := ⟨pow⟩
+meta instance has_float_pow : has_pow float float := ⟨pow⟩
+
+/-- Square root. -/
 meta constant sqrt : float → float
+/-- Cube root. -/
+meta constant cbrt : float → float
+
+/-- Computes `sqrt(x^2 + y^2)`. -/
+meta constant hypot : float → float → float
+
 /-- Exponential function. -/
 meta constant exp : float → float
+/-- 2 raised to the given power. -/
+meta constant exp2 : float → float
 /-- Natural logarithm. -/
 meta constant log : float → float
+meta constant log2 : float → float
+meta constant log10 : float → float
 
 meta constant pi : float
 
@@ -82,13 +112,24 @@ meta constant atan2 : float → float → float
 meta constant sinh : float → float
 meta constant cosh : float → float
 meta constant tanh : float → float
+meta constant asinh : float → float
+meta constant acosh : float → float
+meta constant atanh : float → float
 
 meta constant abs : float → float
+/-- Nearest integer not less than the given value. -/
 meta constant ceil : float → float
+/-- Nearest integer not greater than the given value. -/
 meta constant floor : float → float
+/-- Nearest integer not greater in magnitude than the given value. -/
+meta constant trunc : float → float
+/-- Round to the nearest integer, rounding away from zero in halfway cases. -/
+meta constant round : float → float
 
 meta constant lt : float → float → bool
 meta instance : has_lt float := ⟨λ x y, lt x y⟩
+meta constant le : float → float → bool
+meta instance : has_le float := ⟨λ x y, le x y⟩
 meta instance : decidable_rel (float.has_lt.lt) := by apply_instance
 meta constant dec_eq : decidable_eq float
 attribute [instance] dec_eq
@@ -104,6 +145,9 @@ meta constant to_repr : float → string
 meta instance : has_repr float := ⟨to_repr⟩
 meta instance : has_to_string float := ⟨to_repr⟩
 meta instance : has_to_format float := ⟨format.of_string ∘ to_string⟩
+
+meta instance has_nat_pow : has_pow float nat :=
+⟨λ a b, native.float.pow a (float.of_nat b)⟩
 
 end float
 end native
