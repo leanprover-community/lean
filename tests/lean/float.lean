@@ -8,8 +8,8 @@ meta def floats := [0,1,-1,pi,epsilon, 1/epsilon, pi / 2, pi / 4, -pi]
 meta def floats2 := list.bind floats (λ x, floats.map (λ y, (x,y)))
 
 meta def check1 (prop : float → bool)  := list.map prop floats
-meta def check2  (floats : list (float × float))(prop : float → float → bool)
-:= list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
+meta def check2  (floats : list (float × float))(prop : float → float → bool) :=
+list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 
 #eval specification.radix
 #eval specification.precision

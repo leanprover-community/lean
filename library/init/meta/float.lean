@@ -16,8 +16,8 @@ namespace specification
     meta constant emax : nat
     /-- The minimum exponent. `= 1 - emax` -/
     meta constant emin : int
-
 end specification
+open specification
 
 /-- Returns the difference between 1.0 and the next representable value of the given floating-point type.
     Reference: https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
@@ -31,7 +31,6 @@ meta constant infinity : float
 meta constant qNaN : float
 /-- Signalling NaN. -/
 meta constant sNaN : float
-
 /-- Returns true when the value is positive or negative infinity.-/
 meta constant is_infinite : float → bool
 meta constant is_finite : float → bool
@@ -43,20 +42,20 @@ meta constant is_nan : float → bool
 meta constant is_normal : float → bool
 /-- The sign `s` of the float. `tt` if negative. -/
 meta constant sign : float → bool
-
-/-- The exponent `e` of the float in the base given by `specification.radix`. `emin ≤ e ≤ emax`. Returns none if the number is not finite.  -/
+/-- The exponent `e` of the float in the base given by `radix`. `emin ≤ e ≤ emax`. Returns none if the number is not finite.  -/
 meta constant exponent : float → option int
 /-- Decompose the number `f` in to `(s,e)` where `0.5 ≤ s < 1.0` and `emin ≤ e ≤ emax` such that `f = s * 2 ^ e`. -/
 meta constant frexp : float → float × int
 /-- Decompose in to integer `fst` and fractional `snd` parts. -/
 meta constant modf : float → float × float
-meta def mantissa := prod.fst ∘ frexp
+/-- `mantissa f` returns a number `s` where `0.5 ≤ s < 1.0` such that there exists an integer `e` such that `f = s * 2 ^ e` -/
+meta def mantissa : float → float := prod.fst ∘ frexp
 -- [TODO]
 -- /-- List of digits in the mantissa of the float. `d₀.d₁d₂d₃ ⋯`
 --     The length is `precision` and `0 ≤ dᵢ < radix` for each digit `dᵢ`.
 --     The head of the list is the most significant digit.
 --      -/
--- meta constant mantissa_digits : float → array specification.precision nat
+-- meta constant mantissa_digits : float → array precision nat
 
 meta constant add : float → float → float
 meta instance : has_add float := ⟨add⟩
