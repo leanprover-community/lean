@@ -127,9 +127,10 @@ meta constant round : float → float
 
 meta constant lt : float → float → bool
 meta instance : has_lt float := ⟨λ x y, lt x y⟩
+meta instance decidable_lt : decidable_rel (float.has_lt.lt) := by apply_instance
 meta constant le : float → float → bool
 meta instance : has_le float := ⟨λ x y, le x y⟩
-meta instance : decidable_rel (float.has_lt.lt) := by apply_instance
+meta instance decidable_le : decidable_rel (float.has_le.le) := by apply_instance
 meta constant dec_eq : decidable_eq float
 attribute [instance] dec_eq
 
