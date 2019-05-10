@@ -71,7 +71,7 @@ void initialize_vm_float() {
 
     DECLARE_VM_BUILTIN(name({"native", "float", "exponent"}), [](vm_obj const & a) {
         float f = to_float(a);
-        return isfinite(f) ? mk_vm_some(mk_vm_int(std::ilogb(f))) : mk_vm_none();
+        return std::isfinite(f) ? mk_vm_some(mk_vm_int(std::ilogb(f))) : mk_vm_none();
     });
     DECLARE_VM_BUILTIN(name({"native", "float", "frexp"}), [](vm_obj const & f) {
         int i;
