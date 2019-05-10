@@ -5,7 +5,7 @@ Authors: E.W.Ayers, R.Y.Lewis */
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_int.h"
-#include <math.h>
+#include <cmath>
 #include <limits>
 
 namespace lean{
@@ -52,6 +52,7 @@ vm_obj float_repr(vm_obj const & a) {
     return to_obj(out.str());
 }
 
+using namespace std;
 void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "specification", "radix"}),     []() { return mk_vm_nat(std::numeric_limits<float>::radix); });
     DECLARE_VM_BUILTIN(name({"native", "float", "specification", "precision"}), []() { return mk_vm_nat(std::numeric_limits<float>::digits);});
