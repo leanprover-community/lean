@@ -1,11 +1,11 @@
 /* Copyright 2019 E.W.Ayers
 Authors: E.W.Ayers, R.Y.Lewis */
+#define _USE_MATH_DEFINES
 #include "library/vm/vm.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_int.h"
-#define _USE_MATH_DEFINES
 #include <cmath>
 #include <limits>
 
