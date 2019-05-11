@@ -5,9 +5,9 @@ Authors: E.W.Ayers, R.Y.Lewis */
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_int.h"
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <limits>
-#include <math.h>
 
 namespace lean{
 // [TODO] make a typedef or template for `float` so can generalise to other IEEE-754 impls.
