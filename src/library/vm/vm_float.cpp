@@ -43,7 +43,7 @@ vm_obj float_of_nat(vm_obj const & a) {
     // [TODO] check that the nat isn't too big to fit in an unsigned
     return mk_vm_float(static_cast<float>(to_unsigned(a)));
 }
-vm_obj float_of_int(vm_obj const & i) { return mk_vm_float(to_int(i)); }
+vm_obj float_of_int(vm_obj const & i) { return mk_vm_float(static_cast<float>(to_int(i))); }
 
 vm_obj float_repr(vm_obj const & a) {
     std::ostringstream out;
@@ -88,8 +88,8 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "sub"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) - to_float(a2));});
     DECLARE_VM_BUILTIN(name({"native", "float", "mul"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) * to_float(a2));});
     DECLARE_VM_BUILTIN(name({"native", "float", "div"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(to_float(a1) / to_float(a2));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "pow"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(pow(to_float(a1), to_float(a2)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "atan2"}), [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(atan2(to_float(a1), to_float(a2)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "pow"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(std::pow(to_float(a1), to_float(a2)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "atan2"}), [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(std::atan2(to_float(a1), to_float(a2)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "fmod"}),  [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(std::fmod(to_float(a1), to_float(a2)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "remainder"}), [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(std::remainder(to_float(a1), to_float(a2)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "max"}),   [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_float(std::fmax(to_float(a1), to_float(a2)));});
@@ -122,7 +122,7 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "acosh"}), [](vm_obj const & a) {return mk_vm_float(std::acosh(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "atanh"}), [](vm_obj const & a) {return mk_vm_float(std::atanh(to_float(a)));});
 
-    DECLARE_VM_BUILTIN(name({"native", "float", "pi"}),    [](){return mk_vm_float(M_PI);});
+    DECLARE_VM_BUILTIN(name({"native", "float", "pi"}),    [](){return mk_vm_float(3.14159265358979323846);});
 
     DECLARE_VM_BUILTIN(name({"native", "float", "lt"}),      [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_bool(to_float(a1) < to_float(a2));});
     DECLARE_VM_BUILTIN(name({"native", "float", "le"}),      [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_bool(to_float(a1) <= to_float(a2));});

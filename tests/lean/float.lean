@@ -94,3 +94,5 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval sin pi ≃ 0
 #eval cos pi
 #eval tan pi ≃ 0
+
+#eval (of_int (-12341234))
