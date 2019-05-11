@@ -179,6 +179,8 @@ meta def expr.abstract : expr → expr → expr
 /-- Expressions depend on `level`s, and these may depend on universe parameters which have names.
 `instantiate_univ_params e [(n₁,l₁), ...]` will traverse `e` and replace any universe parameters with name `nᵢ` with the corresponding level `lᵢ`.  -/
 meta constant expr.instantiate_univ_params : expr → list (name × level) → expr
+/-- `instantiate_nth_var n a b` takes the `n`th de-Bruijn variable in `a` and replaces each occurrence with `b`. -/
+meta constant expr.instantiate_nth_var : nat → expr → expr → expr
 /-- `instantiate_var a b` takes the 0th de-Bruijn variable in `a` and replaces each occurrence with `b`. -/
 meta constant expr.instantiate_var         : expr → expr → expr
 /-- ``instantiate_vars `(#0 #1 #2) [x,y,z] = `(%%x %%y %%z)`` -/
@@ -187,6 +189,8 @@ meta constant expr.instantiate_vars        : expr → list expr → expr
 /-- Perform beta-reduction if the left expression is a lambda. Ie: ``expr.subst | `(λ x, %%Y) Z := Y[x/Z] | X Z := X``-/
 protected meta constant expr.subst : expr elab → expr elab → expr elab
 
+/-- `get_free_var_range e` returns one plus the maximum de-Bruijn value in `e`. Eg `get_free_var_range `(#1 #0)` yields `2` -/
+meta constant expr.get_free_var_range : expr → nat
 /-- `has_var e` returns true iff e has free variables. -/
 meta constant expr.has_var       : expr → bool
 /-- `has_var_idx e n` returns true iff `e` has a free variable with de-Bruijn index `n`. -/

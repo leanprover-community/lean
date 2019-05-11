@@ -271,6 +271,11 @@ vm_obj expr_instantiate_var(vm_obj const & e, vm_obj const & v) {
     return to_obj(instantiate(to_expr(e), to_expr(v)));
 }
 
+vm_obj expr_instantiate_nth_var(vm_obj const & n, vm_obj const & e, vm_obj const & v) {
+    auto u = to_unsigned(n);
+    return to_obj(instantiate(to_expr(e), u, to_expr(v)));
+}
+
 vm_obj expr_instantiate_vars(vm_obj const & e, vm_obj const & vs) {
     buffer<expr> vs_buf;
     to_buffer_expr(vs, vs_buf);
@@ -299,6 +304,10 @@ vm_obj expr_abstract_locals(vm_obj const & e, vm_obj const & ns) {
 
 vm_obj expr_has_var(vm_obj const & e) {
     return mk_vm_bool(!closed(to_expr(e)));
+}
+
+vm_obj expr_get_free_var_range(vm_obj const & e) {
+    return mk_vm_nat(get_free_var_range(to_expr(e))); 
 }
 
 vm_obj expr_has_var_idx(vm_obj const & e, vm_obj const & u) {
@@ -502,11 +511,13 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "fold"}),             expr_fold);
     DECLARE_VM_BUILTIN(name({"expr", "replace"}),          expr_replace);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_univ_params"}), expr_instantiate_univ_params);
+    DECLARE_VM_BUILTIN(name({"expr", "instantiate_nth_var"}),     expr_instantiate_nth_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_var"}),  expr_instantiate_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_vars"}), expr_instantiate_vars);
     DECLARE_VM_BUILTIN(name({"expr", "subst"}),            expr_subst);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_local"}),   expr_abstract_local);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_locals"}),  expr_abstract_locals);
+    DECLARE_VM_BUILTIN(name({"expr", "get_free_var_range"}),          expr_get_free_var_range);
     DECLARE_VM_BUILTIN(name({"expr", "has_var"}),          expr_has_var);
     DECLARE_VM_BUILTIN(name({"expr", "has_var_idx"}),      expr_has_var_idx);
     DECLARE_VM_BUILTIN(name({"expr", "has_local"}),        expr_has_local);
