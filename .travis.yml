@@ -7,7 +7,7 @@ dist: trusty
 branches:
   only:
     - master
-    - travis-ccache
+    - float-pr
 group: deprecated-2017Q3
 addons:
   apt:
