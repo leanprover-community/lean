@@ -29,10 +29,10 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval bnot $ sign infinity
 #eval - infinity
 #eval sign $ - infinity
--- #eval infinity - infinity -- [NOTE] on some systems this is `-nan`.
+-- #eval infinity - infinity -- [NOTE] platform dependent
 #eval qNaN
 #eval sNaN
-#eval bnot (qNaN = qNaN : bool) -- [TODO] should we be concerned with nonreflexivity?
+#eval bnot (qNaN = qNaN : bool) -- [NOTE] not reflexive
 #eval (infinity = infinity : bool)
 #eval (infinity ≠ -infinity : bool)
 #eval is_infinite infinity
@@ -43,8 +43,8 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval frexp 123.45
 #eval check1 $ λ x, let ⟨a,b⟩ := frexp x in x = a * (2 : float) ^ (b : float)
 #eval check1 $ λ x, let ⟨a,b⟩ := modf x in x = a + b
-#eval frexp qNaN
-#eval frexp infinity
+-- #eval frexp qNaN     -- [NOTE] platform dependent
+-- #eval frexp infinity -- [NOTE] platform dependent
 
 #eval log 0
 #eval log infinity

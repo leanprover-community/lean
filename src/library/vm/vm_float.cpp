@@ -7,6 +7,7 @@ Authors: E.W.Ayers, R.Y.Lewis */
 #include "library/vm/vm_int.h"
 #include <cmath>
 #include <limits>
+#include <math.h>
 
 namespace lean{
 // [TODO] make a typedef or template for `float` so can generalise to other IEEE-754 impls.
@@ -122,7 +123,7 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "acosh"}), [](vm_obj const & a) {return mk_vm_float(std::acosh(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "atanh"}), [](vm_obj const & a) {return mk_vm_float(std::atanh(to_float(a)));});
 
-    DECLARE_VM_BUILTIN(name({"native", "float", "pi"}),    [](){return mk_vm_float(3.14159265358979323846);});
+    DECLARE_VM_BUILTIN(name({"native", "float", "pi"}),    [](){return mk_vm_float(M_PI);});
 
     DECLARE_VM_BUILTIN(name({"native", "float", "lt"}),      [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_bool(to_float(a1) < to_float(a2));});
     DECLARE_VM_BUILTIN(name({"native", "float", "le"}),      [](vm_obj const & a1, vm_obj const & a2) {return mk_vm_bool(to_float(a1) <= to_float(a2));});
