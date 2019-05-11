@@ -17,7 +17,6 @@ tt
 tt
 nan
 nan
-nan
 tt
 tt
 tt
@@ -37,16 +36,18 @@ inf
 inf
 [tt, tt, tt, tt, tt, ff, tt, tt, tt]
 [tt, tt, tt, tt, tt, ff, tt, tt, tt]
-[tt, tt, ff, ff, tt, ff, tt, tt, ff]
+tt
+3.14159
+tt
+tt
 [tt, tt, tt, tt, tt, tt, tt, tt, tt]
 [tt, tt, tt, tt, tt, tt, tt, tt, tt]
 [tt, tt, tt, tt, tt, tt, tt, tt, tt]
-[tt, tt, tt, tt, tt, tt, ff, tt, tt]
-[tt, tt, tt, tt, tt, tt, ff, tt, tt]
+[tt, tt, tt, tt, tt, tt, tt, tt, tt]
 [tt, tt, tt, tt, tt, tt, tt, tt, tt]
 [tt, tt, tt, tt, tt, ff, tt, tt, tt]
-[tt, tt, ff, tt, ff, ff, tt, tt, ff]
--1.43051e-06
+[tt, tt, ff, tt, tt, ff, tt, tt, ff]
+1.43051e-06
 1
 inf
 [tt, tt, tt, tt, tt, tt, tt, tt, tt]
@@ -61,7 +62,7 @@ tt
 tt
 3
 0
-nan
+tt
 1
 0
 1

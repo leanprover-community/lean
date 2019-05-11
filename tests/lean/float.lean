@@ -1,7 +1,7 @@
 
 open native  native.float
 
-meta def close_enough (a b : float) : bool := abs (a - b) < epsilon
+meta def close_enough (a b : float) : bool := abs (a - b) < 10 * epsilon
 local infixr ` ≃ `:2 := close_enough
 
 meta def floats := [0,1,-1,pi,epsilon, 1/epsilon, pi / 2, pi / 4, -pi]
@@ -29,7 +29,7 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval bnot $ sign infinity
 #eval - infinity
 #eval sign $ - infinity
-#eval infinity - infinity
+-- #eval infinity - infinity -- [NOTE] on some systems this is `-nan`.
 #eval qNaN
 #eval sNaN
 #eval bnot (qNaN = qNaN : bool) -- [TODO] should we be concerned with nonreflexivity?
@@ -54,8 +54,10 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval exp (1 / epsilon)
 #eval check1 $ λ x, log (exp x) ≃ x
 #eval check1 $ λ x, log2 (exp2 x) ≃ x
-#eval check1 $ λ x, exp (log x) ≃ x
-#eval check1 $ λ x, bor (abs x > 1) (sin (asin x) ≃ x)
+#eval is_nan (log $ -1)
+#eval exp (log pi)
+#eval pi ≃ 2 * asin 1
+#eval pi ≃ 2 * acos 0
 #eval check1 $ λ x, bor (abs x > 1) (cos (acos x) ≃ x)
 #eval check1 $ λ x, bor (abs x > 1) (tan (atan x) ≃ x)
 #eval check1 $ λ x, sinh (asinh x) ≃ x
@@ -63,7 +65,7 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval check1 $ λ x, bor (abs x ≥ 1) $ (tanh (atanh x) ≃ x)
 #eval check1 $ λ x, asinh (sinh x) ≃ x
 #eval check1 $ λ x, acosh (cosh x) ≃ x
-#eval atanh (tanh (-pi)) + pi
+#eval abs $ atanh (tanh (-pi)) + pi
 #eval (tanh (1/epsilon))
 #eval atanh 1
 #eval check1 $ λ x, bor (tanh x = 1) $ abs (atanh (tanh x) - x) < 0.1
@@ -76,16 +78,13 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval check1 $ λ x, log10 x ≃ log x / log 10
 #eval check2 floats2 $ λ x y, (x < y) ∨ (y ≤ x)
 #eval check2 floats2 $ λ x y, x + y ≃ y + x
-
 #eval check1 $ λ x, abs(x) = max x (-x)
-
 #eval check2
     [(1,2), (5.1, 3), (-1,-1),(-2,pi),(-pi,234),(epsilon,pi)]
     $ λ x y, x = fmod x y + (y * trunc (x / y))
 #eval fmod 3 4
-
 #eval sin 0
-#eval sin infinity
+#eval is_nan $ sin infinity
 #eval cos 0
 #eval tan 0
 #eval sin $ pi / 2
