@@ -61,6 +61,7 @@ Author: Leonardo de Moura
 #endif
 #if defined(LEAN_EMSCRIPTEN)
 #include <emscripten.h>
+#include "shell/emscripten.h"
 #endif
 #include "githash.h" // NOLINT
 
@@ -420,23 +421,8 @@ public:
 
 int main(int argc, char ** argv) {
 #if defined(LEAN_EMSCRIPTEN)
-    EM_ASM(
-        var lean_path = process.env['LEAN_PATH'];
-        if (lean_path) {
-            ENV['LEAN_PATH'] = lean_path;
-        }
-
-        try {
-            // emscripten cannot mount all of / in the vfs,
-            // we can only mount subdirectories...
-            FS.mount(NODEFS, { root: '/home' }, '/home');
-            FS.mkdir('/root');
-            FS.mount(NODEFS, { root: '/root' }, '/root');
-
-            FS.chdir(process.cwd());
-        } catch (e) {
-            console.log(e);
-        });
+    LEAN_EMSCRIPTEN_ENV
+    LEAN_EMSCRIPTEN_FS
 #endif
     ::initializer init;
     bool make_mode          = false;

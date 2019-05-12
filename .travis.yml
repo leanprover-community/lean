@@ -113,6 +113,57 @@ matrix:
        CMAKE_CXX_COMPILER=g++
        CMAKE_BUILD_TYPE=Debug
 
+   - os: linux
+     language: node_js
+     node_js: # needed for running node build/shell/lean.js -v to get version numbers
+       - "8"
+     addons: {}
+     services:
+       - docker
+     sudo: required
+     env:
+        LEAN_EMSCRIPTEN_BUILD=Main
+        UPLOAD=ON
+     before_install:
+       - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
+     install: true
+     script:
+       - set -e
+       - OPTIONS=" -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=$LEAN_EMSCRIPTEN_BUILD"
+       - |
+         if [[ $TRAVIS_EVENT_TYPE == cron ]]
+          then
+          git fetch --unshallow --tags origin
+          . script/setup_nightly.sh
+         fi
+       - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done & # https://blog.humphd.org/building-large-code-on-travis/
+       - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
+       - kill %1
+       - |
+         if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]
+          then
+          bash script/ci_emscripten_zip.sh
+          bash script/deploy_nightly.sh build/lean-*
+         fi
+
+  # TODO: Emscripten standalone binary tests
+  #  - os: linux
+  #    services:
+  #      - docker
+  #    addons: {}
+  #    sudo: required
+  #    env:
+  #       LEAN_EMSCRIPTEN_BUILD=Test
+  #    before_install:
+  #      - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
+  #    install: true
+  #    script:
+  #      - set -e
+  #      - OPTIONS=" -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=$LEAN_EMSCRIPTEN_BUILD"
+  #      - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done &
+  #      - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
+  #      - kill %1
+
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME == osx ]]; then

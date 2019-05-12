@@ -285,10 +285,10 @@ if (EMSCRIPTEN)
     # The plethory of configure arguments only makes sure that gmp thinks sizeof(mp_limb_t) == sizeof(long) == 4
     ExternalProject_Add(
             gmp
-            URL https://gmplib.org/download/gmp/gmp-6.1.1.tar.bz2
-            URL_HASH SHA256=a8109865f2893f1373b0a8ed5ff7429de8db696fc451b1036bd7bdf95bbeffd6
+            URL https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2 https://ftp.gnu.org/gnu/gmp/gmp-6.1.2.tar.bz2
+            URL_HASH SHA256=5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2
             BUILD_IN_SOURCE 1
-            CONFIGURE_COMMAND emconfigure ./configure "CC_FOR_BUILD=gcc" "CFLAGS=-m32 -DPIC ${CFLAGS_EMSCRIPTEN}" --host=x86_64-pc-linux-gnu --build=i686-pc-linux-gnu --disable-assembly --prefix=${gmp_install_prefix}
+            CONFIGURE_COMMAND emconfigure ./configure "CC_FOR_BUILD=gcc" "CCAS=gcc -c" "CFLAGS=-m32 -DPIC ${CFLAGS_EMSCRIPTEN}" --host=x86_64-pc-linux-gnu --build=i686-pc-linux-gnu --disable-assembly --prefix=${gmp_install_prefix}
             BUILD_COMMAND emmake make -j4
             INSTALL_COMMAND make install
     )
@@ -433,6 +433,32 @@ endif()
 add_library(leanstatic ${LEAN_LIBRARY_TYPE} ${LEAN_OBJS})
 target_link_libraries(leanstatic ${EXTRA_LIBS})
 add_subdirectory(api)
+
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
+# skip building main files
+else()
+add_subdirectory(shell)
+add_subdirectory(tests/shell)
+endif()
+
+function(add_exec_test name tgt)
+    if(EMSCRIPTEN)
+        target_link_libraries(${tgt} "--memory-init-file 0")
+        add_test(NAME ${name} COMMAND node --stack_size=8192 ${CMAKE_CURRENT_BINARY_DIR}/${tgt}.js)
+    else()
+        add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${tgt})
+    endif()
+endfunction()
+
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main)
+# skip building standalone test binaries
+else()
+add_subdirectory(tests/util)
+add_subdirectory(tests/util/numerics)
+add_subdirectory(tests/kernel)
+add_subdirectory(tests/library)
+add_subdirectory(tests/frontends/lean)
+
 # The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
 # For some strange reason, it contains a copy of pthread_equal.
 # Remark: this problem does not happen when we generate the DLL using msys2 on Windows.
@@ -445,30 +471,17 @@ if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
   install(TARGETS leanstatic DESTINATION lib)
 endif()
 
-add_subdirectory(shell)
-
-function(add_exec_test name tgt)
-    if(${EMSCRIPTEN})
-        target_link_libraries(${tgt} "--memory-init-file 0")
-        add_test(NAME ${name} COMMAND ${NODE_JS} ${CMAKE_CURRENT_BINARY_DIR}/${tgt}.js)
-    else()
-        add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${tgt})
-    endif()
-endfunction()
-
-add_subdirectory(tests/util)
-add_subdirectory(tests/util/numerics)
-add_subdirectory(tests/kernel)
-add_subdirectory(tests/library)
-add_subdirectory(tests/frontends/lean)
-add_subdirectory(tests/shell)
-
 # The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
 # For some strange reason, it contains a copy of pthread_equal.
 if (NOT("${CROSS_COMPILE}" MATCHES "ON") AND ("${STATIC}" MATCHES "OFF"))
   add_subdirectory(tests/shared)
 endif()
 
+endif()
+
+if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
+# skip building tests for main files
+else()
 # Include style check
 if (NOT(${CMAKE_SYSTEM_NAME} MATCHES "Windows") AND PYTHONINTERP_FOUND)
 include(StyleCheck)
@@ -486,6 +499,22 @@ if ((${MULTI_THREAD} MATCHES "ON") AND (${CMAKE_SYSTEM_NAME} MATCHES "Darwin"))
   set(LEAN_EXTRA_MAKE_OPTS -s40000 ${LEAN_EXTRA_MAKE_OPTS})
 endif ()
 
+if(EMSCRIPTEN)
+  # emscripten lean make yields too much output
+add_custom_target(
+    standard_lib ALL
+    COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS} > /dev/null
+    DEPENDS bin_lean
+    WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../library"
+    )
+
+add_custom_target(
+    leanpkg ALL
+    COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS} > /dev/null
+    DEPENDS standard_lib
+    WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../leanpkg"
+)
+else()
 add_custom_target(
     standard_lib ALL
     COMMAND "${LEAN_SOURCE_DIR}/../bin/lean" --make ${LEAN_EXTRA_MAKE_OPTS}
@@ -499,6 +528,8 @@ add_custom_target(
     DEPENDS standard_lib
     WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../leanpkg"
 )
+endif()
+endif()
 
 add_custom_target(clean-std-lib
   WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../library"
