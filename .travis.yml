@@ -129,7 +129,7 @@ matrix:
        - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
      install: true
      script:
-       - set -e
+       # - set -e
        - OPTIONS=" -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=$LEAN_EMSCRIPTEN_BUILD"
        - |
          if [[ $TRAVIS_EVENT_TYPE == cron ]]
