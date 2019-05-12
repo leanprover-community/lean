@@ -117,6 +117,7 @@ matrix:
      language: node_js
      node_js: # needed for running node build/shell/lean.js -v to get version numbers
        - "8"
+     addons: {}
      services:
        - docker
      sudo: required
@@ -149,6 +150,7 @@ matrix:
   #  - os: linux
   #    services:
   #      - docker
+  #    addons: {}
   #    sudo: required
   #    env:
   #       LEAN_EMSCRIPTEN_BUILD=Test
