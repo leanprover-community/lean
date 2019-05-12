@@ -4,13 +4,11 @@ install(TARGETS lean DESTINATION bin)
 
 add_executable(lean_js lean_js.cpp lean_js_main.cpp server.cpp leandoc.cpp)
 if(${EMSCRIPTEN})
-    target_link_libraries(lean_js leanstatic_browser)
     # This currently fails to build in the docker container
     # skip it for now so that tests can proceed
     set_target_properties(lean_js PROPERTIES EXCLUDE_FROM_ALL 1)
-else()
-    target_link_libraries(lean_js leanstatic)
 endif()
+target_link_libraries(lean_js leanstatic)
 add_library(shell_js OBJECT lean_js.cpp server.cpp leandoc.cpp)
 
 if(${EMSCRIPTEN})
@@ -45,11 +43,11 @@ if(${EMSCRIPTEN})
     set(LEAN_JS_OPTS "-s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"FS\"]'")
 
     add_executable(lean_js_wasm lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
-    target_link_libraries(lean_js_wasm leanstatic_browser)
+    target_link_libraries(lean_js_wasm leanstatic)
     set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS}")
 
     add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
-    target_link_libraries(lean_js_js leanstatic_browser)
+    target_link_libraries(lean_js_js leanstatic)
     set_target_properties(lean_js_js PROPERTIES LINK_FLAGS "-s WASM=0 ${LEAN_JS_OPTS}")
 else()
   if (MSVC)

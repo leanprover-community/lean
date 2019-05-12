@@ -25,6 +25,10 @@ Author: Leonardo de Moura, Gabriel Ebner
 #include <dirent.h>
 #endif
 
+#if defined(LEAN_EMSCRIPTEN)
+#include <emscripten.h>
+#endif
+
 namespace lean {
 file_not_found_exception::file_not_found_exception(std::string const & fname):
         exception(sstream() << "file '" << fname << "' not found"),
@@ -221,9 +225,15 @@ std::vector<std::string> read_dir(std::string const &dirname) {
 }
 
 std::string lrealpath(std::string const & fname) {
-#if defined(LEAN_EMSCRIPTEN_BROWSER)
-    return fname;
-#elif defined(LEAN_WINDOWS) && !defined(LEAN_CYGWIN)
+// return if in browser or WebWorker context
+#if defined(LEAN_EMSCRIPTEN)
+    if (EM_ASM_INT({
+        return (typeof window === 'object') || (typeof importScripts === 'function');
+    })) {
+        return fname;
+    }
+#endif
+#if defined(LEAN_WINDOWS) && !defined(LEAN_CYGWIN)
     constexpr unsigned BufferSize = 8192;
     char buffer[BufferSize];
     DWORD retval = GetFullPathName(fname.c_str(), BufferSize, buffer, nullptr);

@@ -1,7 +1,7 @@
 add_executable(shell_test shell.cpp $<TARGET_OBJECTS:shell_js>)
 target_link_libraries(shell_test leanstatic)
 
-if(${EMSCRIPTEN})
+if(EMSCRIPTEN)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/shell_test
             "#!/bin/sh\nnode --stack_size=8192 ${CMAKE_CURRENT_BINARY_DIR}/shell_test.js \"$@\"\n")
     execute_process(COMMAND chmod +x ${CMAKE_CURRENT_BINARY_DIR}/shell_test)
