@@ -7,6 +7,7 @@ dist: trusty
 branches:
   only:
     - master
+    - emscripten
 group: deprecated-2017Q3
 addons:
   apt:
@@ -140,7 +141,7 @@ matrix:
        - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
        - kill %1
        - |
-         if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]
+         if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == emscripten ]]
           then
           bash script/ci_emscripten_zip.sh
           bash script/deploy_nightly.sh build/lean-*
