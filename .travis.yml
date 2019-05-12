@@ -7,7 +7,6 @@ dist: trusty
 branches:
   only:
     - master
-    - float-pr
 group: deprecated-2017Q3
 addons:
   apt:
