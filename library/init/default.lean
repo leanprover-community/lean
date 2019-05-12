@@ -7,6 +7,7 @@ prelude
 import init.core init.logic init.category init.data.basic init.version
 import init.propext init.cc_lemmas init.funext init.category.combinators init.function init.classical
 import init.util init.coe init.wf init.meta init.meta.well_founded_tactics init.algebra init.data
+import init.meta.float
 
 @[user_attribute]
 meta def debugger.attr : user_attribute :=
