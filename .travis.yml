@@ -125,6 +125,7 @@ matrix:
         LEAN_EMSCRIPTEN_BUILD=Main
         UPLOAD=ON
      before_install:
+       - mkdir build
        - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
      install: true
      script:
@@ -155,6 +156,7 @@ matrix:
   #    env:
   #       LEAN_EMSCRIPTEN_BUILD=Test
   #    before_install:
+  #      - mkdir build
   #      - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
   #    install: true
   #    script:
