@@ -5,6 +5,7 @@ set -e
 echo "tracing"
 # echo "- " $LEAN_VERSION_DIGITS
 echo "- " lean-browser.zip
-ls build/
+ls build/shell/lean_js_*
 zip build/lean-browser.zip build/shell/lean_js_*
+ls build/
 NODE_DEBUG=fs node build/shell/lean.js -v
