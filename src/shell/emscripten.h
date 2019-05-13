@@ -15,11 +15,13 @@ Authors: Gabriel Ebner, Bryan Gin-ge Chen
         });
 // emscripten cannot mount all of / in the vfs,
 // we can only mount subdirectories...
+// /home and /tmp are created automatically by emscripten
+// see createDefaultDirectories in emscripten's library_fs.js
 #define LEAN_EMSCRIPTEN_FS EM_ASM( \
         try { \
             var cwd = process.cwd(); \
             var cwdRoot = '/' + cwd.split('/')[1]; \
-            FS.mkdir(cwdRoot); \
+            if (cwdRoot !== '/home' && cwdRoot !== '/tmp') FS.mkdir(cwdRoot); \
             FS.mount(NODEFS, { root:cwdRoot }, cwdRoot); \
             FS.chdir(cwd); \
         } catch (e) { \
