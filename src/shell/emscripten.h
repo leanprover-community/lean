@@ -19,6 +19,9 @@ Authors: Gabriel Ebner, Bryan Gin-ge Chen
         try { \
             var cwd = process.cwd(); \
             var cwdRoot = '/' + cwd.split('/')[1]; \
+            if (process.env['NODE_DEBUG']) { \
+                console.log('cwd: ', cwd, '\ncwdRoot: ', cwdRoot); \
+            } \
             FS.mkdir(cwdRoot); \
             FS.mount(NODEFS, { root:cwdRoot }, cwdRoot); \
             FS.chdir(cwd); \
