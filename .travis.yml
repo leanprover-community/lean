@@ -7,7 +7,7 @@ dist: trusty
 branches:
   only:
     - master
-    - emscripten
+    - emscripten-nightly
 group: deprecated-2017Q3
 addons:
   apt:
@@ -26,94 +26,6 @@ addons:
 
 matrix:
   include:
-   - os: linux
-     dist: precise
-     env:
-       CMAKE_CXX_COMPILER=g++-4.9
-       CMAKE_BUILD_TYPE=Release
-       UPLOAD=ON
-       STATIC=ON
-       FIRST=1
-
-   - os: linux
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=clang++-3.4
-       CMAKE_BUILD_TYPE=Release
-       LEAN_EXTRA_MAKE_OPTS=-t0
-       TCMALLOC=ON
-
-   - os: linux
-     addons: &gcc6_addons
-       apt:
-         sources: *apt_sources
-         packages:
-           - *default_packages
-           - g++-6
-           - gcc-6
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++-6
-       CMAKE_BUILD_TYPE=Release
-       TCMALLOC=ON
-
-   - os: linux
-     addons: *gcc6_addons
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++-6
-       CMAKE_BUILD_TYPE=Release
-       TESTCOV=ON
-
-   - os: linux
-     addons: *gcc6_addons
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++-6
-       CMAKE_BUILD_TYPE=Release
-       MULTI_THREAD=OFF
-
-   - os: linux
-     addons:
-       apt:
-         sources: *apt_sources
-         packages:
-           - *default_packages
-           - z3
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++-4.9
-       CMAKE_BUILD_TYPE=Release
-       TEST=OFF
-       TEST_LEANPKG_REGISTRY=ON
-
-   - os: linux
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=clang++-3.4
-       CMAKE_BUILD_TYPE=Debug
-       TCMALLOC=ON
-
-   - os: linux
-     dist: precise
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++-4.9
-       CMAKE_BUILD_TYPE=Debug
-
-   - os: osx
-     env:
-       CMAKE_CXX_COMPILER=clang++
-       CMAKE_BUILD_TYPE=Release
-       UPLOAD=ON
-       TEST_LEANPKG_REGISTRY=ON
-
-   - os: osx
-     if: type != cron
-     env:
-       CMAKE_CXX_COMPILER=g++
-       CMAKE_BUILD_TYPE=Debug
-
    - os: linux
      language: node_js
      node_js: # needed for running node build/shell/lean.js -v to get version numbers
