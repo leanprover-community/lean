@@ -1,11 +1,11 @@
 <html>
 <head>
-    <title>lean.js minimal working example</title>
+    <title>lean_js.js minimal working example</title>
     <meta charset="utf-8">
 </head>
 <body>
 
-<p>Small example of using lean.js</p>
+<p>Small example of using lean_js.js</p>
 
 <pre id="output"></pre>
 
@@ -22,7 +22,7 @@ function outputLog(msg) {
 }
 
 /*
- * "Module" must be initialized before the <script> tag for lean.js.
+ * "Module" must be initialized before the <script> tag for lean_js.js.
  * The lean.js script populates Module with compiled Lean code,
  * but it needs to know about the parameters below or it will throw errors.
  */
@@ -61,8 +61,8 @@ testfile = ''
          + '    and.intro (and.elim_right Hpq) (and.elim_left Hpq))\n'
          + '  (assume Hqp : q ∧ p,\n'
          + '    and.intro (and.elim_right Hqp) (and.elim_left Hqp))\n'
-         + 'check @nat.rec_on\n'
-         + 'print "end of file!"\n';
+         + '#check @nat.rec_on\n'
+         + '#print "end of file!"\n';
 outputLog( testfile );
  var msg = JSON.stringify({
      seq_num: 0,
@@ -70,9 +70,9 @@ outputLog( testfile );
      file_name: "test.lean",
      content: testfile,
  });
- var len = Module.lengthBytesUTF8(msg) + 1;
+ var len = lengthBytesUTF8(msg) + 1;
  var msgPtr = Module._malloc(len);
- Module.stringToUTF8(msg, msgPtr, len);
+ stringToUTF8(msg, msgPtr, len);
  Module.lean_process_request(msgPtr);
 outputLog('--- Sync complete. ' + checkTimer());
 outputLog('--- Syncing test input...'); startTimer();

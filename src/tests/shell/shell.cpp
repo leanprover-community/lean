@@ -8,9 +8,17 @@ Author: Leonardo de Moura
 #include <vector>
 #include "util/test.h"
 #include "shell/lean_js.h"
+#if defined(LEAN_EMSCRIPTEN)
+#include <emscripten.h>
+#include "shell/emscripten.h"
+#endif
 using namespace lean;
 
 int main() {
+#if defined(LEAN_EMSCRIPTEN)
+    LEAN_EMSCRIPTEN_ENV
+    LEAN_EMSCRIPTEN_FS
+#endif
     save_stack_info();
     initialize_emscripten();
     std::string msg = "{\"seq_num\": 0, \"command\": \"sync\", \"file_name\": \"f\", \"content\": \"inductive f\\ndef g := f\"}";

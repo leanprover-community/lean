@@ -19,6 +19,7 @@ Author: Gabriel Ebner
 
 #if defined(LEAN_EMSCRIPTEN)
 #include <emscripten.h>
+#include "shell/emscripten.h"
 #endif
 
 using namespace lean;  // NOLINT
@@ -73,18 +74,8 @@ struct checker_print_fn {
 
 int main(int argc, char ** argv) {
 #if defined(LEAN_EMSCRIPTEN)
-    EM_ASM(
-        try {
-            // emscripten cannot mount all of / in the vfs,
-            // we can only mount subdirectories...
-            FS.mount(NODEFS, { root: '/home' }, '/home');
-            FS.mkdir('/root');
-            FS.mount(NODEFS, { root: '/root' }, '/root');
-
-            FS.chdir(process.cwd());
-        } catch (e) {
-            console.log(e);
-        });
+    LEAN_EMSCRIPTEN_ENV
+    LEAN_EMSCRIPTEN_FS
 #endif
 
     if (argc < 2) {

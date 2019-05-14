@@ -9,3 +9,6 @@ add_library(inductive_compiler OBJECT
   nested.cpp
   util.cpp
   )
+if(EMSCRIPTEN)
+add_dependencies(inductive_compiler gmp)
+endif()

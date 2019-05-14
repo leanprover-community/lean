@@ -27,7 +27,7 @@ Author: Leonardo de Moura
 #else
     #include <unistd.h>
 #endif
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
     #include <sys/socket.h>
     #include <sys/un.h>
     #define SOCKET int
@@ -483,7 +483,7 @@ static vm_obj fs_rename(vm_obj const & p1, vm_obj const & p2, vm_obj const &) {
 }
 
 int mkdir_single(const char *path) {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
     return mkdir(path, 0777);
 #else
     return !CreateDirectoryA(path, NULL);
@@ -539,7 +539,7 @@ static vm_obj fs_mkdir(vm_obj const & _path, vm_obj const & rec, vm_obj const &)
 
 static vm_obj fs_rmdir(vm_obj const & path, vm_obj const &) {
     bool res;
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
     res = !rmdir(to_string(path).c_str());
 #else
     res = RemoveDirectoryA(to_string(path).c_str());
@@ -918,7 +918,7 @@ vm_obj monad_io_random_impl() {
 }
 
 void initialize_vm_io() {
-#if !(defined(__linux__) || defined(__APPLE__))
+#if !(defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN))
     WSADATA wsaData;
     int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (err != 0) {
