@@ -226,6 +226,11 @@ meta constant expr.occurs        : expr → expr → bool
 /-- Returns true if any of the names in the given `name_set` are present in the given `expr`. -/
 meta constant expr.has_local_in : expr → name_set → bool
 
+/-- `mk_delayed_abstraction m ls` creates a delayed abstraction on the metavariable `m` with the unique names of the local constants `ls`.
+    If `m` is not a metavariable then this is equivalent to `abstract_locals`.
+ -/
+meta constant expr.mk_delayed_abstraction : expr → list name → expr
+
 /-- (reflected a) is a special opaque container for a closed `expr` representing `a`.
     It can only be obtained via type class inference, which will use the representation
     of `a` in the calling context. Local constants in the representation are replaced

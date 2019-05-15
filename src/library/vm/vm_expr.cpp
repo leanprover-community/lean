@@ -35,6 +35,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_rb_map.h"
 #include "library/compiler/simp_inductive.h"
 #include "library/compiler/nat_value.h"
+#include "library/delayed_abstraction.h"
 
 namespace lean {
 struct vm_macro_definition : public vm_external {
@@ -475,6 +476,12 @@ vm_obj expr_has_local_in(vm_obj const & e, vm_obj const & s) {
     return mk_vm_bool(contains_local(to_expr(e), to_name_set(s)));
 }
 
+vm_obj expr_mk_delayed_abstraction(vm_obj const & e, vm_obj const & ns) {
+    buffer<name> names;
+    to_buffer_name(ns,names);
+    return to_obj(mk_delayed_abstraction(to_expr(e),names));
+} 
+
 void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "var"}),              expr_var_intro);
     DECLARE_VM_BUILTIN(name({"expr", "sort"}),             expr_sort_intro);
@@ -534,6 +541,8 @@ void initialize_vm_expr() {
     // Not sure if we should expose these or what?
     DECLARE_VM_BUILTIN(name({"expr", "is_internal_cnstr"}), expr_is_internal_cnstr);
     DECLARE_VM_BUILTIN(name({"expr", "get_nat_value"}), expr_get_nat_value);
+
+    DECLARE_VM_BUILTIN(name({"expr","mk_delayed_abstraction"}), expr_mk_delayed_abstraction);
 }
 
 void finalize_vm_expr() {
