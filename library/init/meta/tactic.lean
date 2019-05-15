@@ -690,7 +690,7 @@ match t with
 | _                 := return []
 end
 
-/-- Same as `intros`, except with the given names for the new hypotheses. Use the name ```_`` to instead use the binder's name.-/
+/-- Same as `intros`, except with the given names for the new hypotheses. Use the name ```_``` to instead use the binder's name.-/
 meta def intro_lst : list name → tactic (list expr)
 | []      := return []
 | (n::ns) := do H ← intro n, Hs ← intro_lst ns, return (H :: Hs)
