@@ -59,7 +59,7 @@ public:
         \pre find_metavar_decl(mvar)
         \pre find_metavar_decl(mvar)->get_context().get_local_decl(n) */
     expr get_local(expr const & mvar, name const & n) const;
-
+    bool is_declared(expr const & mvar) const;
     bool is_assigned(level const & l) const {
         lean_assert(is_metavar_decl_ref(l));
         return m_uassignment.contains(meta_id(l));

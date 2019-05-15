@@ -55,6 +55,10 @@ expr metavar_context::mk_metavar_decl(optional<name> const & pp_n, local_context
     return mk_meta_ref(n, pp_n);
 }
 
+bool metavar_context::is_declared(expr const & e) const {
+    return is_metavar(e) && m_decls.contains(mlocal_name(e));
+}
+
 optional<metavar_decl> metavar_context::find_metavar_decl(expr const & e) const {
     lean_assert(is_metavar_decl_ref(e));
     if (auto r = m_decls.find(mlocal_name(e)))

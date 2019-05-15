@@ -307,7 +307,7 @@ vm_obj expr_has_var(vm_obj const & e) {
 }
 
 vm_obj expr_get_free_var_range(vm_obj const & e) {
-    return mk_vm_nat(get_free_var_range(to_expr(e))); 
+    return mk_vm_nat(get_free_var_range(to_expr(e)));
 }
 
 vm_obj expr_has_var_idx(vm_obj const & e, vm_obj const & u) {
@@ -487,9 +487,9 @@ vm_obj expr_has_local_in(vm_obj const & e, vm_obj const & s) {
 
 vm_obj expr_mk_delayed_abstraction(vm_obj const & e, vm_obj const & ns) {
     buffer<name> names;
-    to_buffer_name(ns,names);
-    return to_obj(mk_delayed_abstraction(to_expr(e),names));
-} 
+    to_buffer_name(ns, names);
+    return to_obj(mk_delayed_abstraction(to_expr(e), names));
+}
 
 void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "var"}),              expr_var_intro);
@@ -553,7 +553,7 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "is_internal_cnstr"}), expr_is_internal_cnstr);
     DECLARE_VM_BUILTIN(name({"expr", "get_nat_value"}), expr_get_nat_value);
 
-    DECLARE_VM_BUILTIN(name({"expr","mk_delayed_abstraction"}), expr_mk_delayed_abstraction);
+    DECLARE_VM_BUILTIN(name({"expr", "mk_delayed_abstraction"}), expr_mk_delayed_abstraction);
 }
 
 void finalize_vm_expr() {

@@ -30,6 +30,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_name.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_level.h"
+#include "library/tactic/vm_local_context.h"
 #include "library/vm/vm_declaration.h"
 #include "library/vm/vm_expr.h"
 #include "library/vm/vm_list.h"
@@ -654,6 +655,39 @@ vm_obj tactic_mk_meta_var(vm_obj const & t, vm_obj const & s0) {
     return tactic::mk_success(to_obj(m), set_mctx(s, mctx));
 }
 
+vm_obj tactic_mk_meta_var_in(vm_obj const & t, vm_obj const & lc, vm_obj const & s0) {
+    tactic_state const & s = tactic::to_state(s0);
+    metavar_context mctx = s.mctx();
+    expr m = mctx.mk_metavar_decl(to_local_context(lc), to_expr(t));
+    return tactic::mk_success(to_obj(m), set_mctx(s, mctx));
+}
+
+vm_obj tactic_assign_meta_var(vm_obj const & m0, vm_obj const & a, vm_obj const & s0) {
+    tactic_state const & s = tactic::to_state(s0);
+    metavar_context mctx = s.mctx();
+    expr m = to_expr(m0);
+    if (!is_metavar(m)) {return tactic::mk_exception("assign_meta_var failed, not a metavariable", s);}
+    if (!mctx.is_declared(m)) {return tactic::mk_exception("assign_meta_var failed, metavariable not declared", s);}
+    if (mctx.is_assigned(m)) { return tactic::mk_exception("assign_meta_var failed, metavariable is already assigned", s);}
+    expr assignment = to_expr(a);
+    // [TODO] add a type check here.
+    mctx.assign(m, assignment);
+    return tactic::mk_success(mk_vm_unit(), set_mctx(s, mctx));
+}
+
+
+vm_obj tactic_get_meta_var_context(vm_obj const & mv, vm_obj const & s0) {
+    tactic_state const & s = tactic::to_state(s0);
+    metavar_context const & mctx = s.mctx();
+    expr const & mvar = to_expr(mv);
+    if (!is_metavar(mvar)) {return tactic::mk_exception("get_meta_var_context tactic failed, argument is not a metavariable", s);}
+    if (optional<metavar_decl> decl = mctx.find_metavar_decl(mvar)) {
+        return tactic::mk_success(to_obj(decl->get_context()), s);
+    } else {
+        return tactic::mk_exception("get_meta_var_context tactic failed, given metavariable is not declared", s);
+    }
+}
+
 vm_obj tactic_get_univ_assignment(vm_obj const & u, vm_obj const & s0) {
     tactic_state const & s   = tactic::to_state(s0);
     metavar_context mctx     = s.mctx();
@@ -1049,13 +1083,17 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "mk_instance"}),          tactic_mk_instance);
     DECLARE_VM_BUILTIN(name({"tactic", "unify"}),                tactic_unify);
     DECLARE_VM_BUILTIN(name({"tactic", "get_local"}),            tactic_get_local);
-    DECLARE_VM_BUILTIN(name({"tactic", "local_context"}),        tactic_local_context);
+    DECLARE_VM_BUILTIN(name({"tactic", "local_context"}),    tactic_local_context);
     DECLARE_VM_BUILTIN(name({"tactic", "get_unused_name"}),      tactic_get_unused_name);
     DECLARE_VM_BUILTIN(name({"tactic", "rotate_left"}),          tactic_rotate_left);
     DECLARE_VM_BUILTIN(name({"tactic", "get_goals"}),            tactic_get_goals);
     DECLARE_VM_BUILTIN(name({"tactic", "set_goals"}),            tactic_set_goals);
     DECLARE_VM_BUILTIN(name({"tactic", "mk_meta_univ"}),         tactic_mk_meta_univ);
     DECLARE_VM_BUILTIN(name({"tactic", "mk_meta_var"}),          tactic_mk_meta_var);
+    DECLARE_VM_BUILTIN(name({"tactic", "mk_meta_var_in"}),       tactic_mk_meta_var_in);
+    // DECLARE_VM_BUILTIN(name({"tactic", "declare_meta_var"}),     tactic_declare_meta_var);
+    DECLARE_VM_BUILTIN(name({"tactic", "assign_meta_var"}),      tactic_assign_meta_var);
+    DECLARE_VM_BUILTIN(name({"tactic", "get_meta_var_context"}), tactic_get_meta_var_context);
     DECLARE_VM_BUILTIN(name({"tactic", "get_univ_assignment"}),  tactic_get_univ_assignment);
     DECLARE_VM_BUILTIN(name({"tactic", "get_assignment"}),       tactic_get_assignment);
     DECLARE_VM_BUILTIN(name({"tactic", "mk_fresh_name"}),        tactic_mk_fresh_name);

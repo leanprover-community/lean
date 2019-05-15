@@ -1,0 +1,182 @@
+/* Copyright 2019 E.W.Ayers */
+#include "util/optional.h"
+#include "util/name.h"
+#include "library/type_context.h"
+#include "library/tactic/tactic_state.h"
+#include "library/vm/vm.h"
+#include "library/vm/vm_option.h"
+#include "library/vm/vm_expr.h"
+#include "library/vm/vm_nat.h"
+#include "library/vm/vm_format.h"
+#include "library/vm/vm_level.h"
+#include "library/vm/vm_name.h"
+#include "library/tactic/vm_local_context.h"
+namespace lean {
+
+/* [NOTE] this is a reference to a **mutable** type_context_old object.
+The Lean user should never be able to access this object directly.
+This is fine because it is only ever used as a hidden argumeent within the `tco` monad.  */
+struct vm_type_context_old : public vm_external {
+    type_context_old & m_val;
+    vm_type_context_old(type_context_old & v):m_val(v) {}
+    virtual ~vm_type_context_old() {}
+    virtual void dealloc() override { this->~vm_type_context_old(); get_vm_allocator().deallocate(sizeof(vm_type_context_old), this); }
+    virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_type_context_old(m_val); }
+    virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_type_context_old))) vm_type_context_old(m_val); }
+};
+type_context_old & to_type_context_old(vm_obj const & o) {
+    return static_cast<vm_type_context_old*>(to_external(o))->m_val;
+}
+
+static vm_obj mk_fail(vm_obj const & fmt) {return mk_vm_constructor(1, mk_vm_constant_format_thunk(fmt));}
+static vm_obj mk_fail(format const & fmt) {return mk_fail(to_obj(fmt));}
+static vm_obj mk_fail(char const * msg) {return mk_fail(format(msg));}
+// static vm_obj mk_fail() {return mk_fail("");}
+static vm_obj mk_fail(sstream const & strm) {return mk_fail(strm.str().c_str()); }
+
+static vm_obj mk_succ(vm_obj const & o) {return mk_vm_constructor(0, o);}
+static bool is_succ(vm_obj const & o) {return cidx(o) == 0;}
+static vm_obj value(vm_obj const & o) {return cfield(o, 0);}
+vm_obj tco_run (vm_obj const &, vm_obj const & tco, vm_obj const & t, vm_obj const & s0) {
+    tactic_state s = tactic::to_state(s0);
+    tactic_state_context_cache cache(s);
+    type_context_old ctx = cache.mk_type_context(to_transparency_mode(t));
+    vm_obj result = invoke(tco, mk_vm_external(new (get_vm_allocator().allocate(sizeof(vm_type_context_old))) vm_type_context_old(ctx)));
+    if (is_succ(result)) {
+        return tactic::mk_success(value(result), set_mctx(s, ctx.mctx()));
+    } else {
+        return tactic::mk_exception(value(result), s);
+    }
+}
+vm_obj  tco_infer (vm_obj const & e, vm_obj const & tco) {
+    type_context_old & ctx = to_type_context_old(tco);
+    expr x = to_expr(e);
+    expr y = ctx.infer(x);
+    return mk_succ(to_obj(y));
+}
+vm_obj tco_pure (vm_obj const &, vm_obj const & a, vm_obj const & /*tco*/) {
+    return mk_succ(a);
+}
+vm_obj tco_bind (vm_obj const &, vm_obj const &, vm_obj const & x, vm_obj const & f, vm_obj const & tco) {
+    vm_obj result = invoke(x, tco);
+    if (is_succ(result)) {
+        return invoke(f, value(result), tco);
+    } else {
+        return result;
+    }
+}
+vm_obj tco_fail (vm_obj const & /* α */, vm_obj const & fmt, vm_obj const &) {
+    return mk_fail(fmt);
+}
+vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
+    type_context_old & ctx = to_type_context_old(c);
+    expr x = to_expr(mvar);
+    if (!ctx.is_regular_mvar(x)) { return mk_fail(sstream() << "get_context failed: " << x << " is not a metavariable."); }
+    local_context lc = ctx.mctx().get_metavar_decl(x).get_context();
+    return mk_succ(to_obj(lc));
+}
+vm_obj tco_mk_mvar (vm_obj const & n, vm_obj const & y, vm_obj const & lc, vm_obj const & c) {
+    type_context_old & ctx = to_type_context_old(c);
+    name nm = to_name(n);
+    expr ty = to_expr(y);
+    local_context l = to_local_context(lc);
+    expr mv = ctx.mk_metavar_decl(nm, l, ty);
+    return mk_succ(to_obj(mv));
+}
+/* expr -> expr -> tco unit */
+vm_obj tco_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c) {
+    type_context_old & ctx = to_type_context_old(c);
+    expr m = to_expr(m0);
+    expr a = to_expr(a0);
+    if (!ctx.in_tmp_mode() && is_idx_metavar(m)) {return mk_fail(sstream() << "assign failed: not in temp mode and " << m << " is a tmp metavariable.");}
+    if (!is_metavar(m)) {return mk_fail(sstream() << "assign failed: " << m << " is not a metavaraible."); }
+    ctx.assign(m, a);
+    return mk_succ(mk_vm_unit());
+}
+
+vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
+    expr l = to_expr(l0);
+    if (!closed(l)) {return mk_fail(sstream() << "is_def_eq failed: " << l << " contains de-Bruijn variables.");}
+    expr r = to_expr(r0);
+    if (!closed(r)) {return mk_fail(sstream() << "is_def_eq failed: " << r << " contains de-Bruijn variables.");}
+    type_context_old & ctx = to_type_context_old(c0);
+    type_context_old::approximate_scope scope(ctx, to_bool(approx));
+    bool res = ctx.pure_is_def_eq(l, r);
+    return mk_succ(to_obj(res));
+}
+vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
+    expr l = to_expr(l0);
+    if (!closed(l)) {return mk_fail(sstream() << "is_def_eq failed: " << l << " contains de-Bruijn variables.");}
+    expr r = to_expr(r0);
+    if (!closed(r)) {return mk_fail(sstream() << "is_def_eq failed: " << r << " contains de-Bruijn variables.");}
+    type_context_old & ctx = to_type_context_old(c0);
+    type_context_old::approximate_scope scope(ctx, to_bool(approx));
+    // [NOTE] mutates the context.
+    bool res = ctx.is_def_eq(l, r);
+    return mk_succ(to_obj(res));
+}
+/* tco.tmp_mode : Π {α : Type}, ℕ → ℕ → tco α → tco α */
+vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_obj const & t0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    type_context_old::tmp_mode_scope scope(ctx, to_unsigned(nu0), to_unsigned(nv0));
+    auto res  = invoke(t0, c0);
+    return res;
+}
+vm_obj tco_in_tmp_mode (vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.in_tmp_mode()));
+}
+vm_obj tco_instantiate_mvars (vm_obj const & e0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.instantiate_mvars(to_expr(e0))));
+}
+vm_obj tco_level_instantiate_mvars (vm_obj const & l0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.instantiate_mvars(to_level(l0))));
+}
+vm_obj tco_tmp_get_assignment (vm_obj const & i0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    unsigned i = to_unsigned(i0);
+    if (!ctx.in_tmp_mode()) {return mk_fail("tmp_get_assignment failed: not in tmp mode.");}
+    optional<expr> o = ctx.get_tmp_mvar_assignment(i);
+    if (!o) {
+        return mk_fail(sstream() << "tmp_get_assignment failed: no assignment for " << i << " found");
+    } else {
+        return mk_succ(to_obj(*o));
+    }
+}
+vm_obj tco_level_tmp_get_assignment (vm_obj const & i0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    unsigned i = to_unsigned(i0);
+    if (!ctx.in_tmp_mode()) {return mk_fail("level.tmp_get_assignment failed: not in tmp mode.");}
+    optional<level> o = ctx.get_tmp_uvar_assignment(i);
+    if (!o) {
+        return mk_fail(sstream() << "level.tmp_get_assignment failed: no assignment for " << i << " found");
+    } else {
+        return mk_succ(to_obj(*o));
+    }
+}
+/* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
+   Except because the underlying type_context_old is mutating,
+   we do not allow the user to see this structure. */
+void initialize_vm_tco() {
+    DECLARE_VM_BUILTIN(name({"tco", "pure"}), tco_pure);
+    DECLARE_VM_BUILTIN(name({"tco", "bind"}), tco_bind);
+    DECLARE_VM_BUILTIN(name({"tco", "fail"}), tco_fail);
+    DECLARE_VM_BUILTIN(name({"tco", "run"}), tco_run);
+    DECLARE_VM_BUILTIN(name({"tco", "infer"}), tco_infer);
+    DECLARE_VM_BUILTIN(name({"tco", "get_context"}), tco_get_context);
+    DECLARE_VM_BUILTIN(name({"tco", "mk_mvar"}), tco_mk_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "assign"}), tco_assign);
+    DECLARE_VM_BUILTIN(name({"tco", "unify"}), tco_unify);
+    DECLARE_VM_BUILTIN(name({"tco", "is_def_eq"}), tco_is_def_eq);
+    DECLARE_VM_BUILTIN(name({"tco", "tmp_mode"}), tco_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"tco", "in_tmp_mode"}), tco_in_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"tco", "instantiate_mvars"}), tco_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"tco", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"tco", "tmp_get_assignment"}), tco_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tco", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
+}
+void finalize_vm_tco() {
+}
+}
