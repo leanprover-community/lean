@@ -13,6 +13,7 @@ Author: Leonardo de Moura, Gabriel Ebner
 #include <cstdlib>
 #include <fstream>
 #include <vector>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "util/exception.h"
@@ -252,5 +253,15 @@ std::string lrealpath(std::string const & fname) {
         throw file_not_found_exception(fname);
     }
 #endif
+}
+
+std::string lgetcwd() {
+    if (char * cd = getcwd(nullptr, 0)) {
+        std::string res(cd);
+        free(cd);
+        return res;
+    } else {
+        throw exception(strerror(errno));
+    }
 }
 }

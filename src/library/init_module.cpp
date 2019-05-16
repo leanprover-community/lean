@@ -30,6 +30,7 @@ Author: Leonardo de Moura
 #include "library/fingerprint.h"
 #include "library/util.h"
 #include "library/pp_options.h"
+#include "library/io_env.h"
 #include "library/projection.h"
 #include "library/relation_manager.h"
 #include "library/user_recursors.h"
@@ -121,9 +122,11 @@ void initialize_library_module() {
     initialize_congr_lemma();
     initialize_parray();
     initialize_time_task();
+    initialize_io_env();
 }
 
 void finalize_library_module() {
+    finalize_io_env();
     finalize_time_task();
     finalize_parray();
     finalize_congr_lemma();
