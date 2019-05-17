@@ -79,8 +79,12 @@ namespace lean {
 
 MK_THREAD_LOCAL_GET(std::string, local_cwd, lgetcwd())
 
-std::string local_realpath(std::string const & path) {
-    return lrealpath(local_cwd() + "/" + path);
+std::string abspath(std::string const & path) {
+    return (sstream() << local_cwd() << "/" << path).str();
+}
+
+optional<std::string> local_realpath(std::string const & path) {
+    return try_realpath(abspath(path));
 }
 
 std::string const & get_local_cwd() {
@@ -202,17 +206,14 @@ char const * to_c_io_mode(unsigned int mode, bool is_bin) {
 }
 
 /* (mk_file_handle : string → io.mode → bool → m io.error handle) */
-static vm_obj fs_mk_file_handle(vm_obj const & fname, vm_obj const & m, vm_obj const & bin, vm_obj const &) {
-    try {
-        bool is_bin = to_bool(bin);
-        FILE * h = fopen(local_realpath(to_string(fname)).c_str(), to_c_io_mode(cidx(m), is_bin));
-        if (h != nullptr)
-            return mk_io_result(to_obj(std::make_shared<handle>(h, is_bin)));
-        else
-            return mk_io_failure(sstream() << "failed to open file '" << to_string(fname) << "'");
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "mk_file_handle failed: " << e.what());
-    }
+static vm_obj fs_mk_file_handle(vm_obj const & _fname, vm_obj const & m, vm_obj const & bin, vm_obj const &) {
+    bool is_bin = to_bool(bin);
+    auto fname = abspath(to_string(_fname));
+    FILE * h = fopen(fname.c_str(), to_c_io_mode(cidx(m), is_bin));
+    if (h != nullptr)
+        return mk_io_result(to_obj(std::make_shared<handle>(h, is_bin)));
+    else
+        return mk_io_failure(sstream() << "failed to open file '" << to_string(_fname) << "'");
 }
 
 static vm_obj mk_handle_has_been_closed_error() {
@@ -478,45 +479,33 @@ static int fs_stat(const char *path) {
     return FSTAT_MISC;
 }
 
-static vm_obj fs_file_exists(vm_obj const & path, vm_obj const &) {
-    try {
-        bool ret = fs_stat(local_realpath(to_string(path)).c_str()) == FSTAT_FILE;
-        return mk_io_result(mk_vm_bool(ret));
-    } catch (throwable & e) {
-        return mk_io_result(mk_vm_bool(false));
-    }
+static vm_obj fs_file_exists(vm_obj const & _path, vm_obj const &) {
+    auto path = abspath(to_string(_path));
+    bool ret = fs_stat(path.c_str()) == FSTAT_FILE;
+    return mk_io_result(mk_vm_bool(ret));
 }
 
-static vm_obj fs_dir_exists(vm_obj const & path, vm_obj const &) {
-    try {
-        bool ret = fs_stat(local_realpath(to_string(path)).c_str()) == FSTAT_DIR;
-        return mk_io_result(mk_vm_bool(ret));
-    } catch (throwable & e) {
-        return mk_io_result(mk_vm_bool(false));
-    }
+static vm_obj fs_dir_exists(vm_obj const & _path, vm_obj const &) {
+    auto path = abspath(to_string(_path));
+    bool ret = fs_stat(path.c_str()) == FSTAT_DIR;
+    return mk_io_result(mk_vm_bool(ret));
 }
 
-static vm_obj fs_remove(vm_obj const & path, vm_obj const &) {
-    try {
-        if (std::remove(local_realpath(to_string(path)).c_str()) != 0) {
-            return mk_io_failure(sstream() << "remove failed: " << strerror(errno));
-        }
-        return mk_io_result(mk_vm_unit());
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "remove failed: " << e.what());
+static vm_obj fs_remove(vm_obj const & _path, vm_obj const &) {
+    auto path = abspath(to_string(_path));
+    if (std::remove(path.c_str()) != 0) {
+        return mk_io_failure(sstream() << "remove failed: " << strerror(errno));
     }
+    return mk_io_result(mk_vm_unit());
 }
 
-static vm_obj fs_rename(vm_obj const & p1, vm_obj const & p2, vm_obj const &) {
-    try {
-        if (std::rename(local_realpath(to_string(p1)).c_str(),
-                        local_realpath(to_string(p2)).c_str()) != 0) {
-            return mk_io_failure(sstream() << "rename failed: " << strerror(errno));
-        }
-        return mk_io_result(mk_vm_unit());
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "rename failed: " << e.what());
+static vm_obj fs_rename(vm_obj const & _p1, vm_obj const & _p2, vm_obj const &) {
+    auto p1 = abspath(to_string(_p1));
+    auto p2 = abspath(to_string(_p2));
+    if (std::rename(p1.c_str(), p2.c_str()) != 0) {
+        return mk_io_failure(sstream() << "rename failed: " << strerror(errno));
     }
+    return mk_io_result(mk_vm_unit());
 }
 
 int mkdir_single(const char *path) {
@@ -568,28 +557,21 @@ int mkdir_recursive(const char *path) {
 }
 
 static vm_obj fs_mkdir(vm_obj const & _path, vm_obj const & rec, vm_obj const &) {
-    try {
-        std::string path = local_realpath(to_string(_path));
-        bool res = to_bool(rec) ? mkdir_recursive(path.c_str())
-            : mkdir_single(path.c_str());
-        return mk_io_result(mk_vm_bool(!res));
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "mkdir failed: " << e.what());
-    }
+    auto path = abspath(to_string(_path));
+    bool res = to_bool(rec) ? mkdir_recursive(path.c_str())
+                            : mkdir_single(path.c_str());
+    return mk_io_result(mk_vm_bool(!res));
 }
 
-static vm_obj fs_rmdir(vm_obj const & path, vm_obj const &) {
-    try {
-        bool res;
+static vm_obj fs_rmdir(vm_obj const & _path, vm_obj const &) {
+    bool res;
+    auto path = abspath(to_string(_path));
 #if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
-        res = !rmdir(local_realpath(to_string(path)).c_str());
+    res = !rmdir(path.c_str());
 #else
-        res = RemoveDirectoryA(local_realpath(to_string(path)).c_str());
+    res = RemoveDirectoryA(path.c_str());
 #endif
-        return mk_io_result(mk_vm_bool(res));
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "rmdir failed: " << e.what());
-    }
+    return mk_io_result(mk_vm_bool(res));
 }
 
 /*
@@ -828,12 +810,12 @@ static vm_obj io_get_cwd(vm_obj const &) {
     return mk_io_result(to_obj(local_cwd()));
 }
 
-static vm_obj io_set_cwd(vm_obj const & cwd, vm_obj const &) {
-    try {
-        local_cwd() = local_realpath(to_string(cwd));
+static vm_obj io_set_cwd(vm_obj const & _path, vm_obj const &) {
+    if (auto path = local_realpath(to_string(_path))) {
+        local_cwd() = *path;
         return mk_io_result(mk_vm_unit());
-    } catch (throwable & e) {
-        return mk_io_failure(sstream() << "set_cwd failed: " << e.what());
+    } else {
+        return mk_io_failure(sstream() << "set_cwd failed");
     }
 }
 

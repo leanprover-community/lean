@@ -44,6 +44,7 @@ std::vector<std::string> read_dir(std::string const & dirname);
 time_t get_mtime(std::string const & fname);
 
 std::string lrealpath(std::string const & fname);
+optional<std::string> try_realpath(std::string const & fname);
 
 std::string lgetcwd();
 }
