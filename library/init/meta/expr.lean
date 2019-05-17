@@ -77,7 +77,7 @@ end⟩
   -/
 meta constant macro_def : Type
 
-/-- An expression. eg ```(4+5)``.
+/-- An expression. eg ```(4+5)```.
 
     The `elab` flag is indicates whether the `expr` has been elaborated and doesn't contain any placeholder macros.
     For example the equality `x = x` is represented in `expr ff` as ``app (app (const `eq _) x) x`` while in `expr tt` it is represented as ``app (app (app (const `eq _) t) x) x`` (one more argument).

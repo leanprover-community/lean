@@ -128,8 +128,19 @@ static std::string add_lean_suffix_to_code_blocks(std::string const & s) {
     unsigned i = 0;
     bool in_block = false;
     while (i < sz) {
-        if (!in_block && s[i] == '`' && sz >= 4 && i < sz - 3 && s[i+1] == '`' && s[i+2] == '`' && isspace(s[i+3])) {
-            r += "```lean";
+        if (!in_block && s[i] == '`' && sz >= 4 && i < sz - 3 && s[i+1] == '`' && s[i+2] == '`') {
+            unsigned end = i+3;
+            // It could be like ```1 + 1``` i.e. non-alpha,
+            // so checking not_space seems best.
+            bool has_non_space = false;
+            while (has_non_space == false && end < sz && s[end] != '\n') {
+                 has_non_space = isspace(s[end]) == 0;
+                 end++;
+            }
+
+            if (has_non_space) r += "```";
+            else r += "```lean";
+
             r += s[i+3];
             i += 4;
             in_block = true;

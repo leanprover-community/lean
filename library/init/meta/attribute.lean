@@ -36,7 +36,7 @@ A __user attribute__ is an attribute defined by the user (ie, not built in to Le
 
 ### Data
 A `user_attribute` consists of the following pieces of data:
-- `name` is the name of the attribute, eg ```simp``
+- `name` is the name of the attribute, eg ```simp```
 - `descr` is a plaintext description of the attribute for humans.
 - `after_set` is an optional handler that will be called after the attribute has been applied to a declaration.
     Failing the tactic will fail the entire `attribute/def/...` command, i.e. the attribute will
