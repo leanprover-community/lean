@@ -121,6 +121,14 @@ std::string normalize_path(std::string f) {
     return f;
 }
 
+std::string to_unix_path(std::string f) {
+    for (auto & c : f) {
+        if (c == '\\')
+            c = '/';
+    }
+    return f;
+}
+
 std::string get_path(std::string f) {
     while (true) {
         if (f.empty())
