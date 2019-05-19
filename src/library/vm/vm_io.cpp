@@ -80,7 +80,7 @@ namespace lean {
 MK_THREAD_LOCAL_GET(std::string, local_cwd, lgetcwd())
 
 std::string abspath(std::string const & path) {
-    return (sstream() << local_cwd() << "/" << path).str();
+    return normalize_path( (sstream() << local_cwd() << "/" << path).str() );
 }
 
 optional<std::string> local_realpath(std::string const & path) {
