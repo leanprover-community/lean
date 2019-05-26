@@ -88,6 +88,18 @@ Pass these along with the `cmake ../../src` command.
   every `git commit`. Use this option to avoid the version check. The `.olean`
   files can be removed manually by invoking `make/ninja clean-olean`.
 
+Further Tips For Developers
+---------------------------
+
+In the below tips you can replace `make` with `ninja` as needed.
+
+* To save some time when compiling: use `make shell/lean` to only compile the things needed to run lean (no tests are built).
+* Use `make test` to run Lean's test suite.
+* Once you have run `make test`, you can go in `build/Debug/Testing/Temporary` and open `LastTest.log` to see a detailed report of the tests including why the style check failed.
+* Run the style check on a single file using `python src/cmake/Modules/cpplint.py my_source_file.cpp`
+* To run a single test, go to the test's file directory and call `./test_single.sh my_test_file.lean`.
+
+
 Further Information
 -------------------
 
