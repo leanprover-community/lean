@@ -4,15 +4,17 @@ tco.lean:11:0: error: I failed
 state:
 ⊢ true
 ff
+ff
 ?m_1
-tco.lean:29:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
-tco.lean:35:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
-tco.lean:43:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
+tco.lean:31:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
+tt
+tco.lean:38:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
+tco.lean:46:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
 ℕ
 theorem my_intro_test : ∀ (x : ℕ), x = x :=
 λ (x : ℕ), eq.refl x
 ([], [3, [4, 5]])
-tco.lean:120:0: error: failed to unify
+tco.lean:123:0: error: failed to unify
 state:
 2 goals
 ⊢ true

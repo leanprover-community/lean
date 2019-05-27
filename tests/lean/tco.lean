@@ -16,7 +16,9 @@ run_cmd do
     m ← tactic.mk_meta_var `(nat),
     e ← pure $ `([4,3,2]),
     b ← tco.run (tco.unify m e),
-    trace b -- should fail because the types are not equal
+    trace b, -- should be ff because the types are not equal
+    tco.run (is_assigned m) >>= trace -- should be ff
+
 
 run_cmd do
     m ← tactic.mk_meta_var `(nat),
@@ -29,7 +31,8 @@ run_cmd do
 run_cmd do
   type ← tactic.to_expr ```(nat),
   m ← tactic.mk_meta_var type,
-  tco.run (tco.assign m m),
+  a ← tco.run (tco.assign m m *> tco.get_assignment m),
+  trace $ to_bool $ a = m, -- should be tt
   instantiate_mvars m
 
 run_cmd do
@@ -122,3 +125,4 @@ run_cmd do -- should fail since doesn't match the pattern.
     e ← to_expr ```(list.empty),
     res ←  my_match_pattern p `([] : list ℕ),
     tactic.trace res
+

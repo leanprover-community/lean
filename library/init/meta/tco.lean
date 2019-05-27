@@ -49,16 +49,15 @@ meta constant assign (mvar : expr) (assignment : expr) : tco unit
 /- [TODO] -/ meta constant level.assign (mvar : level) (assignment : level) : tco unit
 /-- Returns true if the mvar is declared. Also works for temporary mvars. -/
 meta constant mvar_is_declared (mvar : expr) : tco bool
-/- [TODO] -/ meta constant is_assigned (mvar : expr) : tco bool
-/- [TODO] -/ meta constant get_context (mvar : expr) : tco lc
+meta constant is_assigned (mvar : expr) : tco bool
+meta constant get_context (mvar : expr) : tco lc
 /-- Works for temps too.-/
-/- [TODO] -/ meta constant get_assignment (mvar : expr) : tco expr
+meta constant get_assignment (mvar : expr) : tco expr
 
 meta constant instantiate_mvars : expr → tco expr
 meta constant level.instantiate_mvars : level → tco level
 
-/- [TODO] -/ meta constant is_mvar (e : expr) : tco bool
-/- [TODO] -/ meta constant is_tmp_mvar (mvar : expr) : tco bool
+meta constant is_tmp_mvar (mvar : expr) : tco bool
 /- [TODO] -/ meta constant is_regular_mvar (mvar : expr) : tco bool
 
 /-- Run the given `tco` monad in a temporary mvar scope.
@@ -68,8 +67,6 @@ meta constant tmp_mode (n_uvars n_mvars : nat) : tco α → tco α
 
 /-- Returns true when we are in temp mode. -/
 meta constant in_tmp_mode : tco bool
-/-- Number of temporary metavariables that are active in the current scope. -/
-/- [TODO] -/ meta constant tmp_count : tco nat
 /- [TODO] -/ meta constant tmp_is_assigned : nat → tco bool
 /- [TODO] -/ meta constant tmp_get_assignment : nat → tco expr
 

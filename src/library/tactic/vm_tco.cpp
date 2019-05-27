@@ -48,15 +48,18 @@ vm_obj tco_run (vm_obj const &, vm_obj const & tco, vm_obj const & t, vm_obj con
         return tactic::mk_exception(value(result), s);
     }
 }
+
 vm_obj  tco_infer (vm_obj const & e, vm_obj const & tco) {
     type_context_old & ctx = to_type_context_old(tco);
     expr x = to_expr(e);
     expr y = ctx.infer(x);
     return mk_succ(to_obj(y));
 }
+
 vm_obj tco_pure (vm_obj const &, vm_obj const & a, vm_obj const & /*tco*/) {
     return mk_succ(a);
 }
+
 vm_obj tco_bind (vm_obj const &, vm_obj const &, vm_obj const & x, vm_obj const & f, vm_obj const & tco) {
     vm_obj result = invoke(x, tco);
     if (is_succ(result)) {
@@ -65,9 +68,11 @@ vm_obj tco_bind (vm_obj const &, vm_obj const &, vm_obj const & x, vm_obj const 
         return result;
     }
 }
+
 vm_obj tco_fail (vm_obj const & /* α */, vm_obj const & fmt, vm_obj const &) {
     return mk_fail(fmt);
 }
+
 vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
     expr x = to_expr(mvar);
@@ -75,6 +80,7 @@ vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
     local_context lc = ctx.mctx().get_metavar_decl(x).get_context();
     return mk_succ(to_obj(lc));
 }
+
 vm_obj tco_mk_mvar (vm_obj const & n, vm_obj const & y, vm_obj const & lc, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
     name nm = to_name(n);
@@ -83,6 +89,7 @@ vm_obj tco_mk_mvar (vm_obj const & n, vm_obj const & y, vm_obj const & lc, vm_ob
     expr mv = ctx.mk_metavar_decl(nm, l, ty);
     return mk_succ(to_obj(mv));
 }
+
 /* expr -> expr -> tco unit */
 vm_obj tco_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
@@ -104,6 +111,7 @@ vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & appro
     bool res = ctx.pure_is_def_eq(l, r);
     return mk_succ(to_obj(res));
 }
+
 vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
     expr l = to_expr(l0);
     if (!closed(l)) {return mk_fail(sstream() << "is_def_eq failed: " << l << " contains de-Bruijn variables.");}
@@ -115,6 +123,7 @@ vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, v
     bool res = ctx.is_def_eq(l, r);
     return mk_succ(to_obj(res));
 }
+
 /* tco.tmp_mode : Π {α : Type}, ℕ → ℕ → tco α → tco α */
 vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_obj const & t0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
@@ -122,6 +131,7 @@ vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_
     auto res  = invoke(t0, c0);
     return res;
 }
+
 vm_obj tco_in_tmp_mode (vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     return mk_succ(to_obj(ctx.in_tmp_mode()));
@@ -156,6 +166,29 @@ vm_obj tco_level_tmp_get_assignment (vm_obj const & i0, vm_obj const & c0) {
         return mk_succ(to_obj(*o));
     }
 }
+vm_obj tco_is_tmp_mvar(vm_obj const & m0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.is_tmp_mvar(to_expr(m0))));
+}
+
+vm_obj tco_is_assigned(vm_obj const & m0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.is_assigned(to_expr(m0))));
+}
+
+vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    expr m = to_expr(m0);
+    optional<expr> a = ctx.get_assignment(m);
+    if (a) {
+        return mk_succ(to_obj(*a));
+    } else {
+        return mk_fail(sstream() << "Get assignment: no assignment exists for " << m);
+    }
+}
+
+
+
 /* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
    Except because the underlying type_context_old is mutating,
    we do not allow the user to see this structure. */
@@ -176,6 +209,9 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
     DECLARE_VM_BUILTIN(name({"tco", "tmp_get_assignment"}), tco_tmp_get_assignment);
     DECLARE_VM_BUILTIN(name({"tco", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tco", "is_tmp_mvar"}), tco_is_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "is_assigned"}), tco_is_assigned);
+    DECLARE_VM_BUILTIN(name({"tco", "get_assignment"}), tco_get_assignment);
 }
 void finalize_vm_tco() {
 }
