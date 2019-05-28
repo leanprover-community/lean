@@ -8,8 +8,10 @@
 #include "library/vm/vm_expr.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_format.h"
+#include "library/vm/vm_list.h"
 #include "library/vm/vm_level.h"
 #include "library/vm/vm_name.h"
+#include "library/idx_metavar.h"
 #include "library/tactic/vm_local_context.h"
 namespace lean {
 
@@ -100,6 +102,15 @@ vm_obj tco_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c) {
     ctx.assign(m, a);
     return mk_succ(mk_vm_unit());
 }
+vm_obj tco_level_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c) {
+    type_context_old & ctx = to_type_context_old(c);
+    level m = to_level(m0);
+    level a = to_level(a0);
+    if (!ctx.in_tmp_mode() && is_idx_metauniv(m)) {return mk_fail(sstream() << "level assign failed: not in temp mode and " << m << " is a tmp metavariable.");}
+    if (!is_meta(m)) {return mk_fail(sstream() << "level assign failed: " << m << " is not a universe metavaraible."); }
+    ctx.assign(m, a);
+    return mk_succ(mk_vm_unit());
+}
 
 vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
     expr l = to_expr(l0);
@@ -170,6 +181,10 @@ vm_obj tco_is_tmp_mvar(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     return mk_succ(to_obj(ctx.is_tmp_mvar(to_expr(m0))));
 }
+vm_obj tco_is_regular_mvar(vm_obj const & m0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(to_obj(ctx.is_regular_mvar(to_expr(m0))));
+}
 
 vm_obj tco_is_assigned(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
@@ -187,7 +202,23 @@ vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
     }
 }
 
-
+vm_obj tco_level_mk_tmp_mvar (vm_obj const & i0) {
+    unsigned i = to_unsigned(i0);
+    return to_obj(lean::mk_idx_metauniv(i));
+}
+vm_obj tco_mk_tmp_mvar (vm_obj const & i0, vm_obj const & type0) {
+    unsigned i = to_unsigned(i0);
+    expr y = to_expr(type0);
+    return to_obj(lean::mk_idx_metavar(i, y));
+}
+vm_obj tco_to_tmp_mvars(vm_obj const & e0, vm_obj const & c0) {
+        buffer<level> ls;
+        buffer<expr>  es;
+        type_context_old & ctx = to_type_context_old(c0);
+        expr e = to_expr(e0);
+        expr t = to_idx_metavars(ctx.mctx(), e, ls, es);
+        return mk_succ(mk_vm_pair(to_obj(t), mk_vm_pair(to_obj(ls), to_obj(es))));
+}
 
 /* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
    Except because the underlying type_context_old is mutating,
@@ -201,6 +232,7 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "get_context"}), tco_get_context);
     DECLARE_VM_BUILTIN(name({"tco", "mk_mvar"}), tco_mk_mvar);
     DECLARE_VM_BUILTIN(name({"tco", "assign"}), tco_assign);
+    DECLARE_VM_BUILTIN(name({"tco", "level", "assign"}), tco_level_assign);
     DECLARE_VM_BUILTIN(name({"tco", "unify"}), tco_unify);
     DECLARE_VM_BUILTIN(name({"tco", "is_def_eq"}), tco_is_def_eq);
     DECLARE_VM_BUILTIN(name({"tco", "tmp_mode"}), tco_tmp_mode);
@@ -210,8 +242,12 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "tmp_get_assignment"}), tco_tmp_get_assignment);
     DECLARE_VM_BUILTIN(name({"tco", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
     DECLARE_VM_BUILTIN(name({"tco", "is_tmp_mvar"}), tco_is_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "is_regular_mvar"}), tco_is_regular_mvar);
     DECLARE_VM_BUILTIN(name({"tco", "is_assigned"}), tco_is_assigned);
     DECLARE_VM_BUILTIN(name({"tco", "get_assignment"}), tco_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tco", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "to_tmp_mvars"}), tco_to_tmp_mvars);
 }
 void finalize_vm_tco() {
 }

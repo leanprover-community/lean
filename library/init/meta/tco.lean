@@ -46,7 +46,7 @@ meta constant mk_mvar (pp_name : name) (type : expr) (context : lc) : tco expr
     You can avoid the unsafety by using `unify` instead.
 -/
 meta constant assign (mvar : expr) (assignment : expr) : tco unit
-/- [TODO] -/ meta constant level.assign (mvar : level) (assignment : level) : tco unit
+meta constant level.assign (mvar : level) (assignment : level) : tco unit
 /-- Returns true if the mvar is declared. Also works for temporary mvars. -/
 meta constant mvar_is_declared (mvar : expr) : tco bool
 meta constant is_assigned (mvar : expr) : tco bool
@@ -58,7 +58,7 @@ meta constant instantiate_mvars : expr → tco expr
 meta constant level.instantiate_mvars : level → tco level
 
 meta constant is_tmp_mvar (mvar : expr) : tco bool
-/- [TODO] -/ meta constant is_regular_mvar (mvar : expr) : tco bool
+meta constant is_regular_mvar (mvar : expr) : tco bool
 
 /-- Run the given `tco` monad in a temporary mvar scope.
 Doing this twice will push the old tmp_mvar assignments to a stack.
@@ -67,13 +67,16 @@ meta constant tmp_mode (n_uvars n_mvars : nat) : tco α → tco α
 
 /-- Returns true when we are in temp mode. -/
 meta constant in_tmp_mode : tco bool
-/- [TODO] -/ meta constant tmp_is_assigned : nat → tco bool
-/- [TODO] -/ meta constant tmp_get_assignment : nat → tco expr
+meta constant tmp_is_assigned : nat → tco bool
+meta constant tmp_get_assignment : nat → tco expr
 
-/- [TODO] -/ meta constant level.tmp_count : tco nat
-/- [TODO] -/ meta constant level.tmp_is_assigned : nat → tco bool
-/- [TODO] -/ meta constant level.tmp_get_assignment : nat → tco level
+meta constant level.tmp_is_assigned : nat → tco bool
+meta constant level.tmp_get_assignment : nat → tco level
 
+/-- Replace each metavariable in the given expression with a temporary metavariable. -/
+meta constant to_tmp_mvars : expr → tco (expr × list level × list expr)
+meta constant mk_tmp_mvar (index : nat) (type : expr): expr
+meta constant level.mk_tmp_mvar (index : nat) : level
 /- BACKTRACKING -/
 
 /-- Run the provided tco within a backtracking scope.
@@ -83,6 +86,10 @@ meta constant in_tmp_mode : tco bool
 /- [TODO] -/ meta constant try {α : Type} : tco α → tco (option α)
 
 meta constant run (inner : tco α) (tr := tactic.transparency.semireducible) : tactic α
+
+meta def trace {α} [has_to_format α] : α → tco unit | a :=
+   pure $ _root_.trace_fmt (to_fmt a) (λ u, ())
+
 
 end tco
 

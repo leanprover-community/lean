@@ -32,7 +32,7 @@ meta constant level.eqv : level → level → bool
 /-- Return tt iff the first level occurs in the second -/
 meta constant level.occurs : level → level → bool
 /-- Replace a parameter named n with l in the first level if the list contains the pair (n, l) -/
-meta constant level.instantiate : level → list (name × level) → list level
+meta constant level.instantiate : level → list (name × level) → level
 meta constant level.to_format : level → options → format
 meta constant level.to_string : level → string
 

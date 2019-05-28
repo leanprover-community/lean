@@ -8,6 +8,10 @@ run_cmd do
     n ← tco.run (do x ← pure "hello", pure x),
     trace n
 
+run_cmd do
+    n ← tco.run $ (λ x, x) <$>  pure "hello",
+    trace n
+
 run_cmd do -- should fail
     f : ℕ ← tco.run (tco.fail $ "I failed"),
     trace f
@@ -28,14 +32,14 @@ run_cmd do
 
 /- What happens when you assign an mvar to itself?
    It shouldn't stop you but it shouldn't stack-overflow either. -/
-run_cmd do
+run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m ← tactic.mk_meta_var type,
   a ← tco.run (tco.assign m m *> tco.get_assignment m),
   trace $ to_bool $ a = m, -- should be tt
   instantiate_mvars m
 
-run_cmd do
+run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m ← tactic.mk_meta_var type,
   m₂ ← to_expr ```(%%m + %%m),
@@ -43,7 +47,7 @@ run_cmd do
   instantiate_mvars m
 
 /- What happens when you assign a pair of mvars to each other? -/
-run_cmd do
+run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m₁ ← tactic.mk_meta_var type,
   m₂ ← tactic.mk_meta_var type,
@@ -51,6 +55,16 @@ run_cmd do
   tco.run (tco.assign m₂ m₁),
   trace m₁,
   trace m₂
+
+run_cmd do
+    x : pexpr ← resolve_name `eq_mul_inv_of_mul_eq,
+    x ← to_expr x,
+    y ← infer_type x,
+    (t,us,es) ← tco.run $ tco.to_tmp_mvars y,
+    trace t,
+    trace us,
+    trace es,
+    tactic.apply `(trivial), set_goals []
 
 /- Some examples of rewriting tactics using tco. -/
 
@@ -84,6 +98,34 @@ lemma my_intro_test : ∀ (x : ℕ), x = x := begin
   refl
 end
 #print my_intro_test
+open native
+
+meta instance level.has_lt : has_lt level := ⟨λ x y, level.lt x y⟩
+meta instance level.dec_lt : decidable_rel (level.has_lt.lt) := by apply_instance
+
+meta def my_mk_pattern (ls : list level) (es : list expr) (target : expr)
+  (ous : list level) (os : list expr) : tactic pattern
+:= tco.run $ do
+  (t, extra_ls, extra_es) ← tco.to_tmp_mvars target,
+  level2meta : list (name × level) ← ls.mfoldl (λ acc l,
+    match l with
+    | level.param n :=
+        pure $ (prod.mk n $ tco.level.mk_tmp_mvar $ acc.length + extra_ls.length) :: acc
+    | _ := tco.failure end) [],
+  let convert_level := λ l, level.instantiate l level2meta,
+  expr2meta : rb_map expr expr ← es.mfoldl (λ acc e, do
+    e_type ← infer e,
+    e_type ← pure $ expr.replace e_type (λ x _, rb_map.find acc x),
+    e_type ← pure $ expr.instantiate_univ_params e_type level2meta,
+    i ← pure $ rb_map.size acc + extra_es.length,
+    m ← pure $ tco.mk_tmp_mvar i e_type,
+    pure $ rb_map.insert acc e m
+  ) $ rb_map.mk _ _,
+  let convert_expr := λ x, expr.instantiate_univ_params (expr.replace x (λ x _, rb_map.find expr2meta x)) level2meta,
+  uoutput ← pure $ ous.map convert_level,
+  output ← pure $ os.map convert_expr,
+  t ← pure $ convert_expr target,
+  pure $ tactic.pattern.mk t uoutput output (extra_ls.length + level2meta.length) (extra_es.length + expr2meta.size)
 
 /-- Reimplementation of tactic.match_pattern -/
 meta def my_match_pattern_core : tactic.pattern → expr → tco (list level × list expr)
@@ -113,7 +155,11 @@ meta def my_pat := do
     LT ← to_expr ```(list %%α),
     t ← pure $ expr.local_const `t `t binder_info.default LT,
     target ← to_expr ```(@list.cons %%α %%h %%t),
-    tactic.mk_pattern [] [α,h,t] target [] [h,t]
+    my_mk_pattern [] [α,h,t] target [] [h,t]
+
+run_cmd do
+    p ← my_pat,
+    trace $ p.target
 
 run_cmd do -- ([], [3, [4, 5]])
     p ← my_pat,
