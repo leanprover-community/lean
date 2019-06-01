@@ -125,23 +125,6 @@ namespace lean {
         return static_cast<vm_ffi_attribute const &>(get_system_attribute(*g_vm_ffi));
     }
 
-  struct vm_ffi_attribute_struct : public attr_struct {
-    name m_obj;
-    optional<name> m_c_struct;
-    // TODO: Find the type for Lean struct fields, build a Map<name, type>
-    std::vector<> m_c_struct_fields;
-    vm_ffi_attribute_struct() {}
-    vm_ffi_attrivute_struct(name const & obj,
-                            optional<name> const & c_struct,
-                            std::vector<> const & c_struct_fields) :
-      m_obj(obj), m_c_struct(c_struct), m_c_struct_fields(c_struct_fields) {}
-    virtual unsigned hash() const override { return m_obj.hash(); }
-    void write(serializer & s) const { s << m_obj << m_c_struct << m_c_struct_fields; }
-    void read(deserializer & d) {
-      d >> m_obj >> m_c_struct >> m_c_struct_fields
-    }
-  };
-
     void initialize_vm_ffi() {
         g_vm_ffi = new name("ffi");
         g_uint8_name  = new name ({"foreign", "uint_8"});
@@ -156,11 +139,16 @@ namespace lean {
         register_system_attribute(vm_ffi_attribute(
             *g_vm_ffi, "Registers a binding to a foreign function or structure.",
             [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
-                auto struct_fields = environment_structure_fields(env, env.get(d));
-                auto ffi_attr = get_vm_ffi_attribute().get(env, d);
-                name sym = ffi_attr->m_c_fun? *ffi_attr->m_c_fun : d;
-                auto b = add_foreign_symbol(env, ffi_attr->m_obj, d, sym.to_string());
-                return b;
+                auto v = to_env(env);
+                auto n = to_name(d);
+                if (is_structure(v, d)) {
+                    auto struct_fields = get_structure_fields(v, d);
+                } else {
+                    auto ffi_attr = get_vm_ffi_attribute().get(env, d);
+                    name sym = ffi_attr->m_c_fun? *ffi_attr->m_c_fun : d;
+                    auto b = add_foreign_symbol(env, ffi_attr->m_obj, d, sym.to_string());
+                    return b;
+                }
             }));
     }
 
