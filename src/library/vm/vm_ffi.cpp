@@ -20,6 +20,7 @@ Author: James King <james@agenultra.com>, Simon Hudon
 #include "util/lean_path.h"
 #include "library/vm/vm_ffi.h"
 #include "library/vm/vm_parser.h"
+#include "frontends/lean/structure_cmd.h"
 
 namespace lean {
 
@@ -139,10 +140,8 @@ namespace lean {
         register_system_attribute(vm_ffi_attribute(
             *g_vm_ffi, "Registers a binding to a foreign function or structure.",
             [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
-                auto v = to_env(env);
-                auto n = to_name(d);
-                if (is_structure(v, d)) {
-                    auto struct_fields = get_structure_fields(v, d);
+                if (is_structure(env, d)) {
+                    auto struct_fields = get_structure_fields(env, d);
                 } else {
                     auto ffi_attr = get_vm_ffi_attribute().get(env, d);
                     name sym = ffi_attr->m_c_fun? *ffi_attr->m_c_fun : d;
