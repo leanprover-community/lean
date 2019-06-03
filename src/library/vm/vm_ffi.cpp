@@ -90,6 +90,12 @@ namespace lean {
         m_ptr->inc_ref();
     }
 
+    vm_foreign_value * vm_foreign_value::make(size_t size, void * data) {
+        auto result = new (new char[ sizeof(vm_foreign_value) + size ]) vm_foreign_value(size);
+        memcpy(result->data(), data, size);
+        return result;
+    }
+
     struct vm_ffi_attribute_data : public attr_data {
         name m_obj;
         optional<name> m_c_fun;
