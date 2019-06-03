@@ -69,8 +69,4 @@ namespace lean {
 
     void finalize_vm_ffi();
 
-    void initialize_vm_ffi();
-
-    void finalize_vm_ffi();
-
 }

@@ -537,7 +537,20 @@ vm_instr mk_local_info_instr(unsigned idx, name const & n, optional<expr> const 
 class vm_state;
 class vm_instr;
 
-struct vm_cfun_sig {
+enum class vm_ffi_call_kind { Ctor, Cases, CFun };
+
+struct vm_ffi_call {
+    vm_ffi_call_kind m_kind;
+};
+
+/* used for implementing constructor, eliminator and projections of ffi structures */
+struct vm_cstruct_fields : vm_ffi_call {
+    ffi_type m_struct;
+    buffer<ffi_type*> m_fields;
+    buffer<ffi_type> m_alloc;
+};
+
+struct vm_cfun_sig : vm_ffi_call {
     buffer<ffi_type *> m_args;
     ffi_type *m_rtype;
     ffi_cif m_cif;
@@ -558,7 +571,7 @@ struct vm_decl_cell {
     list<vm_local_info>   m_args_info;
     optional<pos_info>    m_pos;
     optional<std::string> m_olean;
-    unique_ptr<vm_cfun_sig> m_sig;
+    unique_ptr<vm_ffi_call> m_sig;
     union {
         struct {
             unsigned   m_code_size;
