@@ -185,7 +185,6 @@ class parser : public abstract_parser, public parser_info {
     level parse_level_nud();
     level parse_level_led(level left);
 
-    std::string parse_doc_block();
     void parse_mod_doc_block();
 
     void process_imports();
@@ -417,6 +416,9 @@ public:
     virtual unsigned parse_small_nat() override final;
     virtual std::string parse_string_lit() override final;
     double parse_double();
+
+    /** \brief Parses a documentation block (`/-- TEXT -/`). For example, `/-- Doc\ndoc -/` returns " Doc\ndoc ". */
+    std::string parse_doc_block();
 
     bool parse_local_notation_decl() { return parse_local_notation_decl(nullptr); }
 
