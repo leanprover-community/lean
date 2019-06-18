@@ -88,6 +88,10 @@ Pass these along with the `cmake ../../src` command.
   every `git commit`. Use this option to avoid the version check. The `.olean`
   files can be removed manually by invoking `make/ninja clean-olean`.
 
+Incremental Builds
+------------------
+To speed up interactive development, you can use `make -j<nthreads> bin_lean` or `ninja shell/bin_lean`, which will build the Lean executable (into `bin/`), but not all the tests.
+
 Further Information
 -------------------
 
