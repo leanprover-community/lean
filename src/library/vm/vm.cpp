@@ -1285,6 +1285,31 @@ environment add_foreign_symbol(environment const & env, name const & obj, name c
     return update(env, ext);
 }
 
+environment add_foreign_struct(environment const & env, name const & n) {
+    buffer<name> struct_fields = get_structure_fields(env, n);
+    ffi_type tm_type;
+    ffi_type * tm_elements[struct_fields.size() + 1];
+
+    tm_type.size = tm_type.alignment = 0;
+    tm_type.type = FFI_TYPE_STRUCT;
+    tm_type.elements = &tm_elements;
+
+    // TODO: iterate over struct_fields, fetching the vm_obj from the
+    // environment and adding the appropriate ffi_type to tm_elements
+    // for it
+    for (auto & fn : struct_fields) {
+        declaration decl = env.get(fn);
+        expr t = decl.get_type();
+        if (!is_constant(t))
+            throw exception("Only constant expressions are allowed in struct fields");
+        auto n = const_name(t);
+        // TODO: map n to ffi_type and add pointer to tm_elements
+    }
+    tm_elements[struct_fields.size() + 1] = NULL;
+
+    // TODO: Add tm_type to the environment
+}
+
 bool is_vm_function(environment const & env, name const & fn) {
     auto const & ext = get_extension(env);
     return ext.m_decls.contains(get_vm_index(fn)) || g_vm_builtins->contains(fn);
