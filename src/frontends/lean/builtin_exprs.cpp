@@ -368,7 +368,7 @@ static expr parse_do_expr(parser & p, unsigned, expr const *, pos_info const &) 
 }
 
 static expr parse_unit(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return p.save_pos(mk_constant(get_unit_star_name()), pos);
+    return p.save_pos(mk_constant(get_punit_star_name()), pos);
 }
 
 static expr parse_proof(parser & p);

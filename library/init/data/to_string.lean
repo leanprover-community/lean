@@ -11,7 +11,7 @@ open sum subtype nat
 
 universes u v
 
-/-- Convert the object into a string for tracing/display purposes. 
+/-- Convert the object into a string for tracing/display purposes.
 Similar to Haskell's `show`.
 See also `has_repr`, which is used to output a string which is a valid lean code.
 See also `has_to_format` and `has_to_tactic_format`, `format` has additional support for colours and pretty printing multilines.
@@ -44,7 +44,7 @@ protected def list.to_string {α : Type u} [has_to_string α] : list α → stri
 instance {α : Type u} [has_to_string α] : has_to_string (list α) :=
 ⟨list.to_string⟩
 
-instance : has_to_string unit :=
+instance : has_to_string punit :=
 ⟨λ u, "star"⟩
 
 instance : has_to_string nat :=

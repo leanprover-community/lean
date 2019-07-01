@@ -10,7 +10,7 @@ open sum subtype nat
 
 universes u v
 
-/-- 
+/--
 Implement `has_repr` if the output string is valid lean code that evaluates back to the original object.
 If you just want to view the object as a string for a trace message, use `has_to_string`.
 
@@ -19,7 +19,7 @@ If you just want to view the object as a string for a trace message, use `has_to
 ```
 #eval to_string "hello world"
 -- [Lean] "hello world"
-#eval repr "hello world" 
+#eval repr "hello world"
 -- [Lean] "\"hello world\""
 ```
 
@@ -29,7 +29,7 @@ Reference: https://github.com/leanprover/lean/issues/1664
 class has_repr (α : Type u) :=
 (repr : α → string)
 
-/-- `repr` is similar to `to_string` except that we should have the property `eval (repr x) = x` for most sensible datatypes. 
+/-- `repr` is similar to `to_string` except that we should have the property `eval (repr x) = x` for most sensible datatypes.
 Hence, `repr "hello"` has the value `"\"hello\""` not `"hello"`.  -/
 def repr {α : Type u} [has_repr α] : α → string :=
 has_repr.repr
@@ -53,7 +53,7 @@ protected def list.repr {α : Type u} [has_repr α] : list α → string
 instance {α : Type u} [has_repr α] : has_repr (list α) :=
 ⟨list.repr⟩
 
-instance : has_repr unit :=
+instance : has_repr punit :=
 ⟨λ u, "star"⟩
 
 instance {α : Type u} [has_repr α] : has_repr (option α) :=

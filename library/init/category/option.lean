@@ -51,11 +51,11 @@ namespace option_t
   instance (m') [monad m'] : monad_functor m m' (option_t m) (option_t m') :=
   ⟨λ α, option_t.monad_map⟩
 
-  protected def catch (ma : option_t m α) (handle : unit → option_t m α) : option_t m α :=
+  protected def catch (ma : option_t m α) (handle : punit → option_t m α) : option_t m α :=
   ⟨do some a ← ma.run | (handle ()).run,
       pure a⟩
 
-  instance : monad_except unit (option_t m) :=
+  instance : monad_except punit (option_t m) :=
   { throw := λ _ _, option_t.fail, catch := @option_t.catch _ _ }
 
   instance (m out) [monad_run out m] : monad_run (λ α, out (option α)) (option_t m) :=

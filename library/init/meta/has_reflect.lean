@@ -51,5 +51,5 @@ meta instance list.reflect {α : Type} [has_reflect α] [reflected α] : has_ref
 | []     := `([])
 | (h::t) := `(λ t, h :: t).subst (list.reflect t)
 
-meta instance punit.reflect : has_reflect punit
-| () := `(_)
+meta instance unit.reflect : has_reflect unit
+| () := `(())

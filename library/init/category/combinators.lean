@@ -13,7 +13,7 @@ def list.mmap {m : Type u → Type v} [monad m] {α : Type w} {β : Type u} (f :
 | []       := return []
 | (h :: t) := do h' ← f h, t' ← list.mmap t, return (h' :: t')
 
-def list.mmap' {m : Type → Type v} [monad m] {α : Type u} {β : Type} (f : α → m β) : list α → m unit
+def list.mmap' {m : Type w → Type v} [monad m] {α : Type u} {β : Type w} (f : α → m β) : list α → m punit
 | []       := return ()
 | (h :: t) := f h >> list.mmap' t
 
@@ -40,13 +40,19 @@ def list.mfirst {m : Type u → Type v} [monad m] [alternative m] {α : Type w} 
 | []      := failure
 | (a::as) := f a <|> list.mfirst as
 
-def when {m : Type → Type} [monad m] (c : Prop) [h : decidable c] (t : m unit) : m unit :=
+def when {m : Type u → Type v} [monad m] (c : Prop) [h : decidable c] (t : m punit) : m punit :=
 ite c t (pure ())
 
-def mcond {m : Type → Type} [monad m] {α : Type} (mbool : m bool) (tm fm : m α) : m α :=
+def mcond' {m : Type u → Type v} [monad m] {α : Type u} (mbool : m (ulift bool)) (tm fm : m α) : m α :=
+do b ← mbool, cond b.down tm fm
+
+def mcond {m : Type → Type v} [monad m] {α : Type} (mbool : m bool) (tm fm : m α) : m α :=
 do b ← mbool, cond b tm fm
 
-def mwhen {m : Type → Type} [monad m] (c : m bool) (t : m unit) : m unit :=
+def mwhen' {m : Type u → Type v} [monad m] (c : m (ulift bool)) (t : m punit) : m punit :=
+mcond' c t (return ())
+
+def mwhen {m : Type → Type v} [monad m] (c : m bool) (t : m punit) : m punit :=
 mcond c t (return ())
 
 export list (mmap mmap' mfilter mfoldl)
@@ -63,14 +69,14 @@ def sequence {m : Type u → Type v} [monad m] {α : Type u} : list (m α) → m
 | []       := return []
 | (h :: t) := do h' ← h, t' ← sequence t, return (h' :: t')
 
-def sequence' {m : Type → Type u} [monad m] {α : Type} : list (m α) → m unit
+def sequence' {m : Type u → Type v} [monad m] {α : Type u} : list (m α) → m punit
 | []       := return ()
 | (h :: t) := h >> sequence' t
 
-def whenb {m : Type → Type} [monad m] (b : bool) (t : m unit) : m unit :=
+def whenb {m : Type u → Type v} [monad m] (b : bool) (t : m punit) : m punit :=
 _root_.cond b t (return ())
 
-def unlessb {m : Type → Type} [monad m] (b : bool) (t : m unit) : m unit :=
+def unlessb {m : Type u → Type v} [monad m] (b : bool) (t : m punit) : m punit :=
 _root_.cond b (return ()) t
 
 end monad
