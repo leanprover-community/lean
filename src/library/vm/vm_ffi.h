@@ -45,9 +45,25 @@ namespace lean {
         ~vm_foreign_obj() { if (m_ptr) { m_ptr->dec_ref(); } }
     };
 
-    void initialize_vm_ffi();
-
-    void finalize_vm_ffi();
+    class vm_foreign_value : public vm_external {
+    private:
+        size_t m_size;
+        vm_foreign_value(unsigned size) : m_size(size) { }
+        virtual void dealloc() override {
+            delete [] reinterpret_cast<char *>(this); }
+    public:
+        static vm_foreign_value * make(size_t size, void * data);
+        template <typename T>
+        static vm_foreign_value * make(T const & x) { return make(sizeof(T), &x); }
+        void * data() { return &m_size + 1; }
+        size_t size() const { return m_size; }
+        virtual vm_external * ts_clone(vm_clone_fn const &) override {
+            return new (new char[ sizeof(vm_foreign_value) + m_size ]) vm_foreign_value(m_size);
+        }
+        virtual vm_external * clone(vm_clone_fn const &) override {
+            return new (get_vm_allocator().allocate(sizeof(vm_foreign_value) + m_size)) vm_foreign_value(m_size);
+        }
+    };
 
     void initialize_vm_ffi();
 

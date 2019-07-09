@@ -20,6 +20,7 @@ Author: James King <james@agenultra.com>, Simon Hudon
 #include "util/lean_path.h"
 #include "library/vm/vm_ffi.h"
 #include "library/vm/vm_parser.h"
+#include "frontends/lean/structure_cmd.h"
 
 namespace lean {
 
@@ -67,7 +68,13 @@ namespace lean {
         for (auto e : _args) { args.push_back(to_ffi_type(e)); }
         ffi_type * rt = to_ffi_type(_rt);
         unique_ptr<vm_cfun_sig> sig(new vm_cfun_sig(FFI_DEFAULT_ABI, *rt, std::move(args)));
-        return vm_decl(n, idx, std::move(sig), fn);
+        return vm_decl(n, idx, std::move(sig), args.size(), fn);
+    }
+
+    vm_decl vm_foreign_obj_cell::mk_ctor(name const & n, unsigned idx, string const & fun_name,
+                                          buffer<expr> const & _args, expr const & _rt) {
+
+        return vm_decl( );
     }
 
     vm_foreign_obj_cell::~vm_foreign_obj_cell() {
@@ -87,6 +94,12 @@ namespace lean {
         }
         m_ptr = new vm_foreign_obj_cell(handle, fname);
         m_ptr->inc_ref();
+    }
+
+    vm_foreign_value * vm_foreign_value::make(size_t size, void * data) {
+        auto result = new (new char[ sizeof(vm_foreign_value) + size ]) vm_foreign_value(size);
+        memcpy(result->data(), data, size);
+        return result;
     }
 
     struct vm_ffi_attribute_data : public attr_data {
@@ -137,12 +150,16 @@ namespace lean {
         g_int64_name  = new name ({"foreign", "int_64"});
 
         register_system_attribute(vm_ffi_attribute(
-            *g_vm_ffi, "Registers a binding to a foreign function.",
+            *g_vm_ffi, "Registers a binding to a foreign function or structure.",
             [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
-                auto data = get_vm_ffi_attribute().get(env, d);
-                name sym = data->m_c_fun? *data->m_c_fun : d;
-                auto b = add_foreign_symbol(env, data->m_obj, d, sym.to_string());
-                return b;
+                if (is_structure(env, d)) {
+                    // auto struct_fields = get_structure_fields(env, d);
+                    return add_foreign_struct(env, d);
+                } else {
+                    auto ffi_attr = get_vm_ffi_attribute().get(env, d);
+                    name sym = ffi_attr->m_c_fun? *ffi_attr->m_c_fun : d;
+                    return add_foreign_symbol(env, ffi_attr->m_obj, d, sym.to_string());
+                }
             }));
     }
 

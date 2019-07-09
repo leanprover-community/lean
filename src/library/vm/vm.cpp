@@ -23,6 +23,7 @@ Author: Leonardo de Moura
 #include "util/small_object_allocator.h"
 #include "util/sexpr/option_declarations.h"
 #include "util/shared_mutex.h"
+#include "frontends/lean/structure_cmd.h"
 #include "library/constants.h"
 #include "library/kernel_serializer.h"
 #include "library/trace.h"
@@ -1047,8 +1048,8 @@ vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfun
     m_rc(0), m_kind(vm_decl_kind::CFun), m_name(n), m_idx(idx), m_arity(arity), m_cfn(fn) {}
 
 vm_decl_cell::vm_decl_cell(name const & n, unsigned idx,
-                           unique_ptr<vm_cfun_sig> sig, vm_cfunction fn):
-    m_rc(0), m_kind(vm_decl_kind::CFun), m_name(n), m_idx(idx), m_arity(sig->arity()), m_sig(std::move(sig)), m_cfn(fn) {}
+                           unique_ptr<vm_ffi_call> sig, unsigned arity, vm_cfunction fn):
+    m_rc(0), m_kind(vm_decl_kind::CFun), m_name(n), m_idx(idx), m_arity(arity), m_sig(std::move(sig)), m_cfn(fn) {}
 
 vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                            list<vm_local_info> const & args_info, optional<pos_info> const & pos,
@@ -1145,11 +1146,17 @@ void declare_vm_cases_builtin(name const & n, char const * i, vm_cases_function 
     g_vm_cases_builtins->insert(n, std::make_tuple(i, fn));
 }
 
+struct vm_ffi_struct {
+    ffi_type m_struct;
+    buffer<ffi_type *> m_fields;
+};
+
 /** \brief VM function/constant declarations are stored in an environment extension. */
 struct vm_decls : public environment_extension {
     unsigned_map<vm_decl>            m_decls;
     unsigned_map<vm_cases_function>  m_cases;
     std::unordered_map<name, vm_foreign_obj, name_hash> m_foreign;
+    std::unordered_map<name, std::shared_ptr<vm_ffi_struct>, name_hash> m_native_types;
 
     name                            m_monitor;
 
@@ -1185,6 +1192,11 @@ struct vm_decls : public environment_extension {
     void bind_foreign_symbol(name const & obj, name const & decl, string const & c_fun, buffer<expr> const & args, expr const & t) {
         auto idx = get_vm_index(decl);
         m_decls.insert(idx, m_foreign[obj].get_cfun(decl, idx, c_fun, args, t));
+    }
+
+    void bind_foreign_constructor(name const & decl) {
+        auto idx = get_vm_index(decl);
+        m_decls.insert(idx, _);
     }
 
     unsigned reserve(name const & n, unsigned arity) {
@@ -1282,6 +1294,41 @@ environment add_foreign_symbol(environment const & env, name const & obj, name c
         e = mlocal_type(e);
     }
     ext.bind_foreign_symbol(obj, decl, c_fun, args, rt);
+    return update(env, ext);
+}
+
+environment add_foreign_struct(environment const & env, name const & n) {
+    auto ext = get_extension(env);
+    buffer<std::tuple<name,expr>> struct_fields = get_structure_field_types(env, n);
+    std::shared_ptr<vm_ffi_struct> m_struct = std::make_shared<vm_ffi_struct>();
+
+    ffi_type & tm_type = m_struct->m_struct;
+    buffer<ffi_type *> & tm_elements = m_struct->m_fields;
+
+    tm_type.size = tm_type.alignment = 0;
+    tm_type.type = FFI_TYPE_STRUCT;
+
+    // field_typ
+    name field; expr ftype;
+    for (auto & fn : struct_fields) {
+        std::tie(field, ftype) = fn;
+        // declaration decl = env.get({n, fn});
+        // expr t = decl.get_type();
+        // my_struct -> int_32
+        if (!is_constant(ftype))
+            throw exception("Only constant expressions are allowed in struct fields");
+        auto n = const_name(ftype);
+        tm_elements.push_back( &ext.m_native_types[n]->m_struct );
+    }
+    tm_elements.push_back( NULL );
+
+    tm_type.elements = m_struct->m_fields.data();
+
+    lean_assert(ext.m_native_types.find(n) == ext.m_native_types.end());
+
+    ext.m_native_types[n] = m_struct;
+    // ext.
+
     return update(env, ext);
 }
 
@@ -2946,9 +2993,19 @@ void vm_state::invoke_cfun(vm_decl const & d) {
         unique_lock<mutex> lk(m_call_stack_mtx);
         push_frame_core(0, 0, d.get_idx());
     }
-    if (d.is_ffi())
-        invoke_ffi_call(d.get_cfn(), d.get_sig());
-    else
+    if (d.is_ffi()) {
+        switch (d.get_sig().m_kind) {
+        case vm_ffi_call_kind::Ctor:
+            throw exception("not implemented");
+        case vm_ffi_call_kind::Cases:
+            throw exception("not implemented");
+        case vm_ffi_call_kind::CFun:
+            throw exception("not implemented");
+        case vm_ffi_call_kind::Field:
+            throw exception("not implemented");
+        }
+        // invoke_ffi_call(d.get_cfn(), d.get_sig());
+    } else
         invoke_fn(d.get_cfn(), d.get_arity());
     if (m_profiling) {
         unique_lock<mutex> lk(m_call_stack_mtx);

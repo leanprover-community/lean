@@ -12,6 +12,8 @@ namespace lean {
 environment structure_cmd(parser & p, cmd_meta const & meta);
 environment class_cmd(parser & p, cmd_meta const & meta);
 buffer<name> get_structure_fields(environment const & env, name const & S);
+ buffer<std::tuple<name,expr>> get_structure_field_types(environment const & env, name const & S);
+
 void register_structure_cmd(cmd_table & r);
 /** \brief Return true iff \c S is a structure created with the structure command */
 bool is_structure(environment const & env, name const & S);

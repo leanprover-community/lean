@@ -537,7 +537,20 @@ vm_instr mk_local_info_instr(unsigned idx, name const & n, optional<expr> const 
 class vm_state;
 class vm_instr;
 
-struct vm_cfun_sig {
+enum class vm_ffi_call_kind { Ctor, Cases, CFun, Field };
+
+struct vm_ffi_call {
+    vm_ffi_call_kind m_kind;
+};
+
+/* used for implementing constructor, eliminator and projections of ffi structures */
+struct vm_cstruct_fields : vm_ffi_call {
+    ffi_type m_struct;
+    buffer<ffi_type*> m_fields;
+    buffer<ffi_type> m_alloc;
+};
+
+struct vm_cfun_sig : vm_ffi_call {
     buffer<ffi_type *> m_args;
     ffi_type *m_rtype;
     ffi_cif m_cif;
@@ -558,7 +571,7 @@ struct vm_decl_cell {
     list<vm_local_info>   m_args_info;
     optional<pos_info>    m_pos;
     optional<std::string> m_olean;
-    unique_ptr<vm_cfun_sig> m_sig;
+    unique_ptr<vm_ffi_call> m_sig;
     union {
         struct {
             unsigned   m_code_size;
@@ -569,7 +582,7 @@ struct vm_decl_cell {
     };
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_function fn);
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfunction fn);
-    vm_decl_cell(name const & n, unsigned idx, unique_ptr<vm_cfun_sig> sig, vm_cfunction fn);
+    vm_decl_cell(name const & n, unsigned idx, unique_ptr<vm_ffi_call> sig, unsigned arity, vm_cfunction fn);
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                  list<vm_local_info> const & args_info, optional<pos_info> const & pos,
                  optional<std::string> const & olean);
@@ -585,8 +598,8 @@ public:
     vm_decl():m_ptr(nullptr) {}
     vm_decl(name const & n, unsigned idx, unsigned arity, vm_function fn):
         vm_decl(new vm_decl_cell(n, idx, arity, fn)) {}
-    vm_decl(name const & n, unsigned idx, unique_ptr<vm_cfun_sig> sig, vm_cfunction fn):
-        vm_decl(new vm_decl_cell(n, idx, std::move(sig), fn)) {}
+    vm_decl(name const & n, unsigned idx, unique_ptr<vm_ffi_call> sig, unsigned arity, vm_cfunction fn):
+        vm_decl(new vm_decl_cell(n, idx, std::move(sig), arity, fn)) {}
     vm_decl(name const & n, unsigned idx, unsigned arity, vm_cfunction fn):
         vm_decl(new vm_decl_cell(n, idx, arity, fn)) {}
     vm_decl(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
@@ -611,7 +624,7 @@ public:
     bool is_ffi()  const { lean_assert(m_ptr); return is_cfun() && m_ptr->m_sig.get() != nullptr; }
     unsigned get_idx() const { lean_assert(m_ptr); return m_ptr->m_idx; }
     name get_name() const { lean_assert(m_ptr); return m_ptr->m_name; }
-    vm_cfun_sig const & get_sig() const { lean_assert(m_ptr && is_ffi()); return *m_ptr->m_sig; }
+    vm_ffi_call const & get_sig() const { lean_assert(m_ptr && is_ffi()); return *m_ptr->m_sig; }
     unsigned get_arity() const { lean_assert(m_ptr); return m_ptr->m_arity; }
     unsigned get_code_size() const { lean_assert(is_bytecode()); return m_ptr->m_code_size; }
     vm_instr const * get_code() const { lean_assert(is_bytecode()); return m_ptr->m_code; }
@@ -929,6 +942,7 @@ environment add_native(environment const & env, name const & n, unsigned arity, 
 environment load_foreign_object(environment const & env, name const & n, std::string const & file_name);
 environment add_foreign_symbol(environment const & env, name const & obj, name const & fn,
                                std::string const & symbol);
+environment add_foreign_struct(environment const & env, name const & n);
 
 unsigned get_vm_index(name const & n);
 unsigned get_vm_index_bound();
