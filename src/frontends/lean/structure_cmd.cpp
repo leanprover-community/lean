@@ -108,6 +108,25 @@ buffer<name> get_structure_fields(environment const & env, name const & S) {
     return fields;
 }
 
+buffer<std::tuple<name,expr>> get_structure_field_types(environment const & env, name const & S) {
+    lean_assert(is_structure_like(env, S));
+    buffer<std::tuple<name,expr>> fields;
+    level_param_names ls; unsigned nparams; inductive::intro_rule intro;
+    std::tie(ls, nparams, intro) = get_structure_info(env, S);
+    expr intro_type = inductive::intro_rule_type(intro);
+    unsigned i = 0;
+    while (is_pi(intro_type)) {
+        if (i >= nparams)
+            fields.push_back(std::make_tuple(deinternalize_field_name(binding_name(intro_type)),
+                                             binding_domain(intro_type)));
+        i++;
+        auto local = mk_local(mk_fresh_name(), binding_name(intro_type),
+                              binding_domain(intro_type), binding_info(intro_type));
+        intro_type = instantiate(binding_body(intro_type), local);
+    }
+    return fields;
+}
+
 bool is_structure(environment const & env, name const & S) {
     if (!is_structure_like(env, S))
         return false;

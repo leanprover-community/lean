@@ -33,7 +33,7 @@ constant my_fun : uint_32 → int_64 → int_64
 
 @[ffi foo]
 structure my_basic_struct :=
-(count : uint_32) (result int_64)
+(count : uint_32) (result : int_64)
 
 
 #eval my_fun 7 3
