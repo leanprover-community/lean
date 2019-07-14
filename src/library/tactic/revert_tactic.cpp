@@ -42,12 +42,12 @@ vm_obj revert(list<expr> const & ls, tactic_state const & s, bool preserve_local
                         locals.push_back(l);
                         seen.insert(l);
                     } else {
-                        return tactic::mk_exception(sstream() << "revert tactic failed, duplicate '"
-                                                << mlocal_pp_name(l) << "' hypothesis", s);
+                        return tactic::mk_exception(sstream() << "revert tactic failed, duplicate hypothesis '"
+                                                    << mlocal_pp_name(l) << "'", s);
                     }
                 } else {
-                    return tactic::mk_exception(sstream() << "revert tactic failed, unknown '"
-                                                << mlocal_pp_name(l) << "' hypothesis", s);
+                    return tactic::mk_exception(sstream() << "revert tactic failed, unknown hypothesis '"
+                                                << mlocal_pp_name(l) << "'", s);
                 }
             } else {
                 return tactic::mk_exception(sstream() << "revert tactic failed, expecting local variable, found '"
