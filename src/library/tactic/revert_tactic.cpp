@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #include "library/trace.h"
 #include "library/vm/vm_list.h"
 #include "library/tactic/tactic_state.h"
+#include "kernel/expr_sets.h"
 
 namespace lean {
 expr revert(environment const & env, options const & opts, metavar_context & mctx, expr const & mvar, buffer<expr> & locals,
@@ -33,10 +34,17 @@ vm_obj revert(list<expr> const & ls, tactic_state const & s, bool preserve_local
         if (!g) return mk_no_goals_exception(s);
         local_context lctx         = g->get_context();
         buffer<expr> locals;
+        expr_set seen;
         for (expr const & l : ls) {
             if (is_mlocal(l)) {
                 if (lctx.find_local_decl(l)) {
-                    locals.push_back(l);
+                    if (seen.find(l) == seen.end()) {
+                        locals.push_back(l);
+                        seen.insert(l);
+                    } else {
+                        return tactic::mk_exception(sstream() << "revert tactic failed, duplicate '"
+                                                << mlocal_pp_name(l) << "' hypothesis", s);
+                    }
                 } else {
                     return tactic::mk_exception(sstream() << "revert tactic failed, unknown '"
                                                 << mlocal_pp_name(l) << "' hypothesis", s);
