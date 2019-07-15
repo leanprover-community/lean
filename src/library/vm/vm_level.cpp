@@ -129,7 +129,7 @@ vm_obj level_fold(vm_obj const &, vm_obj const & l, vm_obj const & a, vm_obj con
     return r;
 }
 
-// meta_constant level.instantiate : level → list (name × level) → list level
+// meta_constant level.instantiate : level → list (name × level) → level
 vm_obj level_instantiate(vm_obj const & o, vm_obj const & lst) {
     level const & l = to_level(o);
     buffer<name> ns;
