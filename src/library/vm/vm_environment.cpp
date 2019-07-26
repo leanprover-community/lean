@@ -139,11 +139,9 @@ vm_obj environment_add_ginductive(vm_obj const & env, vm_obj const & opts, vm_ob
         if (inds.empty())
             throw exception("cannot declare 0 inductives");
 
-        std::cout << "foo bar\n";
         environment new_env = add_inductive_declaration(
                     to_env(env), to_options(opts), implicit_infer_map,
                     lp, params, inds, intro_rules, !to_bool(is_meta));
-        std::cout << "bar foo bar\n";
 
         return mk_vm_exceptional_success(to_obj(new_env));
     } catch (throwable & ex) {
