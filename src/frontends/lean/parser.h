@@ -386,6 +386,12 @@ public:
     virtual void next() override final { if (m_curr != token_kind::Eof) scan(); }
     /** \brief Return true iff the current token is a keyword (or command keyword) named \c tk */
     virtual bool curr_is_token(name const & tk) const override final;
+
+    /** \brief Returns the n-th token ahead, where the 0th one is the next one (after \c curr()). */
+    token_kind ahead(int n = 0);
+    /** \brief Lookahead version of \c curr_is_token. See \c ahead(). */
+    bool ahead_is_token(name const & tk, int n = 0);
+
     /** \brief Check current token, and move to next characther, throw exception if current token is not \c tk.  Returns true if succesful. */
     bool check_token_next(name const & tk, char const * msg);
     void check_token_or_id_next(name const & tk, char const * msg);

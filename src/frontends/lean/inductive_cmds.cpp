@@ -372,9 +372,11 @@ class inductive_cmd_fn {
             if (m_p.curr() == token_kind::DocBlock) {
                 // If the next token is a doc block, it applies to the following constructor, *if one exists*.
                 // Otherwise, it might be part of the next command.
-                //if (m_p.next_is_token(get_bar_tk()) || m_p.next_is_token(get_comma_tk()) {
+                if (m_p.ahead_is_token(get_bar_tk()) || m_p.ahead_is_token(get_comma_tk())) {
                     doc = m_p.parse_doc_block();
-                //}
+                } else {
+                    return;
+                }
             } else if (!m_p.curr_is_token(get_bar_tk()) && !m_p.curr_is_token(get_comma_tk())) {
                 // No more constructors, we're done.
                 return;

@@ -90,7 +90,7 @@ Pass these along with the `cmake ../../src` command.
 
 Incremental Builds
 ------------------
-To speed up interactive development, you can use `make -j<nthreads> bin_lean` or `ninja bin_lean`, which will build the Lean executable (into `bin/`), but not all the tests. To build Lean and the standard library, use `make -j<nthread> standard_lib` or `ninja standard_lib`.
+To speed up interactive development, you can use `make -j<nthreads> bin_lean` or `ninja bin_lean`, which will build the Lean executable (into `bin/`), but not all the tests. To build Lean and the standard library, use `make -j<nthreads> standard_lib` or `ninja standard_lib`.
 
 Further Information
 -------------------
