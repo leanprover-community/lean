@@ -17,4 +17,4 @@ void set_processor_rounding(bool plus_inf) {
     else
         std::fesetround(FE_DOWNWARD);
 }
-};
+}

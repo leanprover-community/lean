@@ -49,11 +49,11 @@ void log_tree::node::for_each(std::function<bool(log_tree::node const &)> const 
             c.for_each(fn);
         });
     }
-};
+}
 
 void log_tree::for_each(std::function<bool(log_tree::node const &)> const & fn) const { // NOLINT
     m_root.for_each(fn);
-};
+}
 
 void log_tree::node::detach_core(std::vector<log_tree::event> & events) const {
     if (m_ptr->m_detached) return;

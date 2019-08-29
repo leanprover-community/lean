@@ -21,4 +21,4 @@ double numeric_traits<double>::g_one = 1.0;
 double numeric_traits<double>::log(double d) {
     return std::log(d);
 }
-};
+}
