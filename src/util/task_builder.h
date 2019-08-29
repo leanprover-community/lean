@@ -135,7 +135,7 @@ public:
 template <class Res, class Fn, class Arg>
 task_builder<Res> map(task<Arg> const & arg, Fn && fn) {
     return std::move(task_builder<Res>([arg, fn] { return fn(get(arg)); }).depends_on(arg));
-};
+}
 
 template <class Res>
 task<std::vector<Res>> traverse(std::vector<task<Res>> const & ts) {
@@ -200,6 +200,6 @@ gtask mk_deep_dependency(task<Arg> const & arg, Fn && fn) {
             fn(deps, *v);
         }
     });
-};
+}
 
 }
