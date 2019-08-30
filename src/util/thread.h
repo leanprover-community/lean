@@ -15,7 +15,7 @@ Author: Leonardo de Moura
 
 namespace lean {
 namespace chrono = std::chrono;
-};
+}
 
 #if defined(LEAN_MULTI_THREAD)
 #include <thread>
