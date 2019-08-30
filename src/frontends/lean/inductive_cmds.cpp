@@ -375,11 +375,11 @@ class inductive_cmd_fn {
                 if (m_p.ahead_is_token(get_bar_tk()) || m_p.ahead_is_token(get_comma_tk())) {
                     doc = m_p.parse_doc_block();
                 } else {
-                    return;
+                    break;
                 }
             } else if (!m_p.curr_is_token(get_bar_tk()) && !m_p.curr_is_token(get_comma_tk())) {
                 // No more constructors, we're done.
-                return;
+                break;
             }
 
             m_p.next();
