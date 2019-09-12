@@ -360,36 +360,52 @@ class inductive_cmd_fn {
         }
     }
 
-    void parse_intro_rules(bool has_params, expr const & ind, buffer<expr> & intro_rules, bool prepend_ns) {
-        // If the next token is not `|`, then the inductive type has no constructors
-        if (m_p.curr_is_token(get_bar_tk())) {
-            m_p.next();
-            while (true) {
-                m_pos = m_p.pos();
-                name ir_name = mlocal_name(ind) + m_p.check_atomic_id_next("invalid introduction rule, atomic identifier expected");
-                if (prepend_ns)
-                    ir_name = get_namespace(m_env) + ir_name;
-                parser::local_scope S(m_p);
-                buffer<expr> params;
-                implicit_infer_kind kind = implicit_infer_kind::Implicit;
-                m_p.parse_optional_binders(params, kind);
-                m_implicit_infer_map.insert(ir_name, kind);
-                for (expr const & param : params)
-                    m_p.add_local(param);
-                expr ir_type;
-                if (has_params || m_p.curr_is_token(get_colon_tk())) {
-                    m_p.check_token_next(get_colon_tk(), "invalid introduction rule, ':' expected");
-                    ir_type = m_p.parse_expr();
+    void parse_intro_rules(bool has_params, expr const & ind, buffer<expr> & intro_rules,
+                           buffer<optional<std::string>> & intro_rule_docs, bool prepend_ns) {
+        // If the next token is neither `|` nor a doc block, then the inductive type has no constructors
+        if (!m_p.curr_is_token(get_bar_tk()) && (m_p.curr() != token_kind::DocBlock)) {
+            return;
+        }
+
+        while (true) {
+            optional<std::string> doc {};
+            if (m_p.curr() == token_kind::DocBlock) {
+                // If the next token is a doc block, it applies to the following constructor, *if one exists*.
+                // Otherwise, it might be part of the next command.
+                if (m_p.ahead_is_token(get_bar_tk()) || m_p.ahead_is_token(get_comma_tk())) {
+                    doc = m_p.parse_doc_block();
                 } else {
-                    ir_type = ind;
-                }
-                ir_type = Pi(params, ir_type, m_p);
-                intro_rules.push_back(mk_local(ir_name, ir_type));
-                lean_trace(name({"inductive", "parse"}), tout() << ir_name << " : " << ir_type << "\n";);
-                if (!m_p.curr_is_token(get_bar_tk()) && !m_p.curr_is_token(get_comma_tk()))
                     break;
-                m_p.next();
+                }
+            } else if (!m_p.curr_is_token(get_bar_tk()) && !m_p.curr_is_token(get_comma_tk())) {
+                // No more constructors, we're done.
+                break;
             }
+
+            m_p.next();
+
+            m_pos = m_p.pos();
+            name ir_name = mlocal_name(ind) + m_p.check_atomic_id_next("invalid introduction rule, atomic identifier expected");
+            if (prepend_ns)
+                ir_name = get_namespace(m_env) + ir_name;
+            parser::local_scope S(m_p);
+            buffer<expr> params;
+            implicit_infer_kind kind = implicit_infer_kind::Implicit;
+            m_p.parse_optional_binders(params, kind);
+            m_implicit_infer_map.insert(ir_name, kind);
+            for (expr const & param : params)
+                m_p.add_local(param);
+            expr ir_type;
+            if (has_params || m_p.curr_is_token(get_colon_tk())) {
+                m_p.check_token_next(get_colon_tk(), "invalid introduction rule, ':' expected");
+                ir_type = m_p.parse_expr();
+            } else {
+                ir_type = ind;
+            }
+            ir_type = Pi(params, ir_type, m_p);
+            intro_rules.push_back(mk_local(ir_name, ir_type));
+            intro_rule_docs.push_back(doc);
+            lean_trace(name({"inductive", "parse"}), tout() << ir_name << " : " << ir_type << "\n";);
         }
     }
 
@@ -571,7 +587,7 @@ class inductive_cmd_fn {
         }
     }
 
-    expr parse_inductive(buffer<expr> & params, buffer<expr> & intro_rules) {
+    expr parse_inductive(buffer<expr> & params, buffer<expr> & intro_rules, buffer<optional<std::string>> & intro_rule_docs) {
         parser::local_scope scope(m_p);
         m_pos = m_p.pos();
 
@@ -588,7 +604,7 @@ class inductive_cmd_fn {
         m_p.add_local(ind);
         m_p.parse_local_notation_decl();
 
-        parse_intro_rules(!params.empty(), ind, intro_rules, false);
+        parse_intro_rules(!params.empty(), ind, intro_rules, intro_rule_docs, false);
 
         buffer<expr> ind_intro_rules;
         ind_intro_rules.push_back(ind);
@@ -604,7 +620,8 @@ class inductive_cmd_fn {
         return ind;
     }
 
-    void parse_mutual_inductive(buffer<expr> & params, buffer<expr> & inds, buffer<buffer<expr> > & intro_rules) {
+    void parse_mutual_inductive(buffer<expr> & params, buffer<expr> & inds, buffer<buffer<expr> > & intro_rules,
+                                buffer<buffer<optional<std::string>>> & intro_rule_docs) {
         parser::local_scope scope(m_p);
 
         buffer<expr> pre_inds;
@@ -620,7 +637,8 @@ class inductive_cmd_fn {
             m_mut_attrs.push_back(attrs);
             lean_trace(name({"inductive", "parse"}), tout() << mlocal_name(pre_ind) << " : " << ind_type << "\n";);
             intro_rules.emplace_back();
-            parse_intro_rules(!params.empty(), pre_ind, intro_rules.back(), true);
+            intro_rule_docs.emplace_back();
+            parse_intro_rules(!params.empty(), pre_ind, intro_rules.back(), intro_rule_docs.back(), true);
             expr ind = mk_local(get_namespace(m_p.env()) + mlocal_name(pre_ind), ind_type);
             inds.push_back(ind);
         }
@@ -660,18 +678,37 @@ public:
         check_modifiers();
     }
 
-    void post_process(buffer<expr> const & new_params, buffer<expr> const & new_inds, buffer<buffer<expr> > const & new_intro_rules) {
+    void post_process(buffer<expr> const & new_params, buffer<expr> const & new_inds, buffer<buffer<expr> > const & new_intro_rules,
+                      buffer<buffer<optional<std::string>>> const & new_intro_rule_docs) {
         add_aliases(new_params, new_inds, new_intro_rules);
         add_namespaces(new_inds);
-        for (expr const & ind : new_inds) {
+
+        lean_assert(new_intro_rules.size() == new_intro_rule_docs.size());
+        lean_assert(new_inds.size() == new_intro_rules.size());
+        for (size_t i = 0; i < new_inds.size(); i++) {
+            expr const & ind = new_inds[i];
+
             /* TODO(Leo): add support for doc-strings in mutual inductive definitions.
                We are currently using the same doc string for all elements.
             */
             if (m_meta_info.m_doc_string)
                 m_env = add_doc_string(m_env, mlocal_name(ind), *m_meta_info.m_doc_string);
+
             /* Apply attributes last so that they may access any information on the new decl */
             m_env = m_meta_info.m_attrs.apply(m_env, m_p.ios(), mlocal_name(ind));
+
+            /* Add doc strings for constructors that have them. */
+            lean_assert(new_intro_rules[i].size() == new_intro_rule_docs[i].size());
+            for (size_t j = 0; j < new_intro_rules[i].size(); j++) {
+                expr const & rule = new_intro_rules[i][j];
+                optional<std::string> const & doc = new_intro_rule_docs[i][j];
+
+                if (doc) {
+                    m_env = add_doc_string(m_env, mlocal_name(rule), *doc);
+                }
+            }
         }
+
         lean_assert(new_inds.size() == m_mut_attrs.size());
         for (unsigned i = 0; i < new_inds.size(); ++i)
             m_env = m_mut_attrs[i].apply(m_env, m_p.ios(), mlocal_name(new_inds[i]));
@@ -681,18 +718,21 @@ public:
         buffer<expr>          m_params;
         buffer<expr>          m_inds;
         buffer<buffer<expr> > m_intro_rules;
+        buffer<buffer<optional<std::string>>> m_intro_rule_docs;
     };
 
     void parse(parse_result & result) {
         buffer<expr>          params;
         buffer<expr>          inds;
         buffer<buffer<expr> > intro_rules;
+        // intro_rule_docs do not have to go through elaboration, so we don't need a temporary here.
 
         if (m_meta_info.m_modifiers.m_is_mutual) {
-            parse_mutual_inductive(params, inds, intro_rules);
+            parse_mutual_inductive(params, inds, intro_rules, result.m_intro_rule_docs);
         } else {
             intro_rules.emplace_back();
-            inds.push_back(parse_inductive(params, intro_rules.back()));
+            result.m_intro_rule_docs.emplace_back();
+            inds.push_back(parse_inductive(params, intro_rules.back(), result.m_intro_rule_docs.back()));
         }
 
         if (!m_explicit_levels) {
@@ -707,7 +747,7 @@ public:
         parse(r);
         m_env = add_inductive_declaration(m_p.env(), m_p.get_options(), m_implicit_infer_map, m_lp_names, r.m_params,
                                           r.m_inds, r.m_intro_rules, !m_meta_info.m_modifiers.m_is_meta);
-        post_process(r.m_params, r.m_inds, r.m_intro_rules);
+        post_process(r.m_params, r.m_inds, r.m_intro_rules, r.m_intro_rule_docs);
         return m_env;
     }
 

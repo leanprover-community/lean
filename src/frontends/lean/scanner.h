@@ -111,6 +111,62 @@ public:
 
     bool in_notation() const { return m_in_notation; }
 
+    /**
+        \brief A scope within which the scanner is looking ahead.
+        When the scope ends, scanner state is restored.
+    */
+    class lookahead_scope {
+        rlet<std::string> m_curr_line;
+        rlet<bool>        m_last_line;
+        rlet<int>         m_spos;  // current position
+        rlet<int>         m_upos;  // current position taking into account utf-8 encoding
+        rlet<int>         m_uskip; // hack for decoding utf-8, it marks how many units to skip
+        rlet<int>         m_sline; // current line
+        rlet<uchar>       m_curr;  // current char;
+
+        rlet<int>         m_pos;   // start position of the token
+        rlet<int>         m_line;  // line of the token
+
+        rlet<name>        m_name_val;
+        rlet<token_info>  m_token_info;
+        rlet<mpq>         m_num_val;
+        rlet<std::string> m_buffer;
+        rlet<std::string> m_aux_buffer;
+
+        rlet<bool>        m_in_notation;
+        rlet<bool>        m_field_notation;
+
+        scanner &         m_ref;
+        int               m_stream_pos;
+
+    public:
+        lookahead_scope(scanner & s)
+        #define RLETM(var) var(s.var)
+            : RLETM(m_curr_line)
+            , RLETM(m_last_line)
+            , RLETM(m_spos)
+            , RLETM(m_upos)
+            , RLETM(m_uskip)
+            , RLETM(m_sline)
+            , RLETM(m_curr)
+            , RLETM(m_pos)
+            , RLETM(m_line)
+            , RLETM(m_name_val)
+            , RLETM(m_token_info)
+            , RLETM(m_num_val)
+            , RLETM(m_buffer)
+            , RLETM(m_aux_buffer)
+            , RLETM(m_in_notation)
+            , RLETM(m_field_notation)
+        #undef RLETM
+            , m_ref(s)
+            , m_stream_pos(s.m_stream->tellg()) {}
+
+        ~lookahead_scope() {
+            m_ref.m_stream->seekg(m_stream_pos);
+        }
+    };
+
     class field_notation_scope : public flet<bool> {
     public:
         field_notation_scope(scanner & s, bool flag):
