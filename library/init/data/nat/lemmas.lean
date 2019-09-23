@@ -733,7 +733,7 @@ begin
     { apply nat.sub_lt _ h.left,
       apply lt_of_lt_of_le h.left h.right },
     rw [div_def, mod_def, if_pos h, if_pos h],
-    simp [left_distrib, IH _ h', add_comm],
+    simp [left_distrib, IH _ h', add_comm, add_left_comm],
     rw [← nat.add_sub_assoc h.right, nat.add_sub_cancel_left] },
   -- ¬ (0 < k ∧ k ≤ m)
   { rw [div_def, mod_def, if_neg h', if_neg h'], simp },
@@ -969,7 +969,7 @@ by rw [nat.mul_sub_left_distrib, right_distrib, right_distrib, mul_comm b a, add
        nat.add_sub_add_left]
 
 theorem succ_mul_succ_eq (a b : nat) : succ a * succ b = a*b + a + b + 1 :=
-begin rw [← add_one, ← add_one], simp [right_distrib, left_distrib] end
+begin rw [← add_one, ← add_one], simp [right_distrib, left_distrib, add_left_comm] end
 
 theorem succ_sub {m n : ℕ} (h : m ≥ n) : succ m - n = succ (m - n) :=
 exists.elim (nat.le.dest h)

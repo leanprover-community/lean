@@ -82,7 +82,7 @@ let ⟨n, (h : ↑(1+n) = a)⟩ := le.dest h in
 ⟨n, by rw add_comm at h; exact h.symm⟩
 
 lemma lt_add_succ (a : ℤ) (n : ℕ) : a < a + ↑(nat.succ n) :=
-le.intro (show a + 1 + n = a + nat.succ n, begin simp [int.coe_nat_eq, add_comm], reflexivity end)
+le.intro (show a + 1 + n = a + nat.succ n, begin simp [int.coe_nat_eq, add_comm, add_left_comm], reflexivity end)
 
 lemma lt.intro {a b : ℤ} {n : ℕ} (h : a + nat.succ n = b) : a < b :=
 h ▸ lt_add_succ a n

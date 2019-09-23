@@ -21,7 +21,7 @@ private meta def u : tactic unit :=
 `[unfold bit0 bit1 add1]
 
 private meta def usimp : tactic unit :=
-u >> `[simp]
+u >> `[simp [add_comm, add_left_comm]]
 
 lemma mul_zero [mul_zero_class α] (a : α) : a * 0 = 0 :=
 by simp
@@ -55,7 +55,7 @@ lemma neg_add_neg_eq_of_add_add_eq_zero [add_comm_group α] (a b c : α) (h : c 
 begin
   apply add_neg_eq_of_eq_add,
   apply neg_eq_of_add_eq_zero,
-  simp [add_comm] at h, simp [add_comm], assumption
+  simp [add_comm, add_left_comm] at h, simp [add_comm], assumption
 end
 
 lemma neg_add_neg_helper [add_comm_group α] (a b c : α) (h : a + b = c) : -a + -b = -c :=
@@ -143,10 +143,10 @@ by rw [h1, h2, h]
 
 
 lemma add_comm_four [add_comm_semigroup α] (a b : α) : a + a + (b + b) = (a + b) + (a + b) :=
-by simp
+by simp [add_left_comm]
 
 lemma add_comm_middle [add_comm_semigroup α] (a b c : α) : a + b + c = a + c + b :=
-by simp [add_comm]
+by simp [add_comm, add_left_comm]
 
 lemma bit0_add_bit0 [add_comm_semigroup α] (a b : α) : bit0 a + bit0 b = bit0 (a + b) :=
 by usimp
@@ -198,7 +198,7 @@ lemma bit1_add_one_helper [has_add α] [has_one α] (a t : α) (h : add1 (bit1 a
 by rw [← h]
 
 lemma one_add_bit1 [add_comm_semigroup α] [has_one α] (a : α) : 1 + bit1 a = add1 (bit1 a) :=
-begin unfold bit0 bit1 add1, simp end
+begin unfold bit0 bit1 add1, simp [add_left_comm] end
 
 lemma one_add_bit1_helper [add_comm_semigroup α] [has_one α] (a t : α)
         (h : add1 (bit1 a) = t) : 1 + bit1 a = t :=
