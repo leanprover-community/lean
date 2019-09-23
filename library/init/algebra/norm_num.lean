@@ -55,14 +55,14 @@ lemma neg_add_neg_eq_of_add_add_eq_zero [add_comm_group α] (a b c : α) (h : c 
 begin
   apply add_neg_eq_of_eq_add,
   apply neg_eq_of_add_eq_zero,
-  simp at h, simp, assumption
+  simp [add_comm] at h, simp [add_comm], assumption
 end
 
 lemma neg_add_neg_helper [add_comm_group α] (a b c : α) (h : a + b = c) : -a + -b = -c :=
 begin apply @neg_inj α, simp [neg_add, neg_neg], assumption end
 
 lemma neg_add_pos_eq_of_eq_add [add_comm_group α] (a b c : α) (h : b = c + a) : -a + b = c :=
-begin apply neg_add_eq_of_eq_add, simp at h, assumption end
+begin apply neg_add_eq_of_eq_add, simp [add_comm] at h, assumption end
 
 lemma neg_add_pos_helper1 [add_comm_group α] (a b c : α) (h : b + c = a) : -a + b = -c :=
 begin apply neg_add_eq_of_eq_add, apply eq_add_neg_of_add_eq h end
@@ -146,7 +146,7 @@ lemma add_comm_four [add_comm_semigroup α] (a b : α) : a + a + (b + b) = (a + 
 by simp
 
 lemma add_comm_middle [add_comm_semigroup α] (a b c : α) : a + b + c = a + c + b :=
-by simp
+by simp [add_comm]
 
 lemma bit0_add_bit0 [add_comm_semigroup α] (a b : α) : bit0 a + bit0 b = bit0 (a + b) :=
 by usimp
@@ -156,11 +156,11 @@ lemma bit0_add_bit0_helper [add_comm_semigroup α] (a b t : α) (h : a + b = t) 
 begin rw [← h], usimp end
 
 lemma bit1_add_bit0 [add_comm_semigroup α] [has_one α] (a b : α) : bit1 a + bit0 b = bit1 (a + b) :=
-by usimp
+by rw add_comm; usimp
 
 lemma bit1_add_bit0_helper [add_comm_semigroup α] [has_one α] (a b t : α)
         (h : a + b = t) : bit1 a + bit0 b = bit1 t :=
-begin rw [← h], usimp end
+begin rw [← h, add_comm], usimp end
 
 lemma bit0_add_bit1 [add_comm_semigroup α] [has_one α] (a b : α) :
         bit0 a + bit1 b = bit1 (a + b) :=
@@ -185,7 +185,7 @@ lemma bin_zero_add [add_monoid α] (a : α) : 0 + a = a :=
 by simp
 
 lemma one_add_bit0 [add_comm_semigroup α] [has_one α] (a : α) : 1 + bit0 a = bit1 a :=
-begin unfold bit0 bit1, simp end
+begin unfold bit0 bit1, simp [add_comm] end
 
 lemma bit0_add_one [has_add α] [has_one α] (a : α) : bit0 a + 1 = bit1 a :=
 rfl
