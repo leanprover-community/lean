@@ -1,3 +1,4 @@
+local attribute [simp] add_comm add_left_comm
 lemma nat.lt_add_of_lt {a b c : nat} : a < b → a < c + b :=
 begin
   intro h,
