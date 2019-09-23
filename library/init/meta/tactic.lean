@@ -589,14 +589,22 @@ meta constant set_basic_attribute (attr_name : name) (c_name : name) (persistent
 /-- `unset_attribute attr_name c_name` -/
 meta constant unset_attribute : name → name → tactic unit
 /-- `has_attribute attr_name c_name` succeeds if the declaration `decl_name`
-   has the attribute `attr_name`. The result is the priority. -/
-meta constant has_attribute : name → name → tactic nat
+   has the attribute `attr_name`. The result is the priority and whether or not
+   the attribute is persistent. -/
+meta constant has_attribute : name → name → tactic (bool × nat)
 
-/-- `copy_attribute attr_name c_name d_name` copy attribute `attr_name` from
-   `src` to `tgt` if it is defined for `src` -/
+/-- `copy_attribute attr_name c_name p d_name` copy attribute `attr_name` from
+   `src` to `tgt` if it is defined for `src`; make it persistent if `p` is `tt` -/
 meta def copy_attribute (attr_name : name) (src : name) (p : bool) (tgt : name) : tactic unit :=
 try $ do
-  prio ← has_attribute attr_name src,
+  (_, prio) ← has_attribute attr_name src,
+  set_basic_attribute attr_name tgt p (some prio)
+
+/-- `copy_attribute' attr_name c_name d_name` copy attribute `attr_name` from
+   `src` to `tgt` if it is defined for `src` -/
+meta def copy_attribute' (attr_name : name) (src : name) (tgt : name) : tactic unit :=
+try $ do
+  (p, prio) ← has_attribute attr_name src,
   set_basic_attribute attr_name tgt p (some prio)
 
 /-- Name of the declaration currently being elaborated. -/
