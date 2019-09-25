@@ -92,9 +92,7 @@ static bool try_instance(type_context_old & ctx, expr const & meta, tactic_state
 
 bool synth_instances(type_context_old & ctx, buffer<expr> const & metas, buffer<bool> const & is_instance,
                      tactic_state const & s, vm_obj * out_error_obj, char const * tac_name) {
-    unsigned i = is_instance.size();
-    while (i > 0) {
-        --i;
+    for (unsigned i = 0; i < is_instance.size(); i++) {
         if (!is_instance[i]) continue;
         if (!try_instance(ctx, metas[i], s, out_error_obj, tac_name))
             return false;
