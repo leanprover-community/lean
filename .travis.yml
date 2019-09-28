@@ -139,7 +139,7 @@ matrix:
          fi
        - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done & # https://blog.humphd.org/building-large-code-on-travis/
        - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
-       - kill %1
+       - pkill -9 sleep
        - |
          if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]
           then
