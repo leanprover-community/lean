@@ -28,6 +28,7 @@ public:
     local_decls():m_counter(1) {}
     local_decls(local_decls const & d):
         m_map(d.m_map), m_entries(d.m_entries), m_counter(d.m_counter) {}
+    local_decls & operator=(local_decls const &) = default;
     void insert(name const & k, V const & v) {
         m_map.insert(k, mk_pair(v, m_counter));
         m_entries = cons(mk_pair(k, v), m_entries);

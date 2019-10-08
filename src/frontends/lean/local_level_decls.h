@@ -16,6 +16,7 @@ class local_level_decls {
 public:
     local_level_decls():m_counter(1) {}
     local_level_decls(local_level_decls const & d):m_decls(d.m_decls), m_idxs(d.m_idxs), m_counter(d.m_counter) {}
+    local_level_decls & operator=(local_level_decls const &) = default;
     void insert(name const & k, level const & v) {
         m_decls.insert(k, v);
         m_idxs.insert(k, m_counter);

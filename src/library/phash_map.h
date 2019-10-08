@@ -29,6 +29,7 @@ public:
     typedef Value                      value;
     typedef key_value_pair<Key, Value> key_value;
     default_map_entry() {}
+    default_map_entry(default_map_entry const &) = default;
     default_map_entry(key_value const & d, unsigned h):parent(d, h) {}
     static default_map_entry mk_deleted() { return default_map_entry(false); }
     default_map_entry & operator=(default_map_entry const & src) {

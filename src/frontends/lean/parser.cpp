@@ -2110,7 +2110,7 @@ name parser::check_constant_next(char const * msg) {
     name id = check_id_next(msg);
     try {
         return to_constant(id, msg, p);
-    } catch (parser_error e) {
+    } catch (parser_error & e) {
         maybe_throw_error(std::move(e));
         return id;
     }
@@ -2484,7 +2484,7 @@ void parser::process_imports() {
     auto begin_pos = pos();
     try {
         parse_imports(fingerprint, imports);
-    } catch (parser_exception) {
+    } catch (parser_exception const &) {
         exception_during_scanning = std::current_exception();
     }
 

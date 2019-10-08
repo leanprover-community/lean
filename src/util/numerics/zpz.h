@@ -30,6 +30,7 @@ class zpz {
 public:
     zpz():m_value(0), m_p(2) {}
     zpz(unsigned v, unsigned p):m_value(v), m_p(p) { lean_assert(is_prime(p)); }
+    zpz(zpz const & v) : m_value(v.m_value), m_p(v.m_p) {}
 
     unsigned p() { return m_p; }
     unsigned hash() const { return m_value; }
