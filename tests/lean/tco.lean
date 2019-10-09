@@ -172,3 +172,16 @@ run_cmd do -- should fail since doesn't match the pattern.
     res ←  my_match_pattern p `([] : list ℕ),
     tactic.trace res
 
+run_cmd do
+    tco.run (do
+        lc0 ← tco.get_local_context,
+        tco.push_local `hi `(nat),
+        tco.push_local `there `(nat),
+        lc1 ← tco.get_local_context,
+        tco.pop_local,
+        lc2 ← tco.get_local_context,
+        tco.trace lc0,
+        tco.trace lc1,
+        tco.trace lc2,
+        pure ()
+)
