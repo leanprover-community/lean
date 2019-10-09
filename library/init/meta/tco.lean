@@ -1,7 +1,12 @@
 prelude
 import init.category init.meta.local_context init.meta.tactic
 
-/-- type_context_old monad. -/
+/-- A monad that exposes the functionality of the C++ class `type_context_old`.
+    The idea is that the methods in `tco` are more powerful but _unsafe_ in the
+    sense that you can create terms that do not typecheck or that are not DAGs.
+    Whereas the design of the `tactic` monad makes this difficult.
+    Note that `type_context_old` is mutable in C++ so `tco` can't implement `alternative`.
+     -/
 meta constant tco : Type → Type
 
 namespace tco
@@ -13,25 +18,26 @@ protected meta def failure : tco α := tco.fail ""
 meta instance : monad tco := {bind := @tco.bind, pure := @tco.pure}
 meta instance : monad_fail tco := {fail := λ α, tco.fail ∘ to_fmt}
 
-/- [TODO] -/ meta constant get_env : tco environment
+meta constant get_env : tco environment
 
-/- [TODO] -/ meta constant whnf : expr → tco expr
+meta constant whnf : expr → tco expr
 
 meta constant is_def_eq (e₁ e₂ : expr) (approx := ff)  :  tco bool
 meta constant unify (e₁ e₂ : expr) (approx := ff)  : tco bool
-/-- Infer the type of the given expr. Not including a typecheck. -/
+/-- Infer the type of the given expr. Inferring the type does not mean that it typechecks. Will fail if type can't be inferred. -/
 meta constant infer : expr → tco expr
-/-- Asks the kernel whether the given expression typechecks in this context. -/
-/- [TODO] -/ meta constant check : expr → tco bool
-/- [TODO] -/ meta constant is_stuck : expr → tco bool
-/- [TODO] many more reductions such as zeta, beta, head-beta etc. -/
+/-- A stuck expression `e` is an expression that _would_ reduce,
+except that a metavariable is present that prevents the reduction.
+Returns the metavariable which is causing the stuckage.
+For example, `@has_add.add nat ?m a b` can't project because `?m` is not given.
+-/
+meta constant is_stuck : expr → tco (option expr)
 
 /-- Add a local to the tco local context. -/
-/- [TODO] -/ meta constant push_local (pp_name : name) (type : expr) (bi := binder_info.default) : tco expr
-/- [TODO] -/ meta constant pop_local : tco unit
-
+meta constant push_local (pp_name : name) (type : expr) (bi := binder_info.default) : tco expr
+meta constant pop_local : tco unit
 /-- Get the local context of the tco. -/
-/- [TODO] -/ meta constant get_local_context : tco lc
+meta constant get_local_context : tco lc
 
 /- METAVARIABLES -/
 

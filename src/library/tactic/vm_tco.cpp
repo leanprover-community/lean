@@ -4,6 +4,7 @@
 #include "library/type_context.h"
 #include "library/tactic/tactic_state.h"
 #include "library/vm/vm.h"
+#include "library/vm/vm_environment.h"
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_expr.h"
 #include "library/vm/vm_nat.h"
@@ -120,7 +121,7 @@ vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & appro
     type_context_old & ctx = to_type_context_old(c0);
     type_context_old::approximate_scope scope(ctx, to_bool(approx));
     bool res = ctx.pure_is_def_eq(l, r);
-    return mk_succ(to_obj(res));
+    return mk_succ(mk_vm_bool(res));
 }
 
 vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
@@ -132,7 +133,7 @@ vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, v
     type_context_old::approximate_scope scope(ctx, to_bool(approx));
     // [NOTE] mutates the context.
     bool res = ctx.is_def_eq(l, r);
-    return mk_succ(to_obj(res));
+    return mk_succ(mk_vm_bool(res));
 }
 
 /* tco.tmp_mode : Π {α : Type}, ℕ → ℕ → tco α → tco α */
@@ -145,7 +146,7 @@ vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_
 
 vm_obj tco_in_tmp_mode (vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
-    return mk_succ(to_obj(ctx.in_tmp_mode()));
+    return mk_succ(mk_vm_bool(ctx.in_tmp_mode()));
 }
 vm_obj tco_instantiate_mvars (vm_obj const & e0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
@@ -179,16 +180,16 @@ vm_obj tco_level_tmp_get_assignment (vm_obj const & i0, vm_obj const & c0) {
 }
 vm_obj tco_is_tmp_mvar(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
-    return mk_succ(to_obj(ctx.is_tmp_mvar(to_expr(m0))));
+    return mk_succ(mk_vm_bool(ctx.is_tmp_mvar(to_expr(m0))));
 }
 vm_obj tco_is_regular_mvar(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
-    return mk_succ(to_obj(ctx.is_regular_mvar(to_expr(m0))));
+    return mk_succ(mk_vm_bool(ctx.is_regular_mvar(to_expr(m0))));
 }
 
 vm_obj tco_is_assigned(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
-    return mk_succ(to_obj(ctx.is_assigned(to_expr(m0))));
+    return mk_succ(mk_vm_bool(ctx.is_assigned(to_expr(m0))));
 }
 
 vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
@@ -204,12 +205,12 @@ vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
 
 vm_obj tco_level_mk_tmp_mvar (vm_obj const & i0) {
     unsigned i = to_unsigned(i0);
-    return to_obj(lean::mk_idx_metauniv(i));
+    return mk_succ(to_obj(lean::mk_idx_metauniv(i)));
 }
 vm_obj tco_mk_tmp_mvar (vm_obj const & i0, vm_obj const & type0) {
     unsigned i = to_unsigned(i0);
     expr y = to_expr(type0);
-    return to_obj(lean::mk_idx_metavar(i, y));
+    return mk_succ(to_obj(lean::mk_idx_metavar(i, y)));
 }
 vm_obj tco_to_tmp_mvars(vm_obj const & e0, vm_obj const & c0) {
         buffer<level> ls;
@@ -218,6 +219,27 @@ vm_obj tco_to_tmp_mvars(vm_obj const & e0, vm_obj const & c0) {
         expr e = to_expr(e0);
         expr t = to_idx_metavars(ctx.mctx(), e, ls, es);
         return mk_succ(mk_vm_pair(to_obj(t), mk_vm_pair(to_obj(ls), to_obj(es))));
+}
+
+vm_obj tco_get_env(vm_obj const & c0) {
+    return mk_succ(to_obj(to_type_context_old(c0).env()));
+}
+vm_obj tco_whnf(vm_obj const & e0, vm_obj const & c0) {
+    return mk_succ(to_obj(to_type_context_old(c0).whnf(to_expr(e0))));
+}
+vm_obj tco_is_stuck(vm_obj const & e0, vm_obj const & c0) {
+    return mk_succ(to_obj(to_type_context_old(c0).is_stuck(to_expr(e0))));
+}
+vm_obj tco_get_local_context(vm_obj const & c0) {
+    return mk_succ(to_obj(to_type_context_old(c0).lctx()));
+}
+vm_obj tco_push_local(vm_obj const & n0, vm_obj const & t0, vm_obj const & bi0, vm_obj const & c0) {
+    return mk_succ(to_obj(to_type_context_old(c0).push_local(to_name(n0), to_expr(t0), to_binder_info(bi0))));
+}
+vm_obj tco_pop_local(vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    ctx.pop_local();
+    return mk_succ(mk_vm_unit());
 }
 
 /* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
@@ -229,11 +251,17 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "fail"}), tco_fail);
     DECLARE_VM_BUILTIN(name({"tco", "run"}), tco_run);
     DECLARE_VM_BUILTIN(name({"tco", "infer"}), tco_infer);
+    DECLARE_VM_BUILTIN(name({"tco", "get_env"}), tco_get_env);
     DECLARE_VM_BUILTIN(name({"tco", "get_context"}), tco_get_context);
     DECLARE_VM_BUILTIN(name({"tco", "mk_mvar"}), tco_mk_mvar);
     DECLARE_VM_BUILTIN(name({"tco", "assign"}), tco_assign);
     DECLARE_VM_BUILTIN(name({"tco", "level", "assign"}), tco_level_assign);
     DECLARE_VM_BUILTIN(name({"tco", "unify"}), tco_unify);
+    DECLARE_VM_BUILTIN(name({"tco", "whnf"}), tco_whnf);
+    DECLARE_VM_BUILTIN(name({"tco", "is_stuck"}), tco_is_stuck);
+    DECLARE_VM_BUILTIN(name({"tco", "get_local_context"}), tco_get_local_context);
+    DECLARE_VM_BUILTIN(name({"tco", "push_local"}), tco_push_local);
+    DECLARE_VM_BUILTIN(name({"tco", "pop_local"}), tco_pop_local);
     DECLARE_VM_BUILTIN(name({"tco", "is_def_eq"}), tco_is_def_eq);
     DECLARE_VM_BUILTIN(name({"tco", "tmp_mode"}), tco_tmp_mode);
     DECLARE_VM_BUILTIN(name({"tco", "in_tmp_mode"}), tco_in_tmp_mode);

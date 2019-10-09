@@ -22,5 +22,8 @@ namespace lc
   -- /-- Removes the local with the given unique name and recursively clears decls that depend on it. -/
   -- meta constant clear_recursive : name → lc → lc
   meta constant is_subset : lc → lc → bool
-  meta constant to_local_list : lc → list expr
+  meta constant fold {α : Type} (f : α → expr → α): α → lc → α
+  meta def to_list : lc → list expr := list.reverse ∘ fold (λ acc e, e :: acc) []
+  meta def to_format : lc → format := to_fmt ∘ to_list
+  meta instance lc_has_to_format : has_to_format lc := ⟨to_format⟩
 end lc
