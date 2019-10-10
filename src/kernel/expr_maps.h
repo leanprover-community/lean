@@ -23,4 +23,4 @@ public:
     expr_cond_bi_map(bool use_bi = false):
         std::unordered_map<expr, T, expr_hash, is_cond_bi_equal_proc>(10, expr_hash(), is_cond_bi_equal_proc(use_bi)) {}
 };
-};
+}

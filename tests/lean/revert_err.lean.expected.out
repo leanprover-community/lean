@@ -1,4 +1,9 @@
-revert_err.lean:3:3: error: revert tactic failed, expecting local variable, found 'and a b'
+revert_err.lean:4:3: error: revert tactic failed, expecting local variable, found 'and a b'
 state:
 a b : Prop
+⊢ true
+revert_err.lean:7:3: error: revert tactic failed, duplicate hypothesis 'a'
+state:
+α : Type,
+a : α
 ⊢ true
