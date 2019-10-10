@@ -30,7 +30,7 @@ vm_obj to_obj(local_decl const & ld) {
         to_obj(ld.get_info()),
         to_obj(ld.get_idx())
     };
-    return mk_vm_constructor(0,6,args);
+    return mk_vm_constructor(0, 6, args);
 }
 
 vm_obj lc_mk_local_decl(vm_obj const & pn, vm_obj const & y, vm_obj const & bi, vm_obj const & lc) {

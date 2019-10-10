@@ -12,6 +12,7 @@
 #include "library/vm/vm_list.h"
 #include "library/vm/vm_level.h"
 #include "library/vm/vm_name.h"
+#include "library/tactic/fun_info_tactics.h"
 #include "library/idx_metavar.h"
 #include "library/tactic/vm_local_context.h"
 namespace lean {
@@ -84,12 +85,12 @@ vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
     return mk_succ(to_obj(lc));
 }
 
-vm_obj tco_mk_mvar (vm_obj const & n, vm_obj const & y, vm_obj const & lc, vm_obj const & c) {
+vm_obj tco_mk_mvar (vm_obj const & pp_n0, vm_obj const & y0, vm_obj const & l0, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
-    name nm = to_name(n);
-    expr ty = to_expr(y);
-    local_context l = to_local_context(lc);
-    expr mv = ctx.mk_metavar_decl(nm, l, ty);
+    name pp_n = to_name(pp_n0);
+    expr y = to_expr(y0);
+    local_context l = is_none(l0) ? ctx.lctx() : to_local_context(get_some_value(l0));
+    expr mv = ctx.mk_metavar_decl(pp_n, l, y);
     return mk_succ(to_obj(mv));
 }
 
@@ -142,7 +143,23 @@ vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_
     type_context_old::tmp_mode_scope scope(ctx, to_unsigned(nu0), to_unsigned(nv0));
     auto res  = invoke(t0, c0);
     return res;
+    // tmp_mode_scope is automatically popped when `scope` goes out of scope.
 }
+/* : Π {α : Type}, tco α → tco (option α)  */
+vm_obj tco_try(vm_obj const &, vm_obj const & t0, vm_obj const & c0) {
+    type_context_old & ctx = to_type_context_old(c0);
+    ctx.push_scope();
+    auto res = invoke(t0, c0);
+    if (is_succ(res)) {
+        // [todo] Make sure this is the right thing to call.
+        ctx.commit_scope();
+        return mk_succ(mk_vm_some(value(res)));
+    } else {
+        ctx.pop_scope();
+        return mk_succ(mk_vm_none());
+    }
+}
+
 
 vm_obj tco_in_tmp_mode (vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
@@ -205,12 +222,12 @@ vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
 
 vm_obj tco_level_mk_tmp_mvar (vm_obj const & i0) {
     unsigned i = to_unsigned(i0);
-    return mk_succ(to_obj(lean::mk_idx_metauniv(i)));
+    return to_obj(lean::mk_idx_metauniv(i));
 }
 vm_obj tco_mk_tmp_mvar (vm_obj const & i0, vm_obj const & type0) {
     unsigned i = to_unsigned(i0);
     expr y = to_expr(type0);
-    return mk_succ(to_obj(lean::mk_idx_metavar(i, y)));
+    return to_obj(lean::mk_idx_metavar(i, y));
 }
 vm_obj tco_to_tmp_mvars(vm_obj const & e0, vm_obj const & c0) {
         buffer<level> ls;
@@ -230,6 +247,13 @@ vm_obj tco_whnf(vm_obj const & e0, vm_obj const & c0) {
 vm_obj tco_is_stuck(vm_obj const & e0, vm_obj const & c0) {
     return mk_succ(to_obj(to_type_context_old(c0).is_stuck(to_expr(e0))));
 }
+vm_obj tco_is_declared(vm_obj const & e0, vm_obj const & c0) {
+    expr const & e = to_expr(e0);
+    type_context_old & ctx = to_type_context_old(c0);
+    return mk_succ(mk_vm_bool(
+        (is_metavar_decl_ref(e) && ctx.mctx().find_metavar_decl(e))
+        || (is_local_decl_ref(e) && ctx.lctx().find_local_decl(e))));
+}
 vm_obj tco_get_local_context(vm_obj const & c0) {
     return mk_succ(to_obj(to_type_context_old(c0).lctx()));
 }
@@ -240,6 +264,30 @@ vm_obj tco_pop_local(vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     ctx.pop_local();
     return mk_succ(mk_vm_unit());
+}
+vm_obj tco_get_fun_info(vm_obj const & e0, vm_obj const & n0, vm_obj const & c0) {
+    type_context_old & c = to_type_context_old(c0);
+    try { // [todo] how can get_fun_info throw?
+        // [todo] this is not DRY with `fun_info_tactics.cpp`.
+        if (is_none(n0)) {
+            return mk_succ(to_obj(get_fun_info(c, to_expr(e0))));
+        } else {
+            return mk_succ(to_obj(get_fun_info(c, to_expr(e0), force_to_unsigned(get_some_value(n0), 0))));
+        }
+    } catch (exception const & ex) {
+        // [todo] more helpful error message.
+        return mk_fail("get_fun_info failed.");
+    }
+}
+
+vm_obj tco_fold_mvars(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_obj const & c0) {
+    vm_obj r0 = mk_succ(a0);
+    to_type_context_old(c0).mctx().for_each([&](metavar_decl const & d) {
+        if (is_succ(r0)) {
+            r0 = invoke(f0, value(r0), to_obj(d.mk_ref()), c0);
+        }
+    });
+    return r0;
 }
 
 /* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
@@ -254,11 +302,13 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "get_env"}), tco_get_env);
     DECLARE_VM_BUILTIN(name({"tco", "get_context"}), tco_get_context);
     DECLARE_VM_BUILTIN(name({"tco", "mk_mvar"}), tco_mk_mvar);
+    DECLARE_VM_BUILTIN(name({"tco", "fold_mvars"}), tco_fold_mvars);
     DECLARE_VM_BUILTIN(name({"tco", "assign"}), tco_assign);
     DECLARE_VM_BUILTIN(name({"tco", "level", "assign"}), tco_level_assign);
     DECLARE_VM_BUILTIN(name({"tco", "unify"}), tco_unify);
     DECLARE_VM_BUILTIN(name({"tco", "whnf"}), tco_whnf);
     DECLARE_VM_BUILTIN(name({"tco", "is_stuck"}), tco_is_stuck);
+    DECLARE_VM_BUILTIN(name({"tco", "is_declared"}), tco_is_declared);
     DECLARE_VM_BUILTIN(name({"tco", "get_local_context"}), tco_get_local_context);
     DECLARE_VM_BUILTIN(name({"tco", "push_local"}), tco_push_local);
     DECLARE_VM_BUILTIN(name({"tco", "pop_local"}), tco_pop_local);
@@ -276,6 +326,8 @@ void initialize_vm_tco() {
     DECLARE_VM_BUILTIN(name({"tco", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
     DECLARE_VM_BUILTIN(name({"tco", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
     DECLARE_VM_BUILTIN(name({"tco", "to_tmp_mvars"}), tco_to_tmp_mvars);
+    DECLARE_VM_BUILTIN(name({"tco", "get_fun_info"}), tco_get_fun_info);
+    DECLARE_VM_BUILTIN(name({"tco", "try"}), tco_try);
 }
 void finalize_vm_tco() {
 }

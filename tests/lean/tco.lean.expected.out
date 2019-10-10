@@ -19,12 +19,12 @@ theorem my_intro_test : ∀ (x : ℕ), x = x :=
 λ (x : ℕ), eq.refl x
 ?x_1 :: ?x_2
 ([], [3, [4, 5]])
-tco.lean:169:0: error: failed to unify
+tco.lean:170:0: error: failed to unify
 state:
 2 goals
 ⊢ true
 
 ⊢ Type ?
 []
-[hi,there]
+[hi, there]
 [hi]

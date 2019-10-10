@@ -1,4 +1,4 @@
-open tco tactic
+open tco tactic lc
 
 run_cmd do
     n ← tco.run (pure "hello tco"),
@@ -80,7 +80,7 @@ meta def my_intro_core : expr → tco (expr × expr) | goal := do
         lctx ← get_context goal,
         some (h,lctx) ← pure $ lc.mk_local n y bi lctx,
         b ← pure $ expr.instantiate_var b h,
-        goal' ← mk_mvar name.anonymous b lctx,
+        goal' ← mk_mvar name.anonymous b (some lctx),
         assign goal $ expr.lam n bi y $ expr.mk_delayed_abstraction goal' [expr.local_uniq_name h],
         pure (h, goal')
     |_ := tco.failure
@@ -106,26 +106,27 @@ meta instance level.dec_lt : decidable_rel (level.has_lt.lt) := by apply_instanc
 meta def my_mk_pattern (ls : list level) (es : list expr) (target : expr)
   (ous : list level) (os : list expr) : tactic pattern
 := tco.run $ do
-  (t, extra_ls, extra_es) ← tco.to_tmp_mvars target,
-  level2meta : list (name × level) ← ls.mfoldl (λ acc l,
-    match l with
-    | level.param n :=
-        pure $ (prod.mk n $ tco.level.mk_tmp_mvar $ acc.length + extra_ls.length) :: acc
-    | _ := tco.failure end) [],
-  let convert_level := λ l, level.instantiate l level2meta,
-  expr2meta : rb_map expr expr ← es.mfoldl (λ acc e, do
-    e_type ← infer e,
-    e_type ← pure $ expr.replace e_type (λ x _, rb_map.find acc x),
-    e_type ← pure $ expr.instantiate_univ_params e_type level2meta,
-    i ← pure $ rb_map.size acc + extra_es.length,
-    m ← pure $ tco.mk_tmp_mvar i e_type,
-    pure $ rb_map.insert acc e m
-  ) $ rb_map.mk _ _,
-  let convert_expr := λ x, expr.instantiate_univ_params (expr.replace x (λ x _, rb_map.find expr2meta x)) level2meta,
-  uoutput ← pure $ ous.map convert_level,
-  output ← pure $ os.map convert_expr,
-  t ← pure $ convert_expr target,
-  pure $ tactic.pattern.mk t uoutput output (extra_ls.length + level2meta.length) (extra_es.length + expr2meta.size)
+    (t, extra_ls, extra_es) ← tco.to_tmp_mvars target,
+    level2meta : list (name × level) ← ls.mfoldl (λ acc l, do
+        match l with
+        | level.param n :=
+            pure $ (prod.mk n $ tco.level.mk_tmp_mvar $ acc.length + extra_ls.length) :: acc
+        | _ := tco.failure end
+    ) [],
+    let convert_level := λ l, level.instantiate l level2meta,
+    expr2meta : rb_map expr expr ← es.mfoldl (λ acc e, do
+        e_type ← infer e,
+        e_type ← pure $ expr.replace e_type (λ x _, rb_map.find acc x),
+        e_type ← pure $ expr.instantiate_univ_params e_type level2meta,
+        i ← pure $ rb_map.size acc + extra_es.length,
+        m ← pure $ tco.mk_tmp_mvar i e_type,
+        pure $ rb_map.insert acc e m
+    ) $ rb_map.mk _ _,
+    let convert_expr := λ x, expr.instantiate_univ_params (expr.replace x (λ x _, rb_map.find expr2meta x)) level2meta,
+    uoutput ← pure $ ous.map convert_level,
+    output ← pure $ os.map convert_expr,
+    t ← pure $ convert_expr target,
+    pure $ tactic.pattern.mk t uoutput output (extra_ls.length + level2meta.length) (extra_es.length + expr2meta.size)
 
 /-- Reimplementation of tactic.match_pattern -/
 meta def my_match_pattern_core : tactic.pattern → expr → tco (list level × list expr)
@@ -185,3 +186,35 @@ run_cmd do
         tco.trace lc2,
         pure ()
 )
+open tco
+run_cmd do
+    tco.run (do
+        hi ← mk_mvar `hi `(nat),
+        some hello ← tco.try (do
+            tco.is_declared hi >>= guardb,
+            tco.is_assigned hi >>= (guardb ∘ bnot),
+            tco.assign hi `(4),
+            tco.is_assigned hi >>= guardb,
+            hello ← mk_mvar `hello `(nat),
+            tco.is_declared hello >>= guardb,
+            pure hello
+        ),
+        tco.is_declared hi >>= guardb,
+        tco.is_declared hello >>= guardb,
+        pure ()
+    )
+
+run_cmd do
+    tco.run (do
+        hi ← mk_mvar `hi `(nat),
+        none : option unit ← tco.try (do
+            tco.assign hi `(4),
+            push_local `H `(nat),
+            failure
+        ),
+        tco.is_declared hi >>= guardb,
+        tco.is_assigned hi >>= (guardb ∘ bnot),
+        -- [TODO] the local variable stack escapes the try block. This may be confusing.
+        tco.get_local_context >>= (λ (l : lc), guardb $ not $ list.empty $ lc.to_list $ l),
+        pure ()
+    )

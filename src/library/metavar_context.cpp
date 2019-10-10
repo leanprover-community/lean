@@ -28,6 +28,10 @@ bool is_metavar_decl_ref(expr const & e) {
     return is_metavar(e) && mlocal_type(e) == *g_dummy_type;
 }
 
+expr metavar_decl::mk_ref() const {
+    return mk_meta_ref(m_name, m_pp_name);
+}
+
 name get_metavar_decl_ref_suffix(level const & u) {
     lean_assert(is_metavar_decl_ref(u));
     return meta_id(u).replace_prefix(*g_meta_prefix, name());
@@ -51,7 +55,7 @@ level metavar_context::mk_univ_metavar_decl() {
 expr metavar_context::mk_metavar_decl(optional<name> const & pp_n, local_context const & ctx, expr const & type) {
     // TODO(Leo): should use name_generator
     name n = mk_meta_decl_name();
-    m_decls.insert(n, metavar_decl(ctx, head_beta_reduce(type)));
+    m_decls.insert(n, metavar_decl(ctx, head_beta_reduce(type), n, pp_n));
     return mk_meta_ref(n, pp_n);
 }
 
@@ -72,6 +76,10 @@ metavar_decl const & metavar_context::get_metavar_decl(expr const & e) const {
         return *r;
     else
         throw exception("unknown metavariable");
+}
+
+void metavar_context::for_each(std::function<void(metavar_decl const &)> const & fn) const {
+    m_decls.for_each([&](name, metavar_decl const & d) { fn(d); });
 }
 
 optional<local_decl> metavar_context::find_local_decl(expr const & mvar, name const & n) const {
@@ -153,7 +161,7 @@ void metavar_context::instantiate_mvars_at_type_of(expr const & m) {
     expr type      = d.get_type();
     expr new_type  = instantiate_mvars(type);
     if (new_type != type) {
-        m_decls.insert(mlocal_name(m), metavar_decl(d.get_context(), new_type));
+        m_decls.insert(d.m_name, metavar_decl(d.get_context(), new_type, d.m_name, d.m_pp_name));
     }
 }
 

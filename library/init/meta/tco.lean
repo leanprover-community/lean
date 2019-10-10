@@ -1,11 +1,10 @@
 prelude
-import init.category init.meta.local_context init.meta.tactic
+import init.category init.meta.local_context init.meta.tactic init.meta.fun_info
 
 /-- A monad that exposes the functionality of the C++ class `type_context_old`.
     The idea is that the methods in `tco` are more powerful but _unsafe_ in the
-    sense that you can create terms that do not typecheck or that are not DAGs.
-    Whereas the design of the `tactic` monad makes this difficult.
-    Note that `type_context_old` is mutable in C++ so `tco` can't implement `alternative`.
+    sense that you can create terms that do not typecheck or that are infinitely descending.
+    Under the hood, `tco` is implemented as a reader monad, with a mutable `type_context_old` object.
      -/
 meta constant tco : Type → Type
 
@@ -41,7 +40,10 @@ meta constant get_local_context : tco lc
 
 /- METAVARIABLES -/
 
-meta constant mk_mvar (pp_name : name) (type : expr) (context : lc) : tco expr
+meta constant mk_mvar (pp_name : name) (type : expr) (context : option lc := none) : tco expr
+/-- Iterate over all mvars in the mvar context. -/
+meta constant fold_mvars {α : Type} (f : α → expr → tco α) : α → tco α
+meta def list_mvars : tco (list expr) := fold_mvars (λ l x, pure $ x :: l) []
 /-- Set the mvar to the following assignments.
     Works for temporary metas too.
     [WARNING] `assign` is **unsafe**:
@@ -53,8 +55,8 @@ meta constant mk_mvar (pp_name : name) (type : expr) (context : lc) : tco expr
 -/
 meta constant assign (mvar : expr) (assignment : expr) : tco unit
 meta constant level.assign (mvar : level) (assignment : level) : tco unit
-/-- Returns true if the mvar is declared. Also works for temporary mvars. -/
-meta constant mvar_is_declared (mvar : expr) : tco bool
+/-- Returns true if the given expression is a declared local constant or a declared metavariable. -/
+meta constant is_declared (e : expr) : tco bool
 meta constant is_assigned (mvar : expr) : tco bool
 meta constant get_context (mvar : expr) : tco lc
 /-- Works for temps too.-/
@@ -66,7 +68,7 @@ meta constant level.instantiate_mvars : level → tco level
 meta constant is_tmp_mvar (mvar : expr) : tco bool
 meta constant is_regular_mvar (mvar : expr) : tco bool
 
-/-- Run the given `tco` monad in a temporary mvar scope.
+/-- Run the given `tco` monad in a temporary mvar scope. ↝
 Doing this twice will push the old tmp_mvar assignments to a stack.
 So it is safe to do this whether or not you are already in tmp mode. -/
 meta constant tmp_mode (n_uvars n_mvars : nat) : tco α → tco α
@@ -83,19 +85,34 @@ meta constant level.tmp_get_assignment : nat → tco level
 meta constant to_tmp_mvars : expr → tco (expr × list level × list expr)
 meta constant mk_tmp_mvar (index : nat) (type : expr): expr
 meta constant level.mk_tmp_mvar (index : nat) : level
-/- BACKTRACKING -/
 
 /-- Run the provided tco within a backtracking scope.
     This means that any changes to the metavariable context will not be committed if the
-    inner monad fails to run.
+    inner monad fails.
+    [warning]: the local context modified by `push_local` and `pop_local`
+    is not affected by `try`. Any unpopped locals will be present after the `try` even if the inner `tco` failed.
 -/
-/- [TODO] -/ meta constant try {α : Type} : tco α → tco (option α)
+meta constant try {α : Type} : tco α → tco (option α)
+
+meta def orelse {α : Type} : tco α → tco α → tco α
+| x y := try x >>= λ x, option.rec y pure x
+
+meta instance tco_alternative : alternative tco := {
+    failure := λ α, tco.fail "failed",
+    orelse := λ α x y, tco.orelse x y
+}
 
 meta constant run (inner : tco α) (tr := tactic.transparency.semireducible) : tactic α
 
 meta def trace {α} [has_to_format α] : α → tco unit | a :=
    pure $ _root_.trace_fmt (to_fmt a) (λ u, ())
 
+meta def print_mvars : tco unit := do
+    mvs ← list_mvars,
+    mvs ← pure $ mvs.map (λ x, match x with (expr.mvar _ pp _) := to_fmt pp | _ := "" end),
+    trace mvs
+
+meta constant get_fun_info (f : expr) (nargs : option nat := none) : tco fun_info
 
 end tco
 
