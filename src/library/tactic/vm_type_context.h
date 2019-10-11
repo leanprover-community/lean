@@ -2,6 +2,6 @@
 #pragma once
 #include "library/vm/vm.h"
 namespace lean {
-    void initialize_vm_tco();
-    void finalize_vm_tco();
+    void initialize_vm_type_context();
+    void finalize_vm_type_context();
 }

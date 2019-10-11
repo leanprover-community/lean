@@ -290,45 +290,45 @@ vm_obj tco_fold_mvars(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_o
     return r0;
 }
 
-/* [NOTE] The `tco` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
+/* [NOTE] The `tc` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
    Except because the underlying type_context_old is mutating,
    we do not allow the user to see this structure. */
-void initialize_vm_tco() {
-    DECLARE_VM_BUILTIN(name({"tco", "pure"}), tco_pure);
-    DECLARE_VM_BUILTIN(name({"tco", "bind"}), tco_bind);
-    DECLARE_VM_BUILTIN(name({"tco", "fail"}), tco_fail);
-    DECLARE_VM_BUILTIN(name({"tco", "run"}), tco_run);
-    DECLARE_VM_BUILTIN(name({"tco", "infer"}), tco_infer);
-    DECLARE_VM_BUILTIN(name({"tco", "get_env"}), tco_get_env);
-    DECLARE_VM_BUILTIN(name({"tco", "get_context"}), tco_get_context);
-    DECLARE_VM_BUILTIN(name({"tco", "mk_mvar"}), tco_mk_mvar);
-    DECLARE_VM_BUILTIN(name({"tco", "fold_mvars"}), tco_fold_mvars);
-    DECLARE_VM_BUILTIN(name({"tco", "assign"}), tco_assign);
-    DECLARE_VM_BUILTIN(name({"tco", "level", "assign"}), tco_level_assign);
-    DECLARE_VM_BUILTIN(name({"tco", "unify"}), tco_unify);
-    DECLARE_VM_BUILTIN(name({"tco", "whnf"}), tco_whnf);
-    DECLARE_VM_BUILTIN(name({"tco", "is_stuck"}), tco_is_stuck);
-    DECLARE_VM_BUILTIN(name({"tco", "is_declared"}), tco_is_declared);
-    DECLARE_VM_BUILTIN(name({"tco", "get_local_context"}), tco_get_local_context);
-    DECLARE_VM_BUILTIN(name({"tco", "push_local"}), tco_push_local);
-    DECLARE_VM_BUILTIN(name({"tco", "pop_local"}), tco_pop_local);
-    DECLARE_VM_BUILTIN(name({"tco", "is_def_eq"}), tco_is_def_eq);
-    DECLARE_VM_BUILTIN(name({"tco", "tmp_mode"}), tco_tmp_mode);
-    DECLARE_VM_BUILTIN(name({"tco", "in_tmp_mode"}), tco_in_tmp_mode);
-    DECLARE_VM_BUILTIN(name({"tco", "instantiate_mvars"}), tco_instantiate_mvars);
-    DECLARE_VM_BUILTIN(name({"tco", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
-    DECLARE_VM_BUILTIN(name({"tco", "tmp_get_assignment"}), tco_tmp_get_assignment);
-    DECLARE_VM_BUILTIN(name({"tco", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
-    DECLARE_VM_BUILTIN(name({"tco", "is_tmp_mvar"}), tco_is_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"tco", "is_regular_mvar"}), tco_is_regular_mvar);
-    DECLARE_VM_BUILTIN(name({"tco", "is_assigned"}), tco_is_assigned);
-    DECLARE_VM_BUILTIN(name({"tco", "get_assignment"}), tco_get_assignment);
-    DECLARE_VM_BUILTIN(name({"tco", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"tco", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"tco", "to_tmp_mvars"}), tco_to_tmp_mvars);
-    DECLARE_VM_BUILTIN(name({"tco", "get_fun_info"}), tco_get_fun_info);
-    DECLARE_VM_BUILTIN(name({"tco", "try"}), tco_try);
+void initialize_vm_type_context() {
+    DECLARE_VM_BUILTIN(name({"type_context", "pure"}), tco_pure);
+    DECLARE_VM_BUILTIN(name({"type_context", "bind"}), tco_bind);
+    DECLARE_VM_BUILTIN(name({"type_context", "fail"}), tco_fail);
+    DECLARE_VM_BUILTIN(name({"type_context", "run"}), tco_run);
+    DECLARE_VM_BUILTIN(name({"type_context", "infer"}), tco_infer);
+    DECLARE_VM_BUILTIN(name({"type_context", "get_env"}), tco_get_env);
+    DECLARE_VM_BUILTIN(name({"type_context", "get_context"}), tco_get_context);
+    DECLARE_VM_BUILTIN(name({"type_context", "mk_mvar"}), tco_mk_mvar);
+    DECLARE_VM_BUILTIN(name({"type_context", "fold_mvars"}), tco_fold_mvars);
+    DECLARE_VM_BUILTIN(name({"type_context", "assign"}), tco_assign);
+    DECLARE_VM_BUILTIN(name({"type_context", "level", "assign"}), tco_level_assign);
+    DECLARE_VM_BUILTIN(name({"type_context", "unify"}), tco_unify);
+    DECLARE_VM_BUILTIN(name({"type_context", "whnf"}), tco_whnf);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_stuck"}), tco_is_stuck);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_declared"}), tco_is_declared);
+    DECLARE_VM_BUILTIN(name({"type_context", "get_local_context"}), tco_get_local_context);
+    DECLARE_VM_BUILTIN(name({"type_context", "push_local"}), tco_push_local);
+    DECLARE_VM_BUILTIN(name({"type_context", "pop_local"}), tco_pop_local);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_def_eq"}), tco_is_def_eq);
+    DECLARE_VM_BUILTIN(name({"type_context", "tmp_mode"}), tco_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"type_context", "in_tmp_mode"}), tco_in_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"type_context", "instantiate_mvars"}), tco_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"type_context", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"type_context", "tmp_get_assignment"}), tco_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"type_context", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_tmp_mvar"}), tco_is_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_regular_mvar"}), tco_is_regular_mvar);
+    DECLARE_VM_BUILTIN(name({"type_context", "is_assigned"}), tco_is_assigned);
+    DECLARE_VM_BUILTIN(name({"type_context", "get_assignment"}), tco_get_assignment);
+    DECLARE_VM_BUILTIN(name({"type_context", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"type_context", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"type_context", "to_tmp_mvars"}), tco_to_tmp_mvars);
+    DECLARE_VM_BUILTIN(name({"type_context", "get_fun_info"}), tco_get_fun_info);
+    DECLARE_VM_BUILTIN(name({"type_context", "try"}), tco_try);
 }
-void finalize_vm_tco() {
+void finalize_vm_type_context() {
 }
 }

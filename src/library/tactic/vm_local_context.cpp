@@ -65,11 +65,11 @@ vm_obj lc_fold(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_obj cons
 }
 
 void initialize_vm_local_context() {
-    DECLARE_VM_BUILTIN(name({"lc", "mk_local"}), lc_mk_local_decl);
-    DECLARE_VM_BUILTIN(name({"lc", "get_local"}), lc_get_local);
-    DECLARE_VM_BUILTIN(name({"lc", "get_local_decl"}), lc_get_local_decl);
-    DECLARE_VM_BUILTIN(name({"lc", "is_subset"}), lc_is_subset);
-    DECLARE_VM_BUILTIN(name({"lc", "fold"}), lc_fold);
+    DECLARE_VM_BUILTIN(name({"local_context", "mk_local"}),  lc_mk_local_decl);
+    DECLARE_VM_BUILTIN(name({"local_context", "get_local"}), lc_get_local);
+    DECLARE_VM_BUILTIN(name({"local_context", "get_local_decl"}), lc_get_local_decl);
+    DECLARE_VM_BUILTIN(name({"local_context", "is_subset"}), lc_is_subset);
+    DECLARE_VM_BUILTIN(name({"local_context", "fold"}), lc_fold);
 }
 void finalize_vm_local_context() {
 }

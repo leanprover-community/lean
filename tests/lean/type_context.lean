@@ -1,32 +1,32 @@
-open tco tactic lc
+open type_context tactic local_context
 
 run_cmd do
-    n ← tco.run (pure "hello tco"),
+    n ← type_context.run (pure "hello type_context"),
     trace n
 
 run_cmd do
-    n ← tco.run (do x ← pure "hello", pure x),
+    n ← type_context.run (do x ← pure "hello", pure x),
     trace n
 
 run_cmd do
-    n ← tco.run $ (λ x, x) <$>  pure "hello",
+    n ← type_context.run $ (λ x, x) <$>  pure "hello",
     trace n
 
 run_cmd do -- should fail
-    f : ℕ ← tco.run (tco.fail $ "I failed"),
+    f : ℕ ← type_context.run (type_context.fail $ "I failed"),
     trace f
 
 run_cmd do
     m ← tactic.mk_meta_var `(nat),
     e ← pure $ `([4,3,2]),
-    b ← tco.run (tco.unify m e),
+    b ← type_context.run (type_context.unify m e),
     trace b, -- should be ff because the types are not equal
-    tco.run (is_assigned m) >>= trace -- should be ff
+    type_context.run (is_assigned m) >>= trace -- should be ff
 
 
 run_cmd do
     m ← tactic.mk_meta_var `(nat),
-    r : nat ← tco.run (do tco.unify m `(4), tco.failure) <|> pure 5,
+    r : nat ← type_context.run (do unify m `(4), type_context.failure) <|> pure 5,
     m ← instantiate_mvars m,
     trace m -- should be "?m_1"
 
@@ -35,7 +35,7 @@ run_cmd do
 run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m ← tactic.mk_meta_var type,
-  a ← tco.run (tco.assign m m *> tco.get_assignment m),
+  a ← type_context.run (type_context.assign m m *> type_context.get_assignment m),
   trace $ to_bool $ a = m, -- should be tt
   instantiate_mvars m
 
@@ -43,7 +43,7 @@ run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m ← tactic.mk_meta_var type,
   m₂ ← to_expr ```(%%m + %%m),
-  tco.run (tco.assign m m₂),
+  type_context.run (type_context.assign m m₂),
   instantiate_mvars m
 
 /- What happens when you assign a pair of mvars to each other? -/
@@ -51,8 +51,8 @@ run_cmd do -- should fail with a 'deep recursion'
   type ← tactic.to_expr ```(nat),
   m₁ ← tactic.mk_meta_var type,
   m₂ ← tactic.mk_meta_var type,
-  tco.run (tco.assign m₁ m₂),
-  tco.run (tco.assign m₂ m₁),
+  type_context.run (type_context.assign m₁ m₂),
+  type_context.run (type_context.assign m₂ m₁),
   trace m₁,
   trace m₂
 
@@ -60,36 +60,36 @@ run_cmd do
     x : pexpr ← resolve_name `eq_mul_inv_of_mul_eq,
     x ← to_expr x,
     y ← infer_type x,
-    (t,us,es) ← tco.run $ tco.to_tmp_mvars y,
+    (t,us,es) ← type_context.run $ type_context.to_tmp_mvars y,
     trace t,
     trace us,
     trace es,
     tactic.apply `(trivial), set_goals []
 
-/- Some examples of rewriting tactics using tco. -/
+/- Some examples of rewriting tactics using type_context. -/
 
 meta def my_infer : expr → tactic expr
-| e := tco.run $ tco.infer e
+| e := type_context.run $ type_context.infer e
 
 run_cmd  my_infer `(4 : nat) >>= tactic.trace
 
-meta def my_intro_core : expr → tco (expr × expr) | goal := do
+meta def my_intro_core : expr → type_context (expr × expr) | goal := do
     target ← infer goal,
     match target with
     |(expr.pi n bi y b) := do
         lctx ← get_context goal,
-        some (h,lctx) ← pure $ lc.mk_local n y bi lctx,
+        some (h,lctx) ← pure $ local_context.mk_local n y bi lctx,
         b ← pure $ expr.instantiate_var b h,
         goal' ← mk_mvar name.anonymous b (some lctx),
         assign goal $ expr.lam n bi y $ expr.mk_delayed_abstraction goal' [expr.local_uniq_name h],
         pure (h, goal')
-    |_ := tco.failure
+    |_ := type_context.failure
     end
 open tactic
 
 meta def my_intro : name → tactic expr | n := do
     goal :: rest ← get_goals,
-    (h, goal') ← tco.run $ my_intro_core goal,
+    (h, goal') ← type_context.run $ my_intro_core goal,
     set_goals $ goal' :: rest,
     pure h
 
@@ -105,13 +105,13 @@ meta instance level.dec_lt : decidable_rel (level.has_lt.lt) := by apply_instanc
 
 meta def my_mk_pattern (ls : list level) (es : list expr) (target : expr)
   (ous : list level) (os : list expr) : tactic pattern
-:= tco.run $ do
-    (t, extra_ls, extra_es) ← tco.to_tmp_mvars target,
+:= type_context.run $ do
+    (t, extra_ls, extra_es) ← type_context.to_tmp_mvars target,
     level2meta : list (name × level) ← ls.mfoldl (λ acc l, do
         match l with
         | level.param n :=
-            pure $ (prod.mk n $ tco.level.mk_tmp_mvar $ acc.length + extra_ls.length) :: acc
-        | _ := tco.failure end
+            pure $ (prod.mk n $ type_context.level.mk_tmp_mvar $ acc.length + extra_ls.length) :: acc
+        | _ := type_context.failure end
     ) [],
     let convert_level := λ l, level.instantiate l level2meta,
     expr2meta : rb_map expr expr ← es.mfoldl (λ acc e, do
@@ -119,7 +119,7 @@ meta def my_mk_pattern (ls : list level) (es : list expr) (target : expr)
         e_type ← pure $ expr.replace e_type (λ x _, rb_map.find acc x),
         e_type ← pure $ expr.instantiate_univ_params e_type level2meta,
         i ← pure $ rb_map.size acc + extra_es.length,
-        m ← pure $ tco.mk_tmp_mvar i e_type,
+        m ← pure $ type_context.mk_tmp_mvar i e_type,
         pure $ rb_map.insert acc e m
     ) $ rb_map.mk _ _,
     let convert_expr := λ x, expr.instantiate_univ_params (expr.replace x (λ x _, rb_map.find expr2meta x)) level2meta,
@@ -129,13 +129,13 @@ meta def my_mk_pattern (ls : list level) (es : list expr) (target : expr)
     pure $ tactic.pattern.mk t uoutput output (extra_ls.length + level2meta.length) (extra_es.length + expr2meta.size)
 
 /-- Reimplementation of tactic.match_pattern -/
-meta def my_match_pattern_core : tactic.pattern → expr → tco (list level × list expr)
+meta def my_match_pattern_core : tactic.pattern → expr → type_context (list level × list expr)
 | ⟨target, uoutput, moutput, nuvars, nmvars⟩ e :=
     -- open a temporary metavariable scope.
     tmp_mode nuvars nmvars (do
         -- match target with e.
-        result ← tco.unify target e,
-        if (¬ result) then tco.fail "failed to unify" else do
+        result ← type_context.unify target e,
+        if (¬ result) then type_context.fail "failed to unify" else do
         -- fail when a tmp is not assigned
         list.mmap (level.tmp_get_assignment) $ list.range nuvars,
         list.mmap (tmp_get_assignment) $ list.range nmvars,
@@ -146,7 +146,7 @@ meta def my_match_pattern_core : tactic.pattern → expr → tco (list level × 
     )
 
 meta def my_match_pattern : pattern → expr → tactic (list level × list expr)
-|p e := do tco.run $ my_match_pattern_core p e
+|p e := do type_context.run $ my_match_pattern_core p e
 
 /- Make a pattern for testing. -/
 meta def my_pat := do
@@ -174,47 +174,47 @@ run_cmd do -- should fail since doesn't match the pattern.
     tactic.trace res
 
 run_cmd do
-    tco.run (do
-        lc0 ← tco.get_local_context,
-        tco.push_local `hi `(nat),
-        tco.push_local `there `(nat),
-        lc1 ← tco.get_local_context,
-        tco.pop_local,
-        lc2 ← tco.get_local_context,
-        tco.trace lc0,
-        tco.trace lc1,
-        tco.trace lc2,
+    type_context.run (do
+        lc0 ← type_context.get_local_context,
+        type_context.push_local `hi `(nat),
+        type_context.push_local `there `(nat),
+        lc1 ← type_context.get_local_context,
+        type_context.pop_local,
+        lc2 ← type_context.get_local_context,
+        type_context.trace lc0,
+        type_context.trace lc1,
+        type_context.trace lc2,
         pure ()
 )
-open tco
+
 run_cmd do
-    tco.run (do
+    type_context.run (do
         hi ← mk_mvar `hi `(nat),
-        some hello ← tco.try (do
-            tco.is_declared hi >>= guardb,
-            tco.is_assigned hi >>= (guardb ∘ bnot),
-            tco.assign hi `(4),
-            tco.is_assigned hi >>= guardb,
+        some hello ← type_context.try (do
+            type_context.is_declared hi >>= guardb,
+            type_context.is_assigned hi >>= (guardb ∘ bnot),
+            type_context.assign hi `(4),
+            type_context.is_assigned hi >>= guardb,
             hello ← mk_mvar `hello `(nat),
-            tco.is_declared hello >>= guardb,
+            type_context.is_declared hello >>= guardb,
             pure hello
         ),
-        tco.is_declared hi >>= guardb,
-        tco.is_declared hello >>= guardb,
+        type_context.is_declared hi >>= guardb,
+        type_context.is_declared hello >>= guardb,
         pure ()
     )
 
 run_cmd do
-    tco.run (do
+    type_context.run (do
         hi ← mk_mvar `hi `(nat),
-        none : option unit ← tco.try (do
-            tco.assign hi `(4),
+        none : option unit ← type_context.try (do
+            type_context.assign hi `(4),
             push_local `H `(nat),
             failure
         ),
-        tco.is_declared hi >>= guardb,
-        tco.is_assigned hi >>= (guardb ∘ bnot),
+        type_context.is_declared hi >>= guardb,
+        type_context.is_assigned hi >>= (guardb ∘ bnot),
         -- [TODO] the local variable stack escapes the try block. This may be confusing.
-        tco.get_local_context >>= (λ (l : lc), guardb $ not $ list.empty $ lc.to_list $ l),
+        type_context.get_local_context >>= (λ l, guardb $ not $ list.empty $ local_context.to_list $ l),
         pure ()
     )

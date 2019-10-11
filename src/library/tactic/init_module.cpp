@@ -39,7 +39,7 @@ Author: Leonardo de Moura
 #include "library/tactic/backward/init_module.h"
 #include "library/tactic/smt/init_module.h"
 #include "library/tactic/vm_local_context.h"
-#include "library/tactic/vm_tco.h"
+#include "library/tactic/vm_type_context.h"
 
 namespace lean {
 void initialize_tactic_module() {
@@ -78,7 +78,7 @@ void initialize_tactic_module() {
     initialize_hole_command();
     initialize_smt_module();
     initialize_vm_local_context();
-    initialize_vm_tco();
+    initialize_vm_type_context();
 }
 void finalize_tactic_module() {
     finalize_smt_module();
@@ -116,6 +116,6 @@ void finalize_tactic_module() {
     finalize_tactic_state();
     finalize_kabstract();
     finalize_vm_local_context();
-    finalize_vm_tco();
+    finalize_vm_type_context();
 }
 }
