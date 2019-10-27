@@ -1,4 +1,4 @@
-open type_context tactic local_context
+open tactic local_context tactic.unsafe tactic.unsafe.type_context
 
 run_cmd do
     n ← type_context.run (pure "hello type_context"),
@@ -214,7 +214,31 @@ run_cmd do
         ),
         type_context.is_declared hi >>= guardb,
         type_context.is_assigned hi >>= (guardb ∘ bnot),
-        -- [TODO] the local variable stack escapes the try block. This may be confusing.
+        -- [note] the local variable stack should escape the try block.
         type_context.get_local_context >>= (λ l, guardb $ not $ list.empty $ local_context.to_list $ l),
         pure ()
+    )
+
+-- tactic.get_fun_info and unsafe.type_context.get_fun_info should do the same thing.
+run_cmd do
+    f ← tactic.resolve_name `has_bind.and_then >>= pure ∘ pexpr.mk_explicit >>= to_expr,
+    fi ← tactic.get_fun_info f,
+    fi ← to_string <$> tactic.pp fi,
+    fi₂ ← type_context.run (unsafe.type_context.get_fun_info f),
+    fi₂ ← to_string <$> tactic.pp fi₂,
+    guard (fi = fi₂)
+
+open tactic.unsafe.type_context
+-- in_tmp_mode should work
+run_cmd do
+    type_context.run (do
+        in_tmp_mode >>= guardb ∘ bnot,
+        type_context.tmp_mode 0 3 (do
+            in_tmp_mode >>= guardb,
+            tmp_mode 0 2 (do
+                in_tmp_mode >>= guardb
+            ),
+            in_tmp_mode >>= guardb
+        ),
+        in_tmp_mode >>= guardb ∘ bnot
     )

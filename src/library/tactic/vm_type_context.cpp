@@ -16,10 +16,10 @@
 #include "library/idx_metavar.h"
 #include "library/tactic/vm_local_context.h"
 namespace lean {
-
 /* [NOTE] this is a reference to a **mutable** type_context_old object.
 The Lean user should never be able to access this object directly.
-This is fine because it is only ever used as a hidden argumeent within the `tco` monad.  */
+This is fine because it is only ever used as a hidden argumeent within the `tco` monad.
+The `type_context` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`. */
 struct vm_type_context_old : public vm_external {
     type_context_old & m_val;
     vm_type_context_old(type_context_old & v):m_val(v) {}
@@ -31,13 +31,10 @@ struct vm_type_context_old : public vm_external {
 type_context_old & to_type_context_old(vm_obj const & o) {
     return static_cast<vm_type_context_old*>(to_external(o))->m_val;
 }
-
 static vm_obj mk_fail(vm_obj const & fmt) {return mk_vm_constructor(1, mk_vm_constant_format_thunk(fmt));}
 static vm_obj mk_fail(format const & fmt) {return mk_fail(to_obj(fmt));}
 static vm_obj mk_fail(char const * msg) {return mk_fail(format(msg));}
-// static vm_obj mk_fail() {return mk_fail("");}
 static vm_obj mk_fail(sstream const & strm) {return mk_fail(strm.str().c_str()); }
-
 static vm_obj mk_succ(vm_obj const & o) {return mk_vm_constructor(0, o);}
 static bool is_succ(vm_obj const & o) {return cidx(o) == 0;}
 static vm_obj value(vm_obj const & o) {return cfield(o, 0);}
@@ -52,18 +49,15 @@ vm_obj tco_run (vm_obj const &, vm_obj const & tco, vm_obj const & t, vm_obj con
         return tactic::mk_exception(value(result), s);
     }
 }
-
-vm_obj  tco_infer (vm_obj const & e, vm_obj const & tco) {
+vm_obj tco_infer (vm_obj const & e, vm_obj const & tco) {
     type_context_old & ctx = to_type_context_old(tco);
     expr x = to_expr(e);
     expr y = ctx.infer(x);
     return mk_succ(to_obj(y));
 }
-
-vm_obj tco_pure (vm_obj const &, vm_obj const & a, vm_obj const & /*tco*/) {
+vm_obj tco_pure (vm_obj const &, vm_obj const & a, vm_obj const &) {
     return mk_succ(a);
 }
-
 vm_obj tco_bind (vm_obj const &, vm_obj const &, vm_obj const & x, vm_obj const & f, vm_obj const & tco) {
     vm_obj result = invoke(x, tco);
     if (is_succ(result)) {
@@ -72,11 +66,9 @@ vm_obj tco_bind (vm_obj const &, vm_obj const &, vm_obj const & x, vm_obj const 
         return result;
     }
 }
-
 vm_obj tco_fail (vm_obj const & /* α */, vm_obj const & fmt, vm_obj const &) {
     return mk_fail(fmt);
 }
-
 vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
     expr x = to_expr(mvar);
@@ -84,7 +76,6 @@ vm_obj tco_get_context (vm_obj const & mvar, vm_obj const & c) {
     local_context lc = ctx.mctx().get_metavar_decl(x).get_context();
     return mk_succ(to_obj(lc));
 }
-
 vm_obj tco_mk_mvar (vm_obj const & pp_n0, vm_obj const & y0, vm_obj const & l0, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
     name pp_n = to_name(pp_n0);
@@ -93,7 +84,6 @@ vm_obj tco_mk_mvar (vm_obj const & pp_n0, vm_obj const & y0, vm_obj const & l0, 
     expr mv = ctx.mk_metavar_decl(pp_n, l, y);
     return mk_succ(to_obj(mv));
 }
-
 /* expr -> expr -> tco unit */
 vm_obj tco_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c) {
     type_context_old & ctx = to_type_context_old(c);
@@ -113,7 +103,6 @@ vm_obj tco_level_assign (vm_obj const & m0, vm_obj const & a0, vm_obj const & c)
     ctx.assign(m, a);
     return mk_succ(mk_vm_unit());
 }
-
 vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
     expr l = to_expr(l0);
     if (!closed(l)) {return mk_fail(sstream() << "is_def_eq failed: " << l << " contains de-Bruijn variables.");}
@@ -124,7 +113,6 @@ vm_obj tco_is_def_eq (vm_obj const & l0, vm_obj const & r0, vm_obj const & appro
     bool res = ctx.pure_is_def_eq(l, r);
     return mk_succ(mk_vm_bool(res));
 }
-
 vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, vm_obj const & c0) {
     expr l = to_expr(l0);
     if (!closed(l)) {return mk_fail(sstream() << "is_def_eq failed: " << l << " contains de-Bruijn variables.");}
@@ -132,26 +120,22 @@ vm_obj tco_unify (vm_obj const & l0, vm_obj const & r0, vm_obj const & approx, v
     if (!closed(r)) {return mk_fail(sstream() << "is_def_eq failed: " << r << " contains de-Bruijn variables.");}
     type_context_old & ctx = to_type_context_old(c0);
     type_context_old::approximate_scope scope(ctx, to_bool(approx));
-    // [NOTE] mutates the context.
     bool res = ctx.is_def_eq(l, r);
     return mk_succ(mk_vm_bool(res));
 }
-
-/* tco.tmp_mode : Π {α : Type}, ℕ → ℕ → tco α → tco α */
+/* type_context.tmp_mode : Π {α : Type}, ℕ → ℕ → type_context α → type_context α */
 vm_obj tco_tmp_mode (vm_obj const &, vm_obj const & nu0, vm_obj const & nv0, vm_obj const & t0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     type_context_old::tmp_mode_scope scope(ctx, to_unsigned(nu0), to_unsigned(nv0));
     auto res  = invoke(t0, c0);
     return res;
-    // tmp_mode_scope is automatically popped when `scope` goes out of scope.
 }
-/* : Π {α : Type}, tco α → tco (option α)  */
+/* : Π {α : Type}, type_context α → type_context (option α)  */
 vm_obj tco_try(vm_obj const &, vm_obj const & t0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     ctx.push_scope();
     auto res = invoke(t0, c0);
     if (is_succ(res)) {
-        // [todo] Make sure this is the right thing to call.
         ctx.commit_scope();
         return mk_succ(mk_vm_some(value(res)));
     } else {
@@ -159,8 +143,6 @@ vm_obj tco_try(vm_obj const &, vm_obj const & t0, vm_obj const & c0) {
         return mk_succ(mk_vm_none());
     }
 }
-
-
 vm_obj tco_in_tmp_mode (vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     return mk_succ(mk_vm_bool(ctx.in_tmp_mode()));
@@ -203,12 +185,10 @@ vm_obj tco_is_regular_mvar(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     return mk_succ(mk_vm_bool(ctx.is_regular_mvar(to_expr(m0))));
 }
-
 vm_obj tco_is_assigned(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     return mk_succ(mk_vm_bool(ctx.is_assigned(to_expr(m0))));
 }
-
 vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
     type_context_old & ctx = to_type_context_old(c0);
     expr m = to_expr(m0);
@@ -219,7 +199,6 @@ vm_obj tco_get_assignment(vm_obj const & m0, vm_obj const & c0) {
         return mk_fail(sstream() << "Get assignment: no assignment exists for " << m);
     }
 }
-
 vm_obj tco_level_mk_tmp_mvar (vm_obj const & i0) {
     unsigned i = to_unsigned(i0);
     return to_obj(lean::mk_idx_metauniv(i));
@@ -237,7 +216,6 @@ vm_obj tco_to_tmp_mvars(vm_obj const & e0, vm_obj const & c0) {
         expr t = to_idx_metavars(ctx.mctx(), e, ls, es);
         return mk_succ(mk_vm_pair(to_obj(t), mk_vm_pair(to_obj(ls), to_obj(es))));
 }
-
 vm_obj tco_get_env(vm_obj const & c0) {
     return mk_succ(to_obj(to_type_context_old(c0).env()));
 }
@@ -267,19 +245,16 @@ vm_obj tco_pop_local(vm_obj const & c0) {
 }
 vm_obj tco_get_fun_info(vm_obj const & e0, vm_obj const & n0, vm_obj const & c0) {
     type_context_old & c = to_type_context_old(c0);
-    try { // [todo] how can get_fun_info throw?
-        // [todo] this is not DRY with `fun_info_tactics.cpp`.
+    try {
         if (is_none(n0)) {
             return mk_succ(to_obj(get_fun_info(c, to_expr(e0))));
         } else {
             return mk_succ(to_obj(get_fun_info(c, to_expr(e0), force_to_unsigned(get_some_value(n0), 0))));
         }
     } catch (exception const & ex) {
-        // [todo] more helpful error message.
         return mk_fail("get_fun_info failed.");
     }
 }
-
 vm_obj tco_fold_mvars(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_obj const & c0) {
     vm_obj r0 = mk_succ(a0);
     to_type_context_old(c0).mctx().for_each([&](metavar_decl const & d) {
@@ -289,45 +264,41 @@ vm_obj tco_fold_mvars(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_o
     });
     return r0;
 }
-
-/* [NOTE] The `tc` monad is implemented as `type_context_old & -> a ⊕ (unit -> format)`.
-   Except because the underlying type_context_old is mutating,
-   we do not allow the user to see this structure. */
 void initialize_vm_type_context() {
-    DECLARE_VM_BUILTIN(name({"type_context", "pure"}), tco_pure);
-    DECLARE_VM_BUILTIN(name({"type_context", "bind"}), tco_bind);
-    DECLARE_VM_BUILTIN(name({"type_context", "fail"}), tco_fail);
-    DECLARE_VM_BUILTIN(name({"type_context", "run"}), tco_run);
-    DECLARE_VM_BUILTIN(name({"type_context", "infer"}), tco_infer);
-    DECLARE_VM_BUILTIN(name({"type_context", "get_env"}), tco_get_env);
-    DECLARE_VM_BUILTIN(name({"type_context", "get_context"}), tco_get_context);
-    DECLARE_VM_BUILTIN(name({"type_context", "mk_mvar"}), tco_mk_mvar);
-    DECLARE_VM_BUILTIN(name({"type_context", "fold_mvars"}), tco_fold_mvars);
-    DECLARE_VM_BUILTIN(name({"type_context", "assign"}), tco_assign);
-    DECLARE_VM_BUILTIN(name({"type_context", "level", "assign"}), tco_level_assign);
-    DECLARE_VM_BUILTIN(name({"type_context", "unify"}), tco_unify);
-    DECLARE_VM_BUILTIN(name({"type_context", "whnf"}), tco_whnf);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_stuck"}), tco_is_stuck);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_declared"}), tco_is_declared);
-    DECLARE_VM_BUILTIN(name({"type_context", "get_local_context"}), tco_get_local_context);
-    DECLARE_VM_BUILTIN(name({"type_context", "push_local"}), tco_push_local);
-    DECLARE_VM_BUILTIN(name({"type_context", "pop_local"}), tco_pop_local);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_def_eq"}), tco_is_def_eq);
-    DECLARE_VM_BUILTIN(name({"type_context", "tmp_mode"}), tco_tmp_mode);
-    DECLARE_VM_BUILTIN(name({"type_context", "in_tmp_mode"}), tco_in_tmp_mode);
-    DECLARE_VM_BUILTIN(name({"type_context", "instantiate_mvars"}), tco_instantiate_mvars);
-    DECLARE_VM_BUILTIN(name({"type_context", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
-    DECLARE_VM_BUILTIN(name({"type_context", "tmp_get_assignment"}), tco_tmp_get_assignment);
-    DECLARE_VM_BUILTIN(name({"type_context", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_tmp_mvar"}), tco_is_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_regular_mvar"}), tco_is_regular_mvar);
-    DECLARE_VM_BUILTIN(name({"type_context", "is_assigned"}), tco_is_assigned);
-    DECLARE_VM_BUILTIN(name({"type_context", "get_assignment"}), tco_get_assignment);
-    DECLARE_VM_BUILTIN(name({"type_context", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"type_context", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
-    DECLARE_VM_BUILTIN(name({"type_context", "to_tmp_mvars"}), tco_to_tmp_mvars);
-    DECLARE_VM_BUILTIN(name({"type_context", "get_fun_info"}), tco_get_fun_info);
-    DECLARE_VM_BUILTIN(name({"type_context", "try"}), tco_try);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "pure"}), tco_pure);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "bind"}), tco_bind);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "fail"}), tco_fail);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "run"}), tco_run);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "infer"}), tco_infer);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_env"}), tco_get_env);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_context"}), tco_get_context);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "mk_mvar"}), tco_mk_mvar);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "fold_mvars"}), tco_fold_mvars);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "assign"}), tco_assign);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "level", "assign"}), tco_level_assign);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "unify"}), tco_unify);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "whnf"}), tco_whnf);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_stuck"}), tco_is_stuck);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_declared"}), tco_is_declared);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_local_context"}), tco_get_local_context);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "push_local"}), tco_push_local);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "pop_local"}), tco_pop_local);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_def_eq"}), tco_is_def_eq);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "tmp_mode"}), tco_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "in_tmp_mode"}), tco_in_tmp_mode);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "instantiate_mvars"}), tco_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "level",  "instantiate_mvars"}), tco_level_instantiate_mvars);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "tmp_get_assignment"}), tco_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "level",  "tmp_get_assignment"}), tco_level_tmp_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_tmp_mvar"}), tco_is_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_regular_mvar"}), tco_is_regular_mvar);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "is_assigned"}), tco_is_assigned);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_assignment"}), tco_get_assignment);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "level", "mk_tmp_mvar"}), tco_level_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "mk_tmp_mvar"}), tco_mk_tmp_mvar);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "to_tmp_mvars"}), tco_to_tmp_mvars);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_fun_info"}), tco_get_fun_info);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "try"}), tco_try);
 }
 void finalize_vm_type_context() {
 }

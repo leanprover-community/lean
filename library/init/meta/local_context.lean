@@ -8,12 +8,13 @@ meta structure local_decl :=
 (bi : binder_info)
 (idx : nat)
 
-/-- Local context. -/
+/-- A local context is a list of local constant declarations.
+    Each metavariable in a metavariable context holds a local_context
+    to declare which locals the metavariable is allowed to depend on. -/
 meta constant local_context : Type
 namespace local_context
 /-- Add a new local constant to the lc. The new local has an unused unique_name. Fails when the type depends on local constants that are not present in the context.-/
 meta constant mk_local (pretty_name : name) (type : expr) (bi : binder_info) : local_context → option (expr × local_context)
--- meta constant mk_local_decl_assigned (pretty_name : name) (type : expr) (value : expr) : lc expr
 meta constant get_local_decl : name → local_context → option local_decl
 meta constant get_local : name → local_context → option expr
 meta constant is_subset : local_context → local_context → bool
