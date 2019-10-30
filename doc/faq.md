@@ -51,7 +51,7 @@ The Emacs Lean mode is available via [MELPA](https://melpa.org/). The VS Code Le
 
 * Is Lean sound? How big is the kernel? Should I trust it?
 
-Lean has a relatively small kernel. The [leanchecker](https://github.com/leanprover/lean/tree/master/src/checker) is a bare-bones version of the Lean kernel.
+Lean has a relatively small kernel. The [leanchecker](https://github.com/leanprover-community/lean/tree/master/src/checker) is a bare-bones version of the Lean kernel.
 There are also two independent checkers: [tc](https://github.com/leanprover/tc) and [trepplein](https://github.com/gebner/trepplein).
 We have implemented several kernel extensions to improve performance and make sure the system is reasonably responsive for interactive use.
 We strongly recommend you frequently check your project without these extensions. The command line option `-t0` disables all of them.
@@ -60,6 +60,6 @@ If you are really concerned about soundness, we recommend you often export your 
 
 * Should I open a new issue?
 
-We use [github](https://github.com/leanprover/lean/issues) to track bugs and new features.
+We use [github](https://github.com/leanprover-community/lean/issues) to track bugs and new features.
 Bug reports are always welcome, but nitpicking issues are not (e.g., the error message is confusing).
 RFC issues are created by developers only.

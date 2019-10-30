@@ -30,7 +30,7 @@ make
 Setting up a basic debug build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/debug
 cd build/debug
@@ -46,7 +46,7 @@ Building JS / wasm binaries with Emscripten
 Setting up a basic release build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/emscripten
 cd build/emscripten
