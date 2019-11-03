@@ -2630,8 +2630,8 @@ expr elaborator::visit_equation(expr const & e, unsigned num_fns) {
         }
         expr rhs     = instantiate_rev(equation_rhs(it), rhs_subst);
         expr new_rhs = visit(rhs, some_expr(new_lhs_type));
-        // synthesize_no_tactics();
-        // new_rhs       = instantiate_mvars(new_rhs);
+        synthesize_no_tactics();
+        new_rhs       = instantiate_mvars(new_rhs);
         new_rhs       = enforce_type(new_rhs, new_lhs_type, "equation type mismatch", it);
         expr new_eq = copy_tag(it, mk_equation(new_lhs, new_rhs, ignore_equation_if_unused(it)));
         expr r = copy_tag(ref, fns.mk_lambda(new_locals.mk_lambda(new_eq)));
