@@ -15,6 +15,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_options.h"
+#include "library/constants.h"
 
 namespace lean {
 struct vm_format : public vm_external {
@@ -164,6 +165,16 @@ vm_obj mk_vm_format_thunk(std::function<format()> const & fn) {
 vm_obj apply_format_thunk(vm_obj const & t, vm_obj const & /* u */) {
     format f = to_format_thunk(t)();
     return to_obj(f);
+}
+
+vm_obj mk_vm_constant_format_thunk(vm_obj const & fmt) {
+    vm_state const & S = get_vm_state();
+    if (optional<vm_decl> K = S.get_decl(get_combinator_K_name())) {
+        return mk_vm_closure(K->get_idx(), fmt, mk_vm_unit(), mk_vm_unit());
+    } else {
+        throw exception("failed to create tactic exceptional result, combinator.K is not in the environment, "
+                        "this can happen when users are hacking the init folder");
+    }
 }
 
 void initialize_vm_format() {
