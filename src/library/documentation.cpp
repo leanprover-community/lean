@@ -36,15 +36,25 @@ static environment update(environment const & env, documentation_ext const & ext
 struct doc_modification : public modification {
     LEAN_MODIFICATION("doc")
 
+    /** If non-empty, this is a doc on a declaration. Otherwise,
+      * it's a doc on the whole module. */
     name m_decl;
     std::string m_doc;
 
     doc_modification() {}
+    /** A docstring for the entire module. */
+    doc_modification(std::string const & doc) : m_decl(""), m_doc(doc) {}
+    /** A docstring for a declaration in the module. */
     doc_modification(name const & decl, std::string const & doc) : m_decl(decl), m_doc(doc) {}
 
     void perform(environment & env) const override {
         auto ext = get_extension(env);
-        ext.m_doc_string_map.insert(m_decl, m_doc);
+        if (m_decl != "") {
+            ext.m_doc_string_map.insert(m_decl, m_doc);
+        }
+        // Note that we do NOT add anything to `m_module_doc` here, because `perform` is called
+        // when applying modifications from imported .olean modules whose doc strings are NOT
+        // part of the current module's documentation.
         env = update(env, ext);
     }
 
@@ -170,7 +180,8 @@ environment add_module_doc_string(environment const & env, std::string doc) {
     doc = process_doc(doc);
     auto ext = get_extension(env);
     ext.m_module_doc = cons(doc_entry(doc), ext.m_module_doc);
-    return update(env, ext);
+    auto new_env = update(env, ext);
+    return module::add(new_env, std::make_shared<doc_modification>(doc));
 }
 
 environment add_doc_string(environment const & env, name const & n, std::string doc) {
@@ -182,7 +193,6 @@ environment add_doc_string(environment const & env, name const & n, std::string 
     ext.m_doc_string_map.insert(n, doc);
     ext.m_module_doc = cons(doc_entry(n, doc), ext.m_module_doc);
     auto new_env = update(env, ext);
-    // TODO(gabriel,leo): why does this not update the module documentation?
     return module::add(new_env, std::make_shared<doc_modification>(n, doc));
 }
 
