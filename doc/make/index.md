@@ -98,11 +98,12 @@ In the below tips you can replace `make` with `ninja` as needed.
 * Once you have run `make test`, you can go in `build/Debug/Testing/Temporary` and open `LastTest.log` to see a detailed report of the tests including why the style check failed.
 * Run the style check on a single file using `python src/cmake/Modules/cpplint.py my_source_file.cpp`
 * To run a single test, go to the test's file directory and call `./test_single.sh my_test_file.lean`.
-
-
-Further Information
--------------------
-
-- [Using CCache](ccache.md) to avoid recompilation
-- [Measuring Code Coverage](coverage.md)
-- [Compiling Lean with Split Stacks](split-stack.md)
+* If you need to debug the C++: You might find the gdb module `bin/lean-gdb.py` useful. Install by adding this to `~/.gdbinit`
+    ```
+    set print pretty on
+    add-auto-load-safe-path <PATH_TO_LEAN>/bin/lean-gdb.py
+    ```
+  Now when debugging you can execute `p e` in the gdb console where `e` is a `lean::expr` and it will print `e`'s entire structure.
+* [Using CCache](ccache.md) to avoid recompilation
+* [Measuring Code Coverage](coverage.md)
+* [Compiling Lean with Split Stacks](split-stack.md)
