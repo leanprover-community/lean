@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <map>
 #include "util/serializer.h"
 #include "util/optional.h"
 #include "kernel/pos_info_provider.h"
@@ -142,6 +143,12 @@ environment add_and_perform(environment const & env, std::shared_ptr<modificatio
 
 /** \brief Add the given declaration to the environment, and mark it to be exported. */
 environment add(environment const & env, certified_declaration const & d);
+
+/** \brief Adds a module-level doc to the current module. */
+environment add_doc_string(environment const & env, std::string const & doc);
+
+/** \brief Returns the map of module-level docs indexed by source file name. */
+std::map<std::string, std::string> const & get_doc_strings(environment const & env);
 
 /** \brief Return true iff \c n is a definition added to the current module using #module::add */
 bool is_definition(environment const & env, name const & n);

@@ -758,21 +758,21 @@ vm_obj tactic_add_doc_string(vm_obj const & n, vm_obj const & doc, vm_obj const 
     }
 }
 
-/* meta constant module_doc_strings : tactic (list (option name × string)) */
+/* meta constant module_doc_strings : tactic (list (option string × string)) */
 vm_obj tactic_module_doc_strings(vm_obj const & _s) {
     tactic_state const & s  = tactic::to_state(_s);
-    buffer<doc_entry> entries;
+    buffer<mod_doc_entry> entries;
     get_module_doc_strings(s.env(), entries);
     unsigned i = entries.size();
     vm_obj r   = mk_vm_simple(0);
     while (i > 0) {
         --i;
         vm_obj decl_name;
-        if (auto d = entries[i].get_decl_name())
+        if (auto d = entries[i].m_mod_name)
             decl_name = mk_vm_some(to_obj(*d));
         else
             decl_name = mk_vm_none();
-        vm_obj doc = to_obj(entries[i].get_doc());
+        vm_obj doc = to_obj(entries[i].m_doc);
         vm_obj e   = mk_vm_pair(decl_name, doc);
         r          = mk_vm_constructor(1, e, r);
     }

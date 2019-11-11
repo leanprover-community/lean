@@ -543,7 +543,7 @@ It updates the environment in the tactic_state, and returns an expression of the
 where l_i's and a_j's are the collected dependencies.
 -/
 meta constant add_aux_decl (c : name) (type : expr) (val : expr) (is_lemma : bool) : tactic expr
-meta constant module_doc_strings : tactic (list (option name × string))
+meta constant module_doc_strings : tactic (list (option string × string))
 /-- Set attribute `attr_name` for constant `c_name` with the given priority.
    If the priority is none, then use default -/
 meta constant set_basic_attribute (attr_name : name) (c_name : name) (persistent := ff) (prio : option nat := none) : tactic unit

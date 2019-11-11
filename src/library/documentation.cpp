@@ -15,7 +15,7 @@ Author: Leonardo de Moura
 namespace lean {
 struct documentation_ext : public environment_extension {
     /** Doc string for the current module being processed. It does not include imported doc strings. */
-    list<doc_entry>       m_module_doc;
+    optional<std::string> m_module_doc;
     /** Doc strings for declarations (including imported ones). We store doc_strings for declarations in the .olean files. */
     name_map<std::string> m_doc_string_map;
 };
@@ -36,25 +36,16 @@ static environment update(environment const & env, documentation_ext const & ext
 struct doc_modification : public modification {
     LEAN_MODIFICATION("doc")
 
-    /** If non-empty, this is a doc on a declaration. Otherwise,
-      * it's a doc on the whole module. */
     name m_decl;
     std::string m_doc;
 
     doc_modification() {}
-    /** A docstring for the entire module. */
-    doc_modification(std::string const & doc) : m_decl(""), m_doc(doc) {}
     /** A docstring for a declaration in the module. */
     doc_modification(name const & decl, std::string const & doc) : m_decl(decl), m_doc(doc) {}
 
     void perform(environment & env) const override {
         auto ext = get_extension(env);
-        if (m_decl != "") {
-            ext.m_doc_string_map.insert(m_decl, m_doc);
-        }
-        // Note that we do NOT add anything to `m_module_doc` here, because `perform` is called
-        // when applying modifications from imported .olean modules whose doc strings are NOT
-        // part of the current module's documentation.
+        ext.m_doc_string_map.insert(m_decl, m_doc);
         env = update(env, ext);
     }
 
@@ -179,9 +170,13 @@ static std::string process_doc(std::string s) {
 environment add_module_doc_string(environment const & env, std::string doc) {
     doc = process_doc(doc);
     auto ext = get_extension(env);
-    ext.m_module_doc = cons(doc_entry(doc), ext.m_module_doc);
+    if (ext.m_module_doc) {
+        *ext.m_module_doc += "\n" + doc;
+    } else {
+        ext.m_module_doc = doc;
+    }
     auto new_env = update(env, ext);
-    return module::add(new_env, std::make_shared<doc_modification>(doc));
+    return module::add_doc_string(new_env, doc);
 }
 
 environment add_doc_string(environment const & env, name const & n, std::string doc) {
@@ -191,7 +186,6 @@ environment add_doc_string(environment const & env, name const & n, std::string 
         throw exception(sstream() << "environment already contains a doc string for '" << n << "'");
     }
     ext.m_doc_string_map.insert(n, doc);
-    ext.m_module_doc = cons(doc_entry(n, doc), ext.m_module_doc);
     auto new_env = update(env, ext);
     return module::add(new_env, std::make_shared<doc_modification>(n, doc));
 }
@@ -204,10 +198,15 @@ optional<std::string> get_doc_string(environment const & env, name const & n) {
         return optional<std::string>();
 }
 
-void get_module_doc_strings(environment const & env, buffer<doc_entry> & result) {
+void get_module_doc_strings(environment const & env, buffer<mod_doc_entry> & result) {
     auto ext = get_extension(env);
-    to_buffer(ext.m_module_doc, result);
-    std::reverse(result.begin(), result.end());
+    auto const & mod_docs = module::get_doc_strings(env);
+    for (auto const & pr : mod_docs) {
+        result.push_back({ optional<std::string>{ pr.first }, pr.second });
+    }
+    if (ext.m_module_doc) {
+        result.push_back({ {}, *ext.m_module_doc });
+    }
 }
 
 void initialize_documentation() {
