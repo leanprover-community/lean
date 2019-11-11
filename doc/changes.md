@@ -1,3 +1,40 @@
+v3.5.0c (11 Nov 2019)
+--------------
+
+*Features*
+
+ * tactic/type_context_old: Expose type_context_old as a monad. (#69)
+ * olean: store module documentation in .olean files (#54)
+ * parser/inductive_cmd: support docstrings for constructors (#61)
+ * tactic/interactive: add def for parsing raw `expr`s (#33)
+ * meta/float: meta constant float (#2)
+ * tactic/add_def_eqns: add a Lean function to access the equation compiler (#26)
+ * io: better file existence api (#31)
+ * tactic/interactive: add `lean.parser.itactic`, a tactic block parser (#19)
+ * io: fs io (remove/rename/mkdir/rmdir) + UNIX socket io (#20)
+ * tactic/interactive: generalize custom tactic monads in `begin ... end` blocks (#10)
+ * io/serial: add `expr` serialization/deserialization functions (#6)
+ * meta/environment: add_ginductive to give tactics access to the utility lemmas associated with inductive type declaration  (#3)
+
+*Bug Fixes*
+
+ * build: fix emscripten build in travis (#68)
+ * CMakeLists.txt: GCC 9.1.0 miscompiles certain if statements #63
+ * tactic/revert_tactic: disallow duplicates (#56)
+ * level: give level.instantiate correct type (#46)
+ * documentation: The closing code fence must match opening fence. (#40)
+ * emscripten: fix FS issue: don't mkdir in docker (#39)
+ * emscripten: fix emscripten build (#17)
+ * tactic/case: `case` fails when used with `let` #32
+ * tactic/revert_lst: check that the provided expressions are variables (#12)
+ * init/algebra/field: repeated instance (#8)
+
+*Changes*
+
+ * category/combinators: remove unused notation
+ * tactics: add docstrings to various tactics (#1)
+
+
 v3.4.2 (18 Jan 2019)
 -------------
 
