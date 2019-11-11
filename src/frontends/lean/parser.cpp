@@ -228,6 +228,24 @@ void parser::scan() {
     m_curr = m_scanner.scan(m_env);
 }
 
+token_kind parser::ahead(int n) {
+    scanner::lookahead_scope _scope(m_scanner);
+    auto curr = m_scanner.scan(m_env);
+    for (int i = 0; i < n; i++)
+        m_scanner.scan(m_env);
+    return curr;
+}
+
+bool parser::ahead_is_token(name const & tk, int n) {
+    scanner::lookahead_scope _scope(m_scanner);
+    auto curr = m_scanner.scan(m_env);
+    for (int i = 0; i < n; i++)
+        m_scanner.scan(m_env);
+    return
+        (curr == token_kind::Keyword || curr == token_kind::CommandKeyword) &&
+        get_token_info().value() == tk;
+}
+
 expr parser_info::mk_sorry(pos_info const & p, bool synthetic) {
     return save_pos(::lean::mk_sorry(mk_Prop(), synthetic), p);
 }

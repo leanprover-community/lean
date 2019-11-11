@@ -9,14 +9,19 @@ Author: Leonardo de Moura
 
 namespace lean {
 class metavar_decl {
-    local_context m_context;
-    expr          m_type;
+    name           m_name;
+    optional<name> m_pp_name;
+    local_context  m_context;
+    expr           m_type;
     friend class metavar_context;
-    metavar_decl(local_context const & ctx, expr const & type):m_context(ctx), m_type(type) {}
+    metavar_decl(local_context const & ctx, expr const & type, name const & n, optional<name> const & pp_name): m_name(n), m_pp_name(pp_name), m_context(ctx), m_type(type) {}
 public:
     metavar_decl() {}
+    name const & get_name() { return m_name; }
+    optional<name> const & get_pp_name() { return m_pp_name; }
     expr const & get_type() const { return m_type; }
     local_context const & get_context() const { return m_context; }
+    expr mk_ref() const;
 };
 
 bool is_metavar_decl_ref(level const & l);
@@ -44,6 +49,7 @@ public:
     }
 
     optional<metavar_decl> find_metavar_decl(expr const & mvar) const;
+    void for_each(std::function<void(metavar_decl const &)> const & fn) const;
 
     metavar_decl const & get_metavar_decl(expr const & mvar) const;
 
@@ -59,7 +65,7 @@ public:
         \pre find_metavar_decl(mvar)
         \pre find_metavar_decl(mvar)->get_context().get_local_decl(n) */
     expr get_local(expr const & mvar, name const & n) const;
-
+    bool is_declared(expr const & mvar) const;
     bool is_assigned(level const & l) const {
         lean_assert(is_metavar_decl_ref(l));
         return m_uassignment.contains(meta_id(l));

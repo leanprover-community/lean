@@ -30,4 +30,26 @@ public:
         m_ref = m_old_value;
     }
 };
+
+/**
+    \brief Like flet, but without changing the value on scope introduction.
+
+    rlet<T> l(m_field);
+    is more or less equivalent to
+    flet<T> l(m_field, m_field);
+ */
+template<typename T>
+class rlet {
+    T & m_ref;
+    T m_old_value;
+
+public:
+    rlet(T & ref):
+        m_ref(ref),
+        m_old_value(ref) {}
+
+    ~rlet() {
+        m_ref = m_old_value;
+    }
+};
 }

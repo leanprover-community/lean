@@ -141,4 +141,4 @@ public:
 
     optional<mpq> eval(expr const & e);
 };
-};
+}

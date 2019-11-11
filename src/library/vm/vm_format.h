@@ -16,6 +16,9 @@ vm_obj to_obj(format const & fmt);
 /* Return an object of type (unit -> format) */
 vm_obj mk_vm_format_thunk(std::function<format()> const & fn);
 
+/** Return `K fmt` where `K` is the VM K-combinator. Use to make constant format thunks. */
+vm_obj mk_vm_constant_format_thunk(vm_obj const & fmt);
+
 void initialize_vm_format();
 void finalize_vm_format();
 void initialize_vm_format_builtin_idxs();

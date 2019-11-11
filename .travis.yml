@@ -21,12 +21,12 @@ addons:
       - libgmp-dev
       - libgoogle-perftools-dev
       - g++-4.9
-      - clang-3.4
+      - clang-3.5
 
 matrix:
   include:
    - os: linux
-     dist: precise
+     dist: xenial
      env:
        CMAKE_CXX_COMPILER=g++-4.9
        CMAKE_BUILD_TYPE=Release
@@ -37,7 +37,7 @@ matrix:
    - os: linux
      if: type != cron
      env:
-       CMAKE_CXX_COMPILER=clang++-3.4
+       CMAKE_CXX_COMPILER=clang++-3.5
        CMAKE_BUILD_TYPE=Release
        LEAN_EXTRA_MAKE_OPTS=-t0
        TCMALLOC=ON
@@ -89,12 +89,12 @@ matrix:
    - os: linux
      if: type != cron
      env:
-       CMAKE_CXX_COMPILER=clang++-3.4
+       CMAKE_CXX_COMPILER=clang++-3.5
        CMAKE_BUILD_TYPE=Debug
        TCMALLOC=ON
 
    - os: linux
-     dist: precise
+     dist: xenial
      if: type != cron
      env:
        CMAKE_CXX_COMPILER=g++-4.9
@@ -139,7 +139,7 @@ matrix:
          fi
        - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done & # https://blog.humphd.org/building-large-code-on-travis/
        - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
-       - kill %1
+       - pkill -9 sleep
        - |
          if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]
           then

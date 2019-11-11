@@ -30,7 +30,7 @@ make
 Setting up a basic debug build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/debug
 cd build/debug
@@ -46,7 +46,7 @@ Building JS / wasm binaries with Emscripten
 Setting up a basic release build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/emscripten
 cd build/emscripten
@@ -107,3 +107,6 @@ In the below tips you can replace `make` with `ninja` as needed.
 * [Using CCache](ccache.md) to avoid recompilation
 * [Measuring Code Coverage](coverage.md)
 * [Compiling Lean with Split Stacks](split-stack.md)
+* To speed up interactive development, you can use `make -j<nthreads> bin_lean` or `ninja bin_lean`, which will build the Lean executable (into `bin/`), but not all the tests.
+* To build Lean and the standard library, use `make -j<nthreads> standard_lib` or `ninja standard_lib`.
+

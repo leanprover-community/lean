@@ -156,7 +156,7 @@ struct to_idx_metavars_fn : public replace_visitor {
         return replace_visitor::visit(e);
     }
 };
-
+/** Replace each occurrence of a metavariable in `e` with a temporary metavariable. */
 expr to_idx_metavars(metavar_context const & mctx, expr const & e, buffer<level> & new_us, buffer<expr> & new_ms) {
     if (!has_metavar(e))
         return e;
