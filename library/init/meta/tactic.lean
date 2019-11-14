@@ -543,7 +543,40 @@ It updates the environment in the tactic_state, and returns an expression of the
 where l_i's and a_j's are the collected dependencies.
 -/
 meta constant add_aux_decl (c : name) (type : expr) (val : expr) (is_lemma : bool) : tactic expr
-meta constant module_doc_strings : tactic (list (option string × string))
+
+/-- Returns a list of all top-level (`/-!`) docstrings in the active module and imported ones.
+The returned object is a list of modules, indexed by `(some filename)` for imported modules
+and `none` for the active one, where each module in the list is paired with a list
+of `(position_in_file, docstring)` pairs. -/
+meta constant olean_doc_strings : tactic (list (option string × (list (pos × string))))
+
+/-- Returns a list of docstrings in the active module. An entry in the list can be either:
+- a top-level (`/-!`) docstring, represented as `(none, docstring)`
+- a declaration-specific (`/--`) docstring, represented as `(some decl_name, docstring)` -/
+meta def module_doc_strings : tactic (list (option name × string)) :=
+  do
+    /- Obtain a list of top-level docs in current module. -/
+    mod_docs ← olean_doc_strings,
+    let mod_docs: list (list (option name × string)) :=
+      mod_docs.filter_map (λ d,
+        if d.1.is_none
+          then some (d.2.map
+            (λ pos_doc, ⟨none, pos_doc.2⟩))
+          else none),
+    let mod_docs := mod_docs.join,
+    /- Obtain list of declarations in current module. -/
+    e ← get_env,
+    let decls := environment.fold e ([]: list name)
+      (λ d acc, let n := d.to_name in
+      if (environment.decl_olean e n).is_none
+        then n::acc else acc),
+    /- Map declarations to those which have docstrings. -/
+    decls ← decls.mfoldl (λa n,
+      (doc_string n >>=
+        λ doc, pure $ (some n, doc) :: a)
+      <|> pure a) [],
+    pure (mod_docs ++ decls)
+
 /-- Set attribute `attr_name` for constant `c_name` with the given priority.
    If the priority is none, then use default -/
 meta constant set_basic_attribute (attr_name : name) (c_name : name) (persistent := ff) (prio : option nat := none) : tactic unit

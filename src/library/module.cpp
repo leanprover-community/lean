@@ -90,7 +90,7 @@ struct module_ext : public environment_extension {
      * of module different from that of a source file, so we use file names to index
      * the docstring map. */
     // TODO(Vtec234): lean::rb_map misbehaves here for some reason
-    std::map<std::string, std::string> m_module_docs;
+    std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> m_module_docs;
     // Map from declaration name to olean file where it was defined
     name_map<std::string>     m_decl2olean;
     name_map<pos_info>        m_decl2pos_info;
@@ -425,23 +425,25 @@ struct mod_doc_modification : public modification {
     LEAN_MODIFICATION("mod_doc")
 
     std::string m_doc;
+    pos_info m_pos;
 
     mod_doc_modification() {}
-    /** A docstring for a declaration in the module. */
-    mod_doc_modification(std::string const & doc) : m_doc(doc) {}
+    /** A module-level docstring. */
+    mod_doc_modification(std::string const & doc, pos_info pos) : m_doc(doc), m_pos(pos) {}
 
     void perform(environment & env) const override {
         // No-op. See `import_module` for actual action
     }
 
     void serialize(serializer & s) const override {
-        s << m_doc;
+        s << m_doc << m_pos;
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
         std::string doc;
-        d >> doc;
-        return std::make_shared<mod_doc_modification>(doc);
+        pos_info pos;
+        d >> doc >> pos;
+        return std::make_shared<mod_doc_modification>(doc, pos);
     }
 };
 
@@ -535,11 +537,11 @@ environment add(environment const & env, certified_declaration const & d) {
     return add_decl_pos_info(new_env, _d.get_name());
 }
 
-environment add_doc_string(environment const & env, std::string const & doc) {
-    return add(env, std::make_shared<mod_doc_modification>(doc));
+environment add_doc_string(environment const & env, std::string const & doc, pos_info pos) {
+    return add(env, std::make_shared<mod_doc_modification>(doc, pos));
 }
 
-std::map<std::string, std::string> const & get_doc_strings(environment const & env) {
+std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> const & get_doc_strings(environment const & env) {
     return get_extension(env).m_module_docs;
 }
 
@@ -732,11 +734,7 @@ void import_module(modification_list const & modifications, std::string const & 
             env = add_decl_olean(env, im->m_decl.get_decl().m_name, file_name);
         } else if (auto mdm = dynamic_cast<mod_doc_modification const *>(m.get())) {
             auto ext = get_extension(env);
-            if (ext.m_module_docs.count(file_name) != 0) {
-                ext.m_module_docs[file_name] += "\n" + mdm->m_doc;
-            } else {
-                ext.m_module_docs[file_name] = mdm->m_doc;
-            }
+            ext.m_module_docs[file_name].emplace_back(mdm->m_pos, mdm->m_doc);
             env = update(env, ext);
         }
     }

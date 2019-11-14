@@ -6,13 +6,17 @@ Author: Leonardo de Moura
 */
 #pragma once
 #include <string>
+#include <utility>
+#include <vector>
 #include "kernel/environment.h"
+#include "util/message_definitions.h"
+
 namespace lean {
 struct mod_doc_entry {
     optional<std::string> m_mod_name;
-    std::string           m_doc;
+    std::vector<std::pair<pos_info, std::string>> m_docs;
 };
-environment add_module_doc_string(environment const & env, std::string doc);
+environment add_module_doc_string(environment const & env, std::string doc, pos_info pos);
 environment add_doc_string(environment const & env, name const & n, std::string);
 optional<std::string> get_doc_string(environment const & env, name const & n);
 void get_module_doc_strings(environment const & env, buffer<mod_doc_entry> & result);

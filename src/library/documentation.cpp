@@ -8,14 +8,16 @@ Author: Leonardo de Moura
 #include <algorithm>
 #include <functional>
 #include <cctype>
+#include <utility>
+#include <vector>
 #include "util/sstream.h"
 #include "library/module.h"
 #include "library/documentation.h"
 
 namespace lean {
 struct documentation_ext : public environment_extension {
-    /** Doc string for the current module being processed. It does not include imported doc strings. */
-    optional<std::string> m_module_doc;
+    /** Doc strings for the current module being processed. It does not include imported doc strings. */
+    std::vector<std::pair<pos_info, std::string>> m_module_docs;
     /** Doc strings for declarations (including imported ones). We store doc_strings for declarations in the .olean files. */
     name_map<std::string> m_doc_string_map;
 };
@@ -167,16 +169,12 @@ static std::string process_doc(std::string s) {
     return add_lean_suffix_to_code_blocks(s);
 }
 
-environment add_module_doc_string(environment const & env, std::string doc) {
+environment add_module_doc_string(environment const & env, std::string doc, pos_info pos) {
     doc = process_doc(doc);
     auto ext = get_extension(env);
-    if (ext.m_module_doc) {
-        *ext.m_module_doc += "\n" + doc;
-    } else {
-        ext.m_module_doc = doc;
-    }
+    ext.m_module_docs.emplace_back(pos, doc);
     auto new_env = update(env, ext);
-    return module::add_doc_string(new_env, doc);
+    return module::add_doc_string(new_env, doc, pos);
 }
 
 environment add_doc_string(environment const & env, name const & n, std::string doc) {
@@ -204,9 +202,7 @@ void get_module_doc_strings(environment const & env, buffer<mod_doc_entry> & res
     for (auto const & pr : mod_docs) {
         result.push_back({ optional<std::string>{ pr.first }, pr.second });
     }
-    if (ext.m_module_doc) {
-        result.push_back({ {}, *ext.m_module_doc });
-    }
+    result.push_back({ {}, ext.m_module_docs });
 }
 
 void initialize_documentation() {
