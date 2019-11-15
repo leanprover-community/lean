@@ -43,6 +43,7 @@ This is the first community release of Lean 3.
  * tactic/case: `case` fails when used with `let` (#32)
  * tactic/revert_lst: check that the provided expressions are variables (#12)
  * init/algebra/field: repeated instance (#8)
+ * Add an additional check to `type_context_old::mk_class_instance_at(lctx,type)` to fix issue #55. (#79)
 
 *Changes*
 
