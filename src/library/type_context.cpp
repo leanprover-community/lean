@@ -2354,7 +2354,8 @@ bool type_context_old::is_def_eq_binding(expr e1, expr e2) {
 
 optional<expr> type_context_old::mk_class_instance_at(local_context const & lctx, expr const & type) {
     if (m_cache->get_frozen_local_instances() &&
-        m_cache->get_frozen_local_instances() == lctx.get_frozen_local_instances()) {
+        m_cache->get_frozen_local_instances() == lctx.get_frozen_local_instances() &&
+        equal_locals(m_lctx, lctx)) {
         return mk_class_instance(type);
     } else {
         context_cacheless tmp_cache(*m_cache, true);
