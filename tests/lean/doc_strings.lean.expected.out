@@ -1,8 +1,9 @@
 Makes foo.
 Makes foo of foo.
 Doesn't make foo.
+[(none, [(⟨1, 0⟩, This module has a doc..), (⟨2, 0⟩, ..or two.)])]
 [(none, This module has a doc..),
  (none, ..or two.),
- ((some foo.a), Makes foo.),
  ((some foo.b), Makes foo of foo.),
- ((some two), Doesn't make foo.)]
+ ((some two), Doesn't make foo.),
+ ((some foo.a), Makes foo.)]

@@ -758,22 +758,32 @@ vm_obj tactic_add_doc_string(vm_obj const & n, vm_obj const & doc, vm_obj const 
     }
 }
 
-/* meta constant module_doc_strings : tactic (list (option name × string)) */
-vm_obj tactic_module_doc_strings(vm_obj const & _s) {
+/* meta constant olean_doc_strings : tactic (list (option string × (list (pos × string)))) */
+vm_obj tactic_olean_doc_strings(vm_obj const & _s) {
     tactic_state const & s  = tactic::to_state(_s);
-    buffer<doc_entry> entries;
+    buffer<mod_doc_entry> entries;
     get_module_doc_strings(s.env(), entries);
     unsigned i = entries.size();
     vm_obj r   = mk_vm_simple(0);
     while (i > 0) {
         --i;
         vm_obj decl_name;
-        if (auto d = entries[i].get_decl_name())
+        if (auto d = entries[i].m_mod_name)
             decl_name = mk_vm_some(to_obj(*d));
         else
             decl_name = mk_vm_none();
-        vm_obj doc = to_obj(entries[i].get_doc());
-        vm_obj e   = mk_vm_pair(decl_name, doc);
+        vm_obj lst = mk_vm_simple(0);
+        unsigned j = entries[i].m_docs.size();
+        while (j > 0) {
+            --j;
+            auto const& doc = entries[i].m_docs[j];
+            vm_obj line = mk_vm_nat(doc.first.first);
+            vm_obj column = mk_vm_nat(doc.first.second);
+            vm_obj pos = mk_vm_constructor(0, line, column); // pos_info
+            vm_obj doc_obj = mk_vm_pair(pos, to_obj(doc.second));
+            lst = mk_vm_constructor(1, doc_obj, lst);
+        }
+        vm_obj e   = mk_vm_pair(decl_name, lst);
         r          = mk_vm_constructor(1, e, r);
     }
     return tactic::mk_success(r, s);
@@ -1065,7 +1075,7 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "set_env"}),              tactic_set_env);
     DECLARE_VM_BUILTIN(name({"tactic", "doc_string"}),           tactic_doc_string);
     DECLARE_VM_BUILTIN(name({"tactic", "add_doc_string"}),       tactic_add_doc_string);
-    DECLARE_VM_BUILTIN(name({"tactic", "module_doc_strings"}),   tactic_module_doc_strings);
+    DECLARE_VM_BUILTIN(name({"tactic", "olean_doc_strings"}),    tactic_olean_doc_strings);
     DECLARE_VM_BUILTIN(name({"tactic", "open_namespaces"}),      tactic_open_namespaces);
     DECLARE_VM_BUILTIN(name({"tactic", "decl_name"}),            tactic_decl_name);
     DECLARE_VM_BUILTIN(name({"tactic", "add_aux_decl"}),         tactic_add_aux_decl);

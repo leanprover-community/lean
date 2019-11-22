@@ -31,6 +31,8 @@ This is the first community release of Lean 3.
 
  * Module documentation is now stored in .olean files to allow documentation to be automatically generated. (#54)
 
+ * Documentation of all imported modules is now exposed via the `olean_doc_strings` tactic. (#81)
+
 *Bug Fixes*
 
  * build: fix emscripten build in travis (#68)
