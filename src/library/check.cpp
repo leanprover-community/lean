@@ -12,7 +12,16 @@ Author: Leonardo de Moura
 namespace lean {
 struct check_fn {
     type_context_old &   m_ctx;
+    bool                 m_assign_mvars;
     expr_set             m_visited;
+
+    bool is_def_eq(expr const & a, expr const & b) {
+        return m_assign_mvars ? m_ctx.is_def_eq(a, b) : m_ctx.pure_is_def_eq(a, b);
+    }
+
+    bool relaxed_is_def_eq(expr const & a, expr const & b) {
+        return m_assign_mvars ? m_ctx.relaxed_is_def_eq(a, b) : m_ctx.pure_relaxed_is_def_eq(a, b);
+    }
 
     void visit_constant(expr const & e) {
         declaration d = m_ctx.env().get(const_name(e));
@@ -34,7 +43,7 @@ struct check_fn {
         if (is_sort(S)) return;
         if (is_metavar(S)) {
             level u = m_ctx.mk_univ_metavar_decl();
-            if (m_ctx.is_def_eq(S, mk_sort(u)))
+            if (is_def_eq(S, mk_sort(u)))
                 return;
         }
         lean_trace("check", scope_trace_env _(m_ctx.env(), m_ctx);
@@ -71,7 +80,7 @@ struct check_fn {
         visit(let_value(e));
         visit(let_type(e));
         expr v_type = m_ctx.infer(let_value(e));
-        if (!m_ctx.relaxed_is_def_eq(let_type(e), v_type)) {
+        if (!relaxed_is_def_eq(let_type(e), v_type)) {
             lean_trace("check", scope_trace_env _(m_ctx.env(), m_ctx);
                        tout() << "type mismatch at let binder\n  " << e << "\n";);
             throw exception("check failed, type mismatch at let binder "
@@ -94,7 +103,7 @@ struct check_fn {
         }
         expr a_type = m_ctx.infer(app_arg(e));
         expr d_type = binding_domain(f_type);
-        if (!m_ctx.relaxed_is_def_eq(a_type, d_type)) {
+        if (!relaxed_is_def_eq(a_type, d_type)) {
             lean_trace("check", scope_trace_env _(m_ctx.env(), m_ctx);
                        tout() << "application type mismatch at\n  " << e << "\nargument type\n  "
                        << a_type << "\nexpected type\n  " << d_type;);
@@ -130,13 +139,14 @@ struct check_fn {
     }
 
 public:
-    check_fn(type_context_old & ctx):m_ctx(ctx) {}
+    check_fn(type_context_old & ctx, bool assign_mvars) :
+        m_ctx(ctx), m_assign_mvars(assign_mvars) {}
     void operator()(expr const & e) { return visit(e); }
 };
 
-void check(type_context_old & ctx, expr const & e) {
+void check(type_context_old & ctx, expr const & e, bool assign_mvars) {
     metavar_context mctx = ctx.mctx();
-    check_fn checker(ctx);
+    check_fn checker(ctx, assign_mvars);
     checker(e);
     ctx.set_mctx(mctx);
 }
