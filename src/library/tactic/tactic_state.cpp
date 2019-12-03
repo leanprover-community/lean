@@ -966,7 +966,8 @@ vm_obj tactic_type_check(vm_obj const & e, vm_obj const & m, vm_obj const & s0) 
     try {
         tactic_state_context_cache cache(s);
         type_context_old ctx = cache.mk_type_context(to_transparency_mode(m));
-        check(ctx, to_expr(e));
+        bool assign_mvars = false;
+        check(ctx, to_expr(e), assign_mvars);
         return tactic::mk_success(s);
     } catch (exception & ex) {
         return tactic::mk_exception(ex, s);
