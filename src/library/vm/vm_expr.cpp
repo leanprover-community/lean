@@ -310,6 +310,14 @@ vm_obj expr_get_free_var_range(vm_obj const & e) {
     return mk_vm_nat(get_free_var_range(to_expr(e)));
 }
 
+vm_obj expr_get_weight(vm_obj const & e) {
+    return mk_vm_nat(get_weight(to_expr(e)));
+}
+
+vm_obj expr_get_depth(vm_obj const & e) {
+    return mk_vm_nat(get_depth(to_expr(e)));
+}
+
 vm_obj expr_has_var_idx(vm_obj const & e, vm_obj const & u) {
     if (auto n = try_to_unsigned(u)) {
         return mk_vm_bool(has_free_var(to_expr(e), *n));
@@ -518,6 +526,8 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "abstract_local"}),   expr_abstract_local);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_locals"}),  expr_abstract_locals);
     DECLARE_VM_BUILTIN(name({"expr", "get_free_var_range"}),          expr_get_free_var_range);
+    DECLARE_VM_BUILTIN(name({"expr", "get_weight"}),       expr_get_weight);
+    DECLARE_VM_BUILTIN(name({"expr", "get_depth"}),        expr_get_depth);
     DECLARE_VM_BUILTIN(name({"expr", "has_var"}),          expr_has_var);
     DECLARE_VM_BUILTIN(name({"expr", "has_var_idx"}),      expr_has_var_idx);
     DECLARE_VM_BUILTIN(name({"expr", "has_local"}),        expr_has_local);
