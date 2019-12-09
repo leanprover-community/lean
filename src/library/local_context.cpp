@@ -242,7 +242,8 @@ optional<local_decl> local_context::find_local_decl(name const & n) const {
 }
 
 optional<local_decl> local_context::find_local_decl(expr const & e) const {
-    lean_assert(is_local_decl_ref(e));
+    // lean_assert(is_local_decl_ref(e));
+    if (!is_local_decl_ref(e)) return {};
     return find_local_decl(mlocal_name(e));
 }
 
