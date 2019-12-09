@@ -1,0 +1,7 @@
+"dlist.lean"
+tt
+tt
+ff
+"imported"
+Π {α : Type u}, dlist α → list α
+module_info.lean:26:0: error: invalid object declaration, environment already has an object named 'dlist'

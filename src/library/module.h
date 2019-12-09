@@ -103,6 +103,7 @@ struct olean_data {
 };
 olean_data parse_olean(std::istream & in, std::string const & file_name, bool check_hash = true);
 modification_list parse_olean_modifications(std::string const & serialized_modifications, std::string const & file_name);
+void import_modification(modification const & modif, std::string const & file_name, environment & env);
 void import_module(modification_list const & modifications, std::string const & file_name, environment & env);
 
 struct modification {
@@ -160,6 +161,8 @@ environment add_inductive(environment                       env,
 
 /** \brief The following function must be invoked to register the quotient type computation rules in the kernel. */
 environment declare_quotient(environment const & env);
+
+optional<declaration> is_decl_modification(modification const & mod);
 
 /* Auxiliary object for setting position information for module declarations.
    It affects module::add and module::add_inductive methods. */
