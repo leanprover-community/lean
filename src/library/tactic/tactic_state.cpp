@@ -722,6 +722,12 @@ vm_obj tactic_add_decl(vm_obj const & _d, vm_obj const & _s) {
     }
 }
 
+static vm_obj tactic_set_env_core(vm_obj const & _env, vm_obj const & _s) {
+    tactic_state const & s      = tactic::to_state(_s);
+    environment const & new_env = to_env(_env);
+    return tactic::mk_success(set_env(s, new_env));
+}
+
 vm_obj tactic_set_env(vm_obj const & _env, vm_obj const & _s) {
     tactic_state const & s      = tactic::to_state(_s);
     environment const & new_env = to_env(_env);
@@ -1074,6 +1080,7 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "instantiate_mvars"}),    tactic_instantiate_mvars);
     DECLARE_VM_BUILTIN(name({"tactic", "add_decl"}),             tactic_add_decl);
     DECLARE_VM_BUILTIN(name({"tactic", "set_env"}),              tactic_set_env);
+    DECLARE_VM_BUILTIN(name({"tactic", "set_env_core"}),         tactic_set_env_core);
     DECLARE_VM_BUILTIN(name({"tactic", "doc_string"}),           tactic_doc_string);
     DECLARE_VM_BUILTIN(name({"tactic", "add_doc_string"}),       tactic_add_doc_string);
     DECLARE_VM_BUILTIN(name({"tactic", "olean_doc_strings"}),    tactic_olean_doc_strings);
