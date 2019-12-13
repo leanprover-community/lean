@@ -981,6 +981,34 @@ void display_vm_code(std::ostream & out, unsigned code_sz, vm_instr const * code
 
 environment vm_monitor_register(environment const & env, name const & d);
 
+#define define_vm_external_core(name, cls) \
+    struct vm_##name : public vm_external { \
+        cls m_val; \
+        vm_##name(cls && val) : m_val(val) {} \
+        vm_##name(cls const & val) : m_val(val) {} \
+        virtual ~vm_##name() {} \
+        virtual void dealloc() override { \
+            this->~vm_##name(); \
+            get_vm_allocator().deallocate(sizeof(vm_##name), this); \
+        } \
+        virtual vm_external * ts_clone(vm_clone_fn const &) override { \
+            return new vm_##name(m_val); \
+        } \
+        virtual vm_external * clone(vm_clone_fn const &) override { \
+            return new (get_vm_allocator().allocate(sizeof(vm_##name))) vm_##name(m_val); \
+        } \
+    }; \
+    vm_obj to_obj(cls const & val) { \
+        return mk_vm_external(new (get_vm_allocator().allocate(sizeof(vm_##name))) vm_##name(val)); \
+    } \
+    cls const & to_##name(vm_obj const & o) { \
+        auto ext_##name = dynamic_cast<vm_##name *>(to_external(o)); \
+        lean_vm_check(ext_##name); \
+        return ext_##name->m_val; \
+    }
+
+#define define_vm_external(cls) define_vm_external_core(cls, cls)
+
 void initialize_vm_core();
 void finalize_vm_core();
 
