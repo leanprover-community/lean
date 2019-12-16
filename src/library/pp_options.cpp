@@ -120,6 +120,10 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_PP_ANNOTATIONS false
 #endif
 
+#ifndef LEAN_DEFAULT_PP_LINKS
+#define LEAN_DEFAULT_PP_LINKS false
+#endif
+
 namespace lean {
 static name * g_pp_max_depth         = nullptr;
 static name * g_pp_max_steps         = nullptr;
@@ -148,6 +152,7 @@ static name * g_pp_structure_projections    = nullptr;
 static name * g_pp_instantiate_mvars = nullptr;
 static name * g_pp_use_holes         = nullptr;
 static name * g_pp_annotations       = nullptr;
+static name * g_pp_links             = nullptr;
 static name * g_pp_all               = nullptr;
 static list<options> * g_distinguishing_pp_options = nullptr;
 
@@ -180,6 +185,7 @@ void initialize_pp_options() {
     g_pp_instantiate_mvars = new name{"pp", "instantiate_mvars"};
     g_pp_use_holes         = new name{"pp", "use_holes"};
     g_pp_annotations       = new name{"pp", "annotations"};
+    g_pp_links             = new name{"pp", "links"};
 
     register_unsigned_option(*g_pp_max_depth, LEAN_DEFAULT_PP_MAX_DEPTH,
                              "(pretty printer) maximum expression depth, after that it will use ellipsis");
@@ -243,6 +249,8 @@ void initialize_pp_options() {
                          "(pretty printer) use holes '{! !}' when pretty printing metavariables and `sorry`");
     register_bool_option(*g_pp_annotations, LEAN_DEFAULT_PP_ANNOTATIONS,
                          "(pretty printer) display internal annotations (for debugging purposes only)");
+    register_bool_option(*g_pp_links, LEAN_DEFAULT_PP_LINKS,
+                         "(pretty printer) add links to constants using control characters");
 
     options universes_true(*g_pp_universes, true);
     options full_names_true(*g_pp_full_names, true);
@@ -336,4 +344,5 @@ bool     get_pp_instantiate_mvars(options const & o)    { return o.get_bool(*g_p
 bool     get_pp_use_holes(options const & o)            { return o.get_bool(*g_pp_use_holes, LEAN_DEFAULT_PP_USE_HOLES); }
 bool     get_pp_annotations(options const & o)          { return o.get_bool(*g_pp_annotations, LEAN_DEFAULT_PP_ANNOTATIONS); }
 bool     get_pp_all(options const & opts)               { return opts.get_bool(*g_pp_all, LEAN_DEFAULT_PP_ALL); }
+bool     get_pp_links(options const & opts)             { return opts.get_bool(*g_pp_links, LEAN_DEFAULT_PP_LINKS); }
 }

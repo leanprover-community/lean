@@ -12,6 +12,7 @@ Author: Leonardo de Moura
 #include "library/sorry.h"
 #include "util/flet.h"
 #include "util/fresh_name.h"
+#include "util/sstream.h"
 #include "kernel/replace_fn.h"
 #include "kernel/free_vars.h"
 #include "kernel/abstract.h"
@@ -355,6 +356,7 @@ void pretty_fn::set_options_core(options const & _o) {
     m_structure_instances = get_pp_structure_instances(o);
     m_structure_instances_qualifier = get_pp_structure_instances_qualifier(o);
     m_structure_projections         = get_pp_structure_projections(o);
+    m_links             = get_pp_links(o);
 }
 
 void pretty_fn::set_options(options const & o) {
@@ -557,7 +559,7 @@ auto pretty_fn::pp_overriden_local_ref(expr const & e) -> result {
         fn_fmt = compose(format("_root_."), fn_fmt);
     if (m_implict && has_implicit_args(fn))
         fn_fmt = compose(*g_explicit_fmt, fn_fmt);
-    format r_fmt = fn_fmt;
+    format r_fmt = mk_link(const_name(fn), fn_fmt);
     expr curr_fn = fn;
     for (unsigned i = 0; i < args.size(); i++) {
         expr const & arg = args[i];
@@ -679,6 +681,30 @@ format pretty_fn::escape(name const & n) {
         return format(ss.str());
     }
     return format(n.escape());
+}
+
+format pretty_fn::mk_link(name const & dest, format const & body) {
+    if (m_links) {
+        return format((sstream() << "\xee\x80\x80" << dest << "\xee\x80\x81").str()) +
+            body + format("\xee\x80\x82");
+    } else {
+        return body;
+    }
+}
+
+pretty_fn::result pretty_fn::mk_link(name const & dest, result const & body) {
+    if (!m_links) return body;
+    return result(body.lbp(), body.rbp(), mk_link(dest, body.fmt()));
+}
+
+format pretty_fn::mk_link(expr const & dest, format const & body) {
+    if (!m_links) return body;
+    auto & fn = get_app_fn(dest);
+    if (is_constant(fn)) {
+        return mk_link(const_name(fn), body);
+    } else {
+        return body;
+    }
 }
 
 auto pretty_fn::pp_const(expr const & e, optional<unsigned> const & num_ref_univ_params) -> result {
@@ -835,7 +861,7 @@ auto pretty_fn::pp_structure_instance(expr const & e) -> result {
             if (i < args.size() - 1) fval_fmt += comma();
             r += fval_fmt;
         }
-        r = group(nest(1, format("⟨") + r + format("⟩")));
+        r = group(nest(1, mk_link(const_name(mk), format("⟨")) + r + format("⟩")));
         return result(r);
     } else {
         auto fields = get_structure_fields(m_env, S);
@@ -849,9 +875,9 @@ auto pretty_fn::pp_structure_instance(expr const & e) -> result {
             unsigned field_size = fname.utf8_size();
             format fval_fmt     = pp(args[i + num_params]).fmt();
             if (i < fields.size() - 1) fval_fmt += comma();
-            r                  += format(fname) + space() + *g_assign_fmt + space() + nest(field_size + 4, fval_fmt);
+            r                  += mk_link(S + fname, format(fname)) + space() + *g_assign_fmt + space() + nest(field_size + 4, fval_fmt);
         }
-        r = group(nest(1, format("{") + r + format("}")));
+        r = group(nest(1, mk_link(const_name(mk), format("{")) + r + format("}")));
         return result(r);
     }
 }
@@ -879,7 +905,7 @@ auto pretty_fn::pp_field_notation(expr const & e) -> result {
     expr const & f   = get_app_args(e, args);
     bool ignore_hide = true;
     format s_fmt     = pp_child(args.back(), max_bp(), ignore_hide).fmt();
-    return result(max_bp()-1, s_fmt + format(".") + format(const_name(f).get_string()));
+    return result(max_bp()-1, s_fmt + format(".") + mk_link(const_name(f), format(const_name(f).get_string())));
 }
 
 auto pretty_fn::pp_app(expr const & e) -> result {
@@ -1434,7 +1460,7 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
     if (entry.is_numeral()) {
         return some(result(format(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        format fmt   = format(head(entry.get_transitions()).get_token());
+        format fmt   = mk_link(entry.get_expr(), format(head(entry.get_transitions()).get_token()));
         return some(result(fmt));
     } else {
         using notation::transition;
@@ -1453,7 +1479,7 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
             format curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            format tk_fmt = mk_tk_fmt(ts[i].get_pp_token());
+            format tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt(ts[i].get_pp_token()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1812,7 +1838,7 @@ auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
     switch (e.kind()) {
     case expr_kind::Var:       return pp_var(e);
     case expr_kind::Sort:      return pp_sort(e);
-    case expr_kind::Constant:  return pp_const(e);
+    case expr_kind::Constant:  return mk_link(const_name(e), pp_const(e));
     case expr_kind::Meta:      return pp_meta(e);
     case expr_kind::Local:     return pp_local(e);
     case expr_kind::App:       return pp_app(e);

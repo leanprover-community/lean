@@ -88,6 +88,7 @@ private:
     bool                    m_structure_projections;
     bool                    m_use_holes;
     bool                    m_annotations;
+    bool                    m_links;
 
     name mk_metavar_name(name const & m, optional<name> const & prefix = optional<name>());
     name mk_metavar_name(name const & m, name const & prefix) {
@@ -103,6 +104,10 @@ private:
     optional<name> is_aliased(name const & n) const;
 
     format escape(name const & n);
+
+    format mk_link(name const & dest, format const & body);
+    result mk_link(name const & dest, result const & body);
+    format mk_link(expr const & dest, format const & body);
 
     format pp_child(level const & l);
     format pp_max(level l);
