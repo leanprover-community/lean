@@ -52,7 +52,7 @@ def foo_append._main : Π {α : Type u}, list α → list α → list α :=
     (λ («_» : list α) (_F : list.below α «_»),
        (λ («_» : list α) (_F : list.below α «_»),
           list.cases_on «_» (λ (_F : list.below α list.nil), id_rhs (list α) xs)
-            (λ (hd : α) (tl : list α) (_F : list.below α (hd :: tl)), id_rhs (list α) (hd :: (_F.fst).fst))
+            (λ (hd : α) (tl : list α) (_F : list.below α (hd :: tl)), id_rhs (list α) (hd :: _F.fst.fst))
             _F)
          «_»
          _F)
@@ -81,7 +81,7 @@ def vec.map._main : Π {α : Type u} {β : Type v}, (α → β) → Π (n : ℕ)
                eq.rec
                  (λ («_» : vec α (nat.succ n_1))
                   (_F : nat.below (λ (n : ℕ), vec α n → vec β n) (nat.succ n_1)) (H_2 : «_» == vec.cons a a_1),
-                    eq.rec (id_rhs (vec β (nat.succ n_1)) (vec.cons (f a) ((_F.fst).fst a_1))) _)
+                    eq.rec (id_rhs (vec β (nat.succ n_1)) (vec.cons (f a) (_F.fst.fst a_1))) _)
                  _
                  «_»
                  _F)
@@ -119,7 +119,7 @@ def vec.map'._main : Π {α : Type u} {β : Type v}, (α → β) → Π {n : ℕ
                eq.rec
                  (λ («_» : vec α (nat.succ n_1))
                   (_F : nat.below (λ {n : ℕ}, vec α n → vec β n) (nat.succ n_1)) (H_2 : «_» == vec.cons a a_1),
-                    eq.rec (id_rhs (vec β (nat.succ n_1)) (vec.cons (f a) ((_F.fst).fst a_1))) _)
+                    eq.rec (id_rhs (vec β (nat.succ n_1)) (vec.cons (f a) (_F.fst.fst a_1))) _)
                  _
                  «_»
                  _F)

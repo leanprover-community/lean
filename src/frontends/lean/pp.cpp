@@ -929,7 +929,7 @@ auto pretty_fn::pp_field_notation(expr const & e) -> result {
     expr const & f   = get_app_args(e, args);
     bool ignore_hide = true;
     format s_fmt     = pp_child(args.back(), max_bp(), ignore_hide).fmt();
-    return result(max_bp()-1, s_fmt + format(".") + mk_link(const_name(f), format(const_name(f).get_string())));
+    return result(max_bp()+1, s_fmt + format(".") + mk_link(const_name(f), format(const_name(f).get_string())));
 }
 
 auto pretty_fn::pp_app(expr const & e) -> result {
