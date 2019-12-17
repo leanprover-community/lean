@@ -86,6 +86,7 @@ private:
     bool                    m_structure_instances;
     bool                    m_structure_instances_qualifier;
     bool                    m_structure_projections;
+    bool                    m_generalized_field_notation;
     bool                    m_use_holes;
     bool                    m_annotations;
     bool                    m_links;

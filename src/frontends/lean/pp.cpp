@@ -356,6 +356,7 @@ void pretty_fn::set_options_core(options const & _o) {
     m_structure_instances = get_pp_structure_instances(o);
     m_structure_instances_qualifier = get_pp_structure_instances_qualifier(o);
     m_structure_projections         = get_pp_structure_projections(o);
+    m_generalized_field_notation = get_pp_generalized_field_notation(o);
     m_links             = get_pp_links(o);
 }
 
@@ -883,24 +884,47 @@ auto pretty_fn::pp_structure_instance(expr const & e) -> result {
 }
 
 bool pretty_fn::is_field_notation_candidate(expr const & e) {
+    if (!is_app(e)) return false;
     expr const & f = get_app_fn(e);
     if (!is_constant(f)) return false;
-    projection_info const * info = get_projection_info(m_env, const_name(f));
-    if (!info) return false; /* it is not a projection */
-    if (get_app_num_args(e) != info->m_nparams + 1) return false;
-    /* If implicit arguments is true, and the structure has parameters, we should not
-       pretty print using field notation because we will not be able to see the parameters. */
-    if (m_implict && info->m_nparams) return false;
+    name const & fn = const_name(f);
+    if (!fn.is_string()) return false;
+    name const & S = fn.get_prefix();
     /* The @ explicitness annotation cannot be combined with field notation, so fail on implicit args */
     if (m_implict && has_implicit_args(e)) return false;
-    name const & S = const_name(f).get_prefix();
-    /* We should not use field notation with type classes since the structure is implicit. */
-    if (is_class(m_env, S)) return false;
-    return true;
+
+    if (projection_info const * info = get_projection_info(m_env, const_name(f))) {
+        if (get_app_num_args(e) == info->m_nparams + 1 &&
+            /* If implicit arguments is true, and the structure has parameters, we should not
+            pretty print using field notation because we will not be able to see the parameters. */
+            (!m_implict || !info->m_nparams) &&
+            /* We should not use field notation with type classes since the structure is implicit. */
+            !is_class(m_env, S))
+            return true;
+    }
+
+    if (m_generalized_field_notation) {
+        if (!closed(e) || m_preterm) return false;
+
+        auto arg_ty_fn = get_app_fn(infer_type(app_arg(e)));
+        if (!is_constant(arg_ty_fn)) return false;
+        if (S != const_name(arg_ty_fn)) return false;
+        if (is_implicit(app_fn(e))) return false;
+
+        // check whether all previous arguments are implicit
+        for (auto partial_app = app_fn(e); is_app(partial_app); partial_app = app_fn(partial_app)) {
+            if (!is_implicit(app_fn(partial_app))) {
+                // previous explicit argument
+                return false;
+            }
+        }
+
+        return true;
+    }
+    return false;
 }
 
 auto pretty_fn::pp_field_notation(expr const & e) -> result {
-    lean_assert(is_field_notation_candidate(e));
     buffer<expr> args;
     expr const & f   = get_app_args(e, args);
     bool ignore_hide = true;
