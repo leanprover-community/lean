@@ -141,10 +141,10 @@ matrix:
        - while sleep 5m; do echo "=====[ $SECONDS seconds ]====="; done & # https://blog.humphd.org/building-large-code-on-travis/
        - docker exec -it -e "OPTIONS=$OPTIONS" emscripten script/ci_emscripten_docker.sh
        - pkill -9 sleep
+       - bash script/ci_emscripten_zip.sh
        - |
          if [[ $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]
           then
-          bash script/ci_emscripten_zip.sh
           bash script/deploy_nightly.sh build/lean-*
          fi
 
