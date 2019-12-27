@@ -52,8 +52,7 @@ artifacts:
 deploy:
   description: 'Lean release'
   provider: GitHub
-  auth_token:
-    secure: d+yPrDEAbiNrcf3a0PDNYEn/ieOOP6M7cP9zje+QkJEjHFdjBjWMe8b3qrC1hrus
+  auth_token: $GH_TOKEN
   artifact: binary
   draft: false
   prerelease: false

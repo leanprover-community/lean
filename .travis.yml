@@ -7,6 +7,7 @@ dist: trusty
 branches:
   only:
     - master
+    - /^v3\.[0-9]+\..*$/
 group: deprecated-2017Q3
 addons:
   apt:
@@ -238,7 +239,8 @@ notifications:
 
 deploy:
   provider: releases
-  api_key: $GH_TOKEN
+  api_key:
+    secure: E9x0PxbLwD9tfMI0uaHZTmyAwiLIDuznT0TxN8sWWaz/jIgPHeuK62jNEj1f6ruaLJGsFBpWa4dHykEwyX+zmozOUyS7NWUggdfz1/pgvs0bZIYP6lglAhfxnTDig38es3unvysIoNtrvmIkz0qDcNSTRnYvrfMYv5CL9ycgQ37xjGNC3IGZfoXiK1oN/ng4JANfXrGaISX1TVRcbGUXA7n4CunQMPXJCG/AB4isuDbqhlQs2R5LYjDyrw2xAqEYfgZTSJBkx3UW+grmGoyJGIpgprElFUMKLKJVcWfeFwj8D+pXm2KsX/6PyhKJCufW2CPZfKN3WRYFAtrwHgp93/oXPDZlJgZtfs+hvqJvRxQks/Yx/YQnsQK63tRXkNlHGUVB+W5jKBNtW7NfXNITGciEVdsPDBW7jGWZZR/JvLGrhKr13JdzpPbedS8ihMPUzsRlLGS8FbQI00nQoGMoL1z+9ZOcMxB1rqhRhUOAuqKIaoS5/IW2Iuol0crhy116a8FXeaeTypYmP3WJWtlLuKcNTso0CbGTHojPyvt8kA/zpFRroD8EDHJoxMN7zZA1NJ+rJkIsaRLbj7MhZKVyTgmsE6ZbAa5gaa5NKoTwT5H+3LR9om4dZKSEgnQatm68mGFcrbxsQDKm/af6lnildE6jmDLXfX6I0fGW1iwF5RU=
   file_glob: true
   file: build/lean-*
   skip_cleanup: true
