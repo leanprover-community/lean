@@ -129,7 +129,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - name: Setup
         run: msys2do choco upgrade git -y & vcpkg install mpir:x64-windows
-        if: matrix.os == 'windows-latest' && $CFG == MSVC
+        if: matrix.os == 'windows-latest' && $CFG == 'MSVC'
       - name: Setup
         run: mkdir build
       - name: Build
@@ -149,7 +149,7 @@ jobs:
                   cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release $OPTIONS -G 'Unix Makefiles' &&
                   cmake --build . &&
                   cpack")
-        if: matrix.os == 'windows-latest' && $CFG == MINGW64
+        if: matrix.os == 'windows-latest' && $CFG == 'MINGW64'
       - name: Build
         run: msys2do (cd build; cmake ../src -DCMAKE_BUILD_TYPE=Release 
               -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
@@ -157,7 +157,7 @@ jobs:
               -DLEAN_EXTRA_LINKER_FLAGS_MSVC=/LTCG:OFF
               -G "NMake Makefiles" &&
               cmake --build .)
-        if: matrix.os == 'windows-latest' && $CFG == MSVC
+        if: matrix.os == 'windows-latest' && $CFG == 'MSVC'
       - name: Test
         run: nix-shell --run "cd build; ctest -j --output-on-failure < /dev/null"
         if: matrix.os != 'windows-latest'
