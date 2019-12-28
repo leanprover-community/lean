@@ -98,6 +98,7 @@ jobs:
       TESTCOV: ${{ matrix.TESTCOV }}
       TEST_LEANPKG_REGISTRY: ${{ matrix.TEST_LEANPKG_REGISTRY }}
       UPLOAD: ${{ matrix.UPLOAD }}
+      CXX_FAMILY: `echo ${{ matrix.CMAKE_CXX_COMPILER }} | sed -n "s/\([^\+]*++\).*/\1/p"`
     steps:
       - name: Checkout
         uses: actions/checkout@v1
@@ -151,7 +152,7 @@ jobs:
                   cpack")
         if: matrix.os == 'windows-latest' && matrix.CFG == 'MINGW64'
       - name: Build
-        run: msys2do (cd build; cmake ../src -DCMAKE_BUILD_TYPE=Release 
+        run: msys2do (cd build; cmake ../src -DCMAKE_BUILD_TYPE=Release
               -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
               -DLEAN_EXTRA_CXX_FLAGS=/GL-
               -DLEAN_EXTRA_LINKER_FLAGS_MSVC=/LTCG:OFF
