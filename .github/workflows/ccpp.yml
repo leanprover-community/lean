@@ -15,27 +15,27 @@ jobs:
     strategy:
       matrix:
         # NOTE: must list all targets in `include` here to activate them
-        name: [Linux, "Linux Debug", "Linux fsanitize", "Linux LLVM=ON", macOS, Windows]
+        name: ["Linux Upload","Linux clang Debug","Linux gcc-4.9 Debug","Linux gcc-4.9 Release","Linux gcc-6 Release","Linux gcc-6 Release COV","Linux clang Release MT","Linux gcc-6 Release MT","Windows","Windows 64bits","macOS clang","macOS gcc"]
         include:
-          - name: Linux
+          - name: Linux Upload
             os: ubuntu-latest
             CMAKE_CXX_COMPILER: g++-4.9
             CMAKE_BUILD_TYPE: Release
             UPLOAD: ON
             STATIC: ON
             FIRST: 1
-          - name: Linux
+          - name: Linux clang Release MT
             os: ubuntu-latest
             CMAKE_CXX_COMPILER: clang++-3.5
             CMAKE_BUILD_TYPE: Release
             LEAN_EXTRA_MAKE_OPTS: -t0
             TCMALLOC: ON
-          - name: Linux
+          - name: Linux gcc-6 Release MT
             os: ubuntu-latest
             CMAKE_CXX_COMPILER: g++-6
             CMAKE_BUILD_TYPE: Release
             TCMALLOC: ON
-          - name: Linux Debug
+          - name: Linux gcc-6 Release COV
             os: ubuntu-latest
             CMAKE_CXX_COMPILER: g++-6
             CMAKE_BUILD_TYPE: Release
@@ -61,17 +61,17 @@ jobs:
             CMAKE_CXX_COMPILER: g++-4.9
             CMAKE_BUILD_TYPE: Debug
 
-          - name: macOS
+          - name: macOS clang
             os: macos-latest
             CMAKE_CXX_COMPILER: clang++
             CMAKE_BUILD_TYPE: Release
             UPLOAD: ON
             TEST_LEANPKG_REGISTRY: ON
-          - name: macOS
+          - name: macOS gcc
             os: macos-latest
             CMAKE_CXX_COMPILER: g++
             CMAKE_BUILD_TYPE: Debug
-          - name: Windows
+          - name: Windows 64bits
             os: windows-latest
             CFG: MINGW64
             UPLOAD: ON
