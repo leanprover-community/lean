@@ -129,7 +129,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - name: Setup
         run: msys2do choco upgrade git -y & vcpkg install mpir:x64-windows
-        if: matrix.os == 'windows-latest' && $CFG == 'MSVC'
+        if: matrix.os == 'windows-latest' & $CFG == 'MSVC'
       - name: Setup
         run: mkdir build
       - name: Build
