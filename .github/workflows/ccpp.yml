@@ -100,6 +100,12 @@ jobs:
       UPLOAD: ${{ matrix.UPLOAD }}
       # CXX_FAMILY: `echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`
     steps:
+      - name: Install ccache
+        run: apt get ccache
+        if: matrix.os == 'ubuntu-latest'
+      - name: Install ccache
+        run: brew install ccache
+        if: matrix.os == 'macos-latest'
       - name: New vars
         run: export CXX_FAMILY=`echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`;
            if [[ $TESTCOV != ON ]]; then echo "::set-env name=TESTCOV::OFF"; fi;
