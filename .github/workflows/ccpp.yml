@@ -101,7 +101,7 @@ jobs:
       # CXX_FAMILY: `echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`
     steps:
       - name: New vars
-        run: export$CXX_FAMILY=`echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`; echo "::set-env name=CXX_FAMILY::$CXX_FAMILY"
+        run: export CXX_FAMILY=`echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`; echo "::set-env name=CXX_FAMILY::$CXX_FAMILY"
       - name: print vars
         run: echo $CXX_FAMILY
       - name: Checkout
