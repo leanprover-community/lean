@@ -98,8 +98,10 @@ jobs:
       TESTCOV: ${{ matrix.TESTCOV }}
       TEST_LEANPKG_REGISTRY: ${{ matrix.TEST_LEANPKG_REGISTRY }}
       UPLOAD: ${{ matrix.UPLOAD }}
-      CXX_FAMILY: `echo ${{ matrix.CMAKE_CXX_COMPILER }} | sed -n "s/\([^\+]*++\).*/\1/p"`
+      # CXX_FAMILY: `echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`
     steps:
+      - name: New vars
+        run: export=`echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`; echo "::set-env name=CXX_FAMILY::$CXX_FAMILY"
       - name: Checkout
         uses: actions/checkout@v1
       - name: Install Nix
