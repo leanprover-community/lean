@@ -156,7 +156,6 @@ jobs:
       - name: Build
         run: nix-shell --run "cd build; cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
                 -DCMAKE_CXX_COMPILER=$CXX_FAMILY
-                # -DCMAKE_CXX_COMPILER=ccache-$CXX_FAMILY
                 -DTESTCOV=$TESTCOV
                 -DTCMALLOC=$TCMALLOC
                 -DMULTI_THREAD=$MULTI_THREAD
