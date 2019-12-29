@@ -102,7 +102,7 @@ jobs:
     steps:
       - name: New vars
         run: export CXX_FAMILY=`echo $CMAKE_CXX_COMPILER | sed -n "s/\([^\+]*++\).*/\1/p"`;
-           if [[ $TESTCOV != ON ]]; then echo "::set-env name=TESTCOV::OFF" fi;
+           if [[ $TESTCOV != ON ]]; then echo "::set-env name=TESTCOV::OFF"; fi;
            if [[ $TCMALLOC != ON ]]; then echo "::set-env name=TCMALLOC::OFF"; fi;
            if [[ $STATIC != ON ]]; then echo "::set-env name=STATIC::OFF"; fi;
            if [[ $MULTI_THREAD != OFF ]]; then echo "::set-env name=MULTI_THREAD::ON"; fi;
