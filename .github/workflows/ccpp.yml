@@ -111,11 +111,11 @@ jobs:
         run: echo $CXX_FAMILY
       - name: Checkout
         uses: actions/checkout@v1
-        - name: Install scripts
-          run: mkdir -p ~/bin/ ;
-                 chmod +x script/ccache-$CXX_FAMILY ;
-                 cp script/ccache-$CXX_FAMILY ~/bin/ ;
-                 export PATH="~/bin/:$PATH"
+      - name: Install scripts
+        run: mkdir -p ~/bin/ ;
+               chmod +x script/ccache-$CXX_FAMILY ;
+               cp script/ccache-$CXX_FAMILY ~/bin/ ;
+               export PATH="~/bin/:$PATH"
       - name: Install Nix
         uses: cachix/install-nix-action@v5
         if: matrix.os != 'windows-latest'
