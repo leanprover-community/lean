@@ -113,8 +113,7 @@ jobs:
            if [[ $STATIC != ON ]]; then echo "::set-env name=STATIC::OFF"; fi;
            if [[ $MULTI_THREAD != OFF ]]; then echo "::set-env name=MULTI_THREAD::ON"; fi;
            echo "::set-env name=CXX_FAMILY::$CXX_FAMILY"
-      - name: print vars
-        run: echo $CXX_FAMILY
+        if: matrix.os != 'windows-latest'
       - name: Checkout
         uses: actions/checkout@v1
       - name: Install scripts
