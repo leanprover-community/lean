@@ -154,7 +154,7 @@ jobs:
       - name: Setup
         run: mkdir build
       - name: Build
-        run: nix-shell --run "bash scripts/ci.sh"
+        run: nix-shell --run "bash script/ci.sh"
       - name: Build
         run: msys2do (cd build; C:\msys64\usr\bin\bash -lc "exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/build &&
                   OPTIONS='';
