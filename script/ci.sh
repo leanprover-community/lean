@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -e
-mkdir build
+mkdir -p build
 cd build
 # eval cmake ../src $CMAKE_OPTIONS
 eval cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
