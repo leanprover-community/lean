@@ -151,6 +151,11 @@ jobs:
         run: msys2do choco upgrade git -y & vcpkg install mpir:x64-windows
         if: matrix.os == 'windows-latest' && matrix.CFG == 'MSVC'
       - name: Setup
+        run: |
+          # open shell once for initial setup
+          nix-shell --run true
+        if: matrix.os != 'windows-latest'
+      - name: Setup
         run: mkdir build
       - name: Build
         run: nix-shell --run "bash script/ci.sh"
