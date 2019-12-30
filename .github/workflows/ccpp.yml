@@ -154,19 +154,10 @@ jobs:
       - name: Setup
         run: mkdir build
       - name: Build
-        run: nix-shell --run "cd build; cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
-                -DCMAKE_CXX_COMPILER=$CXX_FAMILY
-                -DTESTCOV=$TESTCOV
-                -DTCMALLOC=$TCMALLOC
-                -DMULTI_THREAD=$MULTI_THREAD
-                -DSTATIC=$STATIC
-                -DLEAN_EXTRA_MAKE_OPTS=$LEAN_EXTRA_MAKE_OPTS
-                $OPTIONS
-                ../src"
+        run: nix-shell --run "bash scripts/ci.sh"
       - name: Build
         run: msys2do (cd build; C:\msys64\usr\bin\bash -lc "exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/build &&
                   OPTIONS='';
-                  if [[ $APPVEYOR_SCHEDULED_BUILD == True ]]; then . ../script/setup_nightly.sh; fi &&
                   cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release $OPTIONS -G 'Unix Makefiles' &&
                   cmake --build . &&
                   cpack")
