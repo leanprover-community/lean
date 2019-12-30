@@ -141,11 +141,6 @@ jobs:
           restore-keys: |
             ${{ matrix.name }}-build
       - name: Setup
-        run: |
-          # open shell once for initial setup
-          nix-shell --run true
-        if: matrix.os != 'windows-latest'
-      - name: Setup
         run: msys2do pacman --noconfirm -S make python mingw-w64-x86_64-cmake mingw-w64-x86_64-clang mingw-w64-x86_64-ccache git diffutils
         if: matrix.os == 'windows-latest'
       - name: Setup
@@ -158,13 +153,9 @@ jobs:
         if: matrix.os != 'windows-latest'
       - name: Setup
         run: mkdir build
-      - name: Setup
-        run: |
-          # open shell once for initial setup
-          nix-shell --run true
-        if: matrix.os != 'windows-latest'
       - name: Build
         run: nix-shell --run "bash script/ci.sh"
+        if: matrix.os != 'windows-latest'
       - name: Build
         run: msys2do (cd build; C:\msys64\usr\bin\bash -lc "exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/build &&
                   OPTIONS='';
