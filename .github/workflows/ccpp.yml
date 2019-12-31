@@ -22,7 +22,8 @@ jobs:
             CMAKE_CXX_COMPILER: g++-4.9
             CMAKE_BUILD_TYPE: Release
             UPLOAD: ON
-            STATIC: ON
+            # STATIC: ON
+            STATIC: OFF
             FIRST: 1
           - name: Linux clang Release MT
             os: ubuntu-latest
