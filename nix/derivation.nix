@@ -8,7 +8,7 @@ llvmPackages.stdenv.mkDerivation rec {
   src = if builtins.pathExists ../.git then builtins.fetchGit { url = ../.; } else ../.;
 
   nativeBuildInputs = [ bash cmake ccache python ];
-  buildInputs = [ gmp llvmPackages.llvm ];
+  buildInputs = [ gmp llvmPackages.llvm stdenv.cc.cc.lib ];
   enableParallelBuilding = true;
 
   preConfigure = ''

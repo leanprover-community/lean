@@ -157,21 +157,8 @@ jobs:
         run: nix-shell --run "bash script/ci.sh"
         if: matrix.os != 'windows-latest'
       - name: Build
-        run: msys2do cd build; bash -lc "exec 0</dev/null && cd build &&
-                  OPTIONS='';
-                  cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release $OPTIONS -G 'Unix Makefiles' &&
-                  cmake --build . &&
-                  cpack"
-        if: matrix.os == 'windows-latest' && matrix.CFG == 'MINGW64'
-      - name: Build
-        run: |
-          msys2do cd build; cmake ../src -DCMAKE_BUILD_TYPE=Release
-              -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
-              -DLEAN_EXTRA_CXX_FLAGS=/GL-
-              -DLEAN_EXTRA_LINKER_FLAGS_MSVC=/LTCG:OFF
-              -G "NMake Makefiles"
-          cmake --build .
-        if: matrix.os == 'windows-latest' && matrix.CFG == 'MSVC'
+        run: msys2do script/ci-win.sh
+        if: matrix.os == 'windows-latest'
       - name: Test
         run: nix-shell --run "cd build; ctest -j --output-on-failure < /dev/null"
         if: matrix.os != 'windows-latest'
