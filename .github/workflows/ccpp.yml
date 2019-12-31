@@ -15,9 +15,9 @@ jobs:
     strategy:
       matrix:
         # NOTE: must list all targets in `include` here to activate them
-        name: ["Linux Upload","Linux clang Debug","Linux gcc-4.9 Debug","Linux gcc-4.9 Release","Linux gcc-6 Release","Linux gcc-6 Release COV","Linux clang Release MT","Linux gcc-6 Release MT","Windows","Windows 64bits","macOS clang","macOS gcc"]
+        name: ["Linux gcc-4.9 Upload","Linux clang Debug","Linux gcc-4.9 Debug","Linux gcc-4.9 Release","Linux gcc-6 Release","Linux gcc-6 Release COV","Linux clang Release MT","Linux gcc-6 Release MT","Windows","Windows 64bits","macOS clang","macOS gcc"]
         include:
-          - name: Linux Upload
+          - name: Linux gcc-4.9 Upload
             os: ubuntu-latest
             CMAKE_CXX_COMPILER: g++-4.9
             CMAKE_BUILD_TYPE: Release

@@ -8,10 +8,9 @@ eval cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE \
                 -DTESTCOV=$TESTCOV \
                 -DTCMALLOC=$TCMALLOC \
                 -DMULTI_THREAD=$MULTI_THREAD \
-                -DSTATIC=OFF \
+                -DSTATIC=$STATIC \
                 -DLEAN_EXTRA_MAKE_OPTS=$LEAN_EXTRA_MAKE_OPTS \
                 $OPTIONS \
                 ../src
-# -DSTATIC=$STATIC
 cmake --build . -j4
 cpack
