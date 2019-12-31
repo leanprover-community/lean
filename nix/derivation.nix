@@ -1,4 +1,4 @@
-{ llvmPackages, bash, cmake, ccache, python, gmp }:
+{ llvmPackages, bash, cmake, ccache, python, gmp, g++ }:
 
 llvmPackages.stdenv.mkDerivation rec {
   name = "lean-${version}";
