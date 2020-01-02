@@ -2,6 +2,7 @@
 set -e
 mkdir -p build
 cd build
+            # CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 if [ $CFG == 'MINGW64' ]; then
     OPTIONS=''
@@ -13,9 +14,9 @@ else
               -DLEAN_EXTRA_C_FLAGS=/GL-
               -DLEAN_EXTRA_CXX_FLAGS=/GL-
               -DLEAN_EXTRA_LINKER_FLAGS_MSVC=/LTCG:OFF
-              # -G "NMake Makefiles"
               -G "Unix Makefiles"
               -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+              # -G "NMake Makefiles"
 fi
 
 cmake --build . -j4
