@@ -1227,7 +1227,9 @@ void type_context_old::ensure_num_tmp_mvars(unsigned num_uvars, unsigned num_mva
 
 optional<level> type_context_old::get_tmp_uvar_assignment(unsigned idx) const {
     lean_assert(in_tmp_mode());
-    lean_assert(idx < m_tmp_data->m_uassignment.size());
+    // FIXME(gabriel): this assertion is violated by postponed level assignments of temporary metavariables in the simplifier
+    // lean_assert(idx < m_tmp_data->m_uassignment.size());
+    if (idx >= m_tmp_data->m_uassignment.size()) return {};
     return m_tmp_data->m_uassignment[idx];
 }
 
@@ -1250,7 +1252,10 @@ optional<expr> type_context_old::get_tmp_assignment(expr const & e) const {
 void type_context_old::assign_tmp(level const & u, level const & l) {
     lean_assert(in_tmp_mode());
     lean_assert(is_idx_metauniv(u));
-    lean_assert(to_meta_idx(u) < m_tmp_data->m_uassignment.size());
+    // FIXME(gabriel): this assertion is violated by postponed level assignments of temporary metavariables in the simplifier
+    // lean_assert(to_meta_idx(u) < m_tmp_data->m_uassignment.size());
+    if (to_meta_idx(u) >= m_tmp_data->m_uassignment.size())
+        m_tmp_data->m_uassignment.resize(to_meta_idx(u) + 1);
     unsigned idx = to_meta_idx(u);
     if (!m_scopes.empty() && !m_tmp_data->m_uassignment[idx]) {
         m_tmp_data->m_trail.emplace_back(tmp_trail_kind::Level, idx);
