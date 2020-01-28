@@ -494,7 +494,7 @@ meta structure simp_all_entry :=
 (s        : simp_lemmas) -- simplification lemmas for simplifying new_type
 
 private meta def update_simp_lemmas (es : list simp_all_entry) (h : expr) : tactic (list simp_all_entry) :=
-es.mmap $ λ e, do new_s ← e.s.add h ff, return {s := new_s, ..e} -- TODO: add symmetry here?
+es.mmap $ λ e, do new_s ← e.s.add h ff, return {s := new_s, ..e}
 
 /- Helper tactic for `init`.
    Remark: the following tactic is quadratic on the length of list expr (the list of non dependent propositions).
@@ -503,7 +503,7 @@ private meta def init_aux : list expr → simp_lemmas → list simp_all_entry �
 | []      s r := return (s, r)
 | (h::hs) s r := do
   new_r  ← update_simp_lemmas r h,
-  new_s  ← s.add h ff, -- TODO: add symmetry here?
+  new_s  ← s.add h ff,
   h_type ← infer_type h,
   init_aux hs new_s (⟨h, h_type, none, s⟩::new_r)
 
@@ -551,7 +551,7 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
        new_es      ← update_simp_lemmas es new_fact_pr,
        new_r       ← update_simp_lemmas r new_fact_pr,
        let new_r := {new_type := new_h_type, pr := new_pr, ..e} :: new_r,
-       new_s       ← s.add new_fact_pr ff, -- TODO: add symmetry here?
+       new_s       ← s.add new_fact_pr ff,
        loop new_es new_r new_s tt
 
 meta def simp_all (s : simp_lemmas) (to_unfold : list name) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
