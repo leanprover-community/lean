@@ -1015,7 +1015,7 @@ static simp_lemmas add_congr_core(type_context_old & ctx, simp_lemmas const & s,
 }
 
 simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, bool symm, unsigned priority) {
-  return ext_add_core(ctx, s, id, symm, priority);
+    return ext_add_core(ctx, s, id, symm, priority);
 }
 
 simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, expr const & e, expr const & h, bool symm, unsigned priority) {
@@ -1025,6 +1025,14 @@ simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, 
         report_failure(sstream() << "invalid simplification lemma '" << id << "': " << e);
     }
     return r;
+}
+
+simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, unsigned priority) {
+    return add(ctx, s, id, false, priority);
+}
+
+simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, expr const & e, expr const & h, unsigned priority) {
+    return add(ctx, s, id, e, h, false, priority);
 }
 
 simp_lemmas add_congr(type_context_old & ctx, simp_lemmas const & s, name const & id, unsigned priority) {

@@ -43,9 +43,9 @@ If your lemma is not being added, you can see the reasons by setting `set_option
 - `LHS` should not occur within a hypothesis `hᵢ`.
 
  -/
-meta constant simp_lemmas.add : simp_lemmas → expr → bool → tactic simp_lemmas
+meta constant simp_lemmas.add (s : simp_lemmas) (e : expr) (symm : bool := false) : tactic simp_lemmas
 /-- Add a simplification lemma by it's declaration name. See `simp_lemmas.add` for more information.-/
-meta constant simp_lemmas.add_simp : simp_lemmas → name → bool → tactic simp_lemmas
+meta constant simp_lemmas.add_simp (s : simp_lemmas) (id : name) (symm : bool := false) : tactic simp_lemmas
 /-- Adds a congruence simp lemma to simp_lemmas.
 A congruence simp lemma is a lemma that breaks the simplification down into separate problems.
 For example, to simplify `a ∧ b` to `c ∧ d`, we should try to simp `a` to `c` and `b` to `d`.
