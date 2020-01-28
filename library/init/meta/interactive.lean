@@ -1060,7 +1060,7 @@ meta inductive simp_arg_type : Type
 meta def simp_arg : parser simp_arg_type :=
 (tk "*" *> return simp_arg_type.all_hyps) <|>
 (tk "-" *> simp_arg_type.except <$> ident) <|>
-(tk "!" *> simp_arg_type.expr tt <$> texpr) <|> -- TODO: why doesn't "←" get parsed?
+(tk "<-" *> simp_arg_type.expr tt <$> texpr) <|>
 (simp_arg_type.expr ff <$> texpr)
 
 meta def simp_arg_list : parser (list simp_arg_type) :=

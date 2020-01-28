@@ -727,11 +727,12 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             rule = instantiate(binding_body(rule), mvar);
             proof = mk_app(proof, mvar);
         }
-        if (symm) {
-          proof = mk_symm(ctx, get_eq_name(), proof);
-        }
         expr rel, lhs, rhs;
         if (is_simp_relation(env, rule, rel, lhs, rhs) && is_constant(rel)) {
+            if (symm) {
+              proof = mk_symm(ctx, get_eq_name(), proof);
+              std::swap(lhs, rhs);
+            }
             if (is_refl_app(proof)) {
                 // This case is for zeta-reduction, regular rfl-lemmas are already handled in add_core(name, ...)
                 new_s.insert(const_name(rel), mk_rfl_lemma(id, univ_metas, reverse_to_list(emetas),
@@ -804,7 +805,6 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
         expr lhs, rhs;
         lean_verify(is_eq(type, lhs, rhs));
         if (symm) {
-            printf("foo\n");
             proof = mk_symm(ctx, get_eq_name(), proof);
             std::swap(lhs, rhs);
         }

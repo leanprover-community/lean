@@ -59,9 +59,10 @@ meta def process_lex : tactic unit → tactic unit
 private meta def unfold_sizeof_measure : tactic unit :=
 dunfold_target [``sizeof_measure, ``measure, ``inv_image] {fail_if_unchanged := ff}
 
+-- TODO: why not re-use `add_simps` used by `simp` itself?
 private meta def add_simps : simp_lemmas → list name → tactic simp_lemmas
 | s []      := return s
-| s (n::ns) := do s' ← s.add_simp n, add_simps s' ns
+| s (n::ns) := do s' ← s.add_simp n ff, add_simps s' ns
 
 private meta def collect_sizeof_lemmas (e : expr) : tactic simp_lemmas :=
 e.mfold simp_lemmas.mk $ λ c d s,
