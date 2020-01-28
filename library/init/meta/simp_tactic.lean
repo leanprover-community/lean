@@ -358,7 +358,7 @@ meta def simp_intros_aux (cfg : simp_config) (use_hyps : bool) (to_unfold : list
       assertv_core h_d.local_pp_name new_d h_new_d,
       clear h_d,
       h_new   ← intro1,
-      new_S ← if use_hyps then mcond (is_prop new_d) (S.add h_new false) (return S)
+      new_S ← if use_hyps then mcond (is_prop new_d) (S.add h_new ff) (return S)
               else return S,
       simp_intros_aux new_S use_ns ns.tail
     }
