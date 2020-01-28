@@ -1203,7 +1203,7 @@ The `simp` tactic uses lemmas and hypotheses to simplify the main goal target or
 
 `simp` simplifies the main goal target using lemmas tagged with the attribute `[simp]`.
 
-`simp [h₁ h₂ ... hₙ]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and the given `hᵢ`'s, where the `hᵢ`'s are expressions. If an `hᵢ` is a defined constant `f`, then the equational lemmas associated with `f` are used. This provides a convenient way to unfold `f`.
+`simp [h₁ h₂ ... hₙ]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and the given `hᵢ`'s, where the `hᵢ`'s are expressions. If `hᵢ` is preceded by left arrow (`←` or `<-`), the simplification is performed in the reverse direction. If an `hᵢ` is a defined constant `f`, then the equational lemmas associated with `f` are used. This provides a convenient way to unfold `f`.
 
 `simp [*]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and all hypotheses.
 
