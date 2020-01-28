@@ -137,8 +137,8 @@ simp_lemmas get_simp_lemmas(environment const & env, simp_lemmas_token tk);
 simp_lemmas get_default_simp_lemmas(environment const & env);
 simp_lemmas get_simp_lemmas(environment const & env, name const & tk_name);
 
-simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, unsigned priority);
-simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, expr const & e, expr const & h, unsigned priority);
+simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, bool symm, unsigned priority);
+simp_lemmas add(type_context_old & ctx, simp_lemmas const & s, name const & id, expr const & e, expr const & h, bool symm, unsigned priority);
 simp_lemmas add_congr(type_context_old & ctx, simp_lemmas const & s, name const & id, unsigned priority);
 simp_lemmas join(simp_lemmas const & s1, simp_lemmas const & s2);
 

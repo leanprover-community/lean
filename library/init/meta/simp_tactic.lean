@@ -43,9 +43,9 @@ If your lemma is not being added, you can see the reasons by setting `set_option
 - `LHS` should not occur within a hypothesis `hᵢ`.
 
  -/
-meta constant simp_lemmas.add : simp_lemmas → expr → tactic simp_lemmas
+meta constant simp_lemmas.add : simp_lemmas → expr → bool → tactic simp_lemmas
 /-- Add a simplification lemma by it's declaration name. See `simp_lemmas.add` for more information.-/
-meta constant simp_lemmas.add_simp : simp_lemmas → name → tactic simp_lemmas
+meta constant simp_lemmas.add_simp : simp_lemmas → name → bool → tactic simp_lemmas
 /-- Adds a congruence simp lemma to simp_lemmas.
 A congruence simp lemma is a lemma that breaks the simplification down into separate problems.
 For example, to simplify `a ∧ b` to `c ∧ d`, we should try to simp `a` to `c` and `b` to `d`.
@@ -58,8 +58,8 @@ lemma and_congr (h₁ : a ↔ c) (h₂ : b ↔ d) : (a ∧ b) ↔ (c ∧ d) := .
 -/
 meta constant simp_lemmas.add_congr : simp_lemmas → name → tactic simp_lemmas
 
-meta def simp_lemmas.append (s : simp_lemmas) (hs : list expr) : tactic simp_lemmas :=
-hs.mfoldl simp_lemmas.add s
+meta def simp_lemmas.append (s : simp_lemmas) (hs : list (expr × bool)) : tactic simp_lemmas :=
+hs.mfoldl (λ s h, simp_lemmas.add s h.fst h.snd) s
 
 /-- `simp_lemmas.rewrite s e prove R` apply a simplification lemma from 's'
 
@@ -358,7 +358,7 @@ meta def simp_intros_aux (cfg : simp_config) (use_hyps : bool) (to_unfold : list
       assertv_core h_d.local_pp_name new_d h_new_d,
       clear h_d,
       h_new   ← intro1,
-      new_S ← if use_hyps then mcond (is_prop new_d) (S.add h_new) (return S)
+      new_S ← if use_hyps then mcond (is_prop new_d) (S.add h_new false) (return S)
               else return S,
       simp_intros_aux new_S use_ns ns.tail
     }
@@ -391,7 +391,7 @@ do (lhs, rhs)     ← target >>= match_eq,
 
 meta def to_simp_lemmas : simp_lemmas → list name → tactic simp_lemmas
 | S []      := return S
-| S (n::ns) := do S' ← S.add_simp n, to_simp_lemmas S' ns
+| S (n::ns) := do S' ← S.add_simp n ff, to_simp_lemmas S' ns
 
 meta def mk_simp_attr (attr_name : name) (attr_deps : list name := []) : command :=
 do let t := `(user_attribute simp_lemmas),
@@ -494,7 +494,7 @@ meta structure simp_all_entry :=
 (s        : simp_lemmas) -- simplification lemmas for simplifying new_type
 
 private meta def update_simp_lemmas (es : list simp_all_entry) (h : expr) : tactic (list simp_all_entry) :=
-es.mmap $ λ e, do new_s ← e.s.add h, return {s := new_s, ..e}
+es.mmap $ λ e, do new_s ← e.s.add h ff, return {s := new_s, ..e} -- TODO: add symmetry here?
 
 /- Helper tactic for `init`.
    Remark: the following tactic is quadratic on the length of list expr (the list of non dependent propositions).
@@ -503,7 +503,7 @@ private meta def init_aux : list expr → simp_lemmas → list simp_all_entry �
 | []      s r := return (s, r)
 | (h::hs) s r := do
   new_r  ← update_simp_lemmas r h,
-  new_s  ← s.add h,
+  new_s  ← s.add h ff, -- TODO: add symmetry here?
   h_type ← infer_type h,
   init_aux hs new_s (⟨h, h_type, none, s⟩::new_r)
 
@@ -551,7 +551,7 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
        new_es      ← update_simp_lemmas es new_fact_pr,
        new_r       ← update_simp_lemmas r new_fact_pr,
        let new_r := {new_type := new_h_type, pr := new_pr, ..e} :: new_r,
-       new_s       ← s.add new_fact_pr,
+       new_s       ← s.add new_fact_pr ff, -- TODO: add symmetry here?
        loop new_es new_r new_s tt
 
 meta def simp_all (s : simp_lemmas) (to_unfold : list name) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=

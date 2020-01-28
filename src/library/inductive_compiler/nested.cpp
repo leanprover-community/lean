@@ -904,7 +904,7 @@ class add_nested_inductive_decl_fn {
                 m_env = add_protected(m_env, sizeof_spec_name);
                 m_tctx.set_env(m_env);
 
-                m_nested_decl.set_sizeof_lemmas(add(m_tctx, m_nested_decl.get_sizeof_lemmas(), sizeof_spec_name, LEAN_DEFAULT_PRIORITY));
+                m_nested_decl.set_sizeof_lemmas(add(m_tctx, m_nested_decl.get_sizeof_lemmas(), sizeof_spec_name, false, LEAN_DEFAULT_PRIORITY));
             }
         }
     }
@@ -1243,7 +1243,7 @@ class add_nested_inductive_decl_fn {
             expr ty = Pi(m_nested_decl.get_params(), Pi(slemma.m_to_abstract, mk_eq(m_tctx, slemma.m_lhs, slemma.m_rhs)));
             expr pf = Fun(m_nested_decl.get_params(), Fun(slemma.m_to_abstract, mk_eq_refl(m_tctx, slemma.m_lhs)));
             define_theorem(n, ty, pf);
-            m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+            m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
         }
 
         prove_nested_pack_unpack(start, end, c_nested_pack, c_nested_unpack, indices, nest_idx);
@@ -1425,7 +1425,7 @@ class add_nested_inductive_decl_fn {
             expr ty = Pi(m_nested_decl.get_params(), Pi(slemma.m_to_abstract, mk_eq(m_tctx, slemma.m_lhs, slemma.m_rhs)));
             expr pf = Fun(m_nested_decl.get_params(), Fun(slemma.m_to_abstract, force_recursors(slemma.m_lhs)));
             define_theorem(n, ty, pf);
-            m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+            m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
         }
 
         prove_primitive_pack_unpack(indices);
@@ -1568,7 +1568,7 @@ class add_nested_inductive_decl_fn {
         simp_lemmas all_lemmas = use_sizeof ? join(m_lemmas, m_nested_decl.get_sizeof_lemmas()) : m_lemmas;
         for (expr const & H : Hs) {
             expr H_type = tctx_whnf.infer(H);
-            all_lemmas = add(tctx_whnf, all_lemmas, mlocal_name(H), H_type, H, LEAN_DEFAULT_PRIORITY);
+            all_lemmas = add(tctx_whnf, all_lemmas, mlocal_name(H), H_type, H, false, LEAN_DEFAULT_PRIORITY);
         }
         lean_trace(name({"inductive_compiler", "nested", "simp", "start"}), tout() << thm << "\n";);
         simp_config cfg = get_simp_config();
@@ -1627,7 +1627,7 @@ class add_nested_inductive_decl_fn {
         expr primitive_pack_unpack_type = Pi(m_nested_decl.get_params(), Pi(index_locals, Pi(x_packed, goal)));
         expr primitive_pack_unpack_val = prove_by_induction_simp(rec_name, primitive_pack_unpack_type, false);
         define_theorem(n, primitive_pack_unpack_type, primitive_pack_unpack_val);
-        m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_primitive_unpack_pack(buffer<expr> const & index_locals) {
@@ -1639,7 +1639,7 @@ class add_nested_inductive_decl_fn {
         expr primitive_unpack_pack_type = Pi(m_nested_decl.get_params(), Pi(index_locals, Pi(x_unpacked, goal)));
         expr primitive_unpack_pack_val = prove_by_induction_simp(rec_name, primitive_unpack_pack_type, false);
         define_theorem(n, primitive_unpack_pack_type, primitive_unpack_pack_val);
-        m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_primitive_pack_sizeof(buffer<expr> const & index_locals) {
@@ -1655,7 +1655,7 @@ class add_nested_inductive_decl_fn {
         expr primitive_sizeof_pack_val = prove_by_induction_simp(rec_name, primitive_sizeof_pack_type, true);
         define_theorem(n, primitive_sizeof_pack_type, primitive_sizeof_pack_val);
         tctx_synth.set_env(m_env);
-        m_lemmas = add(tctx_synth, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(tctx_synth, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_primitive_pack_injective() {
@@ -1669,7 +1669,7 @@ class add_nested_inductive_decl_fn {
         expr proof = prove_pack_injective(lemma_name, goal, mk_primitive_name(fn_type::UNPACK), mk_primitive_name(fn_type::UNPACK_PACK));
         m_env = module::add(m_env, check(m_env, mk_definition_inferring_trusted(m_env, lemma_name, to_list(m_nested_decl.get_lp_names()), goal, proof, true)));
         m_tctx.set_env(m_env);
-        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, LEAN_DEFAULT_PRIORITY);
+        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_nested_pack_unpack(expr const & start, expr const & end, expr const & nested_pack, expr const & nested_unpack, buffer<expr> const & index_locals, unsigned nest_idx) {
@@ -1681,7 +1681,7 @@ class add_nested_inductive_decl_fn {
         expr nested_pack_unpack_type = Pi(m_nested_decl.get_params(), Pi(index_locals, Pi(x_packed, goal)));
         expr nested_pack_unpack_val = prove_by_induction_simp(rec_name, nested_pack_unpack_type, false);
         define_theorem(n, nested_pack_unpack_type, nested_pack_unpack_val);
-        m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_nested_unpack_pack(expr const & start, expr const & /* end */, expr const & nested_pack, expr const & nested_unpack, buffer<expr> const & index_locals, unsigned nest_idx) {
@@ -1693,7 +1693,7 @@ class add_nested_inductive_decl_fn {
         expr nested_unpack_pack_type = Pi(m_nested_decl.get_params(), Pi(index_locals, Pi(x_unpacked, goal)));
         expr nested_unpack_pack_val = prove_by_induction_simp(rec_name, nested_unpack_pack_type, false);
         define_theorem(n, nested_unpack_pack_type, nested_unpack_pack_val);
-        m_lemmas = add(m_tctx, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(m_tctx, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_nested_pack_sizeof(expr const & start, expr const & /* end */, expr const & nested_pack, buffer<expr> const & index_locals, unsigned nest_idx) {
@@ -1709,7 +1709,7 @@ class add_nested_inductive_decl_fn {
         expr nested_sizeof_pack_val = prove_by_induction_simp(rec_name, nested_sizeof_pack_type, true);
         define_theorem(n, nested_sizeof_pack_type, nested_sizeof_pack_val);
         tctx_synth.set_env(m_env);
-        m_lemmas = add(tctx_synth, m_lemmas, n, LEAN_DEFAULT_PRIORITY);
+        m_lemmas = add(tctx_synth, m_lemmas, n, false, LEAN_DEFAULT_PRIORITY);
     }
 
     void prove_nested_pack_injective(unsigned nest_idx) {
@@ -1723,7 +1723,7 @@ class add_nested_inductive_decl_fn {
         expr proof = prove_pack_injective(lemma_name, goal, mk_nested_name(fn_type::UNPACK, nest_idx), mk_nested_name(fn_type::UNPACK_PACK, nest_idx));
         m_env = module::add(m_env, check(m_env, mk_definition_inferring_trusted(m_env, lemma_name, to_list(m_nested_decl.get_lp_names()), goal, proof, true)));
         m_tctx.set_env(m_env);
-        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, LEAN_DEFAULT_PRIORITY);
+        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, false, LEAN_DEFAULT_PRIORITY);
     }
 
     expr prove_by_funext(expr const & goal, expr const & fn1, expr const & fn2) {
@@ -1805,7 +1805,7 @@ class add_nested_inductive_decl_fn {
         }
         define_theorem(n, pi_unpack_pack_type, pi_unpack_pack_val);
         m_env = set_simp_sizeof(m_env, n);
-        m_nested_decl.set_sizeof_lemmas(add(m_tctx, m_nested_decl.get_sizeof_lemmas(), n, LEAN_DEFAULT_PRIORITY));
+        m_nested_decl.set_sizeof_lemmas(add(m_tctx, m_nested_decl.get_sizeof_lemmas(), n, false, LEAN_DEFAULT_PRIORITY));
         m_tctx.set_env(m_env);
     }
 
@@ -1820,7 +1820,7 @@ class add_nested_inductive_decl_fn {
         expr proof = prove_pack_injective(lemma_name, goal, mk_pi_name(fn_type::UNPACK), mk_pi_name(fn_type::UNPACK_PACK));
         m_env = module::add(m_env, check(m_env, mk_definition_inferring_trusted(m_env, lemma_name, to_list(m_nested_decl.get_lp_names()), goal, proof, true)));
         m_tctx.set_env(m_env);
-        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, LEAN_DEFAULT_PRIORITY);
+        m_inj_lemmas = add(m_tctx, m_inj_lemmas, lemma_name, false, LEAN_DEFAULT_PRIORITY);
     }
 
     ////////////////////////////////////////////
@@ -2201,7 +2201,7 @@ class add_nested_inductive_decl_fn {
                 simp_config cfg = get_simp_config();
                 defeq_can_state dcs;
                 simp_lemmas slss;
-                slss = add(tctx, slss, hyp_decl.get_name(), hyp_decl.get_type(), hyp_decl.mk_ref(), LEAN_DEFAULT_PRIORITY);
+                slss = add(tctx, slss, hyp_decl.get_name(), hyp_decl.get_type(), hyp_decl.mk_ref(), false, LEAN_DEFAULT_PRIORITY);
                 simp_result r = finalize(tctx, get_eq_name(), simplify_fn(tctx, dcs, slss, list<name>(), cfg)(get_eq_name(), s.get_main_goal_decl()->get_type()));
                 lean_verify(is_eq(r.get_new(), lhs, rhs));
                 lean_assert(tctx.is_def_eq(lhs, rhs));
@@ -2213,7 +2213,7 @@ class add_nested_inductive_decl_fn {
                     local_decl H_unpack_decl = tctx.lctx().get_local_decl(new_hyps.back());
 
                     slss = simp_lemmas();
-                    slss = add(tctx, slss, unpack_pack_name, LEAN_DEFAULT_PRIORITY);
+                    slss = add(tctx, slss, unpack_pack_name, false, LEAN_DEFAULT_PRIORITY);
                     r = finalize(tctx, get_eq_name(), simplify_fn(tctx, dcs, slss, list<name>(), cfg)(get_eq_name(), H_unpack_decl.get_type()));
                     s = *apply(tctx, false, false, mk_eq_mp(tctx, r.get_proof(), H_unpack_decl.mk_ref()), s);
                     return s;
@@ -2243,7 +2243,7 @@ class add_nested_inductive_decl_fn {
             simp_config cfg = get_simp_config();
             defeq_can_state dcs;
             simp_lemmas slss;
-            slss = add(tctx, slss, hyp_decl.get_name(), hyp_decl.get_type(), hyp_decl.mk_ref(), LEAN_DEFAULT_PRIORITY);
+            slss = add(tctx, slss, hyp_decl.get_name(), hyp_decl.get_type(), hyp_decl.mk_ref(), false, LEAN_DEFAULT_PRIORITY);
             simp_result r = finalize(tctx, get_eq_name(), simplify_fn(tctx, dcs, slss, list<name>(), cfg)(get_eq_name(), goal_type));
             expr pf;
 
