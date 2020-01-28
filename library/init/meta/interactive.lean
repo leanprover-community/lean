@@ -1079,18 +1079,18 @@ private meta def resolve_exception_ids (all_hyps : bool) : list name → list na
   end
 
 /- Return (hs, gex, hex, all) -/
-meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list bool × list pexpr × list name × list name × bool :=
+meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list (pexpr × bool) × list name × list name × bool :=
 do
-  let (symms, hs, ex, all) := hs.foldl
+  let (hs, ex, all) := hs.foldl
     (λ r h,
        match r, h with
-       | (symms, es, ex, all), simp_arg_type.all_hyps    := (symms, es, ex, tt)
-       | (symms, es, ex, all), simp_arg_type.except id   := (symms, es, id::ex, all)
-       | (symms, es, ex, all), simp_arg_type.expr symm e := (symm::symms, e::es, ex, all)
+       | (es, ex, all), simp_arg_type.all_hyps    := (es, ex, tt)
+       | (es, ex, all), simp_arg_type.except id   := (es, id::ex, all)
+       | (es, ex, all), simp_arg_type.expr symm e := ((e, symm)::es, ex, all)
        end)
-    ([], [], [], ff),
+    ([], [], ff),
   (gex, hex) ← resolve_exception_ids all ex [] [],
-  return (symms.reverse, hs.reverse, gex, hex, all)
+  return (hs.reverse, gex, hex, all)
 
 private meta def add_simps : simp_lemmas → list (name × bool) → tactic simp_lemmas
 | s []      := return s
@@ -1108,7 +1108,7 @@ when p.is_choice_macro $
   | _ := failed
   end
 
-private meta def simp_lemmas.resolve_and_add (s : simp_lemmas) (u : list name) (n : name) (symm : bool) (ref : pexpr) :
+private meta def simp_lemmas.resolve_and_add (s : simp_lemmas) (u : list name) (n : name) (ref : pexpr) (symm : bool) :
   tactic (simp_lemmas × list name) :=
 do
   p ← resolve_name n,
@@ -1134,31 +1134,29 @@ do
     report_invalid_simp_lemma n
   end
 
-private meta def simp_lemmas.add_pexpr (s : simp_lemmas) (u : list name) (symm : bool) (p : pexpr) :
+private meta def simp_lemmas.add_pexpr (s : simp_lemmas) (u : list name) (p : pexpr) (symm : bool) :
   tactic (simp_lemmas × list name) :=
 match p with
-| (const c [])          := simp_lemmas.resolve_and_add s u c symm p
-| (local_const c _ _ _) := simp_lemmas.resolve_and_add s u c symm p
+| (const c [])          := simp_lemmas.resolve_and_add s u c p symm
+| (local_const c _ _ _) := simp_lemmas.resolve_and_add s u c p symm
 | _                     := do new_e ← i_to_expr_no_subgoals p,
                               s ← s.add new_e symm,
                               return (s, u)
 end
 
--- TODO: make it list (bool × pexpr)?
 private meta def simp_lemmas.append_pexprs :
-  simp_lemmas → list name → list bool → list pexpr → tactic (simp_lemmas × list name)
-| s u [] []                 := return (s, u)
-| s u (symm::symms) (l::ls) := do
-  (s, u) ← simp_lemmas.add_pexpr s u symm l,
-  simp_lemmas.append_pexprs s u symms ls
-| _ _ _ _ := fail "internal error: append_pexprs should be passed lists of equal length"
+  simp_lemmas → list name → list (pexpr × bool) → tactic (simp_lemmas × list name)
+| s u []                 := return (s, u)
+| s u (l::ls) := do
+  (s, u) ← simp_lemmas.add_pexpr s u l.fst l.snd,
+  simp_lemmas.append_pexprs s u ls
 
 meta def mk_simp_set_core (no_dflt : bool) (attr_names : list name) (hs : list simp_arg_type) (at_star : bool)
                           : tactic (bool × simp_lemmas × list name) :=
-do (symms, hs, gex, hex, all_hyps) ← decode_simp_arg_list hs,
+do (hs, gex, hex, all_hyps) ← decode_simp_arg_list hs,
    when (all_hyps ∧ at_star ∧ not hex.empty) $ fail "A tactic of the form `simp [*, -h] at *` is currently not supported",
    s      ← join_user_simp_lemmas no_dflt attr_names,
-   (s, u) ← simp_lemmas.append_pexprs s [] symms hs,
+   (s, u) ← simp_lemmas.append_pexprs s [] hs,
    s      ← if not at_star ∧ all_hyps then do
               ctx ← collect_ctx_simps,
               let ctx := ctx.filter (λ h, h.local_uniq_name ∉ hex), -- remove local exceptions
