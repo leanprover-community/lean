@@ -112,6 +112,8 @@ public:
 
     void invalidate(module_id const & id);
 
+    module_id resolve(module_name const & n, module_id const & cur_mod);
+
     std::shared_ptr<module_info const> get_module(module_id const &);
 
     std::vector<std::shared_ptr<module_info const>> get_all_modules();
@@ -132,5 +134,10 @@ public:
 
 environment get_combined_environment(environment const & env0,
                                      buffer<std::shared_ptr<module_info const>> const & mods);
+
+module_loader mk_loader(module_id const & cur_mod, std::vector<module_info::dependency> const & deps);
+
+module_mgr * get_global_module_mgr();
+void set_global_module_mgr(module_mgr & mgr);
 
 }

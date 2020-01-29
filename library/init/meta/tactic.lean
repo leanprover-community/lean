@@ -526,6 +526,12 @@ meta constant generalize (e : expr) (n : name := `_x) (md := semireducible) : ta
 meta constant instantiate_mvars : expr → tactic expr
 /-- Add the given declaration to the environment -/
 meta constant add_decl : declaration → tactic unit
+/--
+Changes the environment to the `new_env`.
+The new environment does not need to be a descendant of the old one.
+Use with care.
+-/
+meta constant set_env_core : environment → tactic unit
 /-- Changes the environment to the `new_env`. `new_env` needs to be a descendant from the current environment. -/
 meta constant set_env : environment → tactic unit
 /-- `doc_string env d k` returns the doc string for `d` (if available) -/

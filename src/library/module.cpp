@@ -568,6 +568,15 @@ environment add_inductive(environment                       env,
     new_env = add_decl_pos_info(new_env, decl.m_name);
     return add(new_env, std::make_shared<inductive_modification>(cidecl, env.trust_lvl()));
 }
+
+optional<declaration> is_decl_modification(modification const & mod) {
+    if (auto dm = dynamic_cast<decl_modification const *>(&mod)) {
+        return some(dm->m_decl);
+    } else {
+        return {};
+    }
+}
+
 } // end of namespace module
 
 bool is_candidate_olean_file(std::string const & file_name) {
@@ -657,7 +666,7 @@ environment import_modules(environment const & env0, std::string const & module_
         import_module(env, module_file_name, ref, mod_ldr, import_errors);
 
     module_ext ext = get_extension(env);
-    ext.m_direct_imports = refs;
+    for (auto & ref : refs) ext.m_direct_imports.push_back(ref);
     return update(env, ext);
 }
 
@@ -724,19 +733,23 @@ modification_list parse_olean_modifications(std::string const & olean_code, std:
     return ms;
 }
 
+void import_modification(modification const & m, std::string const & file_name, environment & env) {
+    m.perform(env);
+
+    if (auto dm = dynamic_cast<decl_modification const *>(&m)) {
+        env = add_decl_olean(env, dm->m_decl.get_name(), file_name);
+    } else if (auto im = dynamic_cast<inductive_modification const *>(&m)) {
+        env = add_decl_olean(env, im->m_decl.get_decl().m_name, file_name);
+    } else if (auto mdm = dynamic_cast<mod_doc_modification const *>(&m)) {
+        auto ext = get_extension(env);
+        ext.m_module_docs[file_name].emplace_back(mdm->m_pos, mdm->m_doc);
+        env = update(env, ext);
+    }
+}
+
 void import_module(modification_list const & modifications, std::string const & file_name, environment & env) {
     for (auto & m : modifications) {
-        m->perform(env);
-
-        if (auto dm = dynamic_cast<decl_modification const *>(m.get())) {
-            env = add_decl_olean(env, dm->m_decl.get_name(), file_name);
-        } else if (auto im = dynamic_cast<inductive_modification const *>(m.get())) {
-            env = add_decl_olean(env, im->m_decl.get_decl().m_name, file_name);
-        } else if (auto mdm = dynamic_cast<mod_doc_modification const *>(m.get())) {
-            auto ext = get_extension(env);
-            ext.m_module_docs[file_name].emplace_back(mdm->m_pos, mdm->m_doc);
-            env = update(env, ext);
-        }
+        import_modification(*m.get(), file_name, env);
     }
 }
 

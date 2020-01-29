@@ -17,3 +17,4 @@ import init.meta.comp_value_tactics init.meta.smt
 import init.meta.async_tactic init.meta.ref
 import init.meta.hole_command init.meta.congr_tactic
 import init.meta.local_context init.meta.type_context
+import init.meta.module_info

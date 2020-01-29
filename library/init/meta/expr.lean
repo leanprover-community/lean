@@ -230,6 +230,11 @@ meta constant expr.occurs        : expr → expr → bool
 /-- Returns true if any of the names in the given `name_set` are present in the given `expr`. -/
 meta constant expr.has_local_in : expr → name_set → bool
 
+/-- Computes the number of sub-expressions (constant time). -/
+meta constant expr.get_weight : expr → ℕ
+/-- Computes the maximum depth of the expression (constant time). -/
+meta constant expr.get_depth : expr → ℕ
+
 /-- `mk_delayed_abstraction m ls` creates a delayed abstraction on the metavariable `m` with the unique names of the local constants `ls`.
     If `m` is not a metavariable then this is equivalent to `abstract_locals`.
  -/
