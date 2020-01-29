@@ -1096,16 +1096,16 @@ private meta def resolve_exception_ids (all_hyps : bool) : list name → list na
 -/
 meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list pexpr × list name × list name × bool :=
 do
-  (hs, ex, all) ← hs.foldl
-    (λ (r : tactic (list pexpr × list name × bool)) h, do
-      (es, ex, all) ← r,
+  (hs, ex, all) ← hs.mfoldl
+    (λ (r : (list pexpr × list name × bool)) h, do
+      let (es, ex, all) := r,
       match h with
       | simp_arg_type.all_hyps    := pure (es, ex, tt)
       | simp_arg_type.except id   := pure (es, id::ex, all)
       | simp_arg_type.expr e      := pure (e::es, ex, all)
       | simp_arg_type.symm_expr _ := fail "arguments of the form '←...' are not supported"
       end)
-    (pure ([], [], ff) ),
+    ([], [], ff),
   (gex, hex) ← resolve_exception_ids all ex [] [],
   return (hs.reverse, gex, hex, all)
 
