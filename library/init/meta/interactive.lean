@@ -1197,7 +1197,7 @@ do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    s      ← if not at_star ∧ all_hyps then do
               ctx ← collect_ctx_simps,
               let ctx := ctx.filter (λ h, h.local_uniq_name ∉ hex), -- remove local exceptions
-              s.append (ctx.map (λ h, (h, ff)))
+              s.append ctx
             else return s,
    -- add equational lemmas, if any
    gex ← gex.mmap (λ n, list.cons n <$> get_eqn_lemmas_for tt n),

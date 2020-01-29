@@ -58,8 +58,21 @@ lemma and_congr (h₁ : a ↔ c) (h₂ : b ↔ d) : (a ∧ b) ↔ (c ∧ d) := .
 -/
 meta constant simp_lemmas.add_congr : simp_lemmas → name → tactic simp_lemmas
 
-meta def simp_lemmas.append (s : simp_lemmas) (hs : list (expr × bool)) : tactic simp_lemmas :=
+/-- Add expressions to a set of simp lemmas using `simp_lemmas.add`.
+
+  This is the new version of `simp_lemmas.append`,
+  which also allows you to set the `symm` flag.
+-/
+meta def simp_lemmas.append_with_symm (s : simp_lemmas) (hs : list (expr × bool)) :
+  tactic simp_lemmas :=
 hs.mfoldl (λ s h, simp_lemmas.add s h.fst h.snd) s
+/-- Add expressions to a set of simp lemmas using `simp_lemmas.add`.
+
+  This is the backwards-compatibility version of `simp_lemmas.append_with_symm`,
+  and sets all `symm` flags to `ff`.
+-/
+meta def simp_lemmas.append (s : simp_lemmas) (hs : list expr) : tactic simp_lemmas :=
+hs.mfoldl (λ s h, simp_lemmas.add s h ff) s
 
 /-- `simp_lemmas.rewrite s e prove R` apply a simplification lemma from 's'
 
