@@ -1058,6 +1058,14 @@ meta inductive simp_arg_type : Type
 | expr      : pexpr → simp_arg_type
 | symm_expr : pexpr → simp_arg_type
 
+meta instance simp_arg_type_to_tactic_format : has_to_tactic_format simp_arg_type :=
+⟨λ a, match a with
+| simp_arg_type.all_hyps := pure "*"
+| (simp_arg_type.except n) := pure format!"-{n}"
+| (simp_arg_type.expr e) := i_to_expr_no_subgoals e >>= pp
+| (simp_arg_type.symm_expr e) := ((++) "←") <$> (i_to_expr_no_subgoals e >>= pp)
+end⟩
+
 meta def simp_arg : parser simp_arg_type :=
 (tk "*" *> return simp_arg_type.all_hyps) <|>
 (tk "-" *> simp_arg_type.except <$> ident) <|>
