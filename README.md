@@ -27,7 +27,9 @@ About
 Installation
 ------------
 
-Stable and nightly binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases). For building Lean from source, see the [build instructions](doc/make/index.md).
+Stable binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases). 
+Nightly binary releases are available on the [nightly release page](https://github.com/leanprover-community/lean-nightly/releases).
+For building Lean from source, see the [build instructions](doc/make/index.md).
 
 Miscellaneous
 -------------
