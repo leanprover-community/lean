@@ -1053,15 +1053,16 @@ open expr interactive.types
 
 @[derive has_reflect]
 meta inductive simp_arg_type : Type
-| all_hyps : simp_arg_type
-| except   : name  → simp_arg_type
-| expr     : bool  → pexpr → simp_arg_type
+| all_hyps  : simp_arg_type
+| except    : name  → simp_arg_type
+| expr      : pexpr → simp_arg_type
+| symm_expr : pexpr → simp_arg_type
 
 meta def simp_arg : parser simp_arg_type :=
 (tk "*" *> return simp_arg_type.all_hyps) <|>
 (tk "-" *> simp_arg_type.except <$> ident) <|>
-(tk "<-" *> simp_arg_type.expr tt <$> texpr) <|>
-(simp_arg_type.expr ff <$> texpr)
+(tk "<-" *> simp_arg_type.symm_expr <$> texpr) <|>
+(simp_arg_type.expr <$> texpr)
 
 meta def simp_arg_list : parser (list simp_arg_type) :=
 (tk "*" *> return [simp_arg_type.all_hyps]) <|> list_of simp_arg <|> return []
@@ -1078,15 +1079,43 @@ private meta def resolve_exception_ids (all_hyps : bool) : list name → list na
   | _                   := fail $ sformat! "invalid exception {id}, unknown identifier"
   end
 
-/- Return (hs, gex, hex, all) -/
-meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list (pexpr × bool) × list name × list name × bool :=
+/-- Decode a list of `simp_arg_type` into lists for each type.
+
+  This is a backwards-compatibility version of `decode_simp_arg_list_with_symm`.
+  This version fails when an argument of the form `simp_arg_type.symm_expr`
+  is included, so that `simp`-like tactics that do not (yet) support backwards rewriting
+  should properly report an error but function normally on other inputs.
+-/
+meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list pexpr × list name × list name × bool :=
+do
+  (hs, ex, all) ← hs.foldl
+    (λ (r : tactic (list pexpr × list name × bool)) h, do
+      (es, ex, all) ← r,
+      match h with
+      | simp_arg_type.all_hyps    := pure (es, ex, tt)
+      | simp_arg_type.except id   := pure (es, id::ex, all)
+      | simp_arg_type.expr e      := pure (e::es, ex, all)
+      | simp_arg_type.symm_expr _ := fail "arguments of the form '←...' are not supported"
+      end)
+    (pure ([], [], ff) ),
+  (gex, hex) ← resolve_exception_ids all ex [] [],
+  return (hs.reverse, gex, hex, all)
+
+/-- Decode a list of `simp_arg_type` into lists for each type.
+
+  This is the newer version of `decode_simp_arg_list`,
+  and has a new name for backwards compatibility.
+  This version indicates the direction of a `simp` lemma by including a `bool` with the `pexpr`.
+-/
+meta def decode_simp_arg_list_with_symm (hs : list simp_arg_type) : tactic $ list (pexpr × bool) × list name × list name × bool :=
 do
   let (hs, ex, all) := hs.foldl
     (λ r h,
        match r, h with
        | (es, ex, all), simp_arg_type.all_hyps    := (es, ex, tt)
        | (es, ex, all), simp_arg_type.except id   := (es, id::ex, all)
-       | (es, ex, all), simp_arg_type.expr symm e := ((e, symm)::es, ex, all)
+       | (es, ex, all), simp_arg_type.expr e      := ((e, ff)::es, ex, all)
+       | (es, ex, all), simp_arg_type.symm_expr e := ((e, tt)::es, ex, all)
        end)
     ([], [], ff),
   (gex, hex) ← resolve_exception_ids all ex [] [],
@@ -1153,7 +1182,7 @@ private meta def simp_lemmas.append_pexprs :
 
 meta def mk_simp_set_core (no_dflt : bool) (attr_names : list name) (hs : list simp_arg_type) (at_star : bool)
                           : tactic (bool × simp_lemmas × list name) :=
-do (hs, gex, hex, all_hyps) ← decode_simp_arg_list hs,
+do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    when (all_hyps ∧ at_star ∧ not hex.empty) $ fail "A tactic of the form `simp [*, -h] at *` is currently not supported",
    s      ← join_user_simp_lemmas no_dflt attr_names,
    (s, u) ← simp_lemmas.append_pexprs s [] hs,
@@ -1246,7 +1275,7 @@ do (s, u) ← mk_simp_set no_dflt attr_names hs,
    try triv >> try (reflexivity reducible)
 
 private meta def to_simp_arg_list (symms : list bool) (es : list pexpr) : list simp_arg_type :=
-(symms.zip es).map (λ ⟨s, e⟩, simp_arg_type.expr s e)
+(symms.zip es).map (λ ⟨s, e⟩, if s then simp_arg_type.symm_expr e else simp_arg_type.expr e)
 
 /--
 `dsimp` is similar to `simp`, except that it only uses definitional equalities.
@@ -1406,7 +1435,7 @@ cs.mmap $ λ c, do
   env ← get_env,
   let p := env.is_projection n.const_name,
   when (hs.empty ∧ p.is_none) (fail (sformat! "{tac_name} tactic failed, {c} does not have equational lemmas nor is a projection")),
-  return $ simp_arg_type.expr ff (expr.const c [])
+  return $ simp_arg_type.expr (expr.const c [])
 
 structure unfold_config extends simp_config :=
 (zeta               := ff)
