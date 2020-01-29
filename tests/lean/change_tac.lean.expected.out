@@ -25,3 +25,11 @@ is not definitionally equal to
   1 + 2 = 1 + 2 + 1 → 1 + 2 = 3
 state:
 ⊢ 1 + 2 = 1 + 2 + 1 → 1 + 2 = 3
+2 goals
+⊢ ∀ (y : ℕ), y = y
+
+this : ∀ (x : ℕ), x = x
+⊢ true
+this : ∀ (y : ℕ), y = y
+⊢ true
+change_tac.lean:49:0: warning: declaration '[anonymous]' uses sorry

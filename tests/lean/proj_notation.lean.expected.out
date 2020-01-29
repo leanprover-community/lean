@@ -2,9 +2,9 @@ p.fst : ℕ
 p.fst : ℕ
 p.snd : ℕ
 p.snd : ℕ
-f (p.fst) : ℕ
+f p.fst : ℕ
 p.fst + p.snd : ℕ
-λ (c : car), (c.pos).x : car → ℕ
+λ (c : car), c.pos.x : car → ℕ
 proj_notation.lean:29:19: error: invalid field notation, 'fst' is not a valid "field" because environment does not contain 'car.fst'
   c
 which has type
@@ -24,4 +24,4 @@ has type
 λ (n : ℕ), ⁇ : ℕ → ?M_1
 p.fst : ℕ
 p.snd : ℕ
-λ (c : car), (c.pos).y : car → ℕ
+λ (c : car), c.pos.y : car → ℕ

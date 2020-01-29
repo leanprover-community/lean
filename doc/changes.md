@@ -1,4 +1,4 @@
-v3.5.0c (11 Nov 2019)
+v3.5.0c (26 Dec 2019)
 --------------
 
 This is the first community release of Lean 3.
@@ -44,6 +44,7 @@ This is the first community release of Lean 3.
  * emscripten: fix emscripten build (#17)
  * tactic/case: `case` fails when used with `let` (#32)
  * tactic/revert_lst: check that the provided expressions are variables (#12)
+ * tactic/type_check: do not assign to meta variables (#86)
  * init/algebra/field: repeated instance (#8)
  * Add an additional check to `type_context_old::mk_class_instance_at(lctx,type)` to fix issue #55. (#79)
 

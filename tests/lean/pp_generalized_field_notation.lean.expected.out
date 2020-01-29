@@ -1,0 +1,6 @@
+int.nat_abs_zero : 0.nat_abs = 0
+int.sign_zero : 0.sign = 0
+int.sign_mul_nat_abs : ∀ (a : ℤ), a.sign * ↑(a.nat_abs) = a
+pp_generalized_field_notation.lean:7:0: warning: declaration 'list.reverse_reverse' uses sorry
+list.reverse_reverse : ∀ (xs : list ?M_1), xs.reverse.reverse = xs
+prod.swap_swap : ∀ (p : ?M_1 × ?M_2), p.swap.swap = p
