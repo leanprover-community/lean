@@ -564,6 +564,7 @@ static environment run_command_cmd(parser & p) {
     expr tactic          = p.parse_expr();
     expr try_triv        = mk_app(mk_constant(get_tactic_try_name()), mk_constant(get_tactic_triv_name()));
     tactic               = mk_app(mk_constant(get_has_bind_and_then_name()), tactic, try_triv);
+    tactic               = mk_typed_expr(mk_tactic_unit(), tactic);
     expr val             = mk_typed_expr(mk_true(), mk_by(tactic));
     bool check_unassigned = false;
     bool recover_from_errors = true;
