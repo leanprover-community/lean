@@ -1557,8 +1557,12 @@ private meta def add_interactive_aux (new_namespace : name) : list name → comm
   d_name ← resolve_constant n,
   (declaration.defn _ ls ty val hints trusted) ← env.get d_name,
   (name.mk_string h _) ← return d_name,
-  let new_name := `tactic.interactive <.> h,
+  let new_name := new_namespace <.> h,
   add_decl (declaration.defn new_name ls ty (expr.const d_name (ls.map level.param)) hints trusted),
+  do {
+    doc ← doc_string d_name,
+    add_doc_string new_name doc
+  } <|> skip,
   add_interactive_aux ns
 
 /--
