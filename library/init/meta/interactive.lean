@@ -1193,6 +1193,12 @@ meta def mk_simp_set_core (no_dflt : bool) (attr_names : list name) (hs : list s
 do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    when (all_hyps ∧ at_star ∧ not hex.empty) $ fail "A tactic of the form `simp [*, -h] at *` is currently not supported",
    s      ← join_user_simp_lemmas no_dflt attr_names,
+   -- Erase `h` from the default simp set for calls of the form `simp [←h]`.
+   let to_erase := hs.foldl (λ l h, match h with
+                                    | (const id _, tt) := id :: l
+                                    | _ := l
+                                    end ) [],
+   let s := s.erase to_erase,
    (s, u) ← simp_lemmas.append_pexprs s [] hs,
    s      ← if not at_star ∧ all_hyps then do
               ctx ← collect_ctx_simps,
