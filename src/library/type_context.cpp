@@ -2782,7 +2782,7 @@ lbool type_context_old::quick_is_def_eq(expr const & e1, expr const & e2) {
                 return l_false;
             }
         } else {
-            return l_false;
+            return l_undef;
         }
     }
 
@@ -2797,7 +2797,7 @@ lbool type_context_old::quick_is_def_eq(expr const & e1, expr const & e2) {
             /* We need to swap `m_update_left` and `m_update_right` because `process_assignment` uses `is_def_eq` */
             return to_lbool(process_assignment(e2, e1));
         } else {
-            return l_false;
+            return l_undef;
         }
     }
 
