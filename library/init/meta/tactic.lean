@@ -550,15 +550,15 @@ where l_i's and a_j's are the collected dependencies.
 -/
 meta constant add_aux_decl (c : name) (type : expr) (val : expr) (is_lemma : bool) : tactic expr
 
-/-- Returns a list of all top-level (`/-!`) docstrings in the active module and imported ones.
+/-- Returns a list of all top-level (`/-! ... -/`) docstrings in the active module and imported ones.
 The returned object is a list of modules, indexed by `(some filename)` for imported modules
 and `none` for the active one, where each module in the list is paired with a list
 of `(position_in_file, docstring)` pairs. -/
 meta constant olean_doc_strings : tactic (list (option string × (list (pos × string))))
 
 /-- Returns a list of docstrings in the active module. An entry in the list can be either:
-- a top-level (`/-!`) docstring, represented as `(none, docstring)`
-- a declaration-specific (`/--`) docstring, represented as `(some decl_name, docstring)` -/
+- a top-level (`/-! ... -/`) docstring, represented as `(none, docstring)`
+- a declaration-specific (`/-- ... -/`) docstring, represented as `(some decl_name, docstring)` -/
 meta def module_doc_strings : tactic (list (option name × string)) :=
   do
     /- Obtain a list of top-level docs in current module. -/

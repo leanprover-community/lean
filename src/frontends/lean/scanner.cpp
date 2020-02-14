@@ -357,12 +357,7 @@ void scanner::read_doc_block_core() {
         check_not_eof("unexpected end of documentation block");
         uchar c = curr();
         next();
-        if (c == '`') {
-            if (curr() == '/' || curr() == '-') {
-                m_buffer += c;
-                next();
-            }
-        } else if (c == '/') {
+        if (c == '/') {
             if (curr() == '-') {
                 m_buffer += c;
                 next();
