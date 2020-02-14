@@ -186,7 +186,7 @@ meta constant expr.instantiate_var         : expr → expr → expr
 /-- ``instantiate_vars `(#0 #1 #2) [x,y,z] = `(%%x %%y %%z)`` -/
 meta constant expr.instantiate_vars        : expr → list expr → expr
 
-/-- Perform beta-reduction if the left expression is a lambda. Ie: ``expr.subst | `(λ x, %%Y) Z := Y[x/Z] | X Z := X``-/
+/-- Perform beta-reduction if the left expression is a lambda. Ie: ``expr.subst | `(λ x, %%Y) Z := Y[x/Z] | X Z := X`` -/
 protected meta constant expr.subst : expr elab → expr elab → expr elab
 
 /-- `get_free_var_range e` returns one plus the maximum de-Bruijn value in `e`. Eg `get_free_var_range `(#1 #0)` yields `2` -/
