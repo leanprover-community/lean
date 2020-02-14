@@ -357,10 +357,16 @@ void scanner::read_doc_block_core() {
         check_not_eof("unexpected end of documentation block");
         uchar c = curr();
         next();
-        if (c == '/') {
-            if (curr() == '-') {
+        if (c == '`') {
+            if (curr() == '/' || curr() == '-') {
+                m_buffer += c;
                 next();
-                read_comment_block();
+            }
+        } else if (c == '/') {
+            if (curr() == '-') {
+                m_buffer += c;
+                next();
+                read_comment_block_doc();
             }
         } else if (c == '-') {
             if (curr() == '/') {
@@ -401,6 +407,31 @@ void scanner::read_comment_block() {
                     return;
             }
         }
+    }
+}
+
+void scanner::read_comment_block_doc() {
+    unsigned nesting = 1;
+    while (true) {
+        uchar c = curr();
+        check_not_eof("unexpected end of comment block");
+        next();
+        if (c == '/') {
+            if (curr() == '-') {
+                m_buffer += c;
+                next();
+                nesting++;
+            }
+        } else if (c == '-') {
+            if (curr() == '/') {
+                m_buffer += c;
+                next();
+                nesting--;
+                if (nesting == 0)
+                    return;
+            }
+        }
+        m_buffer += c;
     }
 }
 
