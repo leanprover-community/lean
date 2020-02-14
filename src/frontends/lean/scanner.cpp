@@ -357,7 +357,12 @@ void scanner::read_doc_block_core() {
         check_not_eof("unexpected end of documentation block");
         uchar c = curr();
         next();
-        if (c == '-') {
+        if (c == '/') {
+            if (curr() == '-') {
+                next();
+                read_comment_block();
+            }
+        } else if (c == '-') {
             if (curr() == '/') {
                 next();
                 return;
