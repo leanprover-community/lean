@@ -65,6 +65,7 @@ protected:
     void move_back(unsigned offset, unsigned u_offset);
     void read_single_line_comment();
     void read_comment_block();
+    void read_comment_block_doc();
     void read_until(uchar const * end_str, char const * error_msg);
     unsigned get_utf8_size(uchar c);
     void next_utf_core(uchar c, buffer<uchar> & cs);
