@@ -5,7 +5,7 @@
 \lstdefinelanguage{lean} {
 
 % Anything betweeen $ becomes LaTeX math mode
-mathescape=true,
+mathescape=false,
 % Comments may or not include Latex commands
 texcl=false,
 
@@ -14,22 +14,23 @@ morekeywords=[1]{
 import, prelude, protected, private, noncomputable, definition, meta, renaming,
 hiding, exposing, parameter, parameters, begin, conjecture, constant, constants,
 hypothesis, lemma, corollary, variable, variables, premise, premises, theory,
-print, theorem, proposition, example, abstract,
+print, theorem, proposition, example,
 open, as, export, override, axiom, axioms, inductive, with, without,
 structure, record, universe, universes,
 alias, help, precedence, reserve, declare_trace, add_key_equivalence,
 match, infix, infixl, infixr, notation, postfix, prefix, instance,
-eval, vm_eval, check, coercion, end, this, suppose,
+%eval,
+vm_eval, check, coercion, end, this, suppose,
 using, using_well_founded, namespace, section, fields,
 attribute, local, set_option, extends, include, omit, classes, class,
 instances, coercions, attributes, raw, replacing,
 calc, have, show, suffices, by, in, at, let, forall, Pi, fun,
 exists, if, dif, then, else, assume, take, obtain, from, aliases, register_simp_ext,
-mutual, def, run_command
+mutual, do, def, run_command
 },
 
 % Sorts
-morekeywords=[2]{Type, Prop, Type*, Type₀, Type₁, Type₂, Type₃},
+morekeywords=[2]{Sort, Type, Prop, Type*, Type₀, Type₁, Type₂, Type₃},
 
 % tactics, list taken from lean-syntax.el
 % morekeywords=[3]{
@@ -59,10 +60,10 @@ morekeywords=[2]{Type, Prop, Type*, Type₀, Type₁, Type₂, Type₃},
 
 % Various symbols
 literate=
-{α}{{\ensuremath{\mathrm{\alpha}}}}1
-{β}{{\ensuremath{\mathrm{\beta}}}}1
-{γ}{{\ensuremath{\mathrm{\gamma}}}}1
-{δ}{{\ensuremath{\mathrm{\delta}}}}1
+{α}{{\ensuremath{\mathrm{\upalpha}}}}1
+{β}{{\ensuremath{\mathrm{\upbeta}}}}1
+{γ}{{\ensuremath{\mathrm{\upgamma}}}}1
+{δ}{{\ensuremath{\mathrm{\updelta}}}}1
 {ε}{{\ensuremath{\mathrm{\varepsilon}}}}1
 {ζ}{{\ensuremath{\mathrm{\zeta}}}}1
 {η}{{\ensuremath{\mathrm{\eta}}}}1
@@ -108,7 +109,7 @@ literate=
 
 {∫}{{\ensuremath{\int}}}1
 {∑}{{\ensuremath{\mathrm{\Sigma}}}}1
-{Π}{{\ensuremath{\mathrm{\Pi}}}}1
+%{Π}{{\ensuremath{\mathrm{\Pi}}}}1
 
 {⊥}{{\ensuremath{\perp}}}1
 {∞}{{\ensuremath{\infty}}}1
@@ -145,6 +146,7 @@ literate=
 
 {↦}{{\ensuremath{\mapsto}}}1
 {→}{{\ensuremath{\rightarrow}}}1
+{←}{{\ensuremath{\leftarrow}}}1
 {↔}{{\ensuremath{\leftrightarrow}}}1
 {⇒}{{\ensuremath{\Rightarrow}}}1
 {⟹}{{\ensuremath{\Longrightarrow}}}1
@@ -179,6 +181,7 @@ literate=
 {⌟}{{\ensuremath{\lrcorner}}}1
 {⦃}{{\ensuremath{\{\!|}}}1
 {⦄}{{\ensuremath{|\!\}}}}1
+{∥}{{\ensuremath{\|}}}1
 
 {₁}{{\ensuremath{_1}}}1
 {₂}{{\ensuremath{_2}}}1
@@ -190,6 +193,9 @@ literate=
 {₈}{{\ensuremath{_8}}}1
 {₉}{{\ensuremath{_9}}}1
 {₀}{{\ensuremath{_0}}}1
+{ᵢ}{{\ensuremath{_i}}}1
+{ⱼ}{{\ensuremath{_j}}}1
+{ₐ}{{\ensuremath{_a}}}1
 
 {¹}{{\ensuremath{^1}}}1
 
@@ -198,17 +204,28 @@ literate=
 {↑}{{\ensuremath{\uparrow}}}1
 {↓}{{\ensuremath{\downarrow}}}1
 
+{...}{{\ensuremath{\ldots}}}1
+
 {▸}{{\ensuremath{\triangleright}}}1
 
+{𝒳}{{\ensuremath{\mathcal{X}}}}1
+
+{⌊}{{\ensuremath{\lfloor}}}1
+{⌋}{{\ensuremath{\rfloor}}}1
+{⌈}{{\ensuremath{\lceil}}}1
+{⌉}{{\ensuremath{\rceil}}}1
+
 {Σ}{{\color{symbolcolor}\ensuremath{\Sigma}}}1
-{Π}{{\color{symbolcolor}\ensuremath{\Pi}}}1
+{Π}{{\color{symbolcolor}\ensuremath{\mathrm{\Uppi}}}}1 %\mathrm{\Uppi}
 {∀}{{\color{symbolcolor}\ensuremath{\forall}}}1
 {∃}{{\color{symbolcolor}\ensuremath{\exists}}}1
-{λ}{{\color{symbolcolor}\ensuremath{\mathrm{\lambda}}}}1
+{λ}{{\color{symbolcolor}\ensuremath{\mathrm{\uplambda}}}}1
+{\$}{{\color{symbolcolor}\$}}1
 
 {:=}{{\color{symbolcolor}:=}}1
 {=}{{\color{symbolcolor}=}}1
 {<}{{\color{symbolcolor}<}}1
+{<|>}{{\color{symbolcolor}<|>}}1
 {+}{{\color{symbolcolor}+}}1
 {*}{{\color{symbolcolor}*}}1,
 
@@ -238,10 +255,11 @@ sensitive=true,
 
 % Automatic breaking of long lines
 breaklines=true,
+breakatwhitespace=true,
 
 % Default style fors listingsred
-basicstyle=\ttfamily,
-
+lineskip={-1.5pt},
+basicstyle={\ttfamily},
 % Position of captions is bottom
 captionpos=b,
 
