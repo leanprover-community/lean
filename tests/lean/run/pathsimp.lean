@@ -36,7 +36,7 @@ let sls := simp_lemmas.mk,
 sls ← sls.add_congr ``path.congr,
 -- nat_zero_add can be used as a simplification lemma even though it has
 -- associated equational lemmas
-sls ← sls.add_simp ``nat_zero_add,
+sls ← sls.add_simp ``nat_zero_add ff,
 trace sls,
 path_simp_target sls, reflexivity
 
