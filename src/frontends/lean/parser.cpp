@@ -2402,7 +2402,7 @@ std::string parser::parse_doc_block() {
 }
 
 void parser::parse_mod_doc_block() {
-    m_env = add_module_doc_string(m_env, m_scanner.get_str_val());
+    m_env = add_module_doc_string(m_env, m_scanner.get_str_val(), m_scanner.get_pos_info() );
     next();
 }
 

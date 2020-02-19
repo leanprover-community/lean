@@ -722,6 +722,12 @@ vm_obj tactic_add_decl(vm_obj const & _d, vm_obj const & _s) {
     }
 }
 
+static vm_obj tactic_set_env_core(vm_obj const & _env, vm_obj const & _s) {
+    tactic_state const & s      = tactic::to_state(_s);
+    environment const & new_env = to_env(_env);
+    return tactic::mk_success(set_env(s, new_env));
+}
+
 vm_obj tactic_set_env(vm_obj const & _env, vm_obj const & _s) {
     tactic_state const & s      = tactic::to_state(_s);
     environment const & new_env = to_env(_env);
@@ -758,22 +764,32 @@ vm_obj tactic_add_doc_string(vm_obj const & n, vm_obj const & doc, vm_obj const 
     }
 }
 
-/* meta constant module_doc_strings : tactic (list (option name × string)) */
-vm_obj tactic_module_doc_strings(vm_obj const & _s) {
+/* meta constant olean_doc_strings : tactic (list (option string × (list (pos × string)))) */
+vm_obj tactic_olean_doc_strings(vm_obj const & _s) {
     tactic_state const & s  = tactic::to_state(_s);
-    buffer<doc_entry> entries;
+    buffer<mod_doc_entry> entries;
     get_module_doc_strings(s.env(), entries);
     unsigned i = entries.size();
     vm_obj r   = mk_vm_simple(0);
     while (i > 0) {
         --i;
         vm_obj decl_name;
-        if (auto d = entries[i].get_decl_name())
+        if (auto d = entries[i].m_mod_name)
             decl_name = mk_vm_some(to_obj(*d));
         else
             decl_name = mk_vm_none();
-        vm_obj doc = to_obj(entries[i].get_doc());
-        vm_obj e   = mk_vm_pair(decl_name, doc);
+        vm_obj lst = mk_vm_simple(0);
+        unsigned j = entries[i].m_docs.size();
+        while (j > 0) {
+            --j;
+            auto const& doc = entries[i].m_docs[j];
+            vm_obj line = mk_vm_nat(doc.first.first);
+            vm_obj column = mk_vm_nat(doc.first.second);
+            vm_obj pos = mk_vm_constructor(0, line, column); // pos_info
+            vm_obj doc_obj = mk_vm_pair(pos, to_obj(doc.second));
+            lst = mk_vm_constructor(1, doc_obj, lst);
+        }
+        vm_obj e   = mk_vm_pair(decl_name, lst);
         r          = mk_vm_constructor(1, e, r);
     }
     return tactic::mk_success(r, s);
@@ -956,7 +972,8 @@ vm_obj tactic_type_check(vm_obj const & e, vm_obj const & m, vm_obj const & s0) 
     try {
         tactic_state_context_cache cache(s);
         type_context_old ctx = cache.mk_type_context(to_transparency_mode(m));
-        check(ctx, to_expr(e));
+        bool assign_mvars = false;
+        check(ctx, to_expr(e), assign_mvars);
         return tactic::mk_success(s);
     } catch (exception & ex) {
         return tactic::mk_exception(ex, s);
@@ -1063,9 +1080,10 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "instantiate_mvars"}),    tactic_instantiate_mvars);
     DECLARE_VM_BUILTIN(name({"tactic", "add_decl"}),             tactic_add_decl);
     DECLARE_VM_BUILTIN(name({"tactic", "set_env"}),              tactic_set_env);
+    DECLARE_VM_BUILTIN(name({"tactic", "set_env_core"}),         tactic_set_env_core);
     DECLARE_VM_BUILTIN(name({"tactic", "doc_string"}),           tactic_doc_string);
     DECLARE_VM_BUILTIN(name({"tactic", "add_doc_string"}),       tactic_add_doc_string);
-    DECLARE_VM_BUILTIN(name({"tactic", "module_doc_strings"}),   tactic_module_doc_strings);
+    DECLARE_VM_BUILTIN(name({"tactic", "olean_doc_strings"}),    tactic_olean_doc_strings);
     DECLARE_VM_BUILTIN(name({"tactic", "open_namespaces"}),      tactic_open_namespaces);
     DECLARE_VM_BUILTIN(name({"tactic", "decl_name"}),            tactic_decl_name);
     DECLARE_VM_BUILTIN(name({"tactic", "add_aux_decl"}),         tactic_add_aux_decl);

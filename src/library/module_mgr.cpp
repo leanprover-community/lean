@@ -54,7 +54,7 @@ void module_mgr::mark_out_of_date(module_id const & id) {
     }
 }
 
-static module_loader mk_loader(module_id const & cur_mod, std::vector<module_info::dependency> const & deps) {
+module_loader mk_loader(module_id const & cur_mod, std::vector<module_info::dependency> const & deps) {
     auto deps_per_mod_ptr = std::make_shared<std::unordered_map<module_id, std::vector<module_info::dependency>>>();
     auto & deps_per_mod = *deps_per_mod_ptr;
 
@@ -137,6 +137,10 @@ static module_id resolve(search_path const & path,
     }
 }
 
+module_id module_mgr::resolve(module_name const & n, module_id const & cur_mod) {
+    return lean::resolve(m_path, cur_mod, n);
+}
+
 void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set module_stack) {
     if (auto & existing_mod = m_modules[id])
         if (!existing_mod->m_out_of_date) return;
@@ -176,7 +180,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
             mod->m_trans_mtime = mod->m_mtime;
 
             for (auto & d : parsed_olean.m_imports) {
-                auto d_id = resolve(m_path, id, d);
+                auto d_id = resolve(d, id);
                 build_module(d_id, true, module_stack);
 
                 auto & d_mod = m_modules[d_id];
@@ -229,7 +233,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
         module_id d_id;
         std::shared_ptr<module_info const> d_mod;
         try {
-            d_id = resolve(m_path, id, d);
+            d_id = resolve(d, id);
             build_module(d_id, true, module_stack);
             d_mod = m_modules[d_id];
             mod->m_trans_mtime = std::max(mod->m_trans_mtime, d_mod->m_trans_mtime);
@@ -473,6 +477,16 @@ environment get_combined_environment(environment const & env,
     }
 
     return import_modules(env, combined_id, refs, mk_loader(combined_id, deps));
+}
+
+static module_mgr * g_module_mgr = nullptr;
+
+module_mgr * get_global_module_mgr() {
+    return g_module_mgr;
+}
+
+void set_global_module_mgr(module_mgr & mgr) {
+    g_module_mgr = &mgr;
 }
 
 }

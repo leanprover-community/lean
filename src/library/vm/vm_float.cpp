@@ -13,7 +13,7 @@ namespace lean{
 // [TODO] make a typedef or template for `float` so can generalise to other IEEE-754 impls.
 struct vm_float : public vm_external {
     float m_val;
-    vm_float(float const & v) : m_val(v) {}
+    vm_float(float v) : m_val(v) {}
     virtual ~vm_float() {}
     virtual void dealloc() override {
         this->~vm_float();
@@ -25,19 +25,18 @@ struct vm_float : public vm_external {
     }
 };
 
-vm_obj mk_vm_float(float d) {
+static vm_obj mk_vm_float(float d) {
     return mk_vm_external(new (get_vm_allocator().allocate(sizeof(vm_float))) vm_float(d));
 }
-optional<float> try_to_float(vm_obj const & o) {
-    if (LEAN_LIKELY(is_external(o))) {
-        float f = static_cast<vm_float*>(to_external(o))->m_val;
-        return optional<float>(f);
-    } else {
-        return optional<float>();
-    }
+
+vm_obj to_obj(float d) {
+    return mk_vm_float(d);
 }
+
 float to_float(vm_obj const & o) {
-    return try_to_float(o).value();
+    auto ext_vm_float = dynamic_cast<vm_float*>(to_external(o));
+    lean_vm_check(ext_vm_float);
+    return ext_vm_float->m_val;
 }
 
 vm_obj float_of_nat(vm_obj const & a) {

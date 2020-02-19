@@ -61,7 +61,7 @@ dunfold_target [``sizeof_measure, ``measure, ``inv_image] {fail_if_unchanged := 
 
 private meta def add_simps : simp_lemmas → list name → tactic simp_lemmas
 | s []      := return s
-| s (n::ns) := do s' ← s.add_simp n, add_simps s' ns
+| s (n::ns) := do s' ← s.add_simp n ff, add_simps s' ns
 
 private meta def collect_sizeof_lemmas (e : expr) : tactic simp_lemmas :=
 e.mfold simp_lemmas.mk $ λ c d s,

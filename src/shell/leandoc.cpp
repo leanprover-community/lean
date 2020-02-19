@@ -229,23 +229,20 @@ void gen_doc(environment const & env, options const & _opts, std::ostream & out)
     options opts     = _opts.update_if_undef(name{"pp", "width"}, 100);
     auto fmt_factory = lean::mk_pretty_formatter_factory();
     auto fmt         = fmt_factory(env, opts, ctx);
-    buffer<doc_entry> entries;
-    get_module_doc_strings(env, entries);
-    for (doc_entry const & entry : entries) {
-        if (auto decl_name = entry.get_decl_name()) {
-            if (has_brief(entry.get_doc())) {
+
+    env.for_each_declaration([&] (declaration const & d) {
+         if (auto doc = get_doc_string(env, d.get_name())) {
+            if (has_brief(*doc)) {
                 std::string brief, body;
-                std::tie(brief, body) = split_brief_body(entry.get_doc());
-                gen_decl_doc(out, env, fmt, *decl_name, optional<std::string>(brief));
+                std::tie(brief, body) = split_brief_body(*doc);
+                gen_decl_doc(out, env, fmt, d.get_name(), optional<std::string>(brief));
                 print_block(out, body);
             } else {
-                gen_decl_doc(out, env, fmt, *decl_name, optional<std::string>());
-                print_block(out, entry.get_doc());
+                gen_decl_doc(out, env, fmt, d.get_name(), optional<std::string>());
+                print_block(out, *doc);
             }
-        } else {
-            print_block(out, entry.get_doc());
         }
         out << "\n";
-    }
+    });
 }
 }

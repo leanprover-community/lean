@@ -1,3 +1,58 @@
+v3.5.0c (26 Dec 2019)
+--------------
+
+This is the first community release of Lean 3.
+
+*Features*
+
+ * Add `native.float` for using floating point values within meta functions.
+
+ * Add `reflect (p : parser α) [r : reflectable p] : parser expr` def for parsing raw `expr`s. (#33)
+
+ * Add `tactic.unsafe.type_context` and `local_context` for directly interacting with Lean's type context.
+
+   This means that metavariables and local constants can be directly declared and assigned. (#69)
+
+ * Docstrings are now supported on inductive constructors. (#61)
+
+ * Add `environment.add_defn_eqns` to programmatically create a definition that uses the equation compiler. (#26)
+
+ * Add `environment.add_ginductive` to give tactics access to the utility lemmas associated with inductive type declaration. (#3)
+
+ * Improve file API. Add support for UNIX sockets. (#20, #31)
+
+ * Add `lean.parser.itactic`, a tactic block parser. (#19)
+
+ * Add `interactive.executor`, a class to implement custom tactic monads in `begin ... end` blocks. (#10)
+
+ * Add `expr` serialization/deserialization functions. (#6)
+
+ * Improve and add numerous docstrings.
+
+ * Module documentation is now stored in .olean files to allow documentation to be automatically generated. (#54)
+
+ * Documentation of all imported modules is now exposed via the `olean_doc_strings` tactic. (#81)
+
+*Bug Fixes*
+
+ * build: fix emscripten build in travis (#68)
+ * CMakeLists.txt: GCC 9.1.0 miscompiles certain if statements #63
+ * tactic/revert_tactic: disallow duplicates (#56)
+ * level: give level.instantiate correct type (#46)
+ * documentation: The closing code fence must match opening fence. (#40)
+ * emscripten: fix FS issue: don't mkdir in docker (#39)
+ * emscripten: fix emscripten build (#17)
+ * tactic/case: `case` fails when used with `let` (#32)
+ * tactic/revert_lst: check that the provided expressions are variables (#12)
+ * tactic/type_check: do not assign to meta variables (#86)
+ * init/algebra/field: repeated instance (#8)
+ * Add an additional check to `type_context_old::mk_class_instance_at(lctx,type)` to fix issue #55. (#79)
+
+*Changes*
+
+ * Notation removed: `=<<`, `>=>`, `<=<`
+ * `transfer` and `relator` namespaces removed.
+
 v3.4.2 (18 Jan 2019)
 -------------
 

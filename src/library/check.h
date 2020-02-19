@@ -14,7 +14,7 @@ namespace lean {
    This procedure is use to check the proof-term produced by tactics such as
    rewrite.
 */
-void check(type_context_old & ctx, expr const & e);
+void check(type_context_old & ctx, expr const & e, bool assign_mvars = true);
 void initialize_check();
 void finalize_check();
 }

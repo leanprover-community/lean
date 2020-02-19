@@ -928,8 +928,8 @@ public:
        ------------ */
     void push_scope();
     void pop_scope();
-private:
     void commit_scope();
+private:
     class scope {
         friend class type_context_old;
         type_context_old & m_owner;
