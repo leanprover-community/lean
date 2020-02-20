@@ -238,11 +238,17 @@ by simp [hc]
 
 end division_ring
 
-class field (α : Type u) extends division_ring α, comm_ring α
+class field (α : Type u) extends comm_ring α, has_inv α, zero_ne_one_class α :=
+(mul_inv_cancel : ∀ {a : α}, a ≠ 0 → a * a⁻¹ = 1)
+(inv_zero : (0 : α)⁻¹ = 0)
 
 section field
 
 variable [field α]
+
+instance field.to_division_ring : division_ring α :=
+{ inv_mul_cancel := λ _ h, by rw [mul_comm, field.mul_inv_cancel h]
+  ..show field α, by apply_instance }
 
 lemma one_div_mul_one_div (a b : α) : (1 / a) * (1 / b) =  1 / (a * b) :=
 by rw [division_ring.one_div_mul_one_div, mul_comm b]
