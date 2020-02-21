@@ -8,6 +8,8 @@ The order relation on the integers.
 prelude
 import init.data.int.basic init.data.ordering.basic
 
+local attribute [simp] sub_eq_add_neg
+
 namespace int
 
 private def nonneg (a : ℤ) : Prop := int.cases_on a (assume n, true) (assume n, false)

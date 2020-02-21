@@ -576,6 +576,8 @@ by rw [sub_eq_add_neg, ← neg_add]; refl
 
 protected lemma coe_nat_sub {n m : ℕ} : n ≤ m → (↑(m - n) : ℤ) = ↑m - ↑n := of_nat_sub
 
+local attribute [simp] sub_eq_add_neg
+
 protected lemma sub_nat_nat_eq_coe {m n : ℕ} : sub_nat_nat m n = ↑m - ↑n :=
 sub_nat_nat_elim m n (λm n i, i = ↑m - ↑n)
   (λi n, by simp [int.coe_nat_add, add_left_comm]; refl)

@@ -321,7 +321,8 @@ a + -b
 instance add_group_has_sub [add_group α] : has_sub α :=
 ⟨algebra.sub⟩
 
-@[simp] lemma sub_eq_add_neg [add_group α] (a b : α) : a - b = a + -b :=
+local attribute [simp]
+lemma sub_eq_add_neg [add_group α] (a b : α) : a - b = a + -b :=
 rfl
 
 lemma sub_self [add_group α] (a : α) : a - a = 0 :=
