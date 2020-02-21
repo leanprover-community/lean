@@ -194,9 +194,9 @@ calc sub_nat_nat._match_1 m (m + n + 1) (m + n + 1 - m) =
 
 private lemma sub_nat_nat_add_add (m n k : ℕ) : sub_nat_nat (m + k) (n + k) = sub_nat_nat m n :=
 sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
-  (assume i n, have n + i + k = (n + k) + i, by simp,
+  (assume i n, have n + i + k = (n + k) + i, by simp [add_comm, add_left_comm],
     begin rw [this], exact sub_nat_nat_add_left end)
-  (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp,
+  (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp [add_comm, add_left_comm],
     begin rw [this], exact sub_nat_nat_add_right end)
 
 private lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m - n) :=
@@ -311,10 +311,10 @@ def gcd (m n : ℤ) : ℕ := gcd (nat_abs m) (nat_abs n)
 /- addition -/
 
 protected lemma add_comm : ∀ a b : ℤ, a + b = b + a
-| (of_nat n) (of_nat m) := by simp
+| (of_nat n) (of_nat m) := by simp [nat.add_comm]
 | (of_nat n) -[1+ m]    := rfl
 | -[1+ n]    (of_nat m) := rfl
-| -[1+ n]    -[1+m]     := by simp
+| -[1+ n]    -[1+m]     := by simp [nat.add_comm]
 
 protected lemma add_zero : ∀ a : ℤ, a + 0 = a
 | (of_nat n) := rfl
@@ -350,7 +350,7 @@ begin
   { rw [sub_nat_nat_of_ge h'], simp, rw [sub_nat_nat_sub h', add_comm] },
   have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (le_add_right _ _),
   have h₃ : m ≤ n + k, exact le_of_succ_le_succ h₂,
-  rw [sub_nat_nat_of_lt h', sub_nat_nat_of_lt h₂], simp,
+  rw [sub_nat_nat_of_lt h', sub_nat_nat_of_lt h₂], simp [add_comm],
   rw [← add_succ, succ_pred_eq_of_pos (nat.sub_pos_of_lt h'), add_succ, succ_sub h₃, pred_succ],
   rw [add_comm n, nat.add_sub_assoc (le_of_lt h')]
 end
@@ -363,7 +363,7 @@ private lemma add_assoc_aux1 (m n : ℕ) :
 private lemma add_assoc_aux2 (m n k : ℕ) :
   -[1+ m] + -[1+ n] + of_nat k = -[1+ m] + (-[1+ n] + of_nat k) :=
 begin
-  simp [add_succ], rw [int.add_comm, sub_nat_nat_add_neg_succ_of_nat], simp [add_succ, succ_add]
+  simp [add_succ], rw [int.add_comm, sub_nat_nat_add_neg_succ_of_nat], simp [add_succ, succ_add, add_comm]
 end
 
 protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
@@ -378,7 +378,7 @@ protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
 | (of_nat m) -[1+ n]    -[1+ k]    := by rw [int.add_comm, int.add_comm (of_nat m),
                                          int.add_comm (of_nat m), ← add_assoc_aux2,
                                          int.add_comm -[1+ k] ]
-| -[1+ m]    -[1+ n]    -[1+ k]    := by simp [add_succ, neg_of_nat_of_succ]
+| -[1+ m]    -[1+ n]    -[1+ k]    := by simp [add_succ, add_comm, add_left_comm, neg_of_nat_of_succ]
 
 /- negation -/
 
@@ -580,8 +580,8 @@ local attribute [simp] sub_eq_add_neg
 
 protected lemma sub_nat_nat_eq_coe {m n : ℕ} : sub_nat_nat m n = ↑m - ↑n :=
 sub_nat_nat_elim m n (λm n i, i = ↑m - ↑n)
-  (λi n, by simp [int.coe_nat_add]; refl)
-  (λi n, by simp [int.coe_nat_add, int.coe_nat_one, int.neg_succ_of_nat_eq];
+  (λi n, by simp [int.coe_nat_add, add_left_comm]; refl)
+  (λi n, by simp [int.coe_nat_add, int.coe_nat_one, int.neg_succ_of_nat_eq, add_left_comm];
             apply congr_arg; rw[add_left_comm]; simp)
 
 def to_nat : ℤ → ℕ

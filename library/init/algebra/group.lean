@@ -52,7 +52,7 @@ instance comm_semigroup_to_is_commutative [comm_semigroup α] : is_commutative �
 lemma mul_left_comm [comm_semigroup α] : ∀ a b c : α, a * (b * c) = b * (a * c) :=
 left_comm has_mul.mul mul_comm mul_assoc
 
-local attribute [simp] mul_comm mul_assoc mul_left_comm
+local attribute [simp] mul_assoc
 
 lemma mul_right_comm [comm_semigroup α] : ∀ a b c : α, a * b * c = a * c * b :=
 right_comm has_mul.mul mul_comm mul_assoc
