@@ -143,14 +143,14 @@ lemma one_div_neg_one_eq_neg_one : (1:α) / (-1) = -1 :=
 have (-1) * (-1) = (1:α), by rw [neg_mul_neg, one_mul],
 eq.symm (eq_one_div_of_mul_eq_one this)
 
-lemma one_div_neg_eq_neg_one_div {a : α} : 1 / (- a) = - (1 / a) :=
+lemma one_div_neg_eq_neg_one_div (a : α) : 1 / (- a) = - (1 / a) :=
 calc
   1 / (- a) = 1 / ((-1) * a)        : by rw neg_eq_neg_one_mul
         ... = (1 / a) * (1 / (- 1)) : by rw division_ring.one_div_mul_one_div
         ... = (1 / a) * (-1)        : by rw one_div_neg_one_eq_neg_one
         ... = - (1 / a)             : by rw [mul_neg_eq_neg_mul_symm, mul_one]
 
-lemma div_neg_eq_neg_div {a : α} (b : α) : b / (- a) = - (b / a) :=
+lemma div_neg_eq_neg_div (a b : α) : b / (- a) = - (b / a) :=
 calc
   b / (- a) = b * (1 / (- a)) : by rw [← inv_eq_one_div, division_def]
         ... = b * -(1 / a)    : by rw one_div_neg_eq_neg_one_div
@@ -160,7 +160,7 @@ calc
 lemma neg_div (a b : α) : (-b) / a = - (b / a) :=
 by rw [neg_eq_neg_one_mul, mul_div_assoc, ← neg_eq_neg_one_mul]
 
-lemma neg_div_neg_eq (a : α) {b : α} : (-a) / (-b) = a / b :=
+lemma neg_div_neg_eq (a b : α) : (-a) / (-b) = a / b :=
 by rw [div_neg_eq_neg_div, neg_div, neg_neg]
 
 lemma one_div_one_div (a : α) : 1 / (1 / a) = a :=
