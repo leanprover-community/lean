@@ -162,6 +162,8 @@ end comm_semiring
 
 class ring (α : Type u) extends add_comm_group α, monoid α, distrib α
 
+local attribute [simp] sub_eq_add_neg
+
 lemma ring.mul_zero [ring α] (a : α) : a * 0 = 0 :=
 have a * 0 + 0 = a * 0 + a * 0, from calc
      a * 0 + 0 = a * (0 + 0)   : by simp
