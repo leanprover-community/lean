@@ -171,7 +171,10 @@ meta def default_dec_tac : tactic unit :=
 abstract $
 do clear_internals,
    unfold_wf_rel,
-   process_lex (unfold_sizeof >> cancel_nat_add_lt >> trivial_nat_lt)
+   -- The next line was adapted from code in mathlib by Scott Morrison.
+   -- Because `unfold_sizeof` could actually discharge the goal, add a test
+   -- using `done` to detect this.
+   process_lex (unfold_sizeof >> (done <|> (cancel_nat_add_lt >> trivial_nat_lt)))
 
 end well_founded_tactics
 
