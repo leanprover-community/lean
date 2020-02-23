@@ -1527,7 +1527,7 @@ tactic.match_target t m >> skip
 /--
 `by_cases (h :)? p` splits the main goal into two cases, assuming `h : p` in the first branch, and `h : ¬ p` in the second branch.
 
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute classical.prop_decidable [instance]`.
+This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
 -/
 meta def by_cases : parse cases_arg_p → tactic unit
 | (n, q) := concat_tags $ do
@@ -1551,7 +1551,7 @@ meta def funext : parse ident_* → tactic unit
 /--
 If the target of the main goal is a proposition `p`, `by_contradiction h` reduces the goal to proving `false` using the additional hypothesis `h : ¬ p`. If `h` is omitted, a name is generated automatically.
 
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute classical.prop_decidable [instance]`.
+This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
 -/
 meta def by_contradiction (n : parse ident?) : tactic unit :=
 tactic.by_contradiction n >> return ()
