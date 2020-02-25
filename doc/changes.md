@@ -1,3 +1,22 @@
+v3.6.0c (to be released)
+------------------------
+
+Features:
+ - Remove simp attribute from `sub_eq_add_neg` (#117)
+ - Replace `insert` definition by export (#115)
+ - Remove simp attribute from `add_comm` and `add_left_comm` (#65)
+ - simp with reversed lemmas: `simp ← foo` (#100)
+ - Allow nested block comments in docstrings (#113)
+
+Bug fixes:
+ - Include mathlib fixes to `wf_tacs` (#121)
+ - Typos in docstrings (#125)
+
+Changes:
+ - `add_comm`, `add_left_comm`, and `sub_eq_add_neg` are no longer simp lemmas
+ - `insert` is no longer a definition
+ - Nested block comments are now allowed in docstrings
+
 v3.5.0c (26 Dec 2019)
 --------------
 
