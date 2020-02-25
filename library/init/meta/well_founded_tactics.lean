@@ -14,7 +14,7 @@ by {apply nat.add_lt_add_left, assumption}
 
 /- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
 lemma nat.zero_lt_one_add (a : nat) : 0 < 1 + a :=
-suffices 0 < a + 1, by {simp, assumption},
+suffices 0 < a + 1, by {simp [add_comm], assumption},
 nat.zero_lt_succ _
 
 /- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
@@ -171,7 +171,10 @@ meta def default_dec_tac : tactic unit :=
 abstract $
 do clear_internals,
    unfold_wf_rel,
-   process_lex (unfold_sizeof >> cancel_nat_add_lt >> trivial_nat_lt)
+   -- The next line was adapted from code in mathlib by Scott Morrison.
+   -- Because `unfold_sizeof` could actually discharge the goal, add a test
+   -- using `done` to detect this.
+   process_lex (unfold_sizeof >> (done <|> (cancel_nat_add_lt >> trivial_nat_lt)))
 
 end well_founded_tactics
 

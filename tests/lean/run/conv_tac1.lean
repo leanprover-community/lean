@@ -1,3 +1,4 @@
+local attribute [simp] add_comm add_left_comm
 example (a b : nat) : (λ x, a + x) 0 = b + 1 + a :=
 begin
   conv in (_ + 1) { change nat.succ b },
