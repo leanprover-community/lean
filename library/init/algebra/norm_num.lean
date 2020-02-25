@@ -102,9 +102,9 @@ begin
   rw [h2, ← h, left_distrib, mul_div_cancel' _ hd]
 end
 
-lemma div_mul_helper [field α] (n d c v : α) (hd : d ≠ 0) (h : (n * c) / d = v) :
+lemma div_mul_helper [field α] (n d c v : α) (h : (n * c) / d = v) :
         (n / d) * c = v :=
-by rw [← h, field.div_mul_eq_mul_div_comm _ _ hd, mul_div_assoc]
+by rw [← h, div_mul_eq_mul_div_comm, mul_div_assoc]
 
 lemma mul_div_helper [field α] (a n d v : α) (hd : d ≠ 0) (h : (a * n) / d = v) :
         a * (n / d) = v :=
