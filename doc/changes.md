@@ -1,3 +1,36 @@
+v3.6.0c (to be released)
+------------------------
+
+Features:
+ - Remove simp attribute from `sub_eq_add_neg` (#117)
+ - Replace `insert` definition by export (#115)
+ - Remove simp attribute from `add_comm` and `add_left_comm` (#65)
+ - simp with reversed lemmas: `simp ← foo` (#100)
+ - Allow nested block comments in docstrings (#113)
+
+Bug fixes:
+ - Include mathlib fixes to `wf_tacs` (#121)
+ - Typos in docstrings (#125)
+
+Changes:
+ - `add_comm`, `add_left_comm`, and `sub_eq_add_neg` are no longer simp lemmas
+ - `insert` is no longer a definition
+ - Nested block comments are now allowed in docstrings
+
+v3.5.1c (4 Feb 2019)
+--------------------
+
+Features:
+- Allow `change` to be used to rename bound variables (#96)
+- Annotate pretty-printed output with full constant names (#89)
+- Import modules from meta code (#88)
+- Make `add_interactive` copy the doc string (#97)
+- Avoid version warning for external Leans in leanpkg (#106) 
+
+Bugfixes:
+- Force tactic type in `run_cmd` (#103) 
+- `?m_1` and `(λ x, ?m_1) y` should be definitionally equal (#107)
+
 v3.5.0c (26 Dec 2019)
 --------------
 
