@@ -1,7 +1,8 @@
-v3.6.0c (to be released)
+v3.6.0c (26 Feb 2019)
 ------------------------
 
 Features:
+ - Remove `discrete_field` (#119)
  - Remove simp attribute from `sub_eq_add_neg` (#117)
  - Replace `insert` definition by export (#115)
  - Remove simp attribute from `add_comm` and `add_left_comm` (#65)
@@ -13,6 +14,7 @@ Bug fixes:
  - Typos in docstrings (#125)
 
 Changes:
+ - `discrete_field` is now just `field` (#119)
  - `add_comm`, `add_left_comm`, and `sub_eq_add_neg` are no longer simp lemmas
  - `insert` is no longer a definition
  - Nested block comments are now allowed in docstrings
