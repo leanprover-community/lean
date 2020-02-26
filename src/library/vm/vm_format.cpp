@@ -44,6 +44,10 @@ vm_obj format_line() {
     return to_obj(line());
 }
 
+vm_obj format_soft_break() {
+    return to_obj(soft_break());
+}
+
 vm_obj format_space() {
     return to_obj(space());
 }
@@ -181,6 +185,7 @@ void initialize_vm_format() {
     DECLARE_VM_BUILTIN(name({"format", "line"}),             format_line);
     DECLARE_VM_BUILTIN(name({"format", "space"}),            format_space);
     DECLARE_VM_BUILTIN(name({"format", "nil"}),              format_nil);
+    DECLARE_VM_BUILTIN(name({"format", "soft_break"}),       format_soft_break);
     DECLARE_VM_BUILTIN(name({"format", "compose"}),          format_compose);
     DECLARE_VM_BUILTIN(name({"format", "nest"}),             format_nest);
     DECLARE_VM_BUILTIN(name({"format", "highlight"}),        format_highlight);

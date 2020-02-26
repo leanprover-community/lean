@@ -218,6 +218,7 @@ format highlight_keyword(format const & f);
 format highlight_builtin(format const & f);
 format highlight_command(format const & f);
 format const & line();
+format const & soft_break();
 format const & space();
 format const & lp();
 format const & rp();

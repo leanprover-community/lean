@@ -19,9 +19,10 @@ meta constant format.line            : format
 meta constant format.space           : format
 /-- = `""` -/
 meta constant format.nil             : format
+meta constant format.soft_break      : format
 /-- Concatenate the given formats. -/
 meta constant format.compose         : format → format → format
-/-- `format.nest n f` tells the formatter that `f` is nested inside something with length `n` 
+/-- `format.nest n f` tells the formatter that `f` is nested inside something with length `n`
 so that it is pretty-printed with the correct tabs on a line break.
 For example, in `list.to_format` we have:
 
@@ -55,7 +56,7 @@ meta instance : has_append format :=
 meta instance : has_to_string format :=
 ⟨λ f, f.to_string options.mk⟩
 
-/-- Use this instead of `has_to_string` to enable prettier formatting. 
+/-- Use this instead of `has_to_string` to enable prettier formatting.
 See docstring for `format` for more on the differences between `format` and `string`.
 Note that `format` is `meta` while `string` is not. -/
 meta class has_to_format (α : Type u) :=

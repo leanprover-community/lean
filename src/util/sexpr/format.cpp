@@ -91,6 +91,7 @@ format mk_line() {
 
 static format * g_line = nullptr;
 static format * g_space = nullptr;
+static format * g_soft_break = nullptr;
 static format * g_lp = nullptr;
 static format * g_rp = nullptr;
 static format * g_lsb = nullptr;
@@ -175,6 +176,10 @@ format paren(format const & x) {
 // wrap x y = x <> (text " " :<|> line) <> y
 format wrap(format const & f1, format const & f2) {
     return f1 + choice(format(" "), line()) + f2;
+}
+
+format const & soft_break() {
+    return *g_soft_break;
 }
 
 struct format::separate_tokens_fn {
@@ -518,6 +523,7 @@ void initialize_format() {
     register_unsigned_option(*g_pp_width, LEAN_DEFAULT_PP_WIDTH, "(pretty printer) line width");
     g_line = new format(mk_line());
     g_space = new format(" ");
+    g_soft_break = new format(choice(*g_space, line()));
     g_lp = new format("(");
     g_rp = new format(")");
     g_lsb = new format("[");
@@ -534,6 +540,7 @@ void finalize_format() {
     delete g_sexpr_space;
     delete g_line;
     delete g_space;
+    delete g_soft_break;
     delete g_lp;
     delete g_rp;
     delete g_lsb;
