@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Robert Lewis, Leonardo de Moura
 -/
 prelude
-import init.algebra.ordered_ring init.algebra.field
+import init.algebra.ordered_ring .field
 
 set_option old_structure_cmd true
 
@@ -326,11 +326,11 @@ calc
       a / 2 < a / 2 + a / 2 : lt_add_of_pos_left _ ha
         ... = a             : add_halves a
 
-lemma div_mul_le_div_mul_of_div_le_div_pos {a b c d e : α} (hb : b ≠ 0) (hd : d ≠ 0) (h : a / b ≤ c / d)
+lemma div_mul_le_div_mul_of_div_le_div_pos {a b c d e : α} (h : a / b ≤ c / d)
       (he : e > 0) : a / (b * e) ≤ c / (d * e) :=
 begin
-  have h₁ := field.div_mul_eq_div_mul_one_div a hb (ne_of_gt he),
-  have h₂ := field.div_mul_eq_div_mul_one_div c hd (ne_of_gt he),
+  have h₁ := div_mul_eq_div_mul_one_div a b e,
+  have h₂ := div_mul_eq_div_mul_one_div c d e,
   rw [h₁, h₂],
   apply mul_le_mul_of_nonneg_right h,
   apply le_of_lt,
@@ -404,7 +404,7 @@ lt_of_not_ge $ λ hn, not_le_of_gt hl $ one_div_le_one_div_of_le_of_neg h hn
 
 lemma one_div_le_of_one_div_le_of_pos {a b : α} (ha : a > 0) (h : 1 / a ≤ b) : 1 / b ≤ a :=
 begin
-  rw [← division_ring.one_div_one_div (ne_of_gt ha)],
+  rw [← one_div_one_div a],
   apply one_div_le_one_div_of_le _ h,
   apply one_div_pos_of_pos ha
 end
@@ -412,7 +412,7 @@ end
 lemma one_div_le_of_one_div_le_of_neg {a b : α} (hb : b < 0) (h : 1 / a ≤ b) : 1 / b ≤ a :=
 le_of_not_gt $ λ hl, begin
   have : a < 0, from lt_trans hl (one_div_neg_of_neg hb),
-  rw ← division_ring.one_div_one_div (ne_of_lt this) at hl,
+  rw ← one_div_one_div a at hl,
   exact not_lt_of_ge h (lt_of_one_div_lt_one_div_of_neg hb hl)
 end
 
@@ -445,15 +445,10 @@ end
 end linear_ordered_field
 
 class discrete_linear_ordered_field (α : Type u) extends linear_ordered_field α,
-      decidable_linear_ordered_comm_ring α :=
-(inv_zero : inv zero = zero)
+      decidable_linear_ordered_comm_ring α
 
 section discrete_linear_ordered_field
 variables {α : Type u}
-
-instance discrete_linear_ordered_field.to_discrete_field [s : discrete_linear_ordered_field α] : discrete_field α :=
-{ has_decidable_eq := @decidable_linear_ordered_comm_ring.decidable_eq α (@discrete_linear_ordered_field.to_decidable_linear_ordered_comm_ring α s),
-  ..s }
 
 variables [discrete_linear_ordered_field α]
 
@@ -463,12 +458,12 @@ lemma pos_of_one_div_pos {a : α} (h : 0 < 1 / a) : 0 < a :=
    (assume h3 : 1 / a = 0,
     have h4 : 1 / (1 / a) = 0, from eq.symm h3 ▸ div_zero 1,
     absurd h4 (ne.symm (ne_of_lt h1))),
- (division_ring.one_div_one_div (ne_zero_of_one_div_ne_zero h2)) ▸ h1
+ (one_div_one_div a) ▸ h1
 
 lemma neg_of_one_div_neg {a : α} (h : 1 / a < 0) : a < 0 :=
 have h1 : 0 < - (1 / a), from neg_pos_of_neg h,
 have ha : a ≠ 0, from ne_zero_of_one_div_ne_zero (ne_of_lt h),
-have h2 : 0 < 1 / (-a), from eq.symm (division_ring.one_div_neg_eq_neg_one_div ha) ▸ h1,
+have h2 : 0 < 1 / (-a), from eq.symm (one_div_neg_eq_neg_one_div a) ▸ h1,
 have h3 : 0 < -a, from pos_of_one_div_pos h2,
 neg_of_neg_pos h3
 

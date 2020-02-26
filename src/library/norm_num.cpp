@@ -385,9 +385,8 @@ expr norm_num_context::mk_norm_div_mul(expr const & s_lhs, expr const & s_rhs, e
     expr new_num = mk_mul(args[2], s_rhs);
     auto prf = mk_norm(mk_div(new_num, args[3]));
     lean_assert(to_mpq(prf.first) == to_mpq(rhs));
-    expr den_ne_zero = mk_nonzero_prf(args[3]);
     return mk_app({mk_const(get_norm_num_div_mul_helper_name()), type, mk_field(), args[2], args[3], s_rhs,
-                rhs, den_ne_zero, prf.second});
+                rhs, prf.second});
 }
 
 expr norm_num_context::mk_norm_mul_div(expr const & s_lhs, expr const & s_rhs, expr const & rhs) {
