@@ -171,6 +171,49 @@ do t ← target,
    replace_target new_t pr,
    try tactic.triv, try (tactic.reflexivity reducible)
 
+/--
+The `conv` tactic is built-in to lean. Inside `conv` blocks mathlib currently
+additionally provides
+* `erw`,
+* `ring` and `ring2`,
+* `norm_num`,
+* `norm_cast`, and
+* `conv` (within another `conv`).
+
+Using `conv` inside a `conv` block allows the user to return to the previous
+state of the outer `conv` block after it is finished. Thus you can continue
+editing an expression without having to start a new `conv` block and re-scoping
+everything. For example:
+```lean
+example (a b c d : ℕ) (h₁ : b = c) (h₂ : a + c = a + d) : a + b = a + d :=
+by conv {
+  to_lhs,
+  conv {
+    congr, skip,
+    rw h₁,
+  },
+  rw h₂,
+}
+```
+Without `conv` the above example would need to be proved using two successive
+`conv` blocks each beginning with `to_lhs`.
+
+Also, as a shorthand `conv_lhs` and `conv_rhs` are provided, so that
+```lean
+example : 0 + 0 = 0 :=
+begin
+  conv_lhs { simp }
+end
+```
+just means
+```lean
+example : 0 + 0 = 0 :=
+begin
+  conv { to_lhs, simp }
+end
+```
+and likewise for `to_rhs`.
+-/
 meta def conv (loc : parse (tk "at" *> ident)?)
               (p : parse (tk "in" *> parser.pexpr)?)
               (c : conv.interactive.itactic) : tactic unit :=
