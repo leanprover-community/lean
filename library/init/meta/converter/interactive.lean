@@ -172,13 +172,10 @@ do t ← target,
    try tactic.triv, try (tactic.reflexivity reducible)
 
 /--
-The `conv` tactic is built-in to lean. Inside `conv` blocks mathlib currently
-additionally provides
-* `erw`,
-* `ring` and `ring2`,
-* `norm_num`,
-* `norm_cast`, and
-* `conv` (within another `conv`).
+`conv {...}` allows the user to perform targeted rewriting on a goal or hypothesis,
+by focusing on particular subexpressions.
+
+See <https://leanprover-community.github.io/mathlib_docs/conv.html> for more details.
 
 Using `conv` inside a `conv` block allows the user to return to the previous
 state of the outer `conv` block after it is finished. Thus you can continue
