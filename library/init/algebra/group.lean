@@ -33,7 +33,7 @@ class monoid (α : Type u) extends semigroup α, has_one α :=
 class comm_monoid (α : Type u) extends comm_semigroup α, has_one α :=
 (one_mul : ∀ a : α, 1 * a = a)
 
-instance comm_monoid.to_monoid (α : Type u) [I : comm_monoid α] : monoid α :=
+@[reducible] instance comm_monoid.to_monoid (α : Type u) [I : comm_monoid α] : monoid α :=
 { mul_one := λ a, by rw [comm_monoid.mul_comm, comm_monoid.one_mul]
   ..I }
 

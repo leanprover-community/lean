@@ -4,16 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Robert Lewis, Leonardo de Moura
 -/
 prelude
-import init.algebra.ordered_ring .field
+import init.algebra.ordered_ring init.algebra.field
 
 set_option old_structure_cmd true
 
 universe u
 
-class linear_ordered_field (α : Type u) extends linear_ordered_ring α, field α
+class linear_ordered_field (α : Type u) extends linear_ordered_comm_ring α, division_ring α
 
 section linear_ordered_field
 variables {α : Type u} [linear_ordered_field α]
+
+instance linear_ordered_field.to_field : field α := { ..show linear_ordered_field α, by apply_instance }
 
 lemma mul_zero_lt_mul_inv_of_pos {a : α} (h : 0 < a) : a * 0 < a * (1 / a) :=
 calc a * 0 = 0           : by rw mul_zero
@@ -56,7 +58,7 @@ lemma le_of_one_le_div (a : α) {b : α} (hb : b > 0) (h : 1 ≤ a / b) : b ≤ 
 have hb'   : b ≠ 0,     from ne.symm (ne_of_lt hb),
 calc
    b   ≤ b * (a / b) : le_mul_of_ge_one_right (le_of_lt hb) h
-   ... = a           : by rw [mul_div_cancel' _ hb']
+   ... = a           : by rw [mul_div_cancel' a hb']
 
 lemma one_lt_div_of_lt (a : α) {b : α} (hb : b > 0) (h : b < a) : 1 < a / b :=
 have hb' : b ≠ 0, from ne.symm (ne_of_lt hb),

@@ -91,11 +91,6 @@ lemma succ_mul : ∀ (n m : ℕ), (succ n) * m = (n * m) + m
     sort_add
   end
 
-protected lemma right_distrib : ∀ (n m k : ℕ), (n + m) * k = n * k + m * k
-| n m 0        := rfl
-| n m (succ k) :=
-  begin simp [mul_succ, right_distrib n m k], sort_add end
-
 protected lemma left_distrib : ∀ (n m k : ℕ), n * (m + k) = n * m + n * k
 | 0        m k := by simp [nat.zero_mul]
 | (succ n) m k :=
