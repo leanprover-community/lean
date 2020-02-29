@@ -247,7 +247,8 @@ section field
 variable [field α]
 
 instance field.to_division_ring : division_ring α :=
-{ inv_mul_cancel := λ _ h, by rw [mul_comm, field.mul_inv_cancel h]
+{ inv_mul_cancel := λ _ h, by rw [mul_comm, field.mul_inv_cancel h],
+  ..show ring α, by apply_instance,
   ..show field α, by apply_instance }
 
 lemma one_div_mul_one_div (a b : α) : (1 / a) * (1 / b) =  1 / (a * b) :=

@@ -530,17 +530,13 @@ instance : comm_ring int :=
   add_assoc      := int.add_assoc,
   zero           := int.zero,
   zero_add       := int.zero_add,
-  add_zero       := int.add_zero,
   neg            := int.neg,
   add_left_neg   := int.add_left_neg,
-  add_comm       := int.add_comm,
   mul            := int.mul,
   mul_assoc      := int.mul_assoc,
   one            := int.one,
   one_mul        := int.one_mul,
-  mul_one        := int.mul_one,
   left_distrib   := int.distrib_left,
-  right_distrib  := int.distrib_right,
   mul_comm       := int.mul_comm }
 
 /- Extra instances to short-circuit type class resolution -/
