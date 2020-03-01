@@ -16,9 +16,10 @@ set_option default_priority 100
 
 set_option old_structure_cmd true
 
-class division_ring (α : Type u) extends ring α, has_inv α, zero_ne_one_class α :=
+class division_ring (α : Type u) extends
+  add_group α, semigroup α, has_one α, distrib α, has_inv α, zero_ne_one_class α :=
+(mul_one : ∀ a : α, a * 1 = a)
 (mul_inv_cancel : ∀ {a : α}, a ≠ 0 → a * a⁻¹ = 1)
-(inv_mul_cancel : ∀ {a : α}, a ≠ 0 → a⁻¹ * a = 1)
 (inv_zero : (0 : α)⁻¹ = 0)
 
 variable {α : Type u}
@@ -38,39 +39,84 @@ rfl
 @[simp] lemma inv_zero : 0⁻¹ = (0:α) :=
 division_ring.inv_zero α
 
-@[simp] lemma div_zero (a : α) : a / 0 = (0:α) :=
-calc
-  a / 0 = (a:α) * 0⁻¹ : by rw division_def
-    ... = a * 0       : by rw inv_zero
-    ... = (0:α)       : by rw mul_zero
-
 @[simp]
 lemma mul_inv_cancel {a : α} (h : a ≠ 0) : a * a⁻¹ = 1 :=
 division_ring.mul_inv_cancel h
 
+lemma division_ring.zero_mul (a : α) : 0 * a = 0 :=
+have 0 * a + 0 = 0 * a + 0 * a, from calc
+  0 * a + 0 = (0 + 0) * a   : by simp
+        ... = 0 * a + 0 * a : by rewrite right_distrib,
+show 0 * a = 0, from  (add_left_cancel this).symm
+
+lemma division_ring.mul_zero (a : α) : a * 0 = 0 :=
+have a * 0 + 0 = a * 0 + a * 0, from calc
+     a * 0 + 0 = a * (0 + 0)   : by simp
+           ... = a * 0 + a * 0 : by rw left_distrib,
+show a * 0 = 0, from (add_left_cancel this).symm
+
+
+@[simp] lemma div_zero (a : α) : a / 0 = (0:α) :=
+calc
+  a / 0 = (a:α) * 0⁻¹ : by rw division_def
+    ... = a * 0       : by rw inv_zero
+    ... = (0:α)       : by rw division_ring.mul_zero
+
+lemma inv_ne_zero {a : α} (h : a ≠ 0) : a⁻¹ ≠ 0 :=
+assume : a⁻¹ = 0,
+have 0 = (1 : α), by rw [← mul_inv_cancel h, this, division_ring.mul_zero],
+zero_ne_one this
+
+-- note: integral domain has a "mul_ne_zero". α commutative division ring is an integral
+-- domain, but let's not define that class for now.
+lemma division_ring.mul_ne_zero {a b : α} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 :=
+assume : a * b = 0,
+have   a * 1 = 0, by rw [← mul_inv_cancel hb, ← mul_assoc, this, division_ring.zero_mul],
+have   a = 0, by rwa division_ring.mul_one at this,
+absurd this ha
+
 @[simp]
 lemma inv_mul_cancel {a : α} (h : a ≠ 0) : a⁻¹ * a = 1 :=
-division_ring.inv_mul_cancel h
+have a⁻¹ * a ≠ 0, from division_ring.mul_ne_zero (inv_ne_zero h) h,
+calc a⁻¹ * a =  (a⁻¹ * a) * ((a⁻¹ * a) * (a⁻¹ * a)⁻¹) :
+  by rw [mul_inv_cancel this, division_ring.mul_one]
+... = (a⁻¹ * a) * (a⁻¹ * a)⁻¹ :
+  by rw [← mul_assoc, ← mul_assoc, mul_assoc _ _ (a⁻¹), mul_inv_cancel h, division_ring.mul_one]
+... = 1 : by rw mul_inv_cancel this
+
+lemma division_ring.one_mul (a : α) : 1 * a = a :=
+classical.by_cases
+  (λ ha0 : a = 0, by rw [ha0, division_ring.mul_zero])
+  (λ ha0 : a ≠ 0,
+      by rw [← mul_inv_cancel ha0, mul_assoc,
+        inv_mul_cancel ha0, division_ring.mul_one])
+
+instance division_ring.to_ring : ring α :=
+{ one_mul := division_ring.one_mul,
+  ..show division_ring α, by apply_instance }
 
 @[simp]
 lemma one_div_eq_inv (a : α) : 1 / a = a⁻¹ :=
-one_mul a⁻¹
+division_ring.one_mul a⁻¹
 
 lemma inv_eq_one_div (a : α) : a⁻¹ = 1 / a :=
-by simp
-
-local attribute [simp]
-division_def mul_comm mul_assoc
-mul_left_comm mul_inv_cancel inv_mul_cancel
-
-lemma div_eq_mul_one_div (a b : α) : a / b = a * (1 / b) :=
 by simp
 
 lemma mul_one_div_cancel {a : α} (h : a ≠ 0) : a * (1 / a) = 1 :=
 by simp [h]
 
+lemma one_div_ne_zero {a : α} (h : a ≠ 0) : 1 / a ≠ 0 :=
+inv_eq_one_div a ▸ inv_ne_zero h
+
+local attribute [simp]
+division_def mul_comm mul_assoc
+mul_left_comm inv_mul_cancel
+
+lemma div_eq_mul_one_div (a b : α) : a / b = a * (1 / b) :=
+by simp
+
 lemma one_div_mul_cancel {a : α} (h : a ≠ 0) : (1 / a) * a = 1 :=
-by simp [h]
+by rw [division_def, mul_assoc, inv_mul_cancel h, division_ring.one_mul]
 
 lemma div_self {a : α} (h : a ≠ 0) : a / a = 1 :=
 by simp [h]
@@ -80,14 +126,6 @@ div_self (ne.symm zero_ne_one)
 
 lemma mul_div_assoc (a b c : α) : (a * b) / c = a * (b / c) :=
 by simp
-
-lemma one_div_ne_zero {a : α} (h : a ≠ 0) : 1 / a ≠ 0 :=
-assume : 1 / a = 0,
-have 0 = (1:α), from eq.symm (by rw [← mul_one_div_cancel h, this, mul_zero]),
-absurd this zero_ne_one
-
-lemma inv_ne_zero {a : α} (h : a ≠ 0) : a⁻¹ ≠ 0 :=
-by rw inv_eq_one_div; exact one_div_ne_zero h
 
 lemma one_inv_eq : 1⁻¹ = (1:α) :=
 calc 1⁻¹ = 1 * 1⁻¹ : by rw [one_mul]
@@ -100,14 +138,6 @@ by simp
 
 lemma zero_div (a : α) : 0 / a = 0 :=
 by simp
-
--- note: integral domain has a "mul_ne_zero". α commutative division ring is an integral
--- domain, but let's not define that class for now.
-lemma division_ring.mul_ne_zero {a b : α} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 :=
-assume : a * b = 0,
-have   a * 1 = 0, by rw [← mul_one_div_cancel hb, ← mul_assoc, this, zero_mul],
-have   a = 0, by rwa mul_one at this,
-absurd this ha
 
 lemma mul_ne_zero_comm {a b : α} (h : a * b ≠ 0) : b * a ≠ 0 :=
 have h₁ : a ≠ 0, from ne_zero_of_mul_ne_zero_right h,
@@ -247,8 +277,7 @@ section field
 variable [field α]
 
 instance field.to_division_ring : division_ring α :=
-{ inv_mul_cancel := λ _ h, by rw [mul_comm, field.mul_inv_cancel h],
-  ..show ring α, by apply_instance,
+{ ..show ring α, by apply_instance,
   ..show field α, by apply_instance }
 
 lemma one_div_mul_one_div (a b : α) : (1 / a) * (1 / b) =  1 / (a * b) :=

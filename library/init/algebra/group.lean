@@ -31,15 +31,15 @@ class monoid (α : Type u) extends semigroup α, has_one α :=
 (one_mul : ∀ a : α, 1 * a = a) (mul_one : ∀ a : α, a * 1 = a)
 
 class comm_monoid (α : Type u) extends comm_semigroup α, has_one α :=
-(one_mul : ∀ a : α, 1 * a = a)
+(mul_one : ∀ a : α, a * 1 = a)
 
 @[reducible] instance comm_monoid.to_monoid (α : Type u) [I : comm_monoid α] : monoid α :=
-{ mul_one := λ a, by rw [comm_monoid.mul_comm, comm_monoid.one_mul]
+{ one_mul := λ a, by rw [comm_monoid.mul_comm, comm_monoid.mul_one]
   ..I }
 
 class group (α : Type u) extends semigroup α, has_one α, has_inv α :=
-(one_mul : ∀ a : α, 1 * a = a)
-(mul_left_inv : ∀ a : α, a⁻¹ * a = 1)
+(mul_one : ∀ a : α, a * 1 = a)
+(mul_right_inv : ∀ a : α, a * a⁻¹ = 1)
 
 class comm_group (α : Type u) extends group α, comm_monoid α
 
@@ -81,21 +81,23 @@ monoid.one_mul
 @[simp] lemma mul_one [monoid α] : ∀ a : α, a * 1 = a :=
 monoid.mul_one
 
-@[simp] lemma mul_left_inv [group α] : ∀ a : α, a⁻¹ * a = 1 :=
-group.mul_left_inv
+@[simp] lemma mul_right_inv [group α] : ∀ a : α, a * a⁻¹ = 1 :=
+group.mul_right_inv
+
+def mul_inv_self := @mul_right_inv
+
+@[simp] lemma mul_left_inv [group α] (a : α) : a⁻¹ * a = 1 :=
+calc a⁻¹ * a =  (a⁻¹ * a) * ((a⁻¹ * a) * (a⁻¹ * a)⁻¹) :
+  by rw [mul_right_inv, group.mul_one]
+... = (a⁻¹ * a) * (a⁻¹ * a)⁻¹ :
+  by rw [← mul_assoc, ← mul_assoc, mul_assoc _ _ (a⁻¹), mul_right_inv, group.mul_one]
+... = 1 : by rw mul_right_inv
 
 def inv_mul_self := @mul_left_inv
 
-@[simp] lemma mul_right_inv [group α] (a : α) : a * a⁻¹ = 1 :=
-calc a * a⁻¹ = (a * a⁻¹)⁻¹ * (a * a⁻¹) * (a * a⁻¹) :
-  by rw [mul_left_inv, group.one_mul]
-... = (a * a⁻¹)⁻¹ * (a * a⁻¹) :
-  by rw [mul_assoc, mul_assoc, ← mul_assoc (a⁻¹), mul_left_inv, group.one_mul]
-... = 1 : by rw mul_left_inv
-
 instance group.to_monoid [I : group α] : monoid α :=
-{ mul_one := λ a,
-    by rw [← group.mul_left_inv a, ← mul_assoc, mul_right_inv, group.one_mul],
+{ one_mul := λ a,
+    by rw [← group.mul_right_inv a, mul_assoc, mul_left_inv, group.mul_one],
   ..I }
 
 @[simp] lemma inv_mul_cancel_left [group α] (a b : α) : a⁻¹ * (a * b) = b :=
@@ -112,8 +114,6 @@ inv_eq_of_mul_eq_one (one_mul 1)
 
 @[simp] lemma inv_inv [group α] (a : α) : (a⁻¹)⁻¹ = a :=
 inv_eq_of_mul_eq_one (mul_left_inv a)
-
-def mul_inv_self := @mul_right_inv
 
 lemma inv_inj [group α] {a b : α} (h : a⁻¹ = b⁻¹) : a = b :=
 have a = a⁻¹⁻¹, by simp,
@@ -213,14 +213,12 @@ class add_monoid (α : Type u) extends add_semigroup α, has_zero α :=
 (zero_add : ∀ a : α, 0 + a = a) (add_zero : ∀ a : α, a + 0 = a)
 
 class add_comm_monoid (α : Type u) extends add_semigroup α, has_zero α, add_comm_semigroup α :=
-(zero_add : ∀ a : α, 0 + a = a)
+(add_zero : ∀ a : α, a + 0 = a)
 
 class add_group (α : Type u) extends add_semigroup α, has_zero α, has_neg α :=
-(zero_add : ∀ a : α, 0 + a = a)
-(add_left_neg : ∀ a : α, -a + a = 0)
+(add_zero : ∀ a : α, a + 0 = a)
+(add_right_neg : ∀ a : α, a + -a = 0)
 
--- instance add_group.to_add_monoid (α : Type u) [I : add_group α] : add_monoid α :=
--- { add_zero := sorry, ..I }
 
 class add_comm_group (α : Type u) extends add_group α, add_comm_monoid α
 
@@ -275,7 +273,6 @@ run_cmd transport_multiplicative_to_additive
    (`comm_monoid.to_comm_semigroup, `add_comm_monoid.to_add_comm_semigroup),
    (`group.to_has_one, `add_group.to_has_zero),
    (`group.to_semigroup, `add_group.to_add_semigroup),
-
    (`comm_group.to_group, `add_comm_group.to_add_group),
    (`comm_group.to_comm_monoid, `add_comm_group.to_add_comm_monoid),
    (`left_cancel_semigroup.to_semigroup, `add_left_cancel_semigroup.to_add_semigroup),
@@ -287,16 +284,16 @@ run_cmd transport_multiplicative_to_additive
    (`right_cancel_semigroup.mul_right_cancel, `add_right_cancel_semigroup.add_right_cancel),
    (`monoid.one_mul, `add_monoid.zero_add),
    (`monoid.mul_one, `add_monoid.add_zero),
-   (`group.mul_left_inv, `add_group.add_left_neg),
+   (`group.mul_right_inv, `add_group.add_right_neg),
    (`group.mul, `add_group.add),
    (`group.mul_assoc, `add_group.add_assoc),
    (`group.one, `add_group.zero),
-   (`group.one_mul, `add_group.zero_add),
+   (`group.mul_one, `add_group.add_zero),
    (`group.inv, `add_group.neg),
    (`comm_monoid.mul, `add_comm_monoid.add),
    (`comm_monoid.mul_assoc, `add_comm_monoid.add_assoc),
    (`comm_monoid.one, `add_comm_monoid.zero),
-   (`comm_monoid.one_mul, `add_comm_monoid.zero_add),
+   (`comm_monoid.mul_one, `add_comm_monoid.add_zero),
    (`comm_monoid.mul_comm, `add_comm_monoid.add_comm),
    /- map lemmas -/
    (`mul_assoc, `add_assoc),
@@ -305,8 +302,8 @@ run_cmd transport_multiplicative_to_additive
    (`mul_right_comm, `add_right_comm),
    (`one_mul, `zero_add),
    (`mul_one, `add_zero),
-   (`mul_left_inv, `add_left_neg),
    (`mul_right_inv, `add_right_neg),
+   (`mul_left_inv, `add_left_neg),
    /- map instances -/
    (`group.to_monoid._proof_1, `add_group.to_add_monoid._proof_1),
    (`group.to_monoid, `add_group.to_add_monoid),
@@ -338,8 +335,7 @@ run_cmd transport_multiplicative_to_additive
    (`eq_mul_of_inv_mul_eq, `eq_add_of_neg_add_eq),
    (`mul_eq_of_eq_inv_mul, `add_eq_of_eq_neg_add),
    (`mul_eq_of_eq_mul_inv, `add_eq_of_eq_add_neg),
-   (`one_inv, `neg_zero)
-]
+   (`one_inv, `neg_zero)]
 
 instance add_semigroup_to_is_eq_associative [add_semigroup α] : is_associative α (+) :=
 ⟨add_assoc⟩
