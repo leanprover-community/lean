@@ -1,13 +1,15 @@
 \documentclass{article}
 
 \usepackage[utf8x]{inputenc}
-\usepackage{amssymb}
+\usepackage{amssymb, upgreek}
 
 \usepackage{color}
 \definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
 \definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
 \definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
 \definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{errorcolor}{rgb}{1, 0, 0}           % bright red
+\definecolor{stringcolor}{rgb}{0.5, 0.3, 0.2}    % brown
 
 \usepackage{listings}
 \def\lstlanguagefiles{lstlean.tex}
@@ -18,11 +20,11 @@
 
 \begin{document}
 
-\maketitle 
+\maketitle
 
 This is an example of how to use \verb=lstlean.tex= to typeset your Lean code. Here is some code: \lstinline{theorem foo (x y : ℕ), x + y = y + x}.  Here are the translations of some unicode symbols:
 \begin{lstlisting}
-Some symbols: ℕ ℤ ∩ ⊂ ∀ ∃ Π α β γ ∈ ⦃ ⦄
+Some symbols: ℕ ℤ ∩ ⊂ ∀ ∃ Π λ α β γ ∈ ⦃ ⦄
 \end{lstlisting}
 Here is a block of code:
 \begin{lstlisting}
@@ -66,6 +68,12 @@ theorem append.assoc : ∀ (s t u : list α), s ++ t ++ u = s ++ (t ++ u)
   begin rw (append.assoc l t u), reflexivity end
 
 end list
+
+/- example with sorry -/
+example : false := sorry
+
+/- example string -/
+example : string := "Hello World!"
 \end{lstlisting}
 
 \end{document}
