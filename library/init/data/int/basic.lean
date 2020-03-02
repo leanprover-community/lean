@@ -316,12 +316,9 @@ protected lemma add_comm : ∀ a b : ℤ, a + b = b + a
 | -[1+ n]    (of_nat m) := rfl
 | -[1+ n]    -[1+m]     := by simp [nat.add_comm]
 
-protected lemma add_zero : ∀ a : ℤ, a + 0 = a
-| (of_nat n) := rfl
+protected lemma zero_add : ∀ a : ℤ, 0 + a = a
+| (of_nat n) := congr_arg of_nat (nat.zero_add n)
 | -[1+ n]   := rfl
-
-protected lemma zero_add (a : ℤ) : 0 + a = a :=
-int.add_comm a 0 ▸ int.add_zero a
 
 private lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
   sub_nat_nat (m - n) k = sub_nat_nat m (k + n) :=

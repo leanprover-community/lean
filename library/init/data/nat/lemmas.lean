@@ -104,10 +104,8 @@ protected lemma mul_assoc : ∀ (n m k : ℕ), (n * m) * k = n * (m * k)
 | n m 0        := rfl
 | n m (succ k) := by simp [mul_succ, nat.left_distrib, mul_assoc n m k]
 
-protected lemma mul_one : ∀ (n : ℕ), n * 1 = n := nat.zero_add
-
 protected lemma one_mul (n : ℕ) : 1 * n = n :=
-by rw [nat.mul_comm, nat.mul_one]
+nat.mul_comm n 1 ▸ nat.zero_add n
 
 instance : comm_semiring nat :=
 {add            := nat.add,
