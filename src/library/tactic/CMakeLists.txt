@@ -9,7 +9,9 @@ add_library(tactic OBJECT occurrences.cpp kabstract.cpp tactic_state.cpp
   simp_result.cpp user_attribute.cpp eval.cpp
   simp_lemmas.cpp eqn_lemmas.cpp dsimplify.cpp simplify.cpp
   vm_monitor.cpp destruct_tactic.cpp norm_num_tactic.cpp hole_command.cpp
-  elaborator_exception.cpp algebraic_normalizer.cpp tactic_evaluator.cpp)
+  elaborator_exception.cpp algebraic_normalizer.cpp tactic_evaluator.cpp
+  vm_local_context.cpp
+  vm_type_context.cpp)
 if(EMSCRIPTEN)
 add_dependencies(tactic gmp)
 endif()

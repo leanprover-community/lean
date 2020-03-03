@@ -21,7 +21,7 @@ by cases it; cases it_snd; simp [iterator.next, iterator.next_to_string, string.
 
 lemma zero_lt_length_next_to_string_of_has_next {it : iterator} :
   it.has_next → 0 < it.next_to_string.length :=
-by cases it; cases it_snd; simp [iterator.has_next, iterator.next_to_string, string.length, nat.zero_lt_one_add]
+by cases it; cases it_snd; simp [iterator.has_next, iterator.next_to_string, string.length, nat.zero_lt_one_add, add_comm]
 
 end iterator
 

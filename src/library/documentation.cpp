@@ -8,14 +8,16 @@ Author: Leonardo de Moura
 #include <algorithm>
 #include <functional>
 #include <cctype>
+#include <utility>
+#include <vector>
 #include "util/sstream.h"
 #include "library/module.h"
 #include "library/documentation.h"
 
 namespace lean {
 struct documentation_ext : public environment_extension {
-    /** Doc string for the current module being processed. It does not include imported doc strings. */
-    list<doc_entry>       m_module_doc;
+    /** Doc strings for the current module being processed. It does not include imported doc strings. */
+    std::vector<std::pair<pos_info, std::string>> m_module_docs;
     /** Doc strings for declarations (including imported ones). We store doc_strings for declarations in the .olean files. */
     name_map<std::string> m_doc_string_map;
 };
@@ -40,6 +42,7 @@ struct doc_modification : public modification {
     std::string m_doc;
 
     doc_modification() {}
+    /** A docstring for a declaration in the module. */
     doc_modification(name const & decl, std::string const & doc) : m_decl(decl), m_doc(doc) {}
 
     void perform(environment & env) const override {
@@ -166,11 +169,12 @@ static std::string process_doc(std::string s) {
     return add_lean_suffix_to_code_blocks(s);
 }
 
-environment add_module_doc_string(environment const & env, std::string doc) {
+environment add_module_doc_string(environment const & env, std::string doc, pos_info pos) {
     doc = process_doc(doc);
     auto ext = get_extension(env);
-    ext.m_module_doc = cons(doc_entry(doc), ext.m_module_doc);
-    return update(env, ext);
+    ext.m_module_docs.emplace_back(pos, doc);
+    auto new_env = update(env, ext);
+    return module::add_doc_string(new_env, doc, pos);
 }
 
 environment add_doc_string(environment const & env, name const & n, std::string doc) {
@@ -180,9 +184,7 @@ environment add_doc_string(environment const & env, name const & n, std::string 
         throw exception(sstream() << "environment already contains a doc string for '" << n << "'");
     }
     ext.m_doc_string_map.insert(n, doc);
-    ext.m_module_doc = cons(doc_entry(n, doc), ext.m_module_doc);
     auto new_env = update(env, ext);
-    // TODO(gabriel,leo): why does this not update the module documentation?
     return module::add(new_env, std::make_shared<doc_modification>(n, doc));
 }
 
@@ -194,10 +196,13 @@ optional<std::string> get_doc_string(environment const & env, name const & n) {
         return optional<std::string>();
 }
 
-void get_module_doc_strings(environment const & env, buffer<doc_entry> & result) {
+void get_module_doc_strings(environment const & env, buffer<mod_doc_entry> & result) {
     auto ext = get_extension(env);
-    to_buffer(ext.m_module_doc, result);
-    std::reverse(result.begin(), result.end());
+    auto const & mod_docs = module::get_doc_strings(env);
+    for (auto const & pr : mod_docs) {
+        result.push_back({ optional<std::string>{ pr.first }, pr.second });
+    }
+    result.push_back({ {}, ext.m_module_docs });
 }
 
 void initialize_documentation() {

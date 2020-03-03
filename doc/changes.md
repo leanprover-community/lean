@@ -1,3 +1,93 @@
+v3.6.0c (26 Feb 2019)
+------------------------
+
+Features:
+ - Remove `discrete_field` (#119)
+ - Remove simp attribute from `sub_eq_add_neg` (#117)
+ - Replace `insert` definition by export (#115)
+ - Remove simp attribute from `add_comm` and `add_left_comm` (#65)
+ - simp with reversed lemmas: `simp ← foo` (#100)
+ - Allow nested block comments in docstrings (#113)
+
+Bug fixes:
+ - Include mathlib fixes to `wf_tacs` (#121)
+ - Typos in docstrings (#125)
+
+Changes:
+ - `discrete_field` is now just `field` (#119)
+ - `add_comm`, `add_left_comm`, and `sub_eq_add_neg` are no longer simp lemmas
+ - `insert` is no longer a definition
+ - Nested block comments are now allowed in docstrings
+
+v3.5.1c (4 Feb 2019)
+--------------------
+
+Features:
+- Allow `change` to be used to rename bound variables (#96)
+- Annotate pretty-printed output with full constant names (#89)
+- Import modules from meta code (#88)
+- Make `add_interactive` copy the doc string (#97)
+- Avoid version warning for external Leans in leanpkg (#106) 
+
+Bugfixes:
+- Force tactic type in `run_cmd` (#103) 
+- `?m_1` and `(λ x, ?m_1) y` should be definitionally equal (#107)
+
+v3.5.0c (26 Dec 2019)
+--------------
+
+This is the first community release of Lean 3.
+
+*Features*
+
+ * Add `native.float` for using floating point values within meta functions.
+
+ * Add `reflect (p : parser α) [r : reflectable p] : parser expr` def for parsing raw `expr`s. (#33)
+
+ * Add `tactic.unsafe.type_context` and `local_context` for directly interacting with Lean's type context.
+
+   This means that metavariables and local constants can be directly declared and assigned. (#69)
+
+ * Docstrings are now supported on inductive constructors. (#61)
+
+ * Add `environment.add_defn_eqns` to programmatically create a definition that uses the equation compiler. (#26)
+
+ * Add `environment.add_ginductive` to give tactics access to the utility lemmas associated with inductive type declaration. (#3)
+
+ * Improve file API. Add support for UNIX sockets. (#20, #31)
+
+ * Add `lean.parser.itactic`, a tactic block parser. (#19)
+
+ * Add `interactive.executor`, a class to implement custom tactic monads in `begin ... end` blocks. (#10)
+
+ * Add `expr` serialization/deserialization functions. (#6)
+
+ * Improve and add numerous docstrings.
+
+ * Module documentation is now stored in .olean files to allow documentation to be automatically generated. (#54)
+
+ * Documentation of all imported modules is now exposed via the `olean_doc_strings` tactic. (#81)
+
+*Bug Fixes*
+
+ * build: fix emscripten build in travis (#68)
+ * CMakeLists.txt: GCC 9.1.0 miscompiles certain if statements #63
+ * tactic/revert_tactic: disallow duplicates (#56)
+ * level: give level.instantiate correct type (#46)
+ * documentation: The closing code fence must match opening fence. (#40)
+ * emscripten: fix FS issue: don't mkdir in docker (#39)
+ * emscripten: fix emscripten build (#17)
+ * tactic/case: `case` fails when used with `let` (#32)
+ * tactic/revert_lst: check that the provided expressions are variables (#12)
+ * tactic/type_check: do not assign to meta variables (#86)
+ * init/algebra/field: repeated instance (#8)
+ * Add an additional check to `type_context_old::mk_class_instance_at(lctx,type)` to fix issue #55. (#79)
+
+*Changes*
+
+ * Notation removed: `=<<`, `>=>`, `<=<`
+ * `transfer` and `relator` namespaces removed.
+
 v3.4.2 (18 Jan 2019)
 -------------
 

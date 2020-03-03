@@ -28,7 +28,7 @@ tactic.exact `(⟨λ _, pure (), []⟩ : user_attribute_cache_cfg unit)
 meta def user_attribute.dflt_parser : tactic unit :=
 tactic.exact `(pure () : lean.parser unit)
 
-/-- 
+/--
 A __user attribute__ is an attribute defined by the user (ie, not built in to Lean).
 ### Type parameters
 - `cache_ty` is the type of a cached VM object that is computed from all of the declarations in the environment tagged with this attribute.
@@ -45,8 +45,8 @@ A `user_attribute` consists of the following pieces of data:
     non-removable.
 - `before_unset` Optional handler that will be called before the attribute is removed from a declaration.
 - `cache_cfg` describes how to construct the user attribute's cache. See docstring for `user_attribute_cache_cfg`
-- `reflect_param` demands that `param_ty` can be reflected. 
-    This means we have a function from `param_ty` to an expr. 
+- `reflect_param` demands that `param_ty` can be reflected.
+    This means we have a function from `param_ty` to an expr.
     See the docstring for `has_reflect`.
 - `parser` Parser that will be invoked after parsing the attribute's name. The parse result will be reflected
 and stored and can be retrieved with `user_attribute.get_param`.

@@ -169,13 +169,7 @@ vm_obj interaction_monad<State>::mk_exception(throwable const & ex, State const 
 
 template<typename State>
 vm_obj interaction_monad<State>::mk_exception(format const & fmt, State const & s) {
-    vm_state const & S = get_vm_state();
-    if (optional<vm_decl> K = S.get_decl(get_combinator_K_name())) {
-        return mk_exception(mk_vm_closure(K->get_idx(), lean::to_obj(fmt), mk_vm_unit(), mk_vm_unit()), s);
-    } else {
-        throw exception("failed to create tactic exceptional result, combinator.K is not in the environment, "
-                        "this can happen when users are hacking the init folder");
-    }
+    return mk_exception(mk_vm_constant_format_thunk(lean::to_obj(fmt)), s);
 }
 
 template<typename State>

@@ -35,6 +35,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_rb_map.h"
 #include "library/compiler/simp_inductive.h"
 #include "library/compiler/nat_value.h"
+#include "library/delayed_abstraction.h"
 
 namespace lean {
 struct vm_macro_definition : public vm_external {
@@ -270,6 +271,11 @@ vm_obj expr_instantiate_var(vm_obj const & e, vm_obj const & v) {
     return to_obj(instantiate(to_expr(e), to_expr(v)));
 }
 
+vm_obj expr_instantiate_nth_var(vm_obj const & n, vm_obj const & e, vm_obj const & v) {
+    auto u = to_unsigned(n);
+    return to_obj(instantiate(to_expr(e), u, to_expr(v)));
+}
+
 vm_obj expr_instantiate_vars(vm_obj const & e, vm_obj const & vs) {
     buffer<expr> vs_buf;
     to_buffer_expr(vs, vs_buf);
@@ -298,6 +304,18 @@ vm_obj expr_abstract_locals(vm_obj const & e, vm_obj const & ns) {
 
 vm_obj expr_has_var(vm_obj const & e) {
     return mk_vm_bool(!closed(to_expr(e)));
+}
+
+vm_obj expr_get_free_var_range(vm_obj const & e) {
+    return mk_vm_nat(get_free_var_range(to_expr(e)));
+}
+
+vm_obj expr_get_weight(vm_obj const & e) {
+    return mk_vm_nat(get_weight(to_expr(e)));
+}
+
+vm_obj expr_get_depth(vm_obj const & e) {
+    return mk_vm_nat(get_depth(to_expr(e)));
 }
 
 vm_obj expr_has_var_idx(vm_obj const & e, vm_obj const & u) {
@@ -475,6 +493,12 @@ vm_obj expr_has_local_in(vm_obj const & e, vm_obj const & s) {
     return mk_vm_bool(contains_local(to_expr(e), to_name_set(s)));
 }
 
+vm_obj expr_mk_delayed_abstraction(vm_obj const & e, vm_obj const & ns) {
+    buffer<name> names;
+    to_buffer_name(ns, names);
+    return to_obj(mk_delayed_abstraction(to_expr(e), names));
+}
+
 void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "var"}),              expr_var_intro);
     DECLARE_VM_BUILTIN(name({"expr", "sort"}),             expr_sort_intro);
@@ -495,11 +519,15 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "fold"}),             expr_fold);
     DECLARE_VM_BUILTIN(name({"expr", "replace"}),          expr_replace);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_univ_params"}), expr_instantiate_univ_params);
+    DECLARE_VM_BUILTIN(name({"expr", "instantiate_nth_var"}),     expr_instantiate_nth_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_var"}),  expr_instantiate_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_vars"}), expr_instantiate_vars);
     DECLARE_VM_BUILTIN(name({"expr", "subst"}),            expr_subst);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_local"}),   expr_abstract_local);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_locals"}),  expr_abstract_locals);
+    DECLARE_VM_BUILTIN(name({"expr", "get_free_var_range"}),          expr_get_free_var_range);
+    DECLARE_VM_BUILTIN(name({"expr", "get_weight"}),       expr_get_weight);
+    DECLARE_VM_BUILTIN(name({"expr", "get_depth"}),        expr_get_depth);
     DECLARE_VM_BUILTIN(name({"expr", "has_var"}),          expr_has_var);
     DECLARE_VM_BUILTIN(name({"expr", "has_var_idx"}),      expr_has_var_idx);
     DECLARE_VM_BUILTIN(name({"expr", "has_local"}),        expr_has_local);
@@ -534,6 +562,8 @@ void initialize_vm_expr() {
     // Not sure if we should expose these or what?
     DECLARE_VM_BUILTIN(name({"expr", "is_internal_cnstr"}), expr_is_internal_cnstr);
     DECLARE_VM_BUILTIN(name({"expr", "get_nat_value"}), expr_get_nat_value);
+
+    DECLARE_VM_BUILTIN(name({"expr", "mk_delayed_abstraction"}), expr_mk_delayed_abstraction);
 }
 
 void finalize_vm_expr() {

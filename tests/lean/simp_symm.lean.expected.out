@@ -1,0 +1,2 @@
+simp_symm.lean:32:0: warning: declaration 'op' uses sorry
+simp_symm.lean:33:8: warning: declaration 'op_assoc' uses sorry

@@ -15,19 +15,22 @@
 About
 -----
 
-- [Homepage](http://leanprover.github.io)
+- [Lean Homepage](http://leanprover.github.io)
+- [Lean Prover Community Homepage](https://leanprover-community.github.io)
 - [Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/index.html)
 - [Change Log](doc/changes.md)
-- [FAQ](doc/faq.md)
-- **Important**: Lean 3.4.2 is the latest release. It is also the last release for the Lean 3.x code base. Only major bugs (e.g., soundness) will be fixed for this code base from now on.
-  We are currently developing Lean 4 in a new (private) repository.
-  The Lean 4 source code will be released here when ready. The main goals for Lean 4 are described [here](doc/lean4.md).
+- [Lean 3.4.2 FAQ](doc/faq.md)
+- **Important**: Lean 3.4.2 is the last official release for the Lean 3.x code base. 
+  This fork is maintained and updated by the Lean community.
+  The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
 - For HoTT mode, please use [Lean2](https://github.com/leanprover/lean2).
 
 Installation
 ------------
 
-Stable and nightly binary releases of Lean are available on the [homepage](https://leanprover.github.io/download/). For building Lean from source, see the [build instructions](doc/make/index.md).
+Stable binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases). 
+Nightly binary releases are available on the [nightly release page](https://github.com/leanprover-community/lean-nightly/releases).
+For building Lean from source, see the [build instructions](doc/make/index.md).
 
 Miscellaneous
 -------------
@@ -39,12 +42,3 @@ Miscellaneous
 - [Automatic Builds](doc/make/travis.md)
 - [Syntax Highlight Lean Code in LaTeX](doc/syntax_highlight_in_latex.md)
 - [Exporting, and reference type-checkers](doc/export_format.md)
-
-Roadmap
--------------
-
-- [Open RFC issues](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3ARFC)
-- [Features](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AFeature)
-- [Wish list](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AI-wishlist)
-- [High priority issues](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AP-high)
-- [Medium priority issues](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AP-medium)

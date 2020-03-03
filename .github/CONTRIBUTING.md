@@ -13,11 +13,12 @@ for you (the contributors) and us (the maintainers).
 
 # Opening Issues
 
--  Checked that your issue isn't [already filed](https://github.com/leanprover/lean/issues).
+-  Checked that your issue isn't [already filed](https://github.com/leanprover-community/lean/issues).
 - Specifically look over:
-  * the [wishlist](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AI-wishlist),
-  * open [RFCs](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3ARFC),
-  * open [feature requests](https://github.com/leanprover/lean/issues?q=is%3Aissue+is%3Aopen+label%3AFeature).
+  * the [wishlist](https://github.com/leanprover-community/lean/issues?q=is%3Aissue+is%3Aopen+label%3AI-wishlist),
+  * open [RFCs](https://github.com/leanprover-community/lean/issues?q=is%3Aissue+is%3Aopen+label%3ARFC),
+  * open [feature requests](https://github.com/leanprover-community/lean/issues?q=is%3Aissue+is%3Aopen+label%3AFeature).
+  * The issue may be present on the original Lean project (https://github.com/leanprover/lean) in which case please reopen the issue here and link to the old issue.
 - Reduce the issue to a self-contained, reproducible test case.
 
 # Opening Pull Requests

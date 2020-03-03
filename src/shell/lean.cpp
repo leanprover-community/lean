@@ -621,6 +621,7 @@ int main(int argc, char ** argv) {
 
         fs_module_vfs vfs;
         module_mgr mod_mgr(&vfs, lt.get_root(), path.get_path(), env, ios);
+        set_global_module_mgr(mod_mgr);
 
         if (run_arg) {
             auto mod = mod_mgr.get_module(lrealpath(*run_arg));

@@ -1053,12 +1053,24 @@ open expr interactive.types
 
 @[derive has_reflect]
 meta inductive simp_arg_type : Type
-| all_hyps : simp_arg_type
-| except   : name  → simp_arg_type
-| expr     : pexpr → simp_arg_type
+| all_hyps  : simp_arg_type
+| except    : name  → simp_arg_type
+| expr      : pexpr → simp_arg_type
+| symm_expr : pexpr → simp_arg_type
+
+meta instance simp_arg_type_to_tactic_format : has_to_tactic_format simp_arg_type :=
+⟨λ a, match a with
+| simp_arg_type.all_hyps := pure "*"
+| (simp_arg_type.except n) := pure format!"-{n}"
+| (simp_arg_type.expr e) := i_to_expr_no_subgoals e >>= pp
+| (simp_arg_type.symm_expr e) := ((++) "←") <$> (i_to_expr_no_subgoals e >>= pp)
+end⟩
 
 meta def simp_arg : parser simp_arg_type :=
-(tk "*" *> return simp_arg_type.all_hyps) <|> (tk "-" *> simp_arg_type.except <$> ident) <|> (simp_arg_type.expr <$> texpr)
+(tk "*" *> return simp_arg_type.all_hyps) <|>
+(tk "-" *> simp_arg_type.except <$> ident) <|>
+(tk "<-" *> simp_arg_type.symm_expr <$> texpr) <|>
+(simp_arg_type.expr <$> texpr)
 
 meta def simp_arg_list : parser (list simp_arg_type) :=
 (tk "*" *> return [simp_arg_type.all_hyps]) <|> list_of simp_arg <|> return []
@@ -1075,23 +1087,51 @@ private meta def resolve_exception_ids (all_hyps : bool) : list name → list na
   | _                   := fail $ sformat! "invalid exception {id}, unknown identifier"
   end
 
-/- Return (hs, gex, hex, all) -/
+/-- Decode a list of `simp_arg_type` into lists for each type.
+
+  This is a backwards-compatibility version of `decode_simp_arg_list_with_symm`.
+  This version fails when an argument of the form `simp_arg_type.symm_expr`
+  is included, so that `simp`-like tactics that do not (yet) support backwards rewriting
+  should properly report an error but function normally on other inputs.
+-/
 meta def decode_simp_arg_list (hs : list simp_arg_type) : tactic $ list pexpr × list name × list name × bool :=
+do
+  (hs, ex, all) ← hs.mfoldl
+    (λ (r : (list pexpr × list name × bool)) h, do
+      let (es, ex, all) := r,
+      match h with
+      | simp_arg_type.all_hyps    := pure (es, ex, tt)
+      | simp_arg_type.except id   := pure (es, id::ex, all)
+      | simp_arg_type.expr e      := pure (e::es, ex, all)
+      | simp_arg_type.symm_expr _ := fail "arguments of the form '←...' are not supported"
+      end)
+    ([], [], ff),
+  (gex, hex) ← resolve_exception_ids all ex [] [],
+  return (hs.reverse, gex, hex, all)
+
+/-- Decode a list of `simp_arg_type` into lists for each type.
+
+  This is the newer version of `decode_simp_arg_list`,
+  and has a new name for backwards compatibility.
+  This version indicates the direction of a `simp` lemma by including a `bool` with the `pexpr`.
+-/
+meta def decode_simp_arg_list_with_symm (hs : list simp_arg_type) : tactic $ list (pexpr × bool) × list name × list name × bool :=
 do
   let (hs, ex, all) := hs.foldl
     (λ r h,
        match r, h with
-       | (es, ex, all), simp_arg_type.all_hyps  := (es, ex, tt)
-       | (es, ex, all), simp_arg_type.except id := (es, id::ex, all)
-       | (es, ex, all), simp_arg_type.expr e    := (e::es, ex, all)
+       | (es, ex, all), simp_arg_type.all_hyps    := (es, ex, tt)
+       | (es, ex, all), simp_arg_type.except id   := (es, id::ex, all)
+       | (es, ex, all), simp_arg_type.expr e      := ((e, ff)::es, ex, all)
+       | (es, ex, all), simp_arg_type.symm_expr e := ((e, tt)::es, ex, all)
        end)
     ([], [], ff),
   (gex, hex) ← resolve_exception_ids all ex [] [],
   return (hs.reverse, gex, hex, all)
 
-private meta def add_simps : simp_lemmas → list name → tactic simp_lemmas
+private meta def add_simps : simp_lemmas → list (name × bool) → tactic simp_lemmas
 | s []      := return s
-| s (n::ns) := do s' ← s.add_simp n, add_simps s' ns
+| s (n::ns) := do s' ← s.add_simp n.fst n.snd, add_simps s' ns
 
 private meta def report_invalid_simp_lemma {α : Type} (n : name): tactic α :=
 fail format!"invalid simplification lemma '{n}' (use command 'set_option trace.simp_lemmas true' for more details)"
@@ -1105,7 +1145,8 @@ when p.is_choice_macro $
   | _ := failed
   end
 
-private meta def simp_lemmas.resolve_and_add (s : simp_lemmas) (u : list name) (n : name) (ref : pexpr) : tactic (simp_lemmas × list name) :=
+private meta def simp_lemmas.resolve_and_add (s : simp_lemmas) (u : list name) (n : name) (ref : pexpr) (symm : bool) :
+  tactic (simp_lemmas × list name) :=
 do
   p ← resolve_name n,
   check_no_overload p,
@@ -1113,35 +1154,51 @@ do
   let e := p.erase_annotations.get_app_fn.erase_annotations,
   match e with
   | const n _           :=
-    (do b ← is_valid_simp_lemma_cnst n, guard b, save_const_type_info n ref, s ← s.add_simp n, return (s, u))
+    (do b ← is_valid_simp_lemma_cnst n, guard b, save_const_type_info n ref, s ← s.add_simp n symm, return (s, u))
     <|>
-    (do eqns ← get_eqn_lemmas_for tt n, guard (eqns.length > 0), save_const_type_info n ref, s ← add_simps s eqns, return (s, u))
+    (do eqns ← get_eqn_lemmas_for tt n,
+        guard (eqns.length > 0),
+        save_const_type_info n ref,
+        s ← add_simps s (eqns.map (λ e, (e, ff))),
+        return (s, u))
     <|>
     (do env ← get_env, guard (env.is_projection n).is_some, return (s, n::u))
     <|>
     report_invalid_simp_lemma n
   | _ :=
-    (do e ← i_to_expr_no_subgoals p, b ← is_valid_simp_lemma e, guard b, try (save_type_info e ref), s ← s.add e, return (s, u))
+    (do e ← i_to_expr_no_subgoals p, b ← is_valid_simp_lemma e, guard b, try (save_type_info e ref), s ← s.add e symm, return (s, u))
     <|>
     report_invalid_simp_lemma n
   end
 
-private meta def simp_lemmas.add_pexpr (s : simp_lemmas) (u : list name) (p : pexpr) : tactic (simp_lemmas × list name) :=
+private meta def simp_lemmas.add_pexpr (s : simp_lemmas) (u : list name) (p : pexpr) (symm : bool) :
+  tactic (simp_lemmas × list name) :=
 match p with
-| (const c [])          := simp_lemmas.resolve_and_add s u c p
-| (local_const c _ _ _) := simp_lemmas.resolve_and_add s u c p
-| _                     := do new_e ← i_to_expr_no_subgoals p, s ← s.add new_e, return (s, u)
+| (const c [])          := simp_lemmas.resolve_and_add s u c p symm
+| (local_const c _ _ _) := simp_lemmas.resolve_and_add s u c p symm
+| _                     := do new_e ← i_to_expr_no_subgoals p,
+                              s ← s.add new_e symm,
+                              return (s, u)
 end
 
-private meta def simp_lemmas.append_pexprs : simp_lemmas → list name → list pexpr → tactic (simp_lemmas × list name)
-| s u []      := return (s, u)
-| s u (l::ls) := do (s, u) ← simp_lemmas.add_pexpr s u l, simp_lemmas.append_pexprs s u ls
+private meta def simp_lemmas.append_pexprs :
+  simp_lemmas → list name → list (pexpr × bool) → tactic (simp_lemmas × list name)
+| s u []                 := return (s, u)
+| s u (l::ls) := do
+  (s, u) ← simp_lemmas.add_pexpr s u l.fst l.snd,
+  simp_lemmas.append_pexprs s u ls
 
 meta def mk_simp_set_core (no_dflt : bool) (attr_names : list name) (hs : list simp_arg_type) (at_star : bool)
                           : tactic (bool × simp_lemmas × list name) :=
-do (hs, gex, hex, all_hyps) ← decode_simp_arg_list hs,
+do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    when (all_hyps ∧ at_star ∧ not hex.empty) $ fail "A tactic of the form `simp [*, -h] at *` is currently not supported",
    s      ← join_user_simp_lemmas no_dflt attr_names,
+   -- Erase `h` from the default simp set for calls of the form `simp [←h]`.
+   let to_erase := hs.foldl (λ l h, match h with
+                                    | (const id _, tt) := id :: l
+                                    | _ := l
+                                    end ) [],
+   let s := s.erase to_erase,
    (s, u) ← simp_lemmas.append_pexprs s [] hs,
    s      ← if not at_star ∧ all_hyps then do
               ctx ← collect_ctx_simps,
@@ -1189,7 +1246,7 @@ The `simp` tactic uses lemmas and hypotheses to simplify the main goal target or
 
 `simp` simplifies the main goal target using lemmas tagged with the attribute `[simp]`.
 
-`simp [h₁ h₂ ... hₙ]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and the given `hᵢ`'s, where the `hᵢ`'s are expressions. If an `hᵢ` is a defined constant `f`, then the equational lemmas associated with `f` are used. This provides a convenient way to unfold `f`.
+`simp [h₁ h₂ ... hₙ]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and the given `hᵢ`'s, where the `hᵢ`'s are expressions. If `hᵢ` is preceded by left arrow (`←` or `<-`), the simplification is performed in the reverse direction. If an `hᵢ` is a defined constant `f`, then the equational lemmas associated with `f` are used. This provides a convenient way to unfold `f`.
 
 `simp [*]` simplifies the main goal target using the lemmas tagged with the attribute `[simp]` and all hypotheses.
 
@@ -1231,8 +1288,8 @@ do (s, u) ← mk_simp_set no_dflt attr_names hs,
    tactic.simp_intros s u ids cfg,
    try triv >> try (reflexivity reducible)
 
-private meta def to_simp_arg_list (es : list pexpr) : list simp_arg_type :=
-es.map simp_arg_type.expr
+private meta def to_simp_arg_list (symms : list bool) (es : list pexpr) : list simp_arg_type :=
+(symms.zip es).map (λ ⟨s, e⟩, if s then simp_arg_type.symm_expr e else simp_arg_type.expr e)
 
 /--
 `dsimp` is similar to `simp`, except that it only uses definitional equalities.
@@ -1470,7 +1527,7 @@ tactic.match_target t m >> skip
 /--
 `by_cases (h :)? p` splits the main goal into two cases, assuming `h : p` in the first branch, and `h : ¬ p` in the second branch.
 
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute classical.prop_decidable [instance]`.
+This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
 -/
 meta def by_cases : parse cases_arg_p → tactic unit
 | (n, q) := concat_tags $ do
@@ -1494,7 +1551,7 @@ meta def funext : parse ident_* → tactic unit
 /--
 If the target of the main goal is a proposition `p`, `by_contradiction h` reduces the goal to proving `false` using the additional hypothesis `h : ¬ p`. If `h` is omitted, a name is generated automatically.
 
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute classical.prop_decidable [instance]`.
+This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
 -/
 meta def by_contradiction (n : parse ident?) : tactic unit :=
 tactic.by_contradiction n >> return ()
@@ -1557,8 +1614,12 @@ private meta def add_interactive_aux (new_namespace : name) : list name → comm
   d_name ← resolve_constant n,
   (declaration.defn _ ls ty val hints trusted) ← env.get d_name,
   (name.mk_string h _) ← return d_name,
-  let new_name := `tactic.interactive <.> h,
+  let new_name := new_namespace <.> h,
   add_decl (declaration.defn new_name ls ty (expr.const d_name (ls.map level.param)) hints trusted),
+  do {
+    doc ← doc_string d_name,
+    add_doc_string new_name doc
+  } <|> skip,
   add_interactive_aux ns
 
 /--

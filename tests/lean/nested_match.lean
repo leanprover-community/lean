@@ -1,5 +1,5 @@
+local attribute [simp] add_comm add_left_comm
 namespace ex1
-
 def f : ℕ → ℕ
 | n :=
   (match n with

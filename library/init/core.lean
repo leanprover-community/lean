@@ -398,12 +398,11 @@ def bit1 {α : Type u} [s₁ : has_one α] [s₂ : has_add α] (a : α) : α := 
 
 attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
 
-def insert {α : Type u} {γ : Type v} [has_insert α γ] : α → γ → γ :=
-has_insert.insert
+export has_insert (insert)
 
 /-- The singleton collection -/
 def singleton {α : Type u} {γ : Type v} [has_emptyc γ] [has_insert α γ] (a : α) : γ :=
-has_insert.insert a ∅
+insert a ∅
 
 /- nat basic instances -/
 

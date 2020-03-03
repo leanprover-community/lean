@@ -6,6 +6,7 @@ Author: Leonardo de Moura
 */
 #pragma once
 namespace lean {
+vm_obj to_obj(fun_info const & info);
 void initialize_fun_info_tactics();
 void finalize_fun_info_tactics();
 }

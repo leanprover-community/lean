@@ -7,28 +7,58 @@ prelude
 import init.meta.interactive_base init.function
 
 namespace tactic
+/-- A pattern is an expression `target` containing temporary metavariables.
+A pattern also contains a list of `outputs` which also depend on these temporary metavariables.
+When we run `match p e`, the system will match `p.target` with `e` and assign
+the temporary metavariables. It then returns the outputs with the assigned variables.
+
+## Fields
+
+- `target` Term to match. Contains temporary metavariables.
+- `uoutput` List of universes that are returned on a successful match.
+- `moutput` List of expressions that are returned on a successful match.
+- `nuvars` Number of (temporary) universe metavariables in this pattern.
+- `nmvars` Number of (temporary) metavariables in this pattern.
+
+## Example
+
+The pattern for `list.cons h t` returning `h` and `t` would be
+```
+{ target  := `(@list.cons ?x_0 ?x_1 ?x_2),
+  uoutput := [],
+  moutput := [?x_1,?x_2],
+  nuvars  := 0,
+  nmvars  := 3
+}
+```
+
+-/
 meta structure pattern :=
-/- Term to match. -/
 (target : expr)
-/- Set of universes that is instantiated for each successful match. -/
 (uoutput : list level)
-/- Set of terms that is instantiated for each successful match. -/
 (moutput : list expr)
-/- Number of (temporary) universe meta-variables in this pattern. -/
 (nuvars : nat)
-/- Number of (temporary) meta-variables in this pattern. -/
 (nmvars : nat)
 
-/-- `mk_pattern ls es t u o` creates a new pattern with (length ls) universe meta-variables and (length es) meta-variables.
-   In the produced pattern p, we have that
-   - `pattern.target p` is the term t where the universes ls and expressions es have been replaced with temporary meta-variables.
-   - `pattern.uoutput p` is the list u where the universes ls have been replaced with temporary meta-variables.
-   - `pattern.moutput p` is the list o where the universes ls and expressions es have been replaced with temporary meta-variables.
-   - `pattern.nuvars p` = length ls
-   - `pattern.nmvars p` = length es
+/-- `mk_pattern umetas emetas target uoutput eoutput` creates a new pattern. The arguments are
+- `umetas` a list of level params to be replaced with temporary universe metavariables.
+- `emetas` a list of local constants to be replaced with temporary metavariables.
+- `target` the expression to be matched.
+- `uoutput` a list of levels to return upon matching. Fails if this depends on metavariables.
+- `eoutput` a list of expressions to return upon matching. Fails if this depends on metavariables.
 
-   The tactic fails if o and the types of es do not contain all universes ls and expressions es. -/
-meta constant mk_pattern : list level → list expr → expr → list level → list expr → tactic pattern
+The procedure is as follows:
+1. Convert all metavariables in `target` to temporary metavariables.
+2. For each item in `umetas` amd `emetas`, create a temporary
+   metavariable and replace each instance of the item in `target` with a temporary metavariable
+3. Replace these instances in `uoutput` and `eoutput` too.
+4. Return these replaced versions as a `pattern`.
+
+## Example
+Let `h`,`t` be exprs with types `α` and `list α` respectively.
+Then `mk_pattern [] [α,h,t] `(@list.cons α h t) [] [h,t]` would `match_pattern` against any expr which is a list.cons constructor and return the head and tail arguments.
+-/
+meta constant mk_pattern (umetas : list level) (emetas : list expr) (target : expr) (uoutput :list level) (eoutput : list expr) : tactic pattern
 /-- `mk_pattern p e m` matches (pattern.target p) and e using transparency m.
    If the matching is successful, then return the instantiation of `pattern.output p`.
    The tactic fails if not all (temporary) meta-variables are assigned. -/
@@ -36,8 +66,6 @@ meta constant match_pattern (p : pattern) (e : expr) (m : transparency := reduci
 
 open expr
 
-/- Helper function for converting a term (λ x_1 ... x_n, t) into a pattern
-   where x_1 ... x_n are metavariables -/
 private meta def to_pattern_core : expr → tactic (expr × list expr)
 | (lam n bi d b) := do
    id         ← mk_fresh_name,
@@ -47,8 +75,8 @@ private meta def to_pattern_core : expr → tactic (expr × list expr)
    return (p, x::xs)
 | e              := return (e, [])
 
-/-- Given a pre-term of the form `λ x_1 ... x_n, t[x_1, ..., x_n]`, converts it
-   into the pattern `t[?x_1, ..., ?x_n]` -/
+/-- Given a pre-term of the form `λ x₁ ... xₙ, t[x₁, ..., xₙ]`, converts it
+   into the pattern `t[?x₁, ..., ?xₙ]` with outputs `[?x₁, ..., ?xₙ]` -/
 meta def pexpr_to_pattern (p : pexpr) : tactic pattern :=
 do /- Remark: in the following to_expr, we allow metavars but we do *not* create new goals for them.
       mk_pattern will convert them into temporary metavars. -/
@@ -57,7 +85,7 @@ do /- Remark: in the following to_expr, we allow metavars but we do *not* create
    mk_pattern [] xs new_p [] xs
 
 /-- Convert pre-term into a pattern and try to match e.
-   Given p of the form `λ x_1 ... x_n, t[x_1, ..., x_n]`, a successful
+   Given p of the form `λ x₁ ... xₙ, t[x₁, ..., xₙ]`, a successful
    match will produce a list of length n. -/
 meta def match_expr (p : pexpr) (e : expr) (m := reducible) : tactic (list expr) :=
 do new_p ← pexpr_to_pattern p,

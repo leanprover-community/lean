@@ -4,8 +4,8 @@ if ((${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.1) OR (${CMAKE_MAJO
 endif()
 project(LEAN CXX C)
 set(LEAN_VERSION_MAJOR 3)
-set(LEAN_VERSION_MINOR 5)
-set(LEAN_VERSION_PATCH 0)
+set(LEAN_VERSION_MINOR 6)
+set(LEAN_VERSION_PATCH 1)
 set(LEAN_VERSION_IS_RELEASE 0)  # This number is 1 in the release revision, and 0 otherwise.
 set(LEAN_SPECIAL_VERSION_DESC "" CACHE STRING "Additional version description like 'nightly-2018-03-11'")
 set(LEAN_VERSION_STRING "${LEAN_VERSION_MAJOR}.${LEAN_VERSION_MINOR}.${LEAN_VERSION_PATCH}")
@@ -238,8 +238,9 @@ endif()
 
 # Compiler-specific C++11 activation.
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    # Both -dump* arguments are needed, see https://stackoverflow.com/a/47410010
     execute_process(
-        COMMAND "${CMAKE_CXX_COMPILER}" -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+        COMMAND "${CMAKE_CXX_COMPILER}" -dumpfullversion -dumpversion OUTPUT_VARIABLE GCC_VERSION)
     if (NOT (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9))
         message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.9 or greater.")
     # TODO(Vtec234): Add upper bound when GCC with a fix is released

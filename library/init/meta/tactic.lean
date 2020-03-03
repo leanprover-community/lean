@@ -526,6 +526,12 @@ meta constant generalize (e : expr) (n : name := `_x) (md := semireducible) : ta
 meta constant instantiate_mvars : expr → tactic expr
 /-- Add the given declaration to the environment -/
 meta constant add_decl : declaration → tactic unit
+/--
+Changes the environment to the `new_env`.
+The new environment does not need to be a descendant of the old one.
+Use with care.
+-/
+meta constant set_env_core : environment → tactic unit
 /-- Changes the environment to the `new_env`. `new_env` needs to be a descendant from the current environment. -/
 meta constant set_env : environment → tactic unit
 /-- `doc_string env d k` returns the doc string for `d` (if available) -/
@@ -543,7 +549,40 @@ It updates the environment in the tactic_state, and returns an expression of the
 where l_i's and a_j's are the collected dependencies.
 -/
 meta constant add_aux_decl (c : name) (type : expr) (val : expr) (is_lemma : bool) : tactic expr
-meta constant module_doc_strings : tactic (list (option name × string))
+
+/-- Returns a list of all top-level (`/-! ... -/`) docstrings in the active module and imported ones.
+The returned object is a list of modules, indexed by `(some filename)` for imported modules
+and `none` for the active one, where each module in the list is paired with a list
+of `(position_in_file, docstring)` pairs. -/
+meta constant olean_doc_strings : tactic (list (option string × (list (pos × string))))
+
+/-- Returns a list of docstrings in the active module. An entry in the list can be either:
+- a top-level (`/-! ... -/`) docstring, represented as `(none, docstring)`
+- a declaration-specific (`/-- ... -/`) docstring, represented as `(some decl_name, docstring)` -/
+meta def module_doc_strings : tactic (list (option name × string)) :=
+  do
+    /- Obtain a list of top-level docs in current module. -/
+    mod_docs ← olean_doc_strings,
+    let mod_docs: list (list (option name × string)) :=
+      mod_docs.filter_map (λ d,
+        if d.1.is_none
+          then some (d.2.map
+            (λ pos_doc, ⟨none, pos_doc.2⟩))
+          else none),
+    let mod_docs := mod_docs.join,
+    /- Obtain list of declarations in current module. -/
+    e ← get_env,
+    let decls := environment.fold e ([]: list name)
+      (λ d acc, let n := d.to_name in
+      if (environment.decl_olean e n).is_none
+        then n::acc else acc),
+    /- Map declarations to those which have docstrings. -/
+    decls ← decls.mfoldl (λa n,
+      (doc_string n >>=
+        λ doc, pure $ (some n, doc) :: a)
+      <|> pure a) [],
+    pure (mod_docs ++ decls)
+
 /-- Set attribute `attr_name` for constant `c_name` with the given priority.
    If the priority is none, then use default -/
 meta constant set_basic_attribute (attr_name : name) (c_name : name) (persistent := ff) (prio : option nat := none) : tactic unit
@@ -1171,7 +1210,7 @@ do tgt : expr ← target,
    <|>
    (mk_mapp `decidable.by_contradiction [some tgt, none] >>= eapply >> skip)
    <|>
-   fail "tactic by_contradiction failed, target is not a negation nor a decidable proposition (remark: when 'local attribute classical.prop_decidable [instance]' is used all propositions are decidable)",
+   fail "tactic by_contradiction failed, target is not a negation nor a decidable proposition (remark: when 'local attribute [instance] classical.prop_decidable' is used, all propositions are decidable)",
    match H with
    | some n := intro n
    | none   := intro1

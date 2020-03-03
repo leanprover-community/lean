@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #pragma once
+#include <unordered_map>
 #include <string>
 #include <iostream>
 #include <utility>
@@ -102,6 +103,7 @@ struct olean_data {
 };
 olean_data parse_olean(std::istream & in, std::string const & file_name, bool check_hash = true);
 modification_list parse_olean_modifications(std::string const & serialized_modifications, std::string const & file_name);
+void import_modification(modification const & modif, std::string const & file_name, environment & env);
 void import_module(modification_list const & modifications, std::string const & file_name, environment & env);
 
 struct modification {
@@ -143,6 +145,12 @@ environment add_and_perform(environment const & env, std::shared_ptr<modificatio
 /** \brief Add the given declaration to the environment, and mark it to be exported. */
 environment add(environment const & env, certified_declaration const & d);
 
+/** \brief Adds a module-level doc to the current module. */
+environment add_doc_string(environment const & env, std::string const & doc, pos_info pos);
+
+/** \brief Returns the map of module-level docs indexed by source file name. */
+std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> const & get_doc_strings(environment const & env);
+
 /** \brief Return true iff \c n is a definition added to the current module using #module::add */
 bool is_definition(environment const & env, name const & n);
 
@@ -153,6 +161,8 @@ environment add_inductive(environment                       env,
 
 /** \brief The following function must be invoked to register the quotient type computation rules in the kernel. */
 environment declare_quotient(environment const & env);
+
+optional<declaration> is_decl_modification(modification const & mod);
 
 /* Auxiliary object for setting position information for module declarations.
    It affects module::add and module::add_inductive methods. */
