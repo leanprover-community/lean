@@ -248,7 +248,7 @@ struct congr_lemma_manager {
         contains two inputs a_i and b_i representing the i-th argument in the left-hand-side and
         right-hand-side.
         This lemma is based on the congruence lemma for the simplifier.
-        It uses subsinglenton elimination to show that the congr-simp lemma right-hand-side
+        It uses subsingleton elimination to show that the congr-simp lemma right-hand-side
         is equal to the right-hand-side of this lemma. */
     optional<result> mk_congr(expr const & fn, optional<result> const & simp_lemma,
                               buffer<param_info> const & pinfos, buffer<congr_arg_kind> const & kinds) {
@@ -363,15 +363,40 @@ struct congr_lemma_manager {
         to_buffer(finfo.get_params_info(), pinfos);
         to_buffer(ssinfos, ssinfos_buffer);
         kinds.resize(pinfos.size(), congr_arg_kind::Eq);
+
+        // The default congr_arg_kind is Eq, which allows `simp` to rewrite this
+        // argument. However, if there are references from `i` to `j`, we cannot
+        // rewrite both `i` and `j`. So we must change the congr_arg_kind at
+        // either `i` or `j`. In principle, if there is a dependency with `i`
+        // appearing after `j`, then we set `j` to Fixed (or Cast). But there is
+        // an optimization: if `i` is a subsingleton, we can fix it instead of
+        // `j`, since all subsingletons are equal anyway. The fixing happens in
+        // two loops: one for the special cases, and one for the general case.
         for (unsigned i = 0; i < pinfos.size(); i++) {
             if (std::find(result_deps.begin(), result_deps.end(), i) != result_deps.end()) {
                 kinds[i] = congr_arg_kind::Fixed;
             } else if (ssinfos_buffer[i].is_subsingleton()) {
-                // See comment at mk_congr.
-                if (!pinfos[i].is_prop() && pinfos[i].has_fwd_deps())
-                    kinds[i] = congr_arg_kind::Fixed;
-                else
+                if (pinfos[i].is_prop()) {
+                    // Propositions are all definitionally equal, so we don't need to make this Eq.
                     kinds[i] = congr_arg_kind::Cast;
+                } else if (pinfos[i].has_fwd_deps()) {
+                    // If something depends on `i`, it should be Fixed.
+                    kinds[i] = congr_arg_kind::Fixed;
+                }
+                else
+                {
+                    // It's not a Prop and it has no forwards dependencies.
+                    // If there are backwards dependencies on Eq arguments, then
+                    // we will use subsingleton elimination to prove this
+                    // equality.
+                    // Otherwise we can let this arg stay Eq without problems.
+                    for (auto j : pinfos[i].get_back_deps()) {
+                        if (kinds[j] == congr_arg_kind::Eq) {
+                            kinds[i] = congr_arg_kind::Cast;
+                            break;
+                        }
+                    }
+                }
             } else if (pinfos[i].is_inst_implicit()) {
                 lean_assert(!ssinfos_buffer[i].is_subsingleton());
                 kinds[i] = congr_arg_kind::Fixed;
