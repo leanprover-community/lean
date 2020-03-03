@@ -382,9 +382,7 @@ struct congr_lemma_manager {
                 } else if (pinfos[i].has_fwd_deps()) {
                     // If something depends on `i`, it should be Fixed.
                     kinds[i] = congr_arg_kind::Fixed;
-                }
-                else
-                {
+                } else {
                     // It's not a Prop and it has no forwards dependencies.
                     // If there are backwards dependencies on Eq arguments, then
                     // we will use subsingleton elimination to prove this

@@ -36,6 +36,6 @@ do tgt ← target,
    <|> fail "congr tactic failed"
 
 meta def congr : tactic unit :=
-do focus1 (try assumption >> congr_core >> all_goals (try reflexivity >> try congr))
+do focus1 (try assumption >> congr_core >> all_goals (try reflexivity >> try (applyc `subsingleton.elim) >> try congr))
 
 end tactic
