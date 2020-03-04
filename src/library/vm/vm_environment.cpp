@@ -88,9 +88,11 @@ vm_obj environment_is_protected(vm_obj const & env, vm_obj const & n) {
     }
 }
 
-vm_obj environment_mk_protected(vm_obj const & env, vm_obj const & n) {
+vm_obj environment_add_protected(vm_obj const & env, vm_obj const & decl) {
     try {
-        return mk_vm_exceptional_success(to_obj(add_protected(to_env(env), to_name(n))));
+        auto d = to_declaration(decl);
+        auto e = module::add(to_env(env), check(to_env(env), d));
+        return mk_vm_exceptional_success(to_obj(add_protected(e, d.get_name())));
     } catch (throwable & ex) {
         return mk_vm_exceptional_exception(ex);
     }
@@ -334,7 +336,7 @@ void initialize_vm_environment() {
     DECLARE_VM_BUILTIN(name({"environment", "trust_lvl"}),             environment_trust_lvl);
     DECLARE_VM_BUILTIN(name({"environment", "add"}),                   environment_add);
     DECLARE_VM_BUILTIN(name({"environment", "is_protected"}),          environment_is_protected);
-    DECLARE_VM_BUILTIN(name({"environment", "mk_protected"}),          environment_mk_protected);
+    DECLARE_VM_BUILTIN(name({"environment", "add_protected"}),         environment_add_protected);
     DECLARE_VM_BUILTIN(name({"environment", "get"}),                   environment_get);
     DECLARE_VM_BUILTIN(name({"environment", "fold"}),                  environment_fold);
     DECLARE_VM_BUILTIN(name({"environment", "add_inductive"}),         environment_add_inductive);

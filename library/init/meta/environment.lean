@@ -68,7 +68,7 @@ meta constant trust_lvl       : environment → nat
 /-- Add a new declaration to the environment -/
 meta constant add             : environment → declaration → exceptional environment
 /-- make declaration `n` protected -/
-meta constant mk_protected    : environment → name → exceptional environment
+meta constant add_protected   : environment → declaration → exceptional environment
 /-- check if `n` is the name of a protected declaration -/
 meta constant is_protected    : environment → name → exceptional bool
 /-- Retrieve a declaration from the environment -/
