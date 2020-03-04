@@ -13,6 +13,7 @@ Author: Leonardo de Moura
 #include "library/scoped_ext.h"
 #include "library/class.h"
 #include "library/projection.h"
+#include "library/protected.h"
 #include "library/util.h"
 #include "library/fingerprint.h"
 #include "library/relation_manager.h"
@@ -74,6 +75,22 @@ vm_obj environment_add(vm_obj const & env, vm_obj const & decl) {
 vm_obj environment_get(vm_obj const & env, vm_obj const & n) {
     try {
         return mk_vm_exceptional_success(to_obj(to_env(env).get(to_name(n))));
+    } catch (throwable & ex) {
+        return mk_vm_exceptional_exception(ex);
+    }
+}
+
+vm_obj environment_is_protected(vm_obj const & env, vm_obj const & n) {
+    try {
+        return mk_vm_exceptional_success(mk_vm_bool(is_protected(to_env(env), to_name(n))));
+    } catch (throwable & ex) {
+        return mk_vm_exceptional_exception(ex);
+    }
+}
+
+vm_obj environment_mk_protected(vm_obj const & env, vm_obj const & n) {
+    try {
+        return mk_vm_exceptional_success(to_obj(add_protected(to_env(env), to_name(n))));
     } catch (throwable & ex) {
         return mk_vm_exceptional_exception(ex);
     }
@@ -316,6 +333,8 @@ void initialize_vm_environment() {
     DECLARE_VM_BUILTIN(name({"environment", "mk_std"}),                environment_mk_std);
     DECLARE_VM_BUILTIN(name({"environment", "trust_lvl"}),             environment_trust_lvl);
     DECLARE_VM_BUILTIN(name({"environment", "add"}),                   environment_add);
+    DECLARE_VM_BUILTIN(name({"environment", "is_protected"}),          environment_is_protected);
+    DECLARE_VM_BUILTIN(name({"environment", "mk_protected"}),          environment_mk_protected);
     DECLARE_VM_BUILTIN(name({"environment", "get"}),                   environment_get);
     DECLARE_VM_BUILTIN(name({"environment", "fold"}),                  environment_fold);
     DECLARE_VM_BUILTIN(name({"environment", "add_inductive"}),         environment_add_inductive);

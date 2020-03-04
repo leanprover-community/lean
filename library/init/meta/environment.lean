@@ -67,6 +67,10 @@ meta constant mk_std          : nat → environment
 meta constant trust_lvl       : environment → nat
 /-- Add a new declaration to the environment -/
 meta constant add             : environment → declaration → exceptional environment
+/-- make declaration `n` protected -/
+meta constant mk_protected    : environment → name → exceptional environment
+/-- check if `n` is the name of a protected declaration -/
+meta constant is_protected    : environment → name → exceptional bool
 /-- Retrieve a declaration from the environment -/
 meta constant get             : environment → name → exceptional declaration
 meta def      contains (env : environment) (d : name) : bool :=

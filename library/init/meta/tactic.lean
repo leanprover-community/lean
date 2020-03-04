@@ -1365,6 +1365,20 @@ updateex_env $ λe, e.add_inductive n ls p ty is is_meta
 meta def add_meta_definition (n : name) (lvls : list name) (type value : expr) : tactic unit :=
 add_decl (declaration.defn n lvls type value reducibility_hints.abbrev ff)
 
+/-- make declaration `n` protected -/
+meta def mk_protected (n : name) : tactic unit :=
+updateex_env $ λ e, e.mk_protected n
+
+/-- add declaration `d` as a protected declaration -/
+meta def add_protected_decl (d : declaration) : tactic unit :=
+do add_decl d,
+   mk_protected d.to_name
+
+/-- check if `n` is the name of a protected declaration -/
+meta def is_protected (n : name) : tactic bool :=
+do env ← get_env,
+   returnex $ env.is_protected n
+
 /-- `add_defn_equations` adds a definition specified by a list of equations.
 
   The arguments:
