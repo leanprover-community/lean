@@ -104,8 +104,20 @@ meta def sep_by : parser unit → parser α → parser (list α)
 
 meta constant of_tactic : tactic α → parser α
 
+/-- `of_tactic' tac` lifts the tactic `tac` into the parser monad.
+This is a fixed version of the `of_tactic` constant, which has a buggy implementation. -/
+meta def of_tactic' {α} (tac : tactic α) : parser α :=
+do r ← of_tactic (interaction_monad.get_result tac),
+match r with
+| (success a _) := return a
+| (exception f pos _) := exception f pos
+end
+
+/-- The coercion from `tactic α` to `parser α`.
+
+The implementation is fixed since v3.4.2 -/
 meta instance : has_coe (tactic α) (parser α) :=
-⟨of_tactic⟩
+⟨of_tactic'⟩
 
 namespace reflectable
 

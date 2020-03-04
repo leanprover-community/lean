@@ -94,6 +94,15 @@ meta def interaction_monad.orelse' {α : Type u} (t₁ t₂ : m α) (use_first_e
 meta instance interaction_monad.monad_fail : monad_fail m :=
 { fail := λ α s, interaction_monad.fail (to_fmt s), ..interaction_monad.monad }
 
+/-- `get_result tac` returns the result state of applying `tac` to the current state.
+Note that it does not update the current state. -/
+meta def get_result {σ α} (tac : interaction_monad σ α) :
+  interaction_monad σ (interaction_monad.result σ α) | s :=
+match tac s with
+| r@(success _ s') := success r s'
+| r@(exception _ _ s') := success r s'
+end
+
 -- TODO: unify `parser` and `tactic` behavior?
 -- meta instance interaction_monad.alternative : alternative m :=
 -- ⟨@interaction_monad_fmap, (λ α a s, success a s), (@fapp _ _), @interaction_monad.failed, @interaction_monad_orelse⟩

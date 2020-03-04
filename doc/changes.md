@@ -1,4 +1,13 @@
-v3.6.0c (26 Feb 2019)
+v3.6.2c (?? ??? 2020)
+------------------------
+Bug fixes:
+- Fix the implementation of the instance `has_coe (tactic α) (parser α)` (#136).
+
+v3.6.1c (2 Mar 2020)
+------------------------
+* ...
+
+v3.6.0c (26 Feb 2020)
 ------------------------
 
 Features:
@@ -19,7 +28,7 @@ Changes:
  - `insert` is no longer a definition
  - Nested block comments are now allowed in docstrings
 
-v3.5.1c (4 Feb 2019)
+v3.5.1c (4 Feb 2020)
 --------------------
 
 Features:
@@ -27,10 +36,10 @@ Features:
 - Annotate pretty-printed output with full constant names (#89)
 - Import modules from meta code (#88)
 - Make `add_interactive` copy the doc string (#97)
-- Avoid version warning for external Leans in leanpkg (#106) 
+- Avoid version warning for external Leans in leanpkg (#106)
 
 Bugfixes:
-- Force tactic type in `run_cmd` (#103) 
+- Force tactic type in `run_cmd` (#103)
 - `?m_1` and `(λ x, ?m_1) y` should be definitionally equal (#107)
 
 v3.5.0c (26 Dec 2019)
