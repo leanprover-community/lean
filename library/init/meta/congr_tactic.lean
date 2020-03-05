@@ -33,9 +33,10 @@ meta def congr_core : tactic unit :=
 do tgt ← target,
    apply_eq_congr_core tgt
    <|> apply_heq_congr_core
-   <|> fail "congr tactic failed"
+   <|> fail "congr tactic failed",
+   all_goals (try (applyc `subsingleton.elim))
 
 meta def congr : tactic unit :=
-do focus1 (try assumption >> congr_core >> all_goals (try reflexivity >> try (applyc `subsingleton.elim) >> try congr))
+do focus1 (try assumption >> congr_core >> all_goals (try reflexivity >> try congr))
 
 end tactic
