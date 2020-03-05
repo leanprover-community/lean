@@ -375,29 +375,26 @@ struct congr_lemma_manager {
         for (unsigned i = 0; i < pinfos.size(); i++) {
             if (std::find(result_deps.begin(), result_deps.end(), i) != result_deps.end()) {
                 kinds[i] = congr_arg_kind::Fixed;
-            } else if (ssinfos_buffer[i].is_subsingleton()) {
-                if (pinfos[i].is_prop()) {
-                    // Propositions are all definitionally equal, so we don't need to make this Eq.
+            } else if (pinfos[i].is_prop()) {
+                // Propositions are all definitionally equal, so we don't need to make this Eq.
+                kinds[i] = congr_arg_kind::Cast;
+            } else if (pinfos[i].is_inst_implicit()) {
+                // Instance implicits should be Fixed or Cast as appropriate.
+                if (ssinfos_buffer[i].is_subsingleton() && !pinfos[i].has_fwd_deps())
                     kinds[i] = congr_arg_kind::Cast;
-                } else if (pinfos[i].has_fwd_deps()) {
-                    // If something depends on `i`, it should be Fixed.
+                else
                     kinds[i] = congr_arg_kind::Fixed;
-                } else {
-                    // It's not a Prop and it has no forwards dependencies.
-                    // If there are backwards dependencies on Eq arguments, then
-                    // we will use subsingleton elimination to prove this
-                    // equality.
-                    // Otherwise we can let this arg stay Eq without problems.
-                    for (auto j : pinfos[i].get_back_deps()) {
-                        if (kinds[j] == congr_arg_kind::Eq) {
-                            kinds[i] = congr_arg_kind::Cast;
-                            break;
-                        }
+            } else if (ssinfos_buffer[i].is_subsingleton()) {
+                // If there are backwards dependencies on Eq arguments, then
+                // we will use subsingleton elimination to prove this
+                // equality.
+                // Otherwise we can let this arg stay Eq without problems.
+                for (auto j : pinfos[i].get_back_deps()) {
+                    if (kinds[j] == congr_arg_kind::Eq) {
+                        kinds[i] = congr_arg_kind::Cast;
+                        break;
                     }
                 }
-            } else if (pinfos[i].is_inst_implicit()) {
-                lean_assert(!ssinfos_buffer[i].is_subsingleton());
-                kinds[i] = congr_arg_kind::Fixed;
             }
         }
         for (unsigned i = 0; i < pinfos.size(); i++) {
