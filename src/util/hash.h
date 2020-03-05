@@ -17,6 +17,8 @@ unsigned hash_str(unsigned len, char const * str, unsigned init_value);
 
 unsigned hash_data(std::string const & data);
 
+unsigned combine_hashes(unsigned h1, unsigned h2);
+
 inline unsigned hash(unsigned h1, unsigned h2) {
     h2 -= h1; h2 ^= (h1 << 8);
     h1 -= h2; h2 ^= (h1 << 16);
