@@ -33,7 +33,7 @@ struct module_info {
     module_id m_id;
     std::string m_contents;
     // Hash of the Lean source (after normalizing line endings) yielding this module:
-    // - if m_source == LEAN, hash(remove_cr(m_contents))
+    // - if m_source == LEAN, hash_data(remove_cr(m_contents))
     // - if m_source == OLEAN, value loaded from the .olean
     unsigned m_src_hash;
     // Transitive hash of all source code this module was built from,

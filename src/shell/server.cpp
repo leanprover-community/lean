@@ -487,21 +487,15 @@ server::cmd_res server::handle_sync(server::cmd_req const & req) {
     } else {
         new_content = load_module(new_file_name, /* can_use_olean */ false)->m_contents;
     }
-    unsigned new_hash;
-    {
-        std::string tmp = new_content;
-        remove_cr(tmp);
-        // TODO(Vtec234): by how much is hashing on sync going to slow the server down?
-        // The hash should be super-fast -- maybe xxHash?
-        new_hash = hash_data(tmp);
-    }
+
+    // TODO(Vtec234): by how much is hashing on sync going to slow the server down?
+    // The hash should be super-fast -- maybe xxHash?
+    unsigned new_hash = hash_data(remove_cr(new_content));
 
     bool needs_invalidation = true;
 
     auto & ef = m_open_files[new_file_name];
-    // Why not compare hashes here? Because if an editor changes line endings, the hash won't change
-    // but the bytewise positions of identifiers will, so not rebuilding might cause mismatches.
-    if (ef.m_content != new_content) {
+    if (ef.m_src_hash != new_hash) {
         ef.m_content = new_content;
         ef.m_src_hash = new_hash;
         needs_invalidation = true;

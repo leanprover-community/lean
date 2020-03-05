@@ -180,7 +180,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
             }
 
             mod->m_lt = lt.get();
-            unsigned trans_hash = mod->m_src_hash;
+            unsigned actual_trans_hash = mod->m_src_hash;
 
             for (auto & d : parsed_olean.m_imports) {
                 auto d_id = resolve(d, id);
@@ -189,11 +189,12 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
                 auto & d_mod = m_modules[d_id];
                 mod->m_deps.push_back({ d_id, d, d_mod });
                 // TODO(Vtec234): better way to mix hashes
-                trans_hash ^= d_mod->m_trans_hash;
+                actual_trans_hash ^= d_mod->m_trans_hash;
             }
 
-            // If anything in the transitive import tree has changed, rebuild the module.
-            if (mod->m_trans_hash != trans_hash)
+            // If anything in the reflexive-transitive closure of this module under the import relation
+            // has changed, rebuild the module.
+            if (mod->m_trans_hash != actual_trans_hash)
                 return build_module(id, false, orig_module_stack);
 
             module_info::parse_result res;
@@ -447,12 +448,7 @@ std::shared_ptr<module_info> fs_module_vfs::load_module(module_id const & id, bo
     auto lean_fname = id;
 
     std::string lean_src = read_file(lean_fname);
-    unsigned src_hash;
-    {
-        std::string tmp = lean_src;
-        remove_cr(lean_src);
-        src_hash = hash_data(lean_src);
-    }
+    unsigned src_hash = hash_data(remove_cr(lean_src));
 
     try {
         auto olean_fname = olean_of_lean(lean_fname);

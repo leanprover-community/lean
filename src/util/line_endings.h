@@ -1,19 +1,14 @@
 /*
-Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+Copyright (c) 2016-2020 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
-Author: Gabriel Ebner
+Author: Gabriel Ebner, Wojciech Nawrocki
 */
 #pragma once
 #include <string>
-#include <algorithm>
 
-static void remove_cr(std::string & str) {
-    str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
-}
+namespace lean {
+std::string remove_cr(std::string const & str);
 
-static bool equal_upto_cr(std::string a, std::string b) {
-    remove_cr(a);
-    remove_cr(b);
-    return a == b;
+bool equal_upto_cr(std::string const & a, std::string const & b);
 }
