@@ -351,17 +351,61 @@ struct congr_lemma_manager {
         }
     }
 
-    optional<result> mk_congr_simp(expr const & fn, unsigned nargs,
-                                   fun_info const & finfo, ss_param_infos const & ssinfos) {
-        auto r = m_cache.m_simp_cache.find(key(fn, nargs));
-        if (r != m_cache.m_simp_cache.end())
-            return optional<result>(r->second);
-        list<unsigned> const & result_deps = finfo.get_result_deps();
+    /** Ensure that all dependencies for `congr_arg_kind::Eq` are `congr_arg_kind::Fixed`. */
+    buffer<congr_arg_kind> fix_kinds_for_dependencies(buffer<param_info> const & pinfos,
+                                                      buffer<congr_arg_kind> kinds) {
+        for (unsigned i = 0; i < pinfos.size(); i++) {
+            for (unsigned j = i+1; j < pinfos.size(); j++) {
+                auto j_deps = pinfos[j].get_back_deps();
+                if (std::find(j_deps.begin(), j_deps.end(), i) != j_deps.end() &&
+                        kinds[j] == congr_arg_kind::Eq) {
+                    // We must fix i because there is a j that depends on i,
+                    // and j is not fixed nor a cast-fixed.
+                    kinds[i] = congr_arg_kind::Fixed;
+                    break;
+                }
+            }
+        }
+
+        return kinds;
+    }
+
+    /** Assign a `congr_arg_kind` to each parameter of a function, for use in the congr tactic. */
+    buffer<congr_arg_kind> congr_kinds(buffer<param_info> const & pinfos,
+                                       buffer<ss_param_info> const & ssinfos,
+                                       list<unsigned> const & result_deps) {
         buffer<congr_arg_kind> kinds;
-        buffer<param_info>     pinfos;
-        buffer<ss_param_info>  ssinfos_buffer;
-        to_buffer(finfo.get_params_info(), pinfos);
-        to_buffer(ssinfos, ssinfos_buffer);
+
+        kinds.resize(pinfos.size(), congr_arg_kind::Eq);
+
+        // Try to restrict `Eq` where this does not weaken the conclusion.
+        for (unsigned i = 0; i < pinfos.size(); i++) {
+            if (std::find(result_deps.begin(), result_deps.end(), i) != result_deps.end()) {
+                kinds[i] = congr_arg_kind::Fixed;
+            } else if (pinfos[i].is_prop()) {
+                // Propositions are all definitionally equal, so we don't need to make this Eq.
+                kinds[i] = congr_arg_kind::Cast;
+            } else if (ssinfos[i].is_subsingleton()) {
+                if (pinfos[i].has_fwd_deps())
+                    kinds[i] = congr_arg_kind::Fixed;
+                else
+                    // Subsingleton elimination should deal with this equality.
+                    kinds[i] = congr_arg_kind::Cast;
+            } else if (pinfos[i].is_inst_implicit()) {
+                // Instance implicits should be Fixed or Cast as appropriate.
+                kinds[i] = congr_arg_kind::Fixed;
+            }
+        }
+
+        return fix_kinds_for_dependencies(pinfos, kinds);
+    }
+
+    /** Assign a `congr_arg_kind` to each parameter of a function, for use in the simp tactic. */
+    buffer<congr_arg_kind> congr_simp_kinds(buffer<param_info> const & pinfos,
+                                            buffer<ss_param_info> const & ssinfos,
+                                            list<unsigned> const & result_deps) {
+        buffer<congr_arg_kind> kinds;
+
         kinds.resize(pinfos.size(), congr_arg_kind::Eq);
 
         // The default congr_arg_kind is Eq, which allows `simp` to rewrite this
@@ -380,11 +424,11 @@ struct congr_lemma_manager {
                 kinds[i] = congr_arg_kind::Cast;
             } else if (pinfos[i].is_inst_implicit()) {
                 // Instance implicits should be Fixed or Cast as appropriate.
-                if (ssinfos_buffer[i].is_subsingleton() && !pinfos[i].has_fwd_deps())
+                if (ssinfos[i].is_subsingleton() && !pinfos[i].has_fwd_deps())
                     kinds[i] = congr_arg_kind::Cast;
                 else
                     kinds[i] = congr_arg_kind::Fixed;
-            } else if (ssinfos_buffer[i].is_subsingleton()) {
+            } else if (ssinfos[i].is_subsingleton()) {
                 // If there are backwards dependencies on Eq arguments, then
                 // we will use subsingleton elimination to prove this
                 // equality.
@@ -397,21 +441,21 @@ struct congr_lemma_manager {
                 }
             }
         }
-        for (unsigned i = 0; i < pinfos.size(); i++) {
-            for (unsigned j = i+1; j < pinfos.size(); j++) {
-                auto j_deps = pinfos[j].get_back_deps();
-                if (std::find(j_deps.begin(), j_deps.end(), i) != j_deps.end() &&
-                    kinds[j] == congr_arg_kind::Eq) {
-                    // We must fix i because there is a j that depends on i,
-                    // and j is not fixed nor a cast-fixed.
-                    kinds[i] = congr_arg_kind::Fixed;
-                    break;
-                }
-            }
-        }
+
+        return fix_kinds_for_dependencies(pinfos, kinds);
+    }
+
+    /** Given a list of `congr_arg_kind`, try to make a congr lemma for use in `simp`.
+
+        Note that the passed `congr_arg_kind`s might are not necessarily the kinds
+        used in the final result. In that case, the values in the buffer will
+        be modified to reflect the actually used kinds.
+     */
+    optional<result> mk_congr_simp_from_kinds(expr const & fn,
+                                              buffer<param_info> const & pinfos,
+                                              buffer<congr_arg_kind> & kinds) {
         auto new_r = mk_congr_simp(fn, pinfos, kinds);
         if (new_r) {
-            m_cache.m_simp_cache.insert(mk_pair(key(fn, nargs), *new_r));
             return new_r;
         } else if (has_cast(kinds)) {
             // remove casts and try again
@@ -419,16 +463,28 @@ struct congr_lemma_manager {
                 if (kinds[i] == congr_arg_kind::Cast)
                     kinds[i] = congr_arg_kind::Fixed;
             }
-            auto new_r = mk_congr_simp(fn, pinfos, kinds);
-            if (new_r) {
-                m_cache.m_simp_cache.insert(mk_pair(key(fn, nargs), *new_r));
-                return new_r;
-            } else {
-                return new_r;
-            }
+            return mk_congr_simp(fn, pinfos, kinds);
         } else {
             return new_r;
         }
+    }
+
+    optional<result> mk_congr_simp(expr const & fn, unsigned nargs,
+                                   fun_info const & finfo, ss_param_infos const & ssinfos) {
+        auto r = m_cache.m_simp_cache.find(key(fn, nargs));
+        if (r != m_cache.m_simp_cache.end())
+            return optional<result>(r->second);
+        list<unsigned> const & result_deps = finfo.get_result_deps();
+        buffer<param_info>     pinfos;
+        buffer<ss_param_info>  ssinfos_buffer;
+        to_buffer(finfo.get_params_info(), pinfos);
+        to_buffer(ssinfos, ssinfos_buffer);
+
+        buffer<congr_arg_kind> kinds = congr_simp_kinds(pinfos, ssinfos_buffer, result_deps);
+        auto new_r = mk_congr_simp_from_kinds(fn, pinfos, kinds);
+        if (new_r)
+            m_cache.m_simp_cache.insert(mk_pair(key(fn, nargs), *new_r));
+        return new_r;
     }
 
     optional<result> mk_congr_simp(expr const & fn, unsigned nargs) {
@@ -442,15 +498,18 @@ struct congr_lemma_manager {
         auto r = m_cache.m_cache.find(key(fn, nargs));
         if (r != m_cache.m_cache.end())
             return optional<result>(r->second);
-        optional<result> simp_lemma = mk_congr_simp(fn, nargs);
-        if (!simp_lemma)
-            return optional<result>();
-        buffer<congr_arg_kind> kinds;
+
+        list<unsigned> const & result_deps = finfo.get_result_deps();
         buffer<param_info>     pinfos;
         buffer<ss_param_info>  ssinfos_buffer;
-        to_buffer(simp_lemma->get_arg_kinds(), kinds);
         to_buffer(finfo.get_params_info(), pinfos);
         to_buffer(ssinfos, ssinfos_buffer);
+
+        buffer<congr_arg_kind> kinds = congr_kinds(pinfos, ssinfos_buffer, result_deps);
+        optional<result> simp_lemma = mk_congr_simp_from_kinds(fn, pinfos, kinds);
+        if (!simp_lemma)
+            return optional<result>();
+
         // For congr lemmas we have the following restriction:
         // if a Cast arg is subsingleton, it is not a proposition,
         // and it is a dependent argument, then we mark it as fixed.
@@ -459,8 +518,12 @@ struct congr_lemma_manager {
         lean_assert(kinds.size() == pinfos.size());
         bool has_cast = false;
         for (unsigned i = 0; i < kinds.size(); i++) {
-            if (!pinfos[i].is_prop() && ssinfos_buffer[i].is_subsingleton() && pinfos[i].has_fwd_deps()) {
-                kinds[i] = congr_arg_kind::Fixed;
+            if (!pinfos[i].is_prop() && ssinfos_buffer[i].is_subsingleton()) {
+                if (pinfos[i].has_fwd_deps()) {
+                    lean_assert(kinds[i] == congr_arg_kind::Fixed);
+                } else {
+                    kinds[i] = congr_arg_kind::Cast;
+                }
             }
             if (kinds[i] == congr_arg_kind::Cast)
                 has_cast = true;
