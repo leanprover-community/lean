@@ -86,13 +86,13 @@ universes u₁ u₂ u₃
 
 /- Transitive closure for has_lift, has_coe, has_coe_to_fun -/
 
-instance lift_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_lift a b] [has_lift_t b c] : has_lift_t a c :=
+instance lift_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_lift_t b c] [has_lift a b] : has_lift_t a c :=
 ⟨λ x, lift_t (lift x : b)⟩
 
 instance lift_base {a : Sort u} {b : Sort v} [has_lift a b] : has_lift_t a b :=
 ⟨lift⟩
 
-instance coe_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe a b] [has_coe_t b c] : has_coe_t a c :=
+instance coe_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe_t b c] [has_coe a b] : has_coe_t a c :=
 ⟨λ x, coe_t (coe_b x : b)⟩
 
 instance coe_base {a : Sort u} {b : Sort v} [has_coe a b] : has_coe_t a b :=
@@ -123,17 +123,17 @@ instance coe_option {a : Type u} : has_coe_t a (option a) :=
 class has_coe_t_aux (a : Sort u) (b : Sort v) :=
 (coe : a → b)
 
-instance coe_trans_aux {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe a b] [has_coe_t_aux b c] : has_coe_t_aux a c :=
+instance coe_trans_aux {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe_t_aux b c] [has_coe a b] : has_coe_t_aux a c :=
 ⟨λ x : a, @has_coe_t_aux.coe b c _ (coe_b x)⟩
 
 instance coe_base_aux {a : Sort u} {b : Sort v} [has_coe a b] : has_coe_t_aux a b :=
 ⟨coe_b⟩
 
-instance coe_fn_trans {a : Sort u₁} {b : Sort u₂} [has_coe_t_aux a b] [has_coe_to_fun.{u₂ u₃} b] : has_coe_to_fun.{u₁ u₃} a :=
+instance coe_fn_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_fun.{u₂ u₃} b] [has_coe_t_aux a b] : has_coe_to_fun.{u₁ u₃} a :=
 { F   := λ x, @has_coe_to_fun.F.{u₂ u₃} b _ (@has_coe_t_aux.coe a b _ x),
   coe := λ x, coe_fn (@has_coe_t_aux.coe a b _ x) }
 
-instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} [has_coe_t_aux a b] [has_coe_to_sort.{u₂ u₃} b] : has_coe_to_sort.{u₁ u₃} a :=
+instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_sort.{u₂ u₃} b] [has_coe_t_aux a b] : has_coe_to_sort.{u₁ u₃} a :=
 { S   := has_coe_to_sort.S.{u₂ u₃} b,
   coe := λ x, coe_sort (@has_coe_t_aux.coe a b _ x) }
 
