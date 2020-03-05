@@ -251,7 +251,7 @@ void write_module(loaded_module const & mod, std::ostream & out) {
     }
 
     std::string r = out1.str();
-    unsigned blob_hash    = hash_data(r);
+    unsigned blob_hash = hash_data(r);
 
     bool uses_sorry = get(mod.m_uses_sorry);
 

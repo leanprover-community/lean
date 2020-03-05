@@ -488,8 +488,8 @@ server::cmd_res server::handle_sync(server::cmd_req const & req) {
         new_content = load_module(new_file_name, /* can_use_olean */ false)->m_contents;
     }
 
-    // TODO(Vtec234): by how much is hashing on sync going to slow the server down?
-    // The hash should be super-fast -- maybe xxHash?
+    // NOTE(Vtec234): as of 2020-03-05, hashing all of mathlib takes about .1s on
+    // a 2.7GHz cpu, so this should not have observable performance impact.
     unsigned new_hash = hash_data(remove_cr(new_content));
 
     bool needs_invalidation = true;
