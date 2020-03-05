@@ -11,6 +11,7 @@ Author: Gabriel Ebner
 #include "util/utf8.h"
 #include "util/lean_path.h"
 #include "util/file_lock.h"
+#include "util/line_endings.h"
 #include "library/module_mgr.h"
 #include "library/module.h"
 #include "frontends/lean/pp.h"
@@ -167,6 +168,8 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
             auto parsed_olean = parse_olean(in2, olean_fn, check_hash);
             // we never need to re-parse .olean files, so discard content
             mod->m_contents.clear();
+            mod->m_src_hash = parsed_olean.m_src_hash;
+            mod->m_trans_hash = parsed_olean.m_trans_hash;
 
             if (m_server_mode) {
                 // In server mode, we keep the .lean contents instead of the .olean contents around. This can
@@ -177,7 +180,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
             }
 
             mod->m_lt = lt.get();
-            mod->m_trans_mtime = mod->m_mtime;
+            unsigned trans_hash = mod->m_src_hash;
 
             for (auto & d : parsed_olean.m_imports) {
                 auto d_id = resolve(d, id);
@@ -185,10 +188,12 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
 
                 auto & d_mod = m_modules[d_id];
                 mod->m_deps.push_back({ d_id, d, d_mod });
-                mod->m_trans_mtime = std::max(mod->m_trans_mtime, d_mod->m_trans_mtime);
+                // TODO(Vtec234): better way to mix hashes
+                trans_hash ^= d_mod->m_trans_hash;
             }
 
-            if (mod->m_trans_mtime > mod->m_mtime)
+            // If anything in the transitive import tree has changed, rebuild the module.
+            if (mod->m_trans_hash != trans_hash)
                 return build_module(id, false, orig_module_stack);
 
             module_info::parse_result res;
@@ -196,6 +201,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
             auto deps = mod->m_deps;
             res.m_loaded_module = cache_preimported_env(
                     { id, parsed_olean.m_imports,
+                      parsed_olean.m_src_hash, parsed_olean.m_trans_hash,
                       parse_olean_modifications(parsed_olean.m_serialized_modifications, id),
                       mk_pure_task<bool>(parsed_olean.m_uses_sorry), {} },
                     m_initial_env, [=] { return mk_loader(id, deps); });
@@ -228,7 +234,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     auto imports = get_direct_imports(id, mod->m_contents);
 
     mod->m_lt = logtree();
-    mod->m_trans_mtime = mod->m_mtime;
+    mod->m_trans_hash = mod->m_src_hash;
     for (auto & d : imports) {
         module_id d_id;
         std::shared_ptr<module_info const> d_mod;
@@ -236,7 +242,8 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
             d_id = resolve(d, id);
             build_module(d_id, true, module_stack);
             d_mod = m_modules[d_id];
-            mod->m_trans_mtime = std::max(mod->m_trans_mtime, d_mod->m_trans_mtime);
+            // TODO(Vtec234): better mix
+            mod->m_trans_hash ^= d_mod->m_trans_hash;
         } catch (throwable & ex) {
             message_builder(m_initial_env, m_ios, id, {1, 0}, ERROR).set_exception(ex).report();
         }
@@ -274,14 +281,16 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     }
 
     auto initial_env = m_initial_env;
+    unsigned src_hash = mod->m_src_hash;
+    unsigned trans_hash = mod->m_trans_hash;
     mod->m_result = map<module_info::parse_result>(
         get_end(snapshots),
-        [id, initial_env, ldr](module_parser_result const & res) {
+        [id, initial_env, ldr, src_hash, trans_hash](module_parser_result const & res) {
             module_info::parse_result parse_res;
 
             lean_always_assert(res.m_snapshot_at_end);
             parse_res.m_loaded_module = cache_preimported_env(
-                    export_module(res.m_snapshot_at_end->m_env, id),
+                    export_module(res.m_snapshot_at_end->m_env, id, src_hash, trans_hash),
                     initial_env, [=] { return ldr; });
 
             parse_res.m_opts = res.m_snapshot_at_end->m_options;
@@ -355,16 +364,6 @@ module_mgr::build_lean_snapshots(std::shared_ptr<module_parser> const & mod_pars
         // no diff
         return std::make_pair(old_mod->m_cancel, snap);
     }
-}
-
-static void remove_cr(std::string & str) {
-    str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
-}
-
-static bool equal_upto_cr(std::string a, std::string b) {
-    remove_cr(a);
-    remove_cr(b);
-    return a == b;
 }
 
 std::shared_ptr<module_info const> module_mgr::get_module(module_id const & id) {
@@ -445,22 +444,28 @@ void module_mgr::cancel_all() {
 }
 
 std::shared_ptr<module_info> fs_module_vfs::load_module(module_id const & id, bool can_use_olean) {
-    auto lean_fn = id;
-    auto lean_mtime = get_mtime(lean_fn);
+    auto lean_fname = id;
+
+    std::string lean_src = read_file(lean_fname);
+    unsigned src_hash;
+    {
+        std::string tmp = lean_src;
+        remove_cr(lean_src);
+        src_hash = hash_data(lean_src);
+    }
 
     try {
-        auto olean_fn = olean_of_lean(lean_fn);
-        shared_file_lock olean_lock(olean_fn);
-        auto olean_mtime = get_mtime(olean_fn);
-        if (olean_mtime != -1 && olean_mtime >= lean_mtime &&
+        auto olean_fname = olean_of_lean(lean_fname);
+        shared_file_lock olean_lock(olean_fname);
+        if (file_exists(olean_fname) &&
             can_use_olean &&
             !m_modules_to_load_from_source.count(id) &&
-            is_candidate_olean_file(olean_fn)) {
-            return std::make_shared<module_info>(id, read_file(olean_fn, std::ios_base::binary), module_src::OLEAN, olean_mtime);
+            is_candidate_olean_file(olean_fname, src_hash)) {
+            return std::make_shared<module_info>(id, read_file(olean_fname, std::ios_base::binary), src_hash, src_hash, module_src::OLEAN);
         }
     } catch (exception) {}
 
-    return std::make_shared<module_info>(id, read_file(lean_fn), module_src::LEAN, lean_mtime);
+    return std::make_shared<module_info>(id, lean_src, src_hash, src_hash, module_src::LEAN);
 }
 
 environment get_combined_environment(environment const & env,
