@@ -597,13 +597,20 @@ optional<expr> type_context_old::unfold_definition(expr const & e) {
                 return some_expr(r);
             }
         }
-    } else if (auto r = unfold_definition_core(e)) {
-        if (optional<expr> new_r = extract_id_rhs(*r))
-            return new_r;
-        else
-            return r;
     } else {
-        return none_expr();
+        // Block unfolding of constants that are smart unfolding targets,
+        // because they are also blocked if applied to a non-matching term.
+        if (is_constant(e) && m_smart_unfolding && is_smart_unfolding_target(env(), const_name(e))) {
+            return none_expr();
+        }
+        if (auto r = unfold_definition_core(e)) {
+            if (optional<expr> new_r = extract_id_rhs(*r))
+                return new_r;
+            else
+                return r;
+        } else {
+            return none_expr();
+        }
     }
 }
 
