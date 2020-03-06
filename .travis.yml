@@ -198,7 +198,7 @@ script:
           -DLEAN_EXTRA_MAKE_OPTS=$LEAN_EXTRA_MAKE_OPTS
           $OPTIONS
           ../src
-  - make -j2
+  - script/travis_long.sh make -j2
   - if [[ $TEST != OFF ]]; then yes "A" | travis_wait 60 ctest -j2 --output-on-failure; fi
   - if [[ $UPLOAD == ON ]]; then cpack; fi
   - if [[ $UPLOAD == ON && $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]; then (cd ..; bash script/deploy_nightly.sh build/lean-*); fi
