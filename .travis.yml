@@ -175,6 +175,7 @@ before_install:
 
 script:
   - mkdir -p build
+  - cp script/travis_long.sh build .
   - cd build
   - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi
   - if [[ $TCMALLOC != ON ]]; then TCMALLOC=OFF; fi
@@ -198,7 +199,7 @@ script:
           -DLEAN_EXTRA_MAKE_OPTS=$LEAN_EXTRA_MAKE_OPTS
           $OPTIONS
           ../src
-  - script/travis_long.sh make -j2
+  - ./travis_long.sh make -j2
   - if [[ $TEST != OFF ]]; then yes "A" | travis_wait 60 ctest -j2 --output-on-failure; fi
   - if [[ $UPLOAD == ON ]]; then cpack; fi
   - if [[ $UPLOAD == ON && $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]; then (cd ..; bash script/deploy_nightly.sh build/lean-*); fi
