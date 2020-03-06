@@ -188,7 +188,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
 
                 auto & d_mod = m_modules[d_id];
                 mod->m_deps.push_back({ d_id, d, d_mod });
-                actual_trans_hash ^= d_mod->m_trans_hash;
+                actual_trans_hash = hash(actual_trans_hash, d_mod->m_trans_hash);
             }
 
             // If anything in the reflexive-transitive closure of this module under the import relation
@@ -242,7 +242,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
             d_id = resolve(d, id);
             build_module(d_id, true, module_stack);
             d_mod = m_modules[d_id];
-            mod->m_trans_hash ^= d_mod->m_trans_hash;
+            mod->m_trans_hash = hash(mod->m_trans_hash, d_mod->m_trans_hash);
         } catch (throwable & ex) {
             message_builder(m_initial_env, m_ios, id, {1, 0}, ERROR).set_exception(ex).report();
         }
