@@ -32,6 +32,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_pos_info.h"
 #include "library/vm/vm_rb_map.h"
 #include "frontends/lean/structure_cmd.h"
+#include "frontends/lean/definition_cmds.h"
 
 namespace lean {
 struct vm_environment : public vm_external {
@@ -87,8 +88,14 @@ vm_obj environment_is_protected(vm_obj const & env, vm_obj const & n) {
 vm_obj environment_add_protected(vm_obj const & env, vm_obj const & decl) {
     try {
         auto d = to_declaration(decl);
-        auto e = module::add(to_env(env), check(to_env(env), d));
-        return mk_vm_exceptional_success(to_obj(add_protected(e, d.get_name())));
+        auto real_name = d.get_name();
+        auto short_name = real_name.get_string();
+        auto new_env = to_env(env);
+        new_env = module::add(new_env, check(new_env, d));
+        new_env = add_alias(new_env, true, short_name, real_name);
+        new_env = ensure_decl_namespaces(new_env, real_name);
+
+        return mk_vm_exceptional_success(to_obj(add_protected(new_env, real_name)));
     } catch (throwable & ex) {
         return mk_vm_exceptional_exception(ex);
     }
