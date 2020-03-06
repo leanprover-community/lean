@@ -67,11 +67,4 @@ unsigned hash_data(std::string const & data) {
     return hash(data.size(), [&] (unsigned i) { return static_cast<unsigned char>(data.data()[i]); });
 }
 
-unsigned combine_hashes(unsigned h1, unsigned h2) {
-    // https://stackoverflow.com/a/1646913
-    unsigned ret = 17;
-    ret = ret * 31 + h1;
-    return ret * 31 + h2;
-}
-
 }
