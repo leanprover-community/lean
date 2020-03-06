@@ -81,11 +81,7 @@ vm_obj environment_get(vm_obj const & env, vm_obj const & n) {
 }
 
 vm_obj environment_is_protected(vm_obj const & env, vm_obj const & n) {
-    try {
-        return mk_vm_exceptional_success(mk_vm_bool(is_protected(to_env(env), to_name(n))));
-    } catch (throwable & ex) {
-        return mk_vm_exceptional_exception(ex);
-    }
+    return mk_vm_bool(is_protected(to_env(env), to_name(n)));
 }
 
 vm_obj environment_add_protected(vm_obj const & env, vm_obj const & decl) {

@@ -1370,9 +1370,9 @@ meta def add_protected_decl (d : declaration) : tactic unit :=
 updateex_env $ λ e, e.add_protected d
 
 /-- check if `n` is the name of a protected declaration -/
-meta def is_protected (n : name) : tactic bool :=
+meta def is_protected_decl (n : name) : tactic bool :=
 do env ← get_env,
-   returnex $ env.is_protected n
+   return $ env.is_protected n
 
 /-- `add_defn_equations` adds a definition specified by a list of equations.
 

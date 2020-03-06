@@ -70,7 +70,7 @@ meta constant add             : environment → declaration → exceptional envi
 /-- make declaration `n` protected -/
 meta constant add_protected   : environment → declaration → exceptional environment
 /-- check if `n` is the name of a protected declaration -/
-meta constant is_protected    : environment → name → exceptional bool
+meta constant is_protected    : environment → name → bool
 /-- Retrieve a declaration from the environment -/
 meta constant get             : environment → name → exceptional declaration
 meta def      contains (env : environment) (d : name) : bool :=
