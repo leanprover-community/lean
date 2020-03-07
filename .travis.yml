@@ -175,7 +175,7 @@ before_install:
 
 script:
   - mkdir -p build
-  - cp script/travis_long.sh build .
+  - cp script/travis_long.sh build/
   - cd build
   - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi
   - if [[ $TCMALLOC != ON ]]; then TCMALLOC=OFF; fi
