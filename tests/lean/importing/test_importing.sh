@@ -41,7 +41,7 @@ run_cmd tactic.trace "z"
 EOF
 rm -f x.olean y.olean z.olean
 
-out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\n')
+out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\r\n')
 if [[ "$out" != "xyz" ]]; then
     echo "-- Wrong modules built: got $out , expected xyz"
     exit 1
@@ -52,7 +52,7 @@ def y := 1
 run_cmd tactic.trace "y"
 EOF
 
-out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\n')
+out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\r\n')
 if [[ "$out" != "yz" ]]; then
     echo "-- Wrong modules built: got $out , expected yz"
     exit 1
@@ -64,14 +64,14 @@ def y := x
 run_cmd tactic.trace "y"
 EOF
 
-out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\n')
+out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\r\n')
 if [[ "$out" != "yz" ]]; then
     echo "-- Wrong modules built: got $out , expected yz"
     exit 1
 fi
 
 touch x.lean
-out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\n')
+out=$($LEAN_MAKE z.lean 2>&1 | tr -d '\r\n')
 if [[ "$out" != "" ]]; then
     echo "-- Wrong modules built: got $out , expected no output"
     exit 1
