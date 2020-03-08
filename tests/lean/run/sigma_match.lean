@@ -20,10 +20,10 @@ match x with
 end
 
 example (A B : Type) (x : arrow_ob A B) : src1 x = src2 x :=
-rfl
+by { cases x; cases x_snd; refl }
 
 example (A B : Type) (x : arrow_ob A B) : src1 x = src3 x :=
-rfl
+by { cases x; cases x_snd; refl }
 
 example (A B : Type) (x : arrow_ob A B) : src2 x = src3 x :=
-rfl
+by { cases x; cases x_snd; refl }
