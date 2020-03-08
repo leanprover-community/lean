@@ -3796,6 +3796,12 @@ struct instance_synthesizer {
         stack_entry e = head(m_state.m_stack);
         if (process_special(e))
             return true;
+        if (m_ctx.is_assigned(e.m_mvar)) {
+            // The metavariable has already been assigned.
+            // This typically happens if the instance has already been found via unification.
+            m_state.m_stack = tail(m_state.m_stack);
+            return true;
+        }
         if (!mk_choice_point(e.m_mvar))
             return false;
         m_state.m_stack = tail(m_state.m_stack);
