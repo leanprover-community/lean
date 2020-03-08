@@ -594,17 +594,12 @@ meta constant unset_attribute : name → name → tactic unit
 meta constant has_attribute : name → name → tactic (bool × nat)
 
 /-- `copy_attribute attr_name c_name p d_name` copy attribute `attr_name` from
-   `src` to `tgt` if it is defined for `src`; make it persistent if `p` is `tt` -/
-meta def copy_attribute (attr_name : name) (src : name) (p : bool) (tgt : name) : tactic unit :=
+   `src` to `tgt` if it is defined for `src`; make it persistent if `p` is `tt`;
+   if `p` is `none`, the copied attribute is made persistent iff it is persistent on `src`  -/
+meta def copy_attribute (attr_name : name) (src : name) (tgt : name) (p : option bool := none) : tactic unit :=
 try $ do
-  (_, prio) ← has_attribute attr_name src,
-  set_basic_attribute attr_name tgt p (some prio)
-
-/-- `copy_attribute' attr_name c_name d_name` copy attribute `attr_name` from
-   `src` to `tgt` if it is defined for `src` -/
-meta def copy_attribute' (attr_name : name) (src : name) (tgt : name) : tactic unit :=
-try $ do
-  (p, prio) ← has_attribute attr_name src,
+  (p', prio) ← has_attribute attr_name src,
+  let p := p.get_or_else p',
   set_basic_attribute attr_name tgt p (some prio)
 
 /-- Name of the declaration currently being elaborated. -/
