@@ -4,6 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: Leonardo de Moura
 */
+#include "util/hash.h"
+#include <string>
+
 namespace lean {
 
 void mix(unsigned & a, unsigned & b, unsigned & c) {
@@ -58,6 +61,10 @@ unsigned hash_str(unsigned length, char const * str, unsigned init_value) {
     mix(a, b, c);
     /*-------------------------------------------- report the result */
     return c;
+}
+
+unsigned hash_data(std::string const & data) {
+    return hash(data.size(), [&] (unsigned i) { return static_cast<unsigned char>(data.data()[i]); });
 }
 
 }
