@@ -209,9 +209,9 @@ open tactic
 
 meta def transport_with_dict (dict : name_map name) (src : name) (tgt : name) : command :=
 copy_decl_using dict src tgt
->> copy_attribute `reducible src tt tgt
->> copy_attribute `simp src tt tgt
->> copy_attribute `instance src tt tgt
+>> copy_attribute `reducible src tgt tt
+>> copy_attribute `simp src tgt tt
+>> copy_attribute `instance src tgt tt
 
 /- Transport multiplicative to additive -/
 meta def transport_multiplicative_to_additive (ls : list (name × name)) : command :=

@@ -66,10 +66,11 @@ attribute const & get_attribute(environment const & env, name const & attr) {
 struct attr_record {
     name          m_decl;
     attr_data_ptr m_data; // no data -> deleted
+    bool          m_persistent = true;
 
     attr_record() {}
-    attr_record(name decl, attr_data_ptr data):
-            m_decl(decl), m_data(data) {}
+    attr_record(name decl, attr_data_ptr data, bool pers):
+            m_decl(decl), m_data(data), m_persistent(pers) {}
 
     unsigned hash() const {
         unsigned h = m_decl.hash();
@@ -81,6 +82,10 @@ struct attr_record {
     bool deleted() const {
         return !static_cast<bool>(m_data);
     }
+
+private:
+    /* no not use `m_persistent` in comparison */
+    bool operator == (attr_record const & other);
 };
 
 struct attr_record_cmp {
@@ -159,7 +164,7 @@ typedef scoped_ext<attr_config> attribute_ext;
 
 environment attribute::set_core(environment const & env, io_state const & ios, name const & n, unsigned prio,
                                 attr_data_ptr data, bool persistent) const {
-    auto env2 = attribute_ext::add_entry(env, ios, attr_entry(m_id, prio, attr_record(n, data)), persistent);
+    auto env2 = attribute_ext::add_entry(env, ios, attr_entry(m_id, prio, attr_record(n, data, persistent)), persistent);
     if (m_after_set)
         env2 = m_after_set(env2, ios, n, prio, persistent);
     return env2;
@@ -172,13 +177,13 @@ environment attribute::unset(environment env, io_state const & ios, name const &
         if (m_after_set)
             throw exception(sstream() << "cannot remove attribute [" << get_name() << "]");
     }
-    return attribute_ext::add_entry(env, ios, attr_entry(m_id, get_prio(env, n), attr_record(n, {})), persistent);
+    return attribute_ext::add_entry(env, ios, attr_entry(m_id, get_prio(env, n), attr_record(n, {}, persistent)), persistent);
 }
 
 attr_data_ptr attribute::get_untyped(environment const & env, name const & n) const {
     if (auto p = attribute_ext::get_state(env).find(m_id)) {
         attr_records const & records = p->first;
-        if (auto record = records.get_key({n, {}}))
+        if (auto record = records.get_key({n, {}, true}))
             return record->m_data;
     }
     return {};
@@ -187,8 +192,17 @@ attr_data_ptr attribute::get_untyped(environment const & env, name const & n) co
 unsigned attribute::get_prio(environment const & env, name const & n) const {
     if (auto p = attribute_ext::get_state(env).find(get_name())) {
         attr_records const & records = p->first;
-        if (auto prio = records.get_prio({n, {}}))
+        if (auto prio = records.get_prio({n, {}, true}))
             return prio.value();
+    }
+    return LEAN_DEFAULT_PRIORITY;
+}
+
+bool attribute::get_persistent(environment const & env, name const & n) const {
+    if (auto p = attribute_ext::get_state(env).find(get_name())) {
+        attr_records const & records = p->first;
+        if (auto prio = records.get_key({n, {}, true}))
+            return prio->m_persistent;
     }
     return LEAN_DEFAULT_PRIORITY;
 }
