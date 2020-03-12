@@ -1,0 +1,2 @@
+issue136.lean:6:29: error: oh no
+issue136.lean:6:0: warning: declaration '[anonymous]' uses sorry

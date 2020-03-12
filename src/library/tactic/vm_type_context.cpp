@@ -46,7 +46,8 @@ vm_obj tco_run (vm_obj const &, vm_obj const & tco, vm_obj const & t, vm_obj con
     if (is_succ(result)) {
         return tactic::mk_success(value(result), set_mctx(s, ctx.mctx()));
     } else {
-        return tactic::mk_exception(value(result), s);
+        auto fmt_thunk = value(result);
+        return tactic::mk_exception_from_format_thunk(fmt_thunk, s);
     }
 }
 vm_obj tco_infer (vm_obj const & e, vm_obj const & tco) {

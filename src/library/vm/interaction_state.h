@@ -47,9 +47,8 @@ struct interaction_monad {
     static vm_obj mk_success(vm_obj const & a, vm_obj const & s);
     static vm_obj mk_success(vm_obj const & a, State const & s);
     static vm_obj mk_success(State const & s);
-    static vm_obj mk_exception(vm_obj const & fn, State const & s);
+    static vm_obj mk_exception_from_format_thunk(vm_obj const & fn, State const & s);
     static vm_obj mk_silent_exception(State const & s);
-    static vm_obj mk_exception(vm_obj const & fn, vm_obj const & pos, State const & s);
     static vm_obj mk_exception(throwable const & ex, State const & s);
     static vm_obj mk_exception(format const & fmt, State const & s);
     static vm_obj mk_exception(char const * msg, State const & s);
