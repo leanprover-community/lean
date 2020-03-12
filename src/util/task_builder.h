@@ -128,7 +128,7 @@ public:
         auto ctok = mk_cancellation_token(m_cancel_tok);
         auto task = wrap(cancellation_support(ctok)).build_without_cancellation();
         ctok->add_child(task);
-        return std::move(task);
+        return task;
     }
 };
 
@@ -155,7 +155,7 @@ task<std::vector<Res>> traverse(std::vector<task<Res>> const & ts) {
     return task_builder<std::vector<Res>>([ts] {
         std::vector<Res> vs;
         for (auto & t : ts) vs.push_back(get(t));
-        return std::move(vs);
+        return vs;
     }).depends_on_fn([to_do] (buffer<gtask> & deps) {
         to_do->erase(std::remove_if(to_do->begin(), to_do->end(),
                 [] (gtask & t) { return t->peek_is_finished(); }),
