@@ -1,5 +1,25 @@
-v3.6.0c (26 Feb 2019)
-------------------------
+v3.7.0 (?? Mar 2020)
+--------------------
+
+Features:
+  - `simp` can rewrite subsingletons (#134)
+  - Files are recompiled bases on hash code instead of timestamp (#140)
+  - `mk_protected`, `add_protected`, `is_protected` functions (#138)
+  - `has_attribute` and `copy_attribute` now expliclity support non-persistent attributes (#66)
+
+Bug fixes:
+  - Fix the implementation of the instance `has_coe (tactic α) (parser α)` (#136 and #147)
+  - `simp` catches exception (e.g. from type class resolution, #142)
+  - `(+) = (λ x y, x + y)` unifies now (#141)
+
+Changes:
+  - `apply` solves instances in forward order (#67)
+  - Type class resolution solves instance arguments from right-to-left (#139)
+  - Type class resolution skips assigned metavariables (#135)
+  - Signature of `has_attribute` and `copy_attribute` has changed (#66)
+
+v3.6.0c (26 Feb 2020)
+---------------------
 
 Features:
  - Remove `discrete_field` (#119)
@@ -19,7 +39,7 @@ Changes:
  - `insert` is no longer a definition
  - Nested block comments are now allowed in docstrings
 
-v3.5.1c (4 Feb 2019)
+v3.5.1c (4 Feb 2020)
 --------------------
 
 Features:
@@ -27,10 +47,10 @@ Features:
 - Annotate pretty-printed output with full constant names (#89)
 - Import modules from meta code (#88)
 - Make `add_interactive` copy the doc string (#97)
-- Avoid version warning for external Leans in leanpkg (#106) 
+- Avoid version warning for external Leans in leanpkg (#106)
 
 Bugfixes:
-- Force tactic type in `run_cmd` (#103) 
+- Force tactic type in `run_cmd` (#103)
 - `?m_1` and `(λ x, ?m_1) y` should be definitionally equal (#107)
 
 v3.5.0c (26 Dec 2019)
