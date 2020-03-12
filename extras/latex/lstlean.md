@@ -23,13 +23,15 @@ preamble in your document:
 \documentclass{article}
 
 \usepackage[utf8x]{inputenc}
-\usepackage{amssymb}
+\usepackage{amssymb, upgreek}
 
 \usepackage{color}
 \definecolor{keywordcolor}{rgb}{0.7, 0.1, 0.1}   % red
 \definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
 \definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
 \definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{errorcolor}{rgb}{1, 0, 0}           % bright red
+\definecolor{stringcolor}{rgb}{0.5, 0.3, 0.2}    % brown
 
 \usepackage{listings}
 \def\lstlanguagefiles{lstlean.tex}

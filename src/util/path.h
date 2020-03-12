@@ -41,7 +41,7 @@ bool is_directory(std::string const & fn);
 optional<bool> is_dir(std::string const & fn);
 std::vector<std::string> read_dir(std::string const & dirname);
 
-time_t get_mtime(std::string const & fname);
+bool file_exists(std::string const & fname);
 
 std::string lrealpath(std::string const & fname);
 }

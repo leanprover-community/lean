@@ -86,7 +86,7 @@ class monad_reader (ρ : out_param (Type u)) (m : Type u → Type v) :=
 export monad_reader (read)
 
 instance monad_reader_trans {ρ : Type u} {m : Type u → Type v} {n : Type u → Type w}
-  [has_monad_lift m n] [monad_reader ρ m] : monad_reader ρ n :=
+  [monad_reader ρ m] [has_monad_lift m n] : monad_reader ρ n :=
 ⟨monad_lift (monad_reader.read : m ρ)⟩
 
 instance {ρ : Type u} {m : Type u → Type v} [monad m] : monad_reader ρ (reader_t ρ m) :=

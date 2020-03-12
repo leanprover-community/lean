@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #pragma once
+#include <string>
 #include "util/debug.h"
 #include "util/int64.h"
 
@@ -13,6 +14,8 @@ namespace lean {
 void mix(unsigned & a, unsigned & b, unsigned & c);
 
 unsigned hash_str(unsigned len, char const * str, unsigned init_value);
+
+unsigned hash_data(std::string const & data);
 
 inline unsigned hash(unsigned h1, unsigned h2) {
     h2 -= h1; h2 ^= (h1 << 8);

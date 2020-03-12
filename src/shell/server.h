@@ -60,8 +60,8 @@ class server : public module_vfs {
     io_state m_ios;
 
     struct editor_file {
-        time_t m_mtime;
         std::string m_content;
+        unsigned m_src_hash;
     };
     std::unordered_map<std::string, editor_file> m_open_files;
 

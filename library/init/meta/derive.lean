@@ -72,7 +72,8 @@ do decl ← get_decl n,
    (_, val) ← tactic.solve_aux tgt (intros >> tac),
    val ← instantiate_mvars val,
    let trusted := decl.is_trusted ∧ cls_decl.is_trusted,
-   add_decl (declaration.defn (n ++ cls)
+   add_protected_decl
+     (declaration.defn (n ++ cls)
              (if univ_poly then decl.univ_params else [])
              tgt val reducibility_hints.abbrev trusted),
    set_basic_attribute `instance (n ++ cls) tt,

@@ -212,6 +212,11 @@ FOREACH(T ${LEANPKGTESTS})
 ENDFOREACH(T)
 endif()
 
+# LEAN IMPORTING TEST
+add_test(NAME "leantest_importing"
+         WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../tests/lean/importing/"
+         COMMAND bash "./test_importing.sh" "${LEAN_SOURCE_DIR}/../bin/lean")
+
 # LEAN TESTS using --trust=0
 file(GLOB LEANT0TESTS "${LEAN_SOURCE_DIR}/../tests/lean/trust0/*.lean")
 FOREACH(T ${LEANT0TESTS})

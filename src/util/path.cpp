@@ -173,11 +173,11 @@ std::string read_file(std::string const & fname, std::ios_base::openmode mode) {
     return buf.str();
 }
 
-time_t get_mtime(std::string const &fname) {
+bool file_exists(std::string const &fname) {
     struct stat st;
     if (stat(fname.c_str(), &st) != 0)
-        return -1;
-    return st.st_mtime;
+        return false;
+    return true;
 }
 
 optional<bool> is_dir(std::string const & fn) {

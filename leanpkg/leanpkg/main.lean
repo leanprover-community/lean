@@ -12,16 +12,9 @@ h ← io.mk_file_handle fn io.mode.write,
 io.fs.write h cnts.to_char_buffer,
 io.fs.close h
 
-/--
-.toml files that refer to Lean versions hosted externally will use the syntax "community/lean:3.5.0".
-We need to strip the prefix, if it exists, to avoid an incorrect warning from leanpkg.
--/
-def external_lean_version (s : string) : string :=
-list.ilast $ s.split $ λ c, c = ':'
-
 def read_manifest : io manifest := do
 m ← manifest.from_file leanpkg_toml_fn,
-when (external_lean_version m.lean_version ≠ lean_version_string) $
+when (m.lean_version ≠ lean_version_string) $
   io.print_ln $ "\nWARNING: Lean version mismatch: installed version is " ++ lean_version_string
      ++ ", but package requires " ++ m.lean_version ++ "\n",
 return m

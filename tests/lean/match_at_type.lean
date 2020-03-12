@@ -9,6 +9,3 @@ sorry
 
 instance I2 : decidable (Foo2 (λ ⟨a, b⟩, a)) :=
 sorry
-
-def test (f : ((Σu:nat, nat) → nat) → nat) : f (λ ⟨a, b⟩, a) = f (λ⟨a, b⟩, a) :=
-eq.refl (f ((λ ⟨a, b⟩, a : (Σu:nat, nat) → nat)))

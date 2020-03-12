@@ -352,7 +352,7 @@ vm_obj has_attribute(vm_obj const & vm_attr_n, vm_obj const & vm_n, vm_obj const
     attribute const & attr = get_attribute(s.env(), attr_n);
     if (attr.is_instance(s.env(), n)) {
         unsigned prio          = attr.get_prio(s.env(), n);
-        return tactic::mk_success(mk_vm_nat(prio), s);
+        return tactic::mk_success(mk_vm_pair(mk_vm_bool(attr.get_persistent(s.env(), n)), mk_vm_nat(prio)), s);
     } else {
         return tactic::mk_exception(sstream() << "'" << n << "' is not tagged with attribute '" << attr_n << "'", s);
     }

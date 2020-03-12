@@ -11,7 +11,7 @@ sformat!("{major}.{minor}.{patch}")
 
 def lean_version_string :=
 if lean.is_release then
-    lean_version_string_core
+    "leanprover-community/lean:" ++ lean_version_string_core
 else if lean.special_version_desc ≠ "" then
     lean.special_version_desc
 else

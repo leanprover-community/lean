@@ -1,0 +1,3 @@
+[fixed_no_param, eq, eq]
+[eq, cast]
+[fixed_no_param, eq, eq, cast]
