@@ -3,7 +3,7 @@ v3.7.0c (?? Mar 2020)
 
 Features:
   - `simp` can rewrite subsingletons (#134)
-  - Files are recompiled bases on hash code instead of timestamp (#140)
+  - Files are recompiled based on hash code instead of timestamp (#140)
   - `mk_protected`, `add_protected`, `is_protected` functions (#138)
   - `has_attribute` and `copy_attribute` now expliclity support non-persistent attributes (#66)
 
