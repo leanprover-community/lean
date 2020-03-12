@@ -164,7 +164,6 @@ public:
     }
     explicit format(name const & v):m_value(sexpr_text(sexpr(v))) {}
     format(format const & f1, format const & f2):m_value(sexpr_compose({f1.m_value, f2.m_value})) {}
-    format(format const & f):m_value(f.m_value) {}
     format_kind kind() const {
         return sexpr_kind(m_value);
     }

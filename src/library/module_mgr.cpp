@@ -87,7 +87,7 @@ module_loader mk_loader(module_id const & cur_mod, std::vector<module_info::depe
                     return get(d.m_mod_info->m_result).m_loaded_module;
                 }
             }
-        } catch (std::out_of_range) {
+        } catch (std::out_of_range &) {
             // In files with syntax errors, it can happen that the
             // initial dependency scan does not find all dependencies.
         }
@@ -133,7 +133,7 @@ static module_id resolve(search_path const & path,
     auto base_dir = dirname(module_file_name);
     try {
         return find_file(path, base_dir, ref.m_relative, ref.m_name, ".lean");
-    } catch (lean_file_not_found_exception) {
+    } catch (lean_file_not_found_exception &) {
         return olean_file_to_lean_file(find_file(path, base_dir, ref.m_relative, ref.m_name, ".olean"));
     }
 }
@@ -457,7 +457,7 @@ std::shared_ptr<module_info> fs_module_vfs::load_module(module_id const & id, bo
             is_candidate_olean_file(olean_fname, src_hash)) {
             return std::make_shared<module_info>(id, read_file(olean_fname, std::ios_base::binary), src_hash, src_hash, module_src::OLEAN);
         }
-    } catch (exception) {}
+    } catch (exception &) {}
 
     return std::make_shared<module_info>(id, lean_src, src_hash, src_hash, module_src::LEAN);
 }

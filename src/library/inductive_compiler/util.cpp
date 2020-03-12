@@ -86,7 +86,7 @@ void assert_def_eq(environment const & DEBUG_CODE(env), expr const & DEBUG_CODE(
     DEBUG_CODE(type_checker checker(env, true, false /* allow untrusted/meta */););
     try {
         lean_assert(checker.is_def_eq(e1, e2));
-    } catch (exception ex) {
+    } catch (exception & ex) {
         // TODO(dhs): this is only for debugging
         // We prefer to enter GDB than to throw an exception
         lean_assert(false);
@@ -98,7 +98,7 @@ void assert_type_correct(environment const & env, expr const & e) {
     type_checker checker(env, true, false /* allow untrusted/meta */);
     try {
         checker.check(e);
-    } catch (exception ex) {
+    } catch (exception & ex) {
         // TODO(dhs): this is only for debugging
         // We prefer to enter GDB than to throw an exception
         lean_assert(false);

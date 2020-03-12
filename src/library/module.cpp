@@ -432,7 +432,7 @@ struct mod_doc_modification : public modification {
     /** A module-level docstring. */
     mod_doc_modification(std::string const & doc, pos_info pos) : m_doc(doc), m_pos(pos) {}
 
-    void perform(environment & env) const override {
+    void perform(environment &) const override {
         // No-op. See `import_module` for actual action
     }
 
@@ -657,7 +657,7 @@ static void import_module(environment & env, std::string const & module_file_nam
         auto ext = get_extension(env);
         ext.m_imported.insert(res->m_module_name);
         env = update(env, ext);
-    } catch (throwable) {
+    } catch (throwable &) {
         import_errors.push_back({module_file_name, ref, std::current_exception()});
     }
 }

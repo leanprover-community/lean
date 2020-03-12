@@ -216,7 +216,7 @@ static vm_obj fs_flush(vm_obj const & h, vm_obj const &) {
     try {
         href->flush();
         return mk_io_result(mk_vm_unit());
-    } catch (handle_exception e) {
+    } catch (handle_exception & e) {
         return mk_io_failure("flush failed");
     }
 }
@@ -238,7 +238,7 @@ static vm_obj fs_close(vm_obj const & h, vm_obj const &) {
     try {
         href->close();
         return mk_io_result(mk_vm_unit());
-    } catch (handle_exception e) {
+    } catch (handle_exception & e) {
         return mk_io_failure("close failed");
     }
 }
@@ -399,7 +399,7 @@ static vm_obj fs_write(vm_obj const & h, vm_obj const & b, vm_obj const &) {
     try {
         href->write(tmp);
         return mk_io_result(mk_vm_unit());
-    } catch (handle_exception e) {
+    } catch (handle_exception & e) {
         return mk_io_failure("write failed");
     }
 }
@@ -608,8 +608,8 @@ static vm_obj serial_deserialize(vm_obj const & h, vm_obj const &) {
     fseek(f, 0, SEEK_SET);
 
     char *data = reinterpret_cast<char *>(malloc(fsize));
-    fread(data, fsize, 1, f);
-    if (ferror(f)) {
+    size_t read = fread(data, fsize, 1, f);
+    if (read != 1 || ferror(f)) {
         clearerr(f);
         return mk_io_failure("deserialize failed");
     }

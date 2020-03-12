@@ -56,6 +56,13 @@ public:
         m_entries = new_entries;
     }
 
+    local_decls & operator=(local_decls const & d) {
+        m_map = d.m_map;
+        m_entries = d.m_entries;
+        m_counter = d.m_counter;
+        return *this;
+    }
+
     V const * find(name const & k) const { auto it = m_map.find(k); return it ? &(it->first) : nullptr; }
     unsigned find_idx(name const & k) const { auto it = m_map.find(k); return it ? it->second : 0; }
     bool contains(name const & k) const { return m_map.contains(k); }

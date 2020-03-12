@@ -8600,7 +8600,7 @@ basic_json_parser_63:
                 m_line_buffer.clear();
                 for (m_cursor = m_start; m_cursor != m_limit; ++m_cursor)
                 {
-                    m_line_buffer.append(1, static_cast<const char>(*m_cursor));
+                    m_line_buffer.append(1, static_cast<char>(*m_cursor));
                 }
 
                 // append 5 characters (size of longest keyword "false") to
