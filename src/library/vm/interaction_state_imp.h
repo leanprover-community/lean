@@ -136,24 +136,14 @@ vm_obj interaction_monad<State>::mk_success(State const & s) {
 }
 
 template<typename State>
-vm_obj interaction_monad<State>::mk_exception(vm_obj const & fn, State const & s) {
-    return mk_vm_constructor(1, mk_vm_some(fn), mk_vm_none(), to_obj(s));
-}
-
-template<typename State>
 vm_obj interaction_monad<State>::mk_silent_exception(State const & s) {
     return mk_vm_constructor(1, mk_vm_none(), mk_vm_none(), to_obj(s));
 }
 
 template<typename State>
-vm_obj interaction_monad<State>::mk_exception(vm_obj const & fn, vm_obj const & pos, State const & s) {
-    return mk_vm_constructor(1, mk_vm_some(fn), pos, to_obj(s));
-}
-
-template<typename State>
 vm_obj interaction_monad<State>::update_exception_state(vm_obj const & ex, State const & s) {
     lean_assert(is_result_exception(ex));
-    return mk_exception(get_exception_message(ex), get_exception_pos(ex), s);
+    return mk_vm_constructor(1, cfield(ex, 0), cfield(ex, 1), to_obj(s));
 }
 
 template<typename State>
@@ -164,12 +154,17 @@ vm_obj interaction_monad<State>::mk_exception(throwable const & ex, State const 
     if (auto kex = dynamic_cast<exception_with_pos const *>(&ex))
         pos = kex->get_pos();
     vm_obj _pos = pos ? mk_vm_some(mk_vm_pair(mk_vm_nat(pos->first), mk_vm_nat(pos->second))) : mk_vm_none();
-    return mk_exception(fn, _pos, s);
+    return mk_vm_constructor(1, mk_vm_some(fn), _pos, to_obj(s));
+}
+
+template<typename State>
+vm_obj interaction_monad<State>::mk_exception_from_format_thunk(vm_obj const & fmt_thunk, State const & s) {
+    return mk_vm_constructor(1, mk_vm_some(fmt_thunk), mk_vm_none(), to_obj(s));
 }
 
 template<typename State>
 vm_obj interaction_monad<State>::mk_exception(format const & fmt, State const & s) {
-    return mk_exception(mk_vm_constant_format_thunk(lean::to_obj(fmt)), s);
+    return mk_exception_from_format_thunk(mk_vm_constant_format_thunk(lean::to_obj(fmt)), s);
 }
 
 template<typename State>
@@ -184,7 +179,7 @@ vm_obj interaction_monad<State>::mk_exception(sstream const & strm, State const 
 
 template<typename State>
 vm_obj interaction_monad<State>::mk_exception(std::function<format()> const & thunk, State const & s) {
-    return mk_exception(mk_vm_format_thunk(thunk), s);
+    return mk_exception_from_format_thunk(mk_vm_format_thunk(thunk), s);
 }
 
 template<typename State>
