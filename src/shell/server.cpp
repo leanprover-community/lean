@@ -21,6 +21,7 @@ Authors: Gabriel Ebner, Leonardo de Moura, Sebastian Ullrich
 #include "util/lean_path.h"
 #include "util/sexpr/option_declarations.h"
 #include "util/timer.h"
+#include "util/line_endings.h"
 #include "library/mt_task_queue.h"
 #include "library/st_task_queue.h"
 #include "library/attribute_manager.h"
@@ -422,7 +423,7 @@ void server::handle_request(json const & jreq) {
         handle_request(req);
     } catch (std::exception & ex) {
         send_msg(cmd_res(req.m_seq_num, std::string(ex.what())));
-    } catch (interrupted) {
+    } catch (interrupted &) {
         send_msg(cmd_res(req.m_seq_num, std::string("interrupted")));
     } catch (...) {
         send_msg(cmd_res(req.m_seq_num, std::string("unknown exception")));
@@ -469,7 +470,7 @@ void server::handle_async_response(server::cmd_req const & req, task<cmd_res> co
             send_msg(msg);
         } catch (throwable & ex) {
             send_msg(cmd_res(req.m_seq_num, std::string(ex.what())));
-        } catch (interrupted) {
+        } catch (interrupted &) {
             send_msg(cmd_res(req.m_seq_num, std::string("interrupted")));
         } catch (...) {
             send_msg(cmd_res(req.m_seq_num, std::string("unknown exception")));
@@ -487,14 +488,16 @@ server::cmd_res server::handle_sync(server::cmd_req const & req) {
         new_content = load_module(new_file_name, /* can_use_olean */ false)->m_contents;
     }
 
-    auto mtime = time(nullptr);
+    // NOTE(Vtec234): as of 2020-03-05, hashing all of mathlib takes about .1s on
+    // a 2.7GHz cpu, so this should not have observable performance impact.
+    unsigned new_hash = hash_data(remove_cr(new_content));
 
     bool needs_invalidation = true;
 
     auto & ef = m_open_files[new_file_name];
-    if (ef.m_content != new_content) {
+    if (ef.m_src_hash != new_hash) {
         ef.m_content = new_content;
-        ef.m_mtime = mtime;
+        ef.m_src_hash = new_hash;
         needs_invalidation = true;
     } else {
         needs_invalidation = false;
@@ -695,7 +698,7 @@ server::cmd_res server::handle_search(server::cmd_req const & req) {
 std::shared_ptr<module_info> server::load_module(module_id const & id, bool can_use_olean) {
     if (m_open_files.count(id)) {
         auto & ef = m_open_files[id];
-        return std::make_shared<module_info>(id, ef.m_content, module_src::LEAN, ef.m_mtime);
+        return std::make_shared<module_info>(id, ef.m_content, ef.m_src_hash, ef.m_src_hash, module_src::LEAN);
     }
     return m_fs_vfs.load_module(id, can_use_olean);
 }

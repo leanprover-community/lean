@@ -175,7 +175,7 @@ public:
 /** Builtin functions that take arguments from the system stack.
 
     \remark The C++ code generator produces this kind of function. */
-typedef vm_obj (*vm_cfunction)(vm_obj const &);
+using vm_cfunction = void *;
 typedef vm_obj (*vm_cfunction_0)();
 typedef vm_obj (*vm_cfunction_1)(vm_obj const &);
 typedef vm_obj (*vm_cfunction_2)(vm_obj const &, vm_obj const &);

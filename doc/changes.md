@@ -1,3 +1,58 @@
+v3.7.0c (?? Mar 2020)
+--------------------
+
+Features:
+  - `simp` can rewrite subsingletons (#134)
+  - Files are recompiled based on hash code instead of timestamp (#140)
+  - `mk_protected`, `add_protected`, `is_protected` functions (#138)
+  - `has_attribute` and `copy_attribute` now expliclity support non-persistent attributes (#66)
+
+Bug fixes:
+  - Fix the implementation of the instance `has_coe (tactic α) (parser α)` (#136 and #147)
+  - `simp` catches exception (e.g. from type class resolution, #142)
+  - `(+) = (λ x y, x + y)` unifies now (#141)
+
+Changes:
+  - `apply` solves instances in forward order (#67)
+  - Type class resolution solves instance arguments from right-to-left (#139)
+  - Type class resolution skips assigned metavariables (#135)
+  - Signature of `has_attribute` and `copy_attribute` has changed (#66)
+
+v3.6.0c (26 Feb 2020)
+---------------------
+
+Features:
+ - Remove `discrete_field` (#119)
+ - Remove simp attribute from `sub_eq_add_neg` (#117)
+ - Replace `insert` definition by export (#115)
+ - Remove simp attribute from `add_comm` and `add_left_comm` (#65)
+ - simp with reversed lemmas: `simp ← foo` (#100)
+ - Allow nested block comments in docstrings (#113)
+
+Bug fixes:
+ - Include mathlib fixes to `wf_tacs` (#121)
+ - Typos in docstrings (#125)
+
+Changes:
+ - `discrete_field` is now just `field` (#119)
+ - `add_comm`, `add_left_comm`, and `sub_eq_add_neg` are no longer simp lemmas
+ - `insert` is no longer a definition
+ - Nested block comments are now allowed in docstrings
+
+v3.5.1c (4 Feb 2020)
+--------------------
+
+Features:
+- Allow `change` to be used to rename bound variables (#96)
+- Annotate pretty-printed output with full constant names (#89)
+- Import modules from meta code (#88)
+- Make `add_interactive` copy the doc string (#97)
+- Avoid version warning for external Leans in leanpkg (#106)
+
+Bugfixes:
+- Force tactic type in `run_cmd` (#103)
+- `?m_1` and `(λ x, ?m_1) y` should be definitionally equal (#107)
+
 v3.5.0c (26 Dec 2019)
 --------------
 

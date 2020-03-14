@@ -63,6 +63,7 @@ public:
         return static_cast<bool>(get_untyped(env, n));
     }
     unsigned get_prio(environment const &, name const &) const;
+    bool get_persistent(environment const &, name const &) const;
     virtual void get_instances(environment const &, buffer<name> &) const;
     priority_queue<name, name_quick_cmp> get_instances_by_prio(environment const &) const;
     virtual attr_data_ptr parse_data(abstract_parser &) const;

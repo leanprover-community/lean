@@ -32,8 +32,14 @@ struct module_info {
 
     module_id m_id;
     std::string m_contents;
+    // Hash of the Lean source (after normalizing line endings) yielding this module:
+    // - if m_source == LEAN, hash_data(remove_cr(m_contents))
+    // - if m_source == OLEAN, value loaded from the .olean
+    unsigned m_src_hash;
+    // Transitive hash of all source code this module was built from,
+    // i.e. m_src_hash mixed with the m_trans_hash of each imported module
+    unsigned m_trans_hash;
     module_src m_source = module_src::LEAN;
-    time_t m_mtime = -1, m_trans_mtime = -1;
 
     struct dependency {
         module_id m_id;
@@ -63,10 +69,13 @@ struct module_info {
 
     module_info() {}
 
-    module_info(module_id const & id, std::string const & contents, module_src src, time_t mtime)
-            : m_id(id), m_contents(contents), m_source(src), m_mtime(mtime) {}
+    module_info(module_id const & id, std::string const & contents, unsigned src_hash, unsigned trans_hash, module_src src)
+            : m_id(id), m_contents(contents), m_src_hash(src_hash), m_trans_hash(trans_hash), m_source(src) {}
 };
 
+/* A virtual interface for loading Lean modules by name. It has two instantiations:
+- `fs_module_vs` for loading modules from disk
+- `server` for loading modules open in an editor */
 class module_vfs {
 public:
     virtual ~module_vfs() {}

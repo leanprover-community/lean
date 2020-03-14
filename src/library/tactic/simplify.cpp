@@ -492,12 +492,18 @@ simp_result simplify_core_fn::rewrite(expr const & e) {
     }
 
     for (simp_lemma const & lemma : *srs) {
-        simp_result r = rewrite(e, lemma);
-        if (!is_eqp(r.get_new(), e)) {
+        try {
+            simp_result r = rewrite(e, lemma);
+            if (!is_eqp(r.get_new(), e)) {
+                lean_simp_trace_d(m_ctx, name({"simplify", "rewrite"}),
+                                tout() << "[" << lemma.get_id() << "]: "
+                                << e << " ==> " << r.get_new() << "\n";);
+                return r;
+            }
+        } catch (ext_exception & ex) {
             lean_simp_trace_d(m_ctx, name({"simplify", "rewrite"}),
-                              tout() << "[" << lemma.get_id() << "]: "
-                              << e << " ==> " << r.get_new() << "\n";);
-            return r;
+                tout() << "[" << lemma.get_id() << "]: exception: "
+                << ex << "\n";);
         }
     }
 
@@ -823,7 +829,10 @@ bool simplify_core_fn::simplify_constructor_eq_constructor(simp_result & r) {
             simp_result new_r(new_rhs, inj_eq_pr);
             r = join_eq(m_ctx, r, new_r);
             return true;
-        } catch (exception &) {
+        } catch (ext_exception & ex) {
+            lean_simp_trace(m_ctx, name({"simplify"}),
+                tout() << "cannot simplify constructor equality: exception: "
+                << ex << "\n";);
             return false;
         }
     }

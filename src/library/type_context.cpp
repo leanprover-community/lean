@@ -597,13 +597,20 @@ optional<expr> type_context_old::unfold_definition(expr const & e) {
                 return some_expr(r);
             }
         }
-    } else if (auto r = unfold_definition_core(e)) {
-        if (optional<expr> new_r = extract_id_rhs(*r))
-            return new_r;
-        else
-            return r;
     } else {
-        return none_expr();
+        // Block unfolding of constants that are smart unfolding targets,
+        // because they are also blocked if applied to a non-matching term.
+        if (is_constant(e) && m_smart_unfolding && is_smart_unfolding_target(env(), const_name(e))) {
+            return none_expr();
+        }
+        if (auto r = unfold_definition_core(e)) {
+            if (optional<expr> new_r = extract_id_rhs(*r))
+                return new_r;
+            else
+                return r;
+        } else {
+            return none_expr();
+        }
     }
 }
 
@@ -3621,10 +3628,8 @@ struct instance_synthesizer {
             r = locals.mk_lambda(r);
             m_ctx.assign(mvar, r);
             // copy new_inst_mvars to stack
-            unsigned i = new_inst_mvars.size();
-            while (i > 0) {
-                --i;
-                m_state.m_stack = cons(stack_entry(new_inst_mvars[i], e.m_depth+1), m_state.m_stack);
+            for (auto & mvar : new_inst_mvars) {
+                m_state.m_stack = cons(stack_entry(mvar, e.m_depth+1), m_state.m_stack);
             }
             return true;
         } catch (exception & ex) {
@@ -3796,6 +3801,12 @@ struct instance_synthesizer {
         stack_entry e = head(m_state.m_stack);
         if (process_special(e))
             return true;
+        if (m_ctx.is_assigned(e.m_mvar)) {
+            // The metavariable has already been assigned.
+            // This typically happens if the instance has already been found via unification.
+            m_state.m_stack = tail(m_state.m_stack);
+            return true;
+        }
         if (!mk_choice_point(e.m_mvar))
             return false;
         m_state.m_stack = tail(m_state.m_stack);
