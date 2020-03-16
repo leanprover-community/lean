@@ -1,5 +1,11 @@
-v3.7.0c (?? Mar 2020)
---------------------
+v3.7.1c (?? Mar 2020)
+---------------------
+
+Bug fixes:
+    - Allow loading standalone .olean files (#150)
+
+v3.7.0c (13 Mar 2020)
+---------------------
 
 Features:
   - `simp` can rewrite subsingletons (#134)
