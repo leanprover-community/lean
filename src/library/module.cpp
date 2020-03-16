@@ -580,23 +580,21 @@ optional<declaration> is_decl_modification(modification const & mod) {
 
 } // end of namespace module
 
-bool is_candidate_olean_file(std::string const & file_name, unsigned src_hash) {
+optional<unsigned> src_hash_if_is_candidate_olean(std::string const & file_name) {
     std::ifstream in(file_name);
     deserializer d1(in, optional<std::string>(file_name));
     std::string header, version;
     d1 >> header;
     if (header != g_olean_header)
-        return false;
+        return {};
     d1 >> version;
 #ifndef LEAN_IGNORE_OLEAN_VERSION
     if (version != get_version_string())
-        return false;
+        return {};
 #endif
     unsigned olean_src_hash;
     d1 >> olean_src_hash;
-    if (olean_src_hash != src_hash)
-        return false;
-    return true;
+    return some<unsigned>(olean_src_hash);
 }
 
 olean_data parse_olean(std::istream & in, std::string const & file_name, bool check_hash) {
@@ -610,7 +608,7 @@ olean_data parse_olean(std::istream & in, std::string const & file_name, bool ch
     if (header != g_olean_header)
         throw exception(sstream() << "file '" << file_name << "' does not seem to be a valid object Lean file, invalid header");
     d1 >> version >> src_hash >> trans_hash >> claimed_blob_hash;
-    // version has already been checked in `is_candidate_olean_file`
+    // version has already been checked in `src_hash_if_is_candidate_olean`
 
     d1 >> uses_sorry;
 

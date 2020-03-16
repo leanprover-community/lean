@@ -445,21 +445,33 @@ void module_mgr::cancel_all() {
 std::shared_ptr<module_info> fs_module_vfs::load_module(module_id const & id, bool can_use_olean) {
     auto lean_fname = id;
 
-    std::string lean_src = read_file(lean_fname);
-    unsigned src_hash = hash_data(remove_cr(lean_src));
+    std::string lean_src;
+    optional<unsigned> src_hash = {};
+    if (file_exists(lean_fname)) {
+        lean_src = read_file(lean_fname);
+        src_hash = some<unsigned>(hash_data(remove_cr(lean_src)));
+    }
 
     try {
         auto olean_fname = olean_of_lean(lean_fname);
-        shared_file_lock olean_lock(olean_fname);
         if (file_exists(olean_fname) &&
             can_use_olean &&
-            !m_modules_to_load_from_source.count(id) &&
-            is_candidate_olean_file(olean_fname, src_hash)) {
-            return std::make_shared<module_info>(id, read_file(olean_fname, std::ios_base::binary), src_hash, src_hash, module_src::OLEAN);
+            !m_modules_to_load_from_source.count(id)) {
+            shared_file_lock olean_lock(olean_fname);
+            optional<unsigned> olean_src_hash = src_hash_if_is_candidate_olean(olean_fname);
+            // If there is a valid .olean AND
+            // (there is no source file OR there is one and it matches the hash stored in the .olean), load the .olean.
+            if (olean_src_hash.has_value() &&
+                (!src_hash.has_value() || *src_hash == *olean_src_hash)) {
+                return std::make_shared<module_info>(id, read_file(olean_fname, std::ios_base::binary), *olean_src_hash, *olean_src_hash, module_src::OLEAN);
+            }
         }
     } catch (exception &) {}
 
-    return std::make_shared<module_info>(id, lean_src, src_hash, src_hash, module_src::LEAN);
+    if (src_hash.has_value())
+        return std::make_shared<module_info>(id, lean_src, *src_hash, *src_hash, module_src::LEAN);
+    else
+        throw lean_file_not_found_exception(lean_fname);
 }
 
 environment get_combined_environment(environment const & env,

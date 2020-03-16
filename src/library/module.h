@@ -94,9 +94,10 @@ std::shared_ptr<loaded_module const> cache_preimported_env(
         loaded_module &&, environment const & initial_env,
         std::function<module_loader()> const & mk_mod_ldr);
 
-/** \brief Check whether we should try to load the given .olean file according to its header and Lean version,
- * as well as the hash (after normalizing line endings) of the Lean source to which it should correspond. */
-bool is_candidate_olean_file(std::string const & file_name, unsigned src_hash);
+/** \brief Checks whether we should try to load the given .olean file according to its header and Lean version.
+ * If yes, returns the hash (after normalizing line endings) of the Lean source to which it corresponds,
+ * otherwise returns none. */
+optional<unsigned> src_hash_if_is_candidate_olean(std::string const & file_name);
 
 struct olean_data {
     std::vector<module_name> m_imports;
