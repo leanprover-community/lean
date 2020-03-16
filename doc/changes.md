@@ -1,8 +1,8 @@
 v3.7.1c (?? Mar 2020)
 ---------------------
 
-Bug fixes:
-    - Allow loading standalone .olean files (#150)
+Bug fix:
+  - Allow loading standalone .olean files (#150)
 
 v3.7.0c (13 Mar 2020)
 ---------------------
@@ -23,6 +23,12 @@ Changes:
   - Type class resolution solves instance arguments from right-to-left (#139)
   - Type class resolution skips assigned metavariables (#135)
   - Signature of `has_attribute` and `copy_attribute` has changed (#66)
+  
+v3.6.1c (2 Mar 2020)
+--------------------
+
+Bug fix:
+  - Correctly reference the community fork of Lean in `leanpkg.toml` (#131)
 
 v3.6.0c (26 Feb 2020)
 ---------------------
