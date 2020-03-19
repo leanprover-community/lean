@@ -410,9 +410,9 @@ by rw [abs_mul, abs_mul_abs_self]
 
 lemma sub_le_of_abs_sub_le_left {a b c : α} (h : abs (a - b) ≤ c) : b - c ≤ a :=
 if hz : 0 ≤ a - b then
-  (calc
-      a ≥ b     : le_of_sub_nonneg hz
-    ... ≥ b - c : sub_le_self _ (le_trans (abs_nonneg _) h))
+  calc
+    b - c ≤ b : sub_le_self _ (le_trans (abs_nonneg _) h)
+      ... ≤ a : le_of_sub_nonneg hz
 else
   have habs : b - a ≤ c, by rwa [abs_of_neg (lt_of_not_ge hz), neg_sub] at h,
   have habs' : b ≤ c + a, from le_add_of_sub_right_le habs,
@@ -423,9 +423,9 @@ sub_le_of_abs_sub_le_left (abs_sub a b ▸ h)
 
 lemma sub_lt_of_abs_sub_lt_left {a b c : α} (h : abs (a - b) < c) : b - c < a :=
 if hz : 0 ≤ a - b then
-   (calc
-      a ≥ b     : le_of_sub_nonneg hz
-    ... > b - c : sub_lt_self _ (lt_of_le_of_lt (abs_nonneg _) h))
+  calc
+    b - c < b : sub_lt_self _ (lt_of_le_of_lt (abs_nonneg _) h)
+      ... ≤ a : le_of_sub_nonneg hz
 else
   have habs : b - a < c, by rwa [abs_of_neg (lt_of_not_ge hz), neg_sub] at h,
   have habs' : b < c + a, from lt_add_of_sub_right_lt habs,

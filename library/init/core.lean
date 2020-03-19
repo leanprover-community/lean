@@ -380,12 +380,9 @@ infixr ^       := has_pow.pow
 
 export has_append (append)
 
-@[reducible] def ge {α : Type u} [has_le α] (a b : α) : Prop := has_le.le b a
-@[reducible] def gt {α : Type u} [has_lt α] (a b : α) : Prop := has_lt.lt b a
-
-infix >=       := ge
-infix ≥        := ge
-infix >        := gt
+notation [parsing_only]  x ` >= ` y       := y ≤ x
+notation [parsing_only]  x ` ≥ ` y        := y ≤ x
+notation [parsing_only]  x ` > ` y        := y < x
 
 @[reducible] def superset {α : Type u} [has_subset α] (a b : α) : Prop := has_subset.subset b a
 @[reducible] def ssuperset {α : Type u} [has_ssubset α] (a b : α) : Prop := has_ssubset.ssubset b a

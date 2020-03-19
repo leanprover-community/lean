@@ -29,16 +29,8 @@ do t ← target >>= instantiate_mvars,
            pr     ← mk_nat_val_lt_proof a b,
            exact pr)
        <|>
-       (do (a, b) ← is_gt t,
-           pr     ← mk_nat_val_lt_proof b a,
-           exact pr)
-       <|>
        (do (a, b) ← is_le t,
            pr     ← mk_nat_val_le_proof a b,
-           exact pr)
-       <|>
-       (do (a, b) ← is_ge t,
-           pr     ← mk_nat_val_le_proof b a,
            exact pr))
    <|>
    (do is_def_eq type (const `char []),

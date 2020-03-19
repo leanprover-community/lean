@@ -1339,7 +1339,7 @@ begin
     rw [mod_eq_sub_mod h₁, IH _ h₂],
     -- Normalize goal and h1
     simp [pow_succ],
-    simp [ge, pow_succ] at h₁,
+    simp [pow_succ] at h₁,
     -- Pull subtraction outside mod and div
     rw [sub_mul_mod _ _ _ h₁, sub_mul_div _ _ _ h₁],
     -- Cancel subtraction inside mod b^w

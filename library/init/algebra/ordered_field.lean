@@ -96,24 +96,24 @@ div_mul_cancel b (ne_of_lt hc) ▸ mul_le_mul_of_nonpos_right h (le_of_lt hc)
 
 lemma div_le_of_mul_le_of_neg {a b c : α} (hc : c < 0) (h : a * c ≤ b) : b / c ≤ a :=
 calc
-   a   = a * c * (1 / c) : mul_mul_div a (ne_of_lt hc)
-    ... ≥ b * (1 / c)     : mul_le_mul_of_nonpos_right h (le_of_lt (one_div_neg_of_neg hc))
-    ... = b / c           : eq.symm $ div_eq_mul_one_div b c
+  b / c = b * (1 / c)     : div_eq_mul_one_div b c
+    ... ≤ a * c * (1 / c) : mul_le_mul_of_nonpos_right h (le_of_lt (one_div_neg_of_neg hc))
+    ... = a   : (mul_mul_div a (ne_of_lt hc)).symm
 
 lemma mul_lt_of_gt_div_of_neg {a b c : α} (hc : c < 0) (h : a > b / c) : a * c < b :=
 div_mul_cancel b (ne_of_lt hc) ▸ mul_lt_mul_of_neg_right h hc
 
 lemma div_lt_of_mul_lt_of_pos {a b c : α} (hc : c > 0) (h : b < a * c) : b / c < a :=
 calc
-   a   = a * c * (1 / c) : mul_mul_div a (ne_of_gt hc)
-   ... > b * (1 / c)     : mul_lt_mul_of_pos_right h (one_div_pos_of_pos hc)
-   ... = b / c           : eq.symm $ div_eq_mul_one_div b c
+  b / c = b * (1 / c)      : div_eq_mul_one_div _ _
+    ... < a * c * (1 / c)  : mul_lt_mul_of_pos_right h (one_div_pos_of_pos hc)
+    ... = a                : (mul_mul_div a (ne_of_gt hc)).symm
 
 lemma div_lt_of_mul_gt_of_neg {a b c : α} (hc : c < 0) (h : a * c < b) : b / c < a :=
 calc
-   a   = a * c * (1 / c) : mul_mul_div a (ne_of_lt hc)
-   ... > b * (1 / c)     : mul_lt_mul_of_neg_right h (one_div_neg_of_neg hc)
-   ... = b / c           : eq.symm $ div_eq_mul_one_div b c
+  b / c = b * (1 / c)       : div_eq_mul_one_div _ _
+    ... < a * c * (1 / c)   : mul_lt_mul_of_neg_right h (one_div_neg_of_neg hc)
+    ... = a                 : (mul_mul_div a (ne_of_lt hc)).symm
 
 lemma div_le_of_le_mul {a b c : α} (hb : b > 0) (h : a ≤ b * c) : a / b ≤ c :=
 calc
@@ -136,9 +136,9 @@ have h1 : a / c - b / d < 0, from calc
   a / c - b / d < b / d - b / d : sub_lt_sub_right h _
             ... = 0             : by rw sub_self,
 calc
-    0 > a / c - b / d             : h1
-  ... = (a * d - c * b) / (c * d) : div_sub_div _ _ hc hd
-  ... = (a * d - b * c) / (c * d) : by rw (mul_comm b c)
+  (a * d - b * c) / (c * d) = (a * d - c * b) / (c * d)    : by rw mul_comm b c
+                        ... = a / c - b / d                : (div_sub_div _ _ hc hd).symm
+                        ... < 0                            : h1
 
 lemma mul_sub_mul_div_mul_nonpos {a b c d : α} (hc : c ≠ 0) (hd : d ≠ 0) (h : a / c ≤ b / d) :
       (a * d - b * c) / (c * d) ≤ 0 :=
@@ -146,9 +146,9 @@ have h1 : a / c - b / d ≤ 0, from calc
     a / c - b / d ≤ b / d - b / d : sub_le_sub_right h _
               ... = 0             : by rw sub_self,
 calc
-    0 ≥ a / c - b / d : h1
-  ... = (a * d - c * b) / (c * d) : div_sub_div _ _ hc hd
-  ... = (a * d - b * c) / (c * d) : by rw (mul_comm b c)
+  (a * d - b * c) / (c * d) = (a * d - c * b) / (c * d)    : by rw mul_comm b c
+                        ... = a / c - b / d                : (div_sub_div _ _ hc hd).symm
+                        ... ≤ 0                            : h1
 
 lemma div_lt_div_of_mul_sub_mul_div_neg {a b c d : α} (hc : c ≠ 0) (hd : d ≠ 0)
       (h : (a * d - b * c) / (c * d) < 0) : a / c < b / d :=
@@ -303,9 +303,9 @@ eq.symm
            (begin unfold bit0, rw [left_distrib, mul_one] end))
 
 lemma two_gt_one : (2:α) > 1 :=
-calc (2:α) = 1+1 : one_add_one_eq_two
-     ...   > 1+0 : add_lt_add_left zero_lt_one _
-     ...   = 1   : add_zero 1
+calc (1:α) = 1 + 0 : (add_zero 1).symm
+       ... < 1 + 1 : add_lt_add_left zero_lt_one _
+       ... = (2:α) : rfl
 
 lemma two_ge_one : (2:α) ≥ 1 :=
 le_of_lt two_gt_one
@@ -343,10 +343,10 @@ begin
   split,
   {have h2 : a + a > (b + b) + (a - b),
     calc
-      a + a > b + a             : add_lt_add_right h _
-        ... = b + a + b - b     : by rw add_sub_cancel
-        ... = b + b + a - b     : by simp [add_comm, add_left_comm]
-        ... = (b + b) + (a - b) : by rw add_sub,
+      (b + b) + (a - b) = b + b + a - b : by rw add_sub
+                    ... = b + a + b - b : by cc
+                    ... = b + a : by rw add_sub_cancel
+                    ... < a + a : add_lt_add_right h _,
    have h3 : (a + a) / 2 > ((b + b) + (a - b)) / 2,
      exact div_lt_div_of_lt_of_pos h2 two_pos,
    rw [one_add_one_eq_two, sub_eq_add_neg],

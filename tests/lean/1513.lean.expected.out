@@ -6,8 +6,8 @@ h : m = 0
 1513.lean:8:0: error: tactic failed, there are unsolved goals
 state:
 n : ℕ,
-a : n > 0,
+a : 0 < n,
 y : ℕ := 10,
-a_1 : y > 5,
+a_1 : 5 < y,
 a_2 : n ≠ y
 ⊢ y + 1 = 1 + y

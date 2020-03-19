@@ -1,6 +1,6 @@
-{x : ℕ | x > 0} : set ℕ
-{x : ℕ | x > 0} : set ℕ
-{p : ℕ × ℕ | p.fst > p.snd} : set (ℕ × ℕ)
-{x | x > 0} : set ℕ
-{x | x > 0} : set ℕ
-{p | p.fst > p.snd} : set (ℕ × ℕ)
+{x : ℕ | 0 < x} : set ℕ
+{x : ℕ | 0 < x} : set ℕ
+{p : ℕ × ℕ | p.snd < p.fst} : set (ℕ × ℕ)
+{x | 0 < x} : set ℕ
+{x | 0 < x} : set ℕ
+{p | p.snd < p.fst} : set (ℕ × ℕ)

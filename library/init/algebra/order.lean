@@ -54,7 +54,7 @@ lemma le_of_eq [preorder α] {a b : α} : a = b → a ≤ b :=
 lemma le_antisymm_iff [partial_order α] {a b : α} : a = b ↔ a ≤ b ∧ b ≤ a :=
 ⟨λe, ⟨le_of_eq e, le_of_eq e.symm⟩, λ⟨h1, h2⟩, le_antisymm h1 h2⟩
 
-@[trans] lemma ge_trans [preorder α] : ∀ {a b c : α}, a ≥ b → b ≥ c → a ≥ c :=
+lemma ge_trans [preorder α] : ∀ {a b c : α}, a ≥ b → b ≥ c → a ≥ c :=
 λ a b c h₁ h₂, le_trans h₂ h₁
 
 lemma le_total [linear_order α] : ∀ a b : α, a ≤ b ∨ b ≤ a :=
@@ -82,7 +82,7 @@ lt_irrefl
 
 def lt.trans := @lt_trans
 
-@[trans] lemma gt_trans [preorder α] : ∀ {a b c : α}, a > b → b > c → a > c :=
+lemma gt_trans [preorder α] : ∀ {a b c : α}, a > b → b > c → a > c :=
 λ a b c h₁ h₂, lt_trans h₂ h₁
 
 def gt.trans := @gt_trans
@@ -112,10 +112,10 @@ lemma le_of_lt [preorder α] : ∀ {a b : α}, a < b → a ≤ b
   let ⟨hbc, hcb⟩ := le_not_le_of_lt hbc in
   lt_of_le_not_le (le_trans hab hbc) $ λ hca, hcb (le_trans hca hab)
 
-@[trans] lemma gt_of_gt_of_ge [preorder α] {a b c : α} (h₁ : a > b) (h₂ : b ≥ c) : a > c :=
+lemma gt_of_gt_of_ge [preorder α] {a b c : α} (h₁ : a > b) (h₂ : b ≥ c) : a > c :=
 lt_of_le_of_lt h₂ h₁
 
-@[trans] lemma gt_of_ge_of_gt [preorder α] {a b c : α} (h₁ : a ≥ b) (h₂ : b > c) : a > c :=
+lemma gt_of_ge_of_gt [preorder α] {a b c : α} (h₁ : a ≥ b) (h₂ : b > c) : a > c :=
 lt_of_lt_of_le h₂ h₁
 
 lemma not_le_of_gt [preorder α] {a b : α} (h : a > b) : ¬ a ≤ b :=
