@@ -581,7 +581,7 @@ optional<declaration> is_decl_modification(modification const & mod) {
 } // end of namespace module
 
 optional<unsigned> src_hash_if_is_candidate_olean(std::string const & file_name) {
-    std::ifstream in(file_name);
+    std::ifstream in(file_name, std::ios_base::binary);
     deserializer d1(in, optional<std::string>(file_name));
     std::string header, version;
     d1 >> header;

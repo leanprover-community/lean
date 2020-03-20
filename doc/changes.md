@@ -1,3 +1,9 @@
+v3.7.2c (20 Mar 2020)
+---------------------
+
+Bug fix:
+  - Open .oleans in binary mode on Windows (#155)
+
 v3.7.1c (16 Mar 2020)
 ---------------------
 
