@@ -26,6 +26,8 @@ About
 Installation
 ------------
 
+The recommended way to install Lean is following [these instructions](https://github.com/leanprover-community/mathlib#installation).
+
 Stable binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases). 
 Nightly binary releases are available on the [nightly release page](https://github.com/leanprover-community/lean-nightly/releases).
 For building Lean from source, see the [build instructions](doc/make/index.md).
