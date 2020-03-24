@@ -101,7 +101,7 @@ by simp
 lemma zero_div (a : α) : 0 / a = 0 :=
 by simp
 
--- note: integral domain has a "mul_ne_zero". α commutative division ring is an integral
+-- note: integral domain has a "mul_ne_zero". a commutative division ring is an integral
 -- domain, but let's not define that class for now.
 lemma division_ring.mul_ne_zero {a b : α} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 :=
 assume : a * b = 0,
@@ -169,7 +169,7 @@ match classical.em (a = 0) with
 | or.inr h := eq.symm (eq_one_div_of_mul_eq_one_left (mul_one_div_cancel h))
 end
 
-lemma inv_inv' {a : α} : a⁻¹⁻¹ = a :=
+lemma inv_inv' (a : α) : a⁻¹⁻¹ = a :=
 by rw [inv_eq_one_div, inv_eq_one_div, one_div_one_div]
 
 lemma eq_of_one_div_eq_one_div {a b : α} (h : 1 / a = 1 / b) : a = b :=
@@ -190,6 +190,9 @@ by simp [hb]
 
 lemma div_mul_cancel (a : α) {b : α} (hb : b ≠ 0) : a / b * b = a :=
 by simp [hb]
+
+lemma div_mul_left {a b : α} (hb : b ≠ 0) : b / (a * b) = 1 / a :=
+by simp only [division_def, mul_inv', ← mul_assoc, mul_inv_cancel hb]
 
 lemma div_add_div_same (a b c : α) : a / c + b / c = (a + b) / c :=
 eq.symm $ right_distrib a b (c⁻¹)
@@ -254,13 +257,7 @@ lemma one_div_mul_one_div (a b : α) : (1 / a) * (1 / b) =  1 / (a * b) :=
 by rw [division_ring.one_div_mul_one_div, mul_comm b]
 
 lemma div_mul_right {a : α} (b : α) (ha : a ≠ 0) : a / (a * b) = 1 / b :=
-eq.symm (calc
-    1 / b = a * ((1 / a) * (1 / b)) : by rw [← mul_assoc, mul_one_div_cancel ha, one_mul]
-      ... = a * (1 / (b * a))       : by rw division_ring.one_div_mul_one_div
-      ... = a * (a * b)⁻¹           : by rw [inv_eq_one_div, mul_comm a b])
-
-lemma div_mul_left {a b : α} (hb : b ≠ 0) : b / (a * b) = 1 / a :=
-by rw [mul_comm a, div_mul_right _ hb]
+by rw [mul_comm, div_mul_left ha]
 
 lemma mul_div_cancel_left {a : α} (b : α) (ha : a ≠ 0) : a * b / a = b :=
 by rw [mul_comm a, (mul_div_cancel _ ha)]
