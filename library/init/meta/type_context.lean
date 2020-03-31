@@ -1,10 +1,10 @@
 prelude
 import init.category init.meta.local_context init.meta.tactic init.meta.fun_info
 namespace tactic.unsafe
-/-- A monad that exposes the functionality of the C++ class `type_context`.
-    The idea is that the methods in `tco` are more powerful but _unsafe_ in the
+/-- A monad that exposes the functionality of the C++ class `type_context_old`.
+    The idea is that the methods to `type_context` are more powerful but _unsafe_ in the
     sense that you can create terms that do not typecheck or that are infinitely descending.
-    Under the hood, `tco` is implemented as a reader monad, with a mutable `type_context` object.
+    Under the hood, `type_context` is implemented as a reader monad, with a mutable `type_context` object.
      -/
 meta constant type_context : Type → Type
 namespace type_context
@@ -48,10 +48,12 @@ meta def list_mvars : type_context (list expr) := fold_mvars (λ l x, pure $ x :
     You can avoid the unsafety by using `unify` instead.
 -/
 meta constant assign (mvar : expr) (assignment : expr) : type_context unit
+/-- Assigns a given level metavariable. -/
 meta constant level.assign (mvar : level) (assignment : level) : type_context unit
 /-- Returns true if the given expression is a declared local constant or a declared metavariable. -/
 meta constant is_declared (e : expr) : type_context bool
 meta constant is_assigned (mvar : expr) : type_context bool
+/-- Given a metavariable, returns the local context that the metavariable was declared with. -/
 meta constant get_context (mvar : expr) : type_context local_context
 /-- Get the expression that is assigned to the given mvar expression. Fails if given a -/
 meta constant get_assignment (mvar : expr) : type_context expr
@@ -96,6 +98,10 @@ meta instance type_context_alternative : alternative type_context := {
     orelse := λ α x y, type_context.orelse x y
 }
 
+/-- Runs the given type_context monad using the type context of the current tactic state.
+    You can use this to perform unsafe operations
+    such as direct metavariable assignment and the use of temporary metavariables.
+-/
 meta constant run (inner : type_context α) (tr := tactic.transparency.semireducible) : tactic α
 
 meta def trace {α} [has_to_format α] : α → type_context unit | a :=
