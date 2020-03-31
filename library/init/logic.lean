@@ -881,17 +881,6 @@ lemma if_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidab
         ite b x y = ite c u v :=
 @if_ctx_congr α b c dec_b dec_c x y u v h_c (λ h, h_t) (λ h, h_e)
 
-lemma if_ctx_simp_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] {x y u v : α}
-                        (h_c : b ↔ c) (h_t : c → x = u) (h_e : ¬c → y = v) :
-        ite b x y = (@ite c (decidable_of_decidable_of_iff dec_b h_c) α u v) :=
-@if_ctx_congr α b c dec_b (decidable_of_decidable_of_iff dec_b h_c) x y u v h_c h_t h_e
-
-@[congr]
-lemma if_simp_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] {x y u v : α}
-                    (h_c : b ↔ c) (h_t : x = u) (h_e : y = v) :
-        ite b x y = (@ite c (decidable_of_decidable_of_iff dec_b h_c) α u v) :=
-@if_ctx_simp_congr α b c dec_b x y u v h_c (λ h, h_t) (λ h, h_e)
-
 @[simp]
 lemma if_true {α : Sort u} {h : decidable true} (t e : α) : (@ite true h α t e) = t :=
 if_pos trivial
