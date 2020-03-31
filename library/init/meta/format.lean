@@ -11,7 +11,7 @@ universes u v
 inductive format.color
 | red | green | orange | blue | pink | cyan | grey
 
-/-- Format is a rich string with highlighting and information about how tabs should be put in if linebreaks are needed. A 'pretty string'.  -/
+/-- Format is a rich string with highlighting and information about how tabs should be put in if linebreaks are needed. A 'pretty string'. -/
 meta constant format : Type
 /-- Indicate that it is ok to put a linebreak in here if the line is too long. -/
 meta constant format.line            : format
@@ -19,31 +19,31 @@ meta constant format.line            : format
 meta constant format.space           : format
 /-- = `""` -/
 meta constant format.nil             : format
-/-- Concatenate the given formats. -/
+/-- Concatenate the given format strings. -/
 meta constant format.compose         : format → format → format
-/-- `format.nest n f` tells the formatter that `f` is nested inside something with length `n` 
-so that it is pretty-printed with the correct tabs on a line break.
-For example, in `list.to_format` we have:
+/-- `format.nest n f` tells the formatter that `f` is nested inside something with length `n`
+    so that it is pretty-printed with the correct tabs on a line break.
+    For example, in `list.to_format` we have:
 
-```
-(nest 1 $ format.join $ list.intersperse ("," ++ line) $ xs.map to_fmt)
-```
+    ```
+    (nest 1 $ format.join $ list.intersperse ("," ++ line) $ xs.map to_fmt)
+    ```
 
-This will be written all on one line, but when the list is too large, it will put in linebreaks after the comma and indent later lines by 1.
+    This will be written all on one line, but when the list is too large, it will put in linebreaks after the comma and indent later lines by 1.
  -/
 meta constant format.nest            : nat → format → format
-/-- Make the given format be displayed a particular color. [TODO] does this override nested colours etc? -/
+/-- Make the given format be displayed a particular color. -/
 meta constant format.highlight       : format → color → format
-/-- [TODO] I think this might be obsolete, in the Lean source code it seems to be doing the same thing as `flatten`. -/
+/-- When printing the given format `f`, if `f.flatten` fits without need for linebreaks then print the `f.flatten`, else print `f` unflattened with linebreaks. -/
 meta constant format.group           : format → format
 meta constant format.of_string       : string → format
 meta constant format.of_nat          : nat → format
-/-- [TODO] -/
+/-- Flattening removes all of the `format.nest` items from the format tree.  -/
 meta constant format.flatten         : format → format
 meta constant format.to_string  (f : format) (o : options := options.mk) : string
 meta constant format.of_options      : options → format
 meta constant format.is_nil          : format → bool
-/-- [TODO] -/
+/-- Traces the given format to the output window, then performs the given continuation.  -/
 meta constant trace_fmt {α : Type u} : format → (unit → α) → α
 
 meta instance : inhabited format :=
@@ -55,7 +55,7 @@ meta instance : has_append format :=
 meta instance : has_to_string format :=
 ⟨λ f, f.to_string options.mk⟩
 
-/-- Use this instead of `has_to_string` to enable prettier formatting. 
+/-- Use this instead of `has_to_string` to enable prettier formatting.
 See docstring for `format` for more on the differences between `format` and `string`.
 Note that `format` is `meta` while `string` is not. -/
 meta class has_to_format (α : Type u) :=
@@ -150,14 +150,18 @@ meta instance {α : Type u} {p : α → Prop} [has_to_format α] : has_to_format
 meta def format.bracket : string → string → format → format
 | o c f := to_fmt o ++ nest o.length f ++ to_fmt c
 
+/-- Surround with "()". -/
 meta def format.paren (f : format) : format :=
 format.bracket "(" ")" f
 
+/-- Surround with "{}". -/
 meta def format.cbrace (f : format) : format :=
 format.bracket "{" "}" f
 
+/-- Surround with "[]". -/
 meta def format.sbracket (f : format) : format :=
 format.bracket "[" "]" f
 
+/-- Surround with "⦃⦄". -/
 meta def format.dcbrace (f : format) : format :=
 to_fmt "⦃" ++ nest 1 f ++ to_fmt "⦄"
