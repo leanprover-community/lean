@@ -22,14 +22,14 @@ meta constant format.nil             : format
 /-- Concatenate the given format strings. -/
 meta constant format.compose         : format → format → format
 /-- `format.nest n f` tells the formatter that `f` is nested inside something with length `n`
-    so that it is pretty-printed with the correct tabs on a line break.
-    For example, in `list.to_format` we have:
+so that it is pretty-printed with the correct tabs on a line break.
+For example, in `list.to_format` we have:
 
-    ```
-    (nest 1 $ format.join $ list.intersperse ("," ++ line) $ xs.map to_fmt)
-    ```
+```
+(nest 1 $ format.join $ list.intersperse ("," ++ line) $ xs.map to_fmt)
+```
 
-    This will be written all on one line, but when the list is too large, it will put in linebreaks after the comma and indent later lines by 1.
+This will be written all on one line, but when the list is too large, it will put in linebreaks after the comma and indent later lines by 1.
  -/
 meta constant format.nest            : nat → format → format
 /-- Make the given format be displayed a particular color. -/
