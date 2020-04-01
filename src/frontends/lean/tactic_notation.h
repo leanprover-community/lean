@@ -7,7 +7,9 @@ Author: Leonardo de Moura
 #pragma once
 #include "frontends/lean/parser.h"
 namespace lean {
-name get_interactive_tactic_full_name(name const & tac_class, name const & tac);
+name get_interactive_tactic_full_name
+    (environment const & env,
+     name const & tac_class, name const & tac);
 expr parse_begin_end_expr(parser & p, pos_info const & pos);
 expr parse_curly_begin_end_expr(parser & p, pos_info const & pos);
 expr parse_begin_end(parser & p, unsigned, expr const *, pos_info const & pos);
