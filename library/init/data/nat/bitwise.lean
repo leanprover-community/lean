@@ -116,7 +116,7 @@ def binary_rec {C : nat → Sort u} (z : C 0) (f : ∀ b n, C n → C (bit b n))
       change div2 n < n, rw div2_val,
       apply (div_lt_iff_lt_mul _ _ (succ_pos 1)).2,
       have := nat.mul_lt_mul_of_pos_left (lt_succ_self 1)
-        (lt_of_le_of_ne (zero_le _) (ne.symm n0)),
+        (nat.lt_of_le_of_ne (zero_le _) (ne.symm n0)),
       rwa mul_one at this
     end,
     by rw [← show bit (bodd n) n' = n, from bit_decomp n]; exact

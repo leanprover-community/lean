@@ -329,9 +329,30 @@ instance : decidable_linear_ordered_cancel_comm_monoid ℕ :=
 lemma le_of_lt_succ {m n : nat} : m < succ n → m ≤ n :=
 le_of_succ_le_succ
 
+protected lemma lt_or_eq_of_le {m n : ℕ} : m ≤ n → m < n ∨ m = n :=
+  λ le, or.cases_on (nat.lt_or_ge m n) or.inl (λ ge, or.inr (nat.le_antisymm le ge))
+
+protected lemma lt_of_le_of_ne {a b : ℕ} : a ≤ b → a ≠ b → a < b :=
+  λ le ne, or.cases_on (nat.lt_or_ge a b) id (λ ge, absurd (nat.le_antisymm le ge) ne)
+
+protected lemma le_of_not_gt {a b : ℕ} (h : ¬ a > b) : a ≤ b :=
+  or.cases_on (nat.lt_or_ge b a) (λ lt, absurd lt h) id
+
+protected lemma lt_of_not_ge {a b : ℕ} (h : ¬ a ≥ b) : a < b :=
+  or.cases_on (nat.lt_or_ge a b) id (λ ge, absurd ge h)
+
+protected lemma lt_iff_not_ge (x y : ℕ) : x < y ↔ ¬ x ≥ y :=
+⟨not_le_of_gt, nat.lt_of_not_ge⟩
+
+protected lemma le_of_mul_le_mul_left {a b c : ℕ} (h : c * a ≤ c * b) (hc : c > 0) : a ≤ b :=
+nat.le_of_not_gt
+  (assume h1 : b < a,
+   have h2 : c * b < c * a, from nat.mul_lt_mul_of_pos_left h1 hc,
+   not_le_of_gt h2 h)
+
 theorem eq_of_mul_eq_mul_left {m k n : ℕ} (Hn : n > 0) (H : n * m = n * k) : m = k :=
-le_antisymm (le_of_mul_le_mul_left (le_of_eq H) Hn)
-            (le_of_mul_le_mul_left (le_of_eq H.symm) Hn)
+le_antisymm (nat.le_of_mul_le_mul_left (le_of_eq H) Hn)
+            (nat.le_of_mul_le_mul_left (le_of_eq H.symm) Hn)
 
 theorem eq_of_mul_eq_mul_right {n m k : ℕ} (Hm : m > 0) (H : n * m = k * m) : n = k :=
 by rw [mul_comm n m, mul_comm k m] at H; exact eq_of_mul_eq_mul_left Hm H
@@ -604,7 +625,7 @@ protected lemma sub_eq_iff_eq_add {a b c : ℕ} (ab : b ≤ a) : a - b = c ↔ a
   assume a_eq, begin rw [a_eq, nat.add_sub_cancel] end⟩
 
 protected lemma lt_of_sub_eq_succ {m n l : ℕ} (H : m - n = nat.succ l) : n < m :=
-lt_of_not_ge
+nat.lt_of_not_ge
   (assume (H' : n ≥ m), begin simp [nat.sub_eq_zero_of_le H'] at H, contradiction end)
 
 @[simp] lemma zero_min (a : ℕ) : min 0 a = 0 :=
@@ -640,7 +661,7 @@ begin
   intros n, induction n with n ih,
     {intros m h₁, exact absurd h₁ (not_lt_zero _)},
     {intros m h₁,
-      apply or.by_cases (lt_or_eq_of_le (le_of_lt_succ h₁)),
+      apply or.by_cases (nat.lt_or_eq_of_le (le_of_lt_succ h₁)),
         {intros, apply ih, assumption},
         {intros, subst m, apply h _ ih}}
 end
@@ -697,7 +718,7 @@ begin
   {apply or.elim (decidable.em (succ x < y)),
     {intro h₁, rwa [mod_eq_of_lt h₁]},
     {intro h₁,
-      have h₁ : succ x % y = (succ x - y) % y, {exact mod_eq_sub_mod (le_of_not_gt h₁)},
+      have h₁ : succ x % y = (succ x - y) % y, {exact mod_eq_sub_mod (nat.le_of_not_gt h₁)},
       have this : succ x - y ≤ x, {exact le_of_lt_succ (sub_lt (succ_pos x) h)},
       have h₂ : (succ x - y) % y < y, {exact ih _ this},
       rwa [← h₁] at h₂}}
@@ -754,7 +775,7 @@ eq.trans (div_def 0 b) $ if_neg (and.rec not_le_of_gt)
 protected lemma div_le_of_le_mul {m n : ℕ} : ∀ {k}, m ≤ k * n → m / k ≤ n
 | 0        h := by simp [nat.div_zero]; apply zero_le
 | (succ k) h :=
-  suffices succ k * (m / succ k) ≤ succ k * n, from le_of_mul_le_mul_left this (zero_lt_succ _),
+  suffices succ k * (m / succ k) ≤ succ k * n, from nat.le_of_mul_le_mul_left this (zero_lt_succ _),
   calc
     succ k * (m / succ k) ≤ m % succ k + succ k * (m / succ k) : le_add_left _ _
                       ... = m                                  : by rw mod_add_div
@@ -799,7 +820,7 @@ begin
   apply nat.strong_induction_on y _,
   clear y,
   intros y IH x,
-  cases lt_or_ge y k with h h,
+  cases nat.lt_or_ge y k with h h,
   -- base case: y < k
   { rw [div_eq_of_lt h],
     cases x with x,
@@ -826,7 +847,7 @@ theorem div_lt_iff_lt_mul (x y : ℕ) {k : ℕ}
   (Hk : k > 0)
 : x / k < y ↔ x < y * k :=
 begin
-  simp [lt_iff_not_ge],
+  simp only [nat.lt_iff_not_ge],
   apply not_iff_not_of_iff,
   apply le_div_iff_mul_le _ _ Hk
 end
@@ -929,11 +950,11 @@ theorem mul_self_lt_mul_self : Π {n m : ℕ}, n < m → n * n < m * m
 
 theorem mul_self_le_mul_self_iff {n m : ℕ} : n ≤ m ↔ n * n ≤ m * m :=
 ⟨mul_self_le_mul_self, λh, decidable.by_contradiction $
-  λhn, not_lt_of_ge h $ mul_self_lt_mul_self $ lt_of_not_ge hn⟩
+  λhn, not_lt_of_ge h $ mul_self_lt_mul_self $ nat.lt_of_not_ge hn⟩
 
 theorem mul_self_lt_mul_self_iff {n m : ℕ} : n < m ↔ n * n < m * m :=
-iff.trans (lt_iff_not_ge _ _) $ iff.trans (not_iff_not_of_iff mul_self_le_mul_self_iff) $
-  iff.symm (lt_iff_not_ge _ _)
+iff.trans (nat.lt_iff_not_ge _ _) $ iff.trans (not_iff_not_of_iff mul_self_le_mul_self_iff) $
+  iff.symm (nat.lt_iff_not_ge _ _)
 
 theorem le_mul_self : Π (n : ℕ), n ≤ n * n
 | 0     := le_refl _
@@ -1020,7 +1041,7 @@ suffices ∀m k, n ≤ k + m → acc lbp k, from λa, this _ _ (nat.le_add_left 
 protected def find_x : {n // p n ∧ ∀m < n, ¬p m} :=
 @well_founded.fix _ (λk, (∀n < k, ¬p n) → {n // p n ∧ ∀m < n, ¬p m}) lbp wf_lbp
 (λm IH al, if pm : p m then ⟨m, pm, al⟩ else
-    have ∀ n ≤ m, ¬p n, from λn h, or.elim (lt_or_eq_of_le h) (al n) (λe, by rw e; exact pm),
+    have ∀ n ≤ m, ¬p n, from λn h, or.elim (nat.lt_or_eq_of_le h) (al n) (λe, by rw e; exact pm),
     IH _ ⟨rfl, this⟩ (λn h, this n $ nat.le_of_succ_le_succ h))
 0 (λn h, absurd h (nat.not_lt_zero _))
 
@@ -1031,14 +1052,14 @@ protected theorem find_spec : p nat.find := nat.find_x.2.left
 protected theorem find_min : ∀ {m : ℕ}, m < nat.find → ¬p m := nat.find_x.2.right
 
 protected theorem find_min' {m : ℕ} (h : p m) : nat.find ≤ m :=
-le_of_not_gt (λ l, find_min l h)
+nat.le_of_not_gt (λ l, find_min l h)
 
 end find
 
 /- mod -/
 
 theorem mod_le (x y : ℕ) : x % y ≤ x :=
-or.elim (lt_or_ge x y)
+or.elim (nat.lt_or_ge x y)
   (λxlty, by rw mod_eq_of_lt xlty; refl)
   (λylex, or.elim (eq_zero_or_pos y)
     (λy0, by rw [y0, mod_zero]; refl)
@@ -1070,13 +1091,13 @@ else if z0 : z = 0 then
 else x.strong_induction_on $ λn IH,
   have y0 : y > 0, from nat.pos_of_ne_zero y0,
   have z0 : z > 0, from nat.pos_of_ne_zero z0,
-  or.elim (le_or_gt y n)
+  or.elim (nat.lt_or_ge n y)
+    (λyn, by rw [mod_eq_of_lt yn, mod_eq_of_lt (mul_lt_mul_of_pos_left yn z0)])
     (λyn, by rw [
         mod_eq_sub_mod yn,
         mod_eq_sub_mod (mul_le_mul_left z yn),
         ← nat.mul_sub_left_distrib];
       exact IH _ (sub_lt (lt_of_lt_of_le y0 yn) y0))
-    (λyn, by rw [mod_eq_of_lt yn, mod_eq_of_lt (mul_lt_mul_of_pos_left yn z0)])
 
 theorem mul_mod_mul_right (z x y : ℕ) : (x * z) % (y * z) = (x % y) * z :=
 by rw [mul_comm x z, mul_comm y z, mul_comm (x % y) z]; apply mul_mod_mul_left
@@ -1285,7 +1306,7 @@ theorem pow_le_pow_of_le_left {x y : ℕ} (H : x ≤ y) : ∀ i : ℕ, x^i ≤ y
 
 theorem pow_le_pow_of_le_right {x : ℕ} (H : x > 0) {i : ℕ} : ∀ {j}, i ≤ j → x^i ≤ x^j
 | 0        h := by rw eq_zero_of_le_zero h; apply le_refl
-| (succ j) h := (lt_or_eq_of_le h).elim
+| (succ j) h := (nat.lt_or_eq_of_le h).elim
   (λhl, by rw [pow_succ, ← mul_one (x^i)]; exact
     mul_le_mul (pow_le_pow_of_le_right $ le_of_lt_succ hl) H (zero_le _) (zero_le _))
   (λe, by rw e; refl)
@@ -1322,7 +1343,7 @@ begin
   apply nat.strong_induction_on m,
   clear m,
   intros p IH,
-  cases lt_or_ge p (b^succ w) with h₁ h₁,
+  cases nat.lt_or_ge p (b^succ w) with h₁ h₁,
   -- base case: p < b^succ w
   { have h₂ : p / b < b^w,
     { rw [div_lt_iff_lt_mul p _ b_pos],
