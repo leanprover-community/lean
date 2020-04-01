@@ -2,19 +2,21 @@
 
 instance : has_repr name := ⟨λ x, to_string x⟩
 
-meta def hello_override := `hello_override
+meta def hello_override := `hello_override.name
 
 @[vm_override hello_override]
-meta def hello := `hello
+meta def hello := `hello.name
 #print hello -- should use `hello
 #eval hello  -- should be `hello_override
 set_option vm_override.enabled false
 #eval hello -- should still be hello_override because vm_overrides are done at compile time.
 @[vm_override hello_override]
-meta def hello_2 := `hello
+meta def hello_2 := `hello.name
 #eval hello_2 -- should be `hello because vm_overrides are not enabled
 set_option vm_override.enabled true
 #eval hello_2 -- should be `hello because vm_overrides were not enabled when the compiler of hello_2 ran.
+
+
 
 @[vm_override native.float native.float]
 inductive float₀ : Type 1
@@ -61,13 +63,10 @@ def float.pow (a b : float) : float := sorry
 
 instance : has_pow float float := ⟨float.pow⟩
 
--- @[vm_override native.float.zero]
--- >>>>>>> variant B
--- meta def native.float.zero : native.float := 0
--- meta def native.float.one : native.float := 1
--- ======= end
+
 @[vm_override native.float.zero]
 def zero : float := sorry
+
 
 -- @[vm_override native.float.one]
 def one : float := sorry
@@ -82,6 +81,6 @@ def to_repr (p : float) : string := repr "dummy"
 
 instance : has_repr float := ⟨to_repr⟩
 set_option pp.numerals false
-#check  (0.1 + 05 / 0.0000034 : float)
+-- #check  (0.1 + 05 / 0.0000034 : float)
 
 #eval (0.1 + 05 / 0.0000034 : float)

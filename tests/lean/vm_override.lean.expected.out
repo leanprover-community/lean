@@ -3,6 +3,7 @@ meta def hello : name :=
 id_rhs name (name.mk_string "name" (name.mk_string "hello" name.anonymous))
 hello_override.name
 hello.name
+hello.name
 hello_override.name
 vm_override.lean:22:0: error: unknown declaration 'native.float.mk'
 vm_override.lean:27:5: warning: declaration 'native.float₁.mk' uses sorry

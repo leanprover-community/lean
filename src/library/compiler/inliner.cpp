@@ -12,6 +12,7 @@ Author: Leonardo de Moura
 #include "library/normalize.h"
 #include "library/attribute_manager.h"
 #include "library/vm/vm.h"
+#include "library/vm/vm_override.h"
 #include "library/compiler/util.h"
 #include "library/compiler/compiler_step_visitor.h"
 
@@ -77,6 +78,14 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
             return new_e;
     }
 
+    expr default_visit_constant(expr const & e) {
+        expr new_e = compiler_step_visitor::visit_constant(e);
+        if (new_e != e)
+            return visit(new_e);
+        else
+            return new_e;
+    }
+
     bool is_nonrecursive_recursor(name const & n) {
         if (auto I_name = inductive::is_elim_rule(env(), n)) {
             return !is_recursive_datatype(env(), *I_name);
@@ -129,11 +138,63 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
         return ctx().reduce_projection(e);
     }
 
-    virtual expr visit_app(expr const & e) override {
+    optional<expr> apply_overrides_rec(expr const & e) {
+        if (is_constant(e)) {
+            name n = const_name(e);
+            if (auto override_name = get_vm_override_name(m_env, n)) {
+                n = override_name.value();
+                while (auto override_name = get_vm_override_name(m_env, n)) {
+                    n = override_name.value();
+                }
+                return optional<expr>(mk_constant(n, const_levels(e)));
+            }
+        } else if (is_app(e)) {
+            auto fn = app_fn(e);
+            auto arg = app_arg(e);
+            bool changed = false;
+            if (auto fn2 = apply_overrides_rec(fn)) {
+                fn = *fn2;
+                changed = true;
+            }
+            if (auto arg2 = apply_overrides_rec(arg)) {
+                arg = *arg2;
+                changed = true;
+            }
+            if (changed) {
+                return optional<expr>(mk_app(fn, arg));
+            }
+        }
+        return optional<expr>();
+    }
+
+    expr apply_overrides(expr const & e) {
+        if (auto e2 = apply_overrides_rec(e)) {
+            return *e2;
+        } else {
+            return e;
+        }
+    }
+
+    virtual expr visit_constant(expr const & e) override {
+        name n = const_name(e);
+        if (auto override_name = get_vm_override_name(m_env, n)) {
+            n = override_name.value();
+            while (auto override_name = get_vm_override_name(m_env, n)) {
+                n = override_name.value();
+            }
+            return default_visit_constant(mk_constant(n, const_levels(e)));
+        } else {
+            return default_visit_constant(e);
+        }
+    }
+
+    virtual expr visit_app(expr const & arg) override {
+        expr e = apply_overrides(arg);
         expr const & fn = get_app_fn(e);
         if (!is_constant(fn))
             return default_visit_app(e);
         name const & n  = const_name(fn);
+
         if (is_vm_builtin_function(n) || is_pack_unpack(env(), e))
             return default_visit_app(e);
         if (is_cases_on_recursor(env(), n) || is_nonrecursive_recursor(n))

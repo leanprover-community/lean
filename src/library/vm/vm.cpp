@@ -1475,7 +1475,7 @@ environment add_vm_code(environment const & env, name const & fn, unsigned arity
 
 optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
     name n = decl_name;
-    if (auto override_name = get_vm_override_name(env, n)) {
+    while (auto override_name = get_vm_override_name(env, n)) {
         n = override_name.value();
     }
     vm_decls const & ext = get_extension(env);
