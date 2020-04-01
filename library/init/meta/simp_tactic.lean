@@ -287,7 +287,7 @@ meta constant simplify (s : simp_lemmas) (to_unfold : list name := []) (e : expr
                        (discharger : tactic unit := failed) : tactic (expr × expr)
 
 meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
-do t ← target,
+do t ← target >>= instantiate_mvars,
    (new_t, pr) ← simplify s to_unfold t cfg `eq discharger,
    replace_target new_t pr
 
