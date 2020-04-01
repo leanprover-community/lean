@@ -64,11 +64,11 @@ def float.pow (a b : float) : float := sorry
 instance : has_pow float float := ⟨float.pow⟩
 
 -- @[vm_override native.float.zero]
--- @[vm_override native.float.zero]
+@[vm_override native.float.zero]
 def zero : float := sorry
 
 -- @[vm_override native.float.one]
--- @[vm_override native.float.one]
+@[vm_override native.float.one]
 def one : float := sorry
 
 @[vm_override native.float.has_one]
