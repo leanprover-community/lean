@@ -770,17 +770,13 @@ end
 class inhabited (α : Sort u) :=
 (default : α)
 
-def default (α : Sort u) [inhabited α] : α :=
-inhabited.default α
+export inhabited (default)
 
 @[inline, irreducible] def arbitrary (α : Sort u) [inhabited α] : α :=
 default α
 
 instance prop.inhabited : inhabited Prop :=
 ⟨true⟩
-
-instance fun.inhabited (α : Sort u) {β : Sort v} [h : inhabited β] : inhabited (α → β) :=
-inhabited.rec_on h (λ b, ⟨λ a, b⟩)
 
 instance pi.inhabited (α : Sort u) {β : α → Sort v} [Π x, inhabited (β x)] : inhabited (Π x, β x) :=
 ⟨λ a, default (β a)⟩

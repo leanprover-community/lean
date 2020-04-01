@@ -98,6 +98,22 @@ linear_ordered_semiring.zero_lt_one α
 lemma zero_le_one : 0 ≤ (1:α) :=
 le_of_lt zero_lt_one
 
+lemma two_pos : 0 < (2:α) := add_pos zero_lt_one zero_lt_one
+
+lemma two_ne_zero : (2:α) ≠ 0 :=
+ne.symm (ne_of_lt two_pos)
+
+lemma two_gt_one : (2:α) > 1 :=
+calc (2:α) = 1+1 : one_add_one_eq_two
+     ...   > 1+0 : add_lt_add_left zero_lt_one _
+     ...   = 1   : add_zero 1
+
+lemma two_ge_one : (2:α) ≥ 1 :=
+le_of_lt two_gt_one
+
+lemma four_pos : (4:α) > 0 :=
+add_pos two_pos two_pos
+
 lemma lt_of_mul_lt_mul_left {a b c : α} (h : c * a < c * b) (hc : c ≥ 0) : a < b :=
 lt_of_not_ge
   (assume h1 : b ≤ a,

@@ -130,7 +130,7 @@ variables {α : Type u₁} {β : Type u₂} {φ : Type u₃}
 λ f a b, f (a, b)
 
 @[inline] def uncurry : (α → β → φ) → α × β → φ :=
-λ f ⟨a, b⟩, f a b
+λ f a, f a.1 a.2
 
 @[simp] lemma curry_uncurry (f : α → β → φ) : curry (uncurry f) = f :=
 rfl
