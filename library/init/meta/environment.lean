@@ -12,17 +12,15 @@ meta constant environment : Type
 
 namespace environment
 /--
-Consider a type ψ which is an inductive datatype using a single constructor `mk (a : α) (b : β) : → ψ`.
+Consider a type `ψ` which is an inductive datatype using a single constructor `mk (a : α) (b : β) : ψ`.
 Lean will automatically make two projection functions `a : ψ → α`, `b : ψ → β`.
 Lean tags these declarations as __projections__.
 This helps the simplifier / rewriter not have to expand projectors.
 Eg `a (mk x y)` will automatically reduce to `x`.
 If you `extend` a structure, all of the projections on the parent will also be created for the child.
+Projections are also treated differently in the VM for efficiency.
 
-[TODO] any other reasons Lean treats projections differently to regular declarations?
-    I know that you get projection macros.
-[TODO] Are there projections that aren't arguments to constructors?
-[NOTE] projectors have nothing to do with the dot `mylist.map` syntax.
+Note that projectors have nothing to do with the dot `mylist.map` syntax.
 
 You can find out if a declaration is a projection using `environment.is_projection` which returns `projection_info`.
 
