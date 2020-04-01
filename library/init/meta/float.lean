@@ -151,8 +151,5 @@ meta instance : has_to_format float := ⟨format.of_string ∘ to_string⟩
 meta instance has_nat_pow : has_pow float nat :=
 ⟨λ a b, native.float.pow a (float.of_nat b)⟩
 
-meta instance : decidable_rel (float.has_lt.lt) := by apply_instance
-attribute [instance] dec_eq
-
 end float
 end native
