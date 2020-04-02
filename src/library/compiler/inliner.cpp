@@ -44,6 +44,9 @@ void finalize_inliner() {
 }
 
 class inline_simple_definitions_fn : public compiler_step_visitor {
+
+    bool m_enable_overrides;
+
     /* Return true iff v is of the form (g y_1 ... y_n) where
        y_i is a constant or a variable.
        Moreover, y_i's variables are pairwise distinct. */
@@ -168,24 +171,33 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     }
 
     expr apply_overrides(expr const & e) {
-        if (auto e2 = apply_overrides_rec(e)) {
-            return *e2;
+        if (m_enable_overrides) {
+            if (auto e2 = apply_overrides_rec(e)) {
+                return *e2;
+            } else {
+                return e;
+            }
         } else {
             return e;
         }
     }
 
     virtual expr visit_constant(expr const & e) override {
-        name n = const_name(e);
-        if (auto override_name = get_vm_override_name(m_env, n)) {
-            n = override_name.value();
-            while (auto override_name = get_vm_override_name(m_env, n)) {
+        if (m_enable_overrides) {
+            name n = const_name(e);
+            if (auto override_name = get_vm_override_name(m_env, n)) {
                 n = override_name.value();
+                while (auto override_name = get_vm_override_name(m_env, n)) {
+                    n = override_name.value();
+                }
+                return default_visit_constant(mk_constant(n, const_levels(e)));
+            } else {
+                return default_visit_constant(e);
             }
-            return default_visit_constant(mk_constant(n, const_levels(e)));
         } else {
             return default_visit_constant(e);
         }
+
     }
 
     virtual expr visit_app(expr const & arg) override {
@@ -226,7 +238,8 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
 
 public:
     inline_simple_definitions_fn(environment const & env, abstract_context_cache & cache):
-        compiler_step_visitor(env, cache) {}
+        compiler_step_visitor(env, cache),
+        m_enable_overrides(get_vm_override_enabled(env.get_options())) {}
 };
 
 expr inline_simple_definitions(environment const & env, abstract_context_cache & cache, expr const & e) {
