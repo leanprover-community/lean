@@ -1054,7 +1054,6 @@ void vm_decl_cell::dealloc() {
 static name * g_vm_override_enabled;
 
 vm_decl set_overridden(vm_decl const & d, unsigned idx_override) {
-    // [TODO] is this correctly dealing with reference counts?
     return vm_decl(
         d.get_name(),
         d.get_idx(),

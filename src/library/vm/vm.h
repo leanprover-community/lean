@@ -901,7 +901,9 @@ void declare_vm_cases_builtin(name const & n, char const * internal_name, vm_cas
 /** \brief Return builtin cases internal index. */
 optional<unsigned> get_vm_builtin_cases_idx(environment const & env, name const & n);
 
-/** Replace the vm declaration of `n` with the vm declaration at `n_override`. */
+/** Replace the vm declaration of `n` with the vm declaration at `n_override`.
+    If `n` is an inductive declaration, `override_ns` should be provided and
+    gives a namespace which contains overrides for its recursor and constructors. */
 environment add_override(environment const & env, name const & n, name const & n_override, optional<name> const & override_ns);
 
 /** Register in the given environment \c fn as the implementation for function \c n.

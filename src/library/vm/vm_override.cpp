@@ -74,8 +74,13 @@ void initialize_vm_override() {
     g_vm_override = new name("vm_override");
     g_vm_override_enabled = new name("vm_override", "enabled");
     register_system_attribute(
-      vm_override_attribute(*g_vm_override, "Override this declaration with the given declaration when evaluating in the VM."
-        , [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
+      vm_override_attribute(*g_vm_override,
+        "Override this declaration with the given declaration when evaluating in the VM.\n"
+        "\n"
+        "When overriding an inductive datatype, a second argument should be given containing"
+        "the overrides for the constructors and recursors."
+        ,
+        [](environment const & env, io_state const &, name const & d, unsigned, bool) -> environment {
           // this is called when the attribute is added
           auto data = get_vm_override_attribute().get(env, d);
           return add_override(env, d, data->m_name, data->m_ns);
