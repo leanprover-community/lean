@@ -106,8 +106,6 @@ instance : has_repr float := ⟨to_repr⟩
 
 set_option pp.numerals false
 
-#check  (2 : float)
-
 -- our definition of `div` is silly.
 example (x y : float) :  x / y = 5 := begin cases x, cases y, refl end
 
