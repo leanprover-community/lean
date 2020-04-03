@@ -318,8 +318,8 @@ structure unification_hint :=
 
 /- Declare builtin and reserved notation -/
 
-class has_zero     (α : Type u) := (zero : α)
-class has_one      (α : Type u) := (one : α)
+class has_zero     (α : Type u) := mk {} :: (zero : α)
+class has_one      (α : Type u) := mk {} :: (one : α)
 class has_add      (α : Type u) := (add : α → α → α)
 class has_mul      (α : Type u) := (mul : α → α → α)
 class has_inv      (α : Type u) := (inv : α → α)
