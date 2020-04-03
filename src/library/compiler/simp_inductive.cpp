@@ -89,12 +89,17 @@ protected:
     pair<expr, bool> visit_minor_premise(expr e, buffer<bool> const & rel_fields) {
         type_context_old::tmp_locals locals(ctx());
         for (unsigned i = 0; i < rel_fields.size(); i++) {
-            lean_assert(is_lambda(e));
-            if (rel_fields[i]) {
-                expr l = locals.push_local_from_binding(e);
-                e = instantiate(binding_body(e), l);
+            if (!is_lambda(e)) {
+                /* [note] this was added for the test `tests/lean/crash2.lean`.  */
+                break;
             } else {
-                e = instantiate(binding_body(e), mk_neutral_expr());
+                lean_assert(is_lambda(e));
+                if (rel_fields[i]) {
+                    expr l = locals.push_local_from_binding(e);
+                    e = instantiate(binding_body(e), l);
+                } else {
+                    e = instantiate(binding_body(e), mk_neutral_expr());
+                }
             }
         }
         e = visit(e);
