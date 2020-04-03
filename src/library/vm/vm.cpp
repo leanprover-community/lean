@@ -1503,8 +1503,9 @@ optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
             return optional<vm_decl>(ovr);
         else
             return decl;
-    } else
+    } else {
         return optional<vm_decl>();
+    }
 }
 
 optional<name> get_vm_override_name(environment const & env, name const & decl_name) {

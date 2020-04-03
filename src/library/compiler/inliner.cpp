@@ -43,7 +43,6 @@ void finalize_inliner() {
 }
 
 class inline_simple_definitions_fn : public compiler_step_visitor {
-
     bool m_enable_overrides;
 
     /* Return true iff v is of the form (g y_1 ... y_n) where
@@ -196,7 +195,6 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
         } else {
             return default_visit_constant(e);
         }
-
     }
 
     virtual expr visit_app(expr const & arg) override {
