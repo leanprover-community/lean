@@ -1472,16 +1472,46 @@ environment add_vm_code(environment const & env, name const & fn, unsigned arity
     return update_vm_code(new_env, fn, code_sz, code, args_info, pos);
 }
 
-optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
-    name n = decl_name;
-    while (auto override_name = get_vm_override_name(env, n)) {
-        n = override_name.value();
+optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl) {
+    vm_decls const & ext = get_extension(env);
+    if (!get_vm_override_enabled(get_global_ios().get_options()))
+        return optional<vm_decl>();
+    auto d = decl;
+    if (auto idx = d.get_overridden()) {
+        d = *ext.m_decls.find(*idx);
+        while (auto idx = d.get_overridden()) {
+            d = *ext.m_decls.find(*idx);
+        }
+        return optional<vm_decl>(d);
     }
+    return optional<vm_decl>();
+}
+
+optional<vm_decl> get_vm_decl_no_override(environment const & env, name const & decl_name) {
+    name n = decl_name;
     vm_decls const & ext = get_extension(env);
     if (auto decl = ext.m_decls.find(get_vm_index(n)))
         return optional<vm_decl>(*decl);
     else
         return optional<vm_decl>();
+}
+
+optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
+    name n = decl_name;
+    if (auto decl = get_vm_decl_no_override(env, n)) {
+        if (auto ovr = get_vm_override_decl(env, *decl))
+            return optional<vm_decl>(ovr);
+        else
+            return decl;
+    } else
+        return optional<vm_decl>();
+}
+
+optional<name> get_vm_override_name(environment const & env, name const & decl_name) {
+    if (auto decl = get_vm_decl_no_override(env, decl_name))
+        if (auto ovr = get_vm_override_decl(env, *decl))
+            return optional<name>(ovr->get_name());
+    return optional<name>();
 }
 
 optional<unsigned> get_vm_builtin_cases_idx(environment const & env, name const & n) {

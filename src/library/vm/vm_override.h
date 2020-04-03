@@ -8,7 +8,6 @@ Author: E.W.Ayers
 #include "kernel/environment.h"
 #include "util/name.h"
 namespace lean {
-    optional<name> get_vm_override_name(environment const & env, name const & n);
     bool get_vm_override_enabled(options const & opts);
     void initialize_vm_override();
     void finalize_vm_override();

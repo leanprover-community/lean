@@ -8,7 +8,6 @@ Author: Leonardo de Moura
 #include "kernel/inductive/inductive.h"
 #include "library/util.h"
 #include "library/module.h"
-#include "library/trace.h"
 #include "library/normalize.h"
 #include "library/attribute_manager.h"
 #include "library/vm/vm.h"
@@ -239,7 +238,7 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
 public:
     inline_simple_definitions_fn(environment const & env, abstract_context_cache & cache):
         compiler_step_visitor(env, cache),
-        m_enable_overrides(get_vm_override_enabled(env.get_options())) {}
+        m_enable_overrides(get_vm_override_enabled(get_global_ios().get_options())) { }
 };
 
 expr inline_simple_definitions(environment const & env, abstract_context_cache & cache, expr const & e) {

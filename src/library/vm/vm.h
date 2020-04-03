@@ -953,6 +953,8 @@ optional<unsigned> get_vm_constant_idx(environment const & env, name const & n);
 /** \brief Return true iff \c fn is a VM function in the given environment. */
 bool is_vm_function(environment const & env, name const & fn);
 
+optional<name> get_vm_override_name(environment const & env, name const & decl_name);
+
 optional<vm_decl> get_vm_decl(environment const & env, name const & n);
 
 /** \brief Return the function idx of a builtin function.

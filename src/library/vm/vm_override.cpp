@@ -60,16 +60,6 @@ bool get_vm_override_enabled(options const & opts) {
     return opts.get_bool(*g_vm_override_enabled, LEAN_DEFAULT_VM_OVERRIDE_ENABLED);
 }
 
-optional<name> get_vm_override_name(environment const & env, name const & n) {
-    bool is_enabled = get_vm_override_enabled(get_global_ios().get_options());
-    if (!is_enabled) {return lean::optional<name>();}
-    if (auto data = get_vm_override_attribute().get(env, n)) {
-        return lean::optional<name>(data->m_name);
-    } else {
-        return lean::optional<name>();
-    }
-}
-
 void initialize_vm_override() {
     g_vm_override = new name("vm_override");
     g_vm_override_enabled = new name("vm_override", "enabled");
