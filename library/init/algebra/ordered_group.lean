@@ -192,12 +192,11 @@ variable [ordered_comm_group α]
 
 lemma ordered_comm_group.add_lt_add_left (a b : α) (h : a < b) (c : α) : c + a < c + b :=
 begin
-  rw lt_iff_le_not_le at h,
-  rw lt_iff_le_not_le,
+  rw lt_iff_le_not_le at h ⊢,
   split,
   { apply ordered_comm_group.add_le_add_left _ _ h.1 },
   { intro w,
-    let w : -c + (c + b) ≤ -c + (c + a) := ordered_comm_group.add_le_add_left _ _ w _,
+    have w : -c + (c + b) ≤ -c + (c + a) := ordered_comm_group.add_le_add_left _ _ w _,
     simp only [add_zero, add_comm, add_left_neg, add_left_comm] at w,
     exact h.2 w },
 end
@@ -632,3 +631,4 @@ class decidable_linear_ordered_cancel_comm_monoid (α : Type u)
 lemma decidable_linear_ordered_comm_group.add_lt_add_left {α} [decidable_linear_ordered_comm_group α]
   (a b : α) (h : a < b) (c : α) : c + a < c + b :=
   ordered_comm_group.add_lt_add_left a b h c
+  
