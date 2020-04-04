@@ -185,11 +185,21 @@ end ordered_cancel_comm_monoid
 
 class ordered_comm_group (α : Type u) extends add_comm_group α, partial_order α :=
 (add_le_add_left : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b)
-(add_lt_add_left : ∀ a b : α, a < b → ∀ c : α, c + a < c + b)
 
 section ordered_comm_group
 variable {α : Type u}
 variable [ordered_comm_group α]
+
+lemma ordered_comm_group.add_lt_add_left (a b : α) (h : a < b) (c : α) : c + a < c + b :=
+begin
+  rw lt_iff_le_not_le at h ⊢,
+  split,
+  { apply ordered_comm_group.add_le_add_left _ _ h.1 },
+  { intro w,
+    have w : -c + (c + b) ≤ -c + (c + a) := ordered_comm_group.add_le_add_left _ _ w _,
+    simp only [add_zero, add_comm, add_left_neg, add_left_comm] at w,
+    exact h.2 w },
+end
 
 lemma ordered_comm_group.le_of_add_le_add_left {a b c : α} (h : a + b ≤ a + c) : b ≤ c :=
 have -a + (a + b) ≤ -a + (a + c), from ordered_comm_group.add_le_add_left _ _ h _,
@@ -610,7 +620,6 @@ end ordered_comm_group
 class decidable_linear_ordered_comm_group (α : Type u)
     extends add_comm_group α, decidable_linear_order α :=
 (add_le_add_left : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b)
-(add_lt_add_left : ∀ a b : α, a < b → ∀ c : α, c + a < c + b)
 
 instance decidable_linear_ordered_comm_group.to_ordered_comm_group (α : Type u)
   [s : decidable_linear_ordered_comm_group α] : ordered_comm_group α :=
@@ -618,3 +627,8 @@ instance decidable_linear_ordered_comm_group.to_ordered_comm_group (α : Type u)
 
 class decidable_linear_ordered_cancel_comm_monoid (α : Type u)
       extends ordered_cancel_comm_monoid α, decidable_linear_order α
+
+lemma decidable_linear_ordered_comm_group.add_lt_add_left {α} [decidable_linear_ordered_comm_group α]
+  (a b : α) (h : a < b) (c : α) : c + a < c + b :=
+  ordered_comm_group.add_lt_add_left a b h c
+  
