@@ -90,7 +90,7 @@ protected:
         type_context_old::tmp_locals locals(ctx());
         for (unsigned i = 0; i < rel_fields.size(); i++) {
             if (!is_lambda(e)) {
-                /* [note] this was added for the test `tests/lean/crash2.lean`.  */
+                /* [note] this was added for the test `tests/lean/172.lean`.  */
                 break;
             } else {
                 lean_assert(is_lambda(e));
