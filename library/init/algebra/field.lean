@@ -86,8 +86,16 @@ assume : 1 / a = 0,
 have 0 = (1:α), from eq.symm (by rw [← mul_one_div_cancel h, this, mul_zero]),
 absurd this zero_ne_one
 
+lemma ne_zero_of_one_div_ne_zero {a : α} (h : 1 / a ≠ 0) : a ≠ 0 :=
+assume ha : a = 0, begin rw [ha, div_zero] at h, contradiction end
+
 lemma inv_ne_zero {a : α} (h : a ≠ 0) : a⁻¹ ≠ 0 :=
 by rw inv_eq_one_div; exact one_div_ne_zero h
+
+lemma eq_zero_of_one_div_eq_zero {a : α} (h : 1 / a = 0) : a = 0 :=
+classical.by_cases
+  (assume ha, ha)
+  (assume ha, false.elim ((one_div_ne_zero ha) h))
 
 lemma one_inv_eq : 1⁻¹ = (1:α) :=
 calc 1⁻¹ = 1 * 1⁻¹ : by rw [one_mul]
@@ -101,7 +109,7 @@ by simp
 lemma zero_div (a : α) : 0 / a = 0 :=
 by simp
 
--- note: integral domain has a "mul_ne_zero". α commutative division ring is an integral
+-- note: integral domain has a "mul_ne_zero". a commutative division ring is an integral
 -- domain, but let's not define that class for now.
 lemma division_ring.mul_ne_zero {a b : α} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 :=
 assume : a * b = 0,
@@ -169,7 +177,7 @@ match classical.em (a = 0) with
 | or.inr h := eq.symm (eq_one_div_of_mul_eq_one_left (mul_one_div_cancel h))
 end
 
-lemma inv_inv' {a : α} : a⁻¹⁻¹ = a :=
+lemma inv_inv' (a : α) : a⁻¹⁻¹ = a :=
 by rw [inv_eq_one_div, inv_eq_one_div, one_div_one_div]
 
 lemma eq_of_one_div_eq_one_div {a b : α} (h : 1 / a = 1 / b) : a = b :=
@@ -185,11 +193,25 @@ lemma one_div_div (a b : α) : 1 / (a / b) = b / a :=
 by rw [one_div_eq_inv, division_def, mul_inv',
        inv_inv', division_def]
 
+lemma div_helper {a : α} (b : α) (h : a ≠ 0) : (1 / (a * b)) * a = 1 / b :=
+by simp only [division_def, mul_inv', one_mul, mul_assoc, inv_mul_cancel h, mul_one]
+
 lemma mul_div_cancel (a : α) {b : α} (hb : b ≠ 0) : a * b / b = a :=
 by simp [hb]
 
 lemma div_mul_cancel (a : α) {b : α} (hb : b ≠ 0) : a / b * b = a :=
 by simp [hb]
+
+lemma div_div_eq_mul_div (a b c : α) :
+      a / (b / c) = (a * c) / b :=
+by rw [div_eq_mul_one_div, one_div_div, ← mul_div_assoc]
+
+lemma div_mul_left {a b : α} (hb : b ≠ 0) : b / (a * b) = 1 / a :=
+by simp only [division_def, mul_inv', ← mul_assoc, mul_inv_cancel hb]
+
+lemma mul_div_mul_right (a : α) (b : α) {c : α} (hc : c ≠ 0) :
+      (a * c) / (b * c) = a / b :=
+by rw [mul_div_assoc, div_mul_left hc, ← mul_div_assoc, mul_one]
 
 lemma div_add_div_same (a b c : α) : a / c + b / c = (a + b) / c :=
 eq.symm $ right_distrib a b (c⁻¹)
@@ -236,6 +258,12 @@ have (a + b / c) * c = a * c + b, by rw [right_distrib, (div_mul_cancel _ hc)],
 lemma mul_mul_div (a : α) {c : α} (hc : c ≠ 0) : a = a * c * (1 / c) :=
 by simp [hc]
 
+lemma eq_of_mul_eq_mul_of_nonzero_left {a b c : α} (h : a ≠ 0) (h₂ : a * b = a * c) : b = c :=
+by rw [← one_mul b, ← inv_mul_cancel h, mul_assoc, h₂, ← mul_assoc, inv_mul_cancel h, one_mul]
+
+lemma eq_of_mul_eq_mul_of_nonzero_right {a b c : α} (h : c ≠ 0) (h2 : a * c = b * c) : a = b :=
+by rw [← mul_one a, ← mul_inv_cancel h, ← mul_assoc, h2, mul_assoc, mul_inv_cancel h, mul_one]
+
 end division_ring
 
 class field (α : Type u) extends comm_ring α, has_inv α, zero_ne_one_class α :=
@@ -254,13 +282,7 @@ lemma one_div_mul_one_div (a b : α) : (1 / a) * (1 / b) =  1 / (a * b) :=
 by rw [division_ring.one_div_mul_one_div, mul_comm b]
 
 lemma div_mul_right {a : α} (b : α) (ha : a ≠ 0) : a / (a * b) = 1 / b :=
-eq.symm (calc
-    1 / b = a * ((1 / a) * (1 / b)) : by rw [← mul_assoc, mul_one_div_cancel ha, one_mul]
-      ... = a * (1 / (b * a))       : by rw division_ring.one_div_mul_one_div
-      ... = a * (a * b)⁻¹           : by rw [inv_eq_one_div, mul_comm a b])
-
-lemma div_mul_left {a b : α} (hb : b ≠ 0) : b / (a * b) = 1 / a :=
-by rw [mul_comm a, div_mul_right _ hb]
+by rw [mul_comm, div_mul_left ha]
 
 lemma mul_div_cancel_left {a : α} (b : α) (ha : a ≠ 0) : a * b / a = b :=
 by rw [mul_comm a, (mul_div_cancel _ ha)]
@@ -282,10 +304,6 @@ lemma mul_div_mul_left (a b : α) {c : α} (hc : c ≠ 0) :
       (c * a) / (c * b) = a / b :=
 by rw [← div_mul_div, div_self hc, one_mul]
 
-lemma mul_div_mul_right (a : α) {b c : α} (hb : b ≠ 0) (hc : c ≠ 0) :
-      (a * c) / (b * c) = a / b :=
-by rw [mul_comm a, mul_comm b, mul_div_mul_left _ _ hc]
-
 lemma div_mul_eq_mul_div (a b c : α) : (b / c) * a = (b * a) / c :=
 by simp [division_def]
 
@@ -296,7 +314,7 @@ by rw [div_mul_eq_mul_div, ← one_mul c, ← div_mul_div,
 
 lemma div_add_div (a : α) {b : α} (c : α) {d : α} (hb : b ≠ 0) (hd : d ≠ 0) :
       (a / b) + (c / d) = ((a * d) + (b * c)) / (b * d) :=
-by rw [← mul_div_mul_right _ hb hd, ← mul_div_mul_left c d hb, div_add_div_same]
+by rw [← mul_div_mul_right _ b hd, ← mul_div_mul_left c d hb, div_add_div_same]
 
 lemma div_sub_div (a : α) {b : α} (c : α) {d : α} (hb : b ≠ 0) (hd : d ≠ 0) :
       (a / b) - (c / d) = ((a * d) - (b * c)) / (b * d) :=
@@ -311,10 +329,6 @@ lemma mul_eq_mul_of_div_eq_div (a : α) {b : α} (c : α) {d : α} (hb : b ≠ 0
 by rw [← mul_one (a*d), mul_assoc, mul_comm d, ← mul_assoc, ← div_self hb,
        ← div_mul_eq_mul_div_comm, h, div_mul_eq_mul_div, div_mul_cancel _ hd]
 
-lemma div_div_eq_mul_div (a b c : α) :
-      a / (b / c) = (a * c) / b :=
-by rw [div_eq_mul_one_div, one_div_div, ← mul_div_assoc]
-
 lemma div_div_eq_div_mul (a b c : α) :
       (a / b) / c = a / (b * c) :=
 by rw [div_eq_mul_one_div, div_mul_div, mul_one]
@@ -327,22 +341,5 @@ by rw [div_div_eq_mul_div, div_mul_eq_mul_div,
 lemma div_mul_eq_div_mul_one_div (a b c : α) :
       a / (b * c) = (a / b) * (1 / c) :=
 by rw [← div_div_eq_div_mul, ← div_eq_mul_one_div]
-
-lemma eq_of_mul_eq_mul_of_nonzero_left {a b c : α} (h : a ≠ 0) (h₂ : a * b = a * c) : b = c :=
-by rw [← one_mul b, ← div_self h, div_mul_eq_mul_div, h₂, mul_div_cancel_left _ h]
-
-lemma eq_of_mul_eq_mul_of_nonzero_right {a b c : α} (h : c ≠ 0) (h2 : a * c = b * c) : a = b :=
-by rw [← mul_one a, ← div_self h, ← mul_div_assoc, h2, mul_div_cancel _ h]
-
-lemma ne_zero_of_one_div_ne_zero {a : α} (h : 1 / a ≠ 0) : a ≠ 0 :=
-assume ha : a = 0, begin rw [ha, div_zero] at h, contradiction end
-
-lemma eq_zero_of_one_div_eq_zero {a : α} (h : 1 / a = 0) : a = 0 :=
-classical.by_cases
-  (assume ha, ha)
-  (assume ha, false.elim ((one_div_ne_zero ha) h))
-
-lemma div_helper {a : α} (b : α) (h : a ≠ 0) : (1 / (a * b)) * a = 1 / b :=
-by rw [div_mul_eq_mul_div, one_mul, div_mul_right _ h]
 
 end field

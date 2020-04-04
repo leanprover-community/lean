@@ -43,5 +43,5 @@ rfl
 end
 
 def {u₁ u₂ v₁ v₂} prod.map {α₁ : Type u₁} {α₂ : Type u₂} {β₁ : Type v₁} {β₂ : Type v₂}
-  (f : α₁ → α₂) (g : β₁ → β₂) : α₁ × β₁ → α₂ × β₂
-| (a, b) := (f a, g b)
+  (f : α₁ → α₂) (g : β₁ → β₂) (x : α₁ × β₁) : α₂ × β₂ :=
+(f x.1, g x.2)
