@@ -150,19 +150,8 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
                 return optional<expr>(mk_constant(n, const_levels(e)));
             }
         } else if (is_app(e)) {
-            auto fn = app_fn(e);
-            auto arg = app_arg(e);
-            bool changed = false;
-            if (auto fn2 = apply_overrides_rec(fn)) {
-                fn = *fn2;
-                changed = true;
-            }
-            if (auto arg2 = apply_overrides_rec(arg)) {
-                arg = *arg2;
-                changed = true;
-            }
-            if (changed) {
-                return optional<expr>(mk_app(fn, arg));
+            if (auto fn = apply_overrides_rec(app_fn(e))) {
+                return optional<expr>(mk_app(*fn, app_arg(e)));
             }
         }
         return optional<expr>();
@@ -198,10 +187,12 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     }
 
     virtual expr visit_app(expr const & arg) override {
-        expr e = apply_overrides(arg);
-        expr const & fn = get_app_fn(e);
+        expr e = arg;
+        expr fn = get_app_fn(e);
         if (!is_constant(fn))
             return default_visit_app(e);
+        e = apply_overrides(arg);
+        fn = get_app_fn(e);
         name const & n  = const_name(fn);
 
         if (is_vm_builtin_function(n) || is_pack_unpack(env(), e))
