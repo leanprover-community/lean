@@ -1051,6 +1051,7 @@ void vm_decl_cell::dealloc() {
     delete this;
 }
 
+/// Name of the option to disable vm_overrides.
 static name * g_vm_override_enabled;
 
 vm_decl set_overridden(vm_decl const & d, unsigned idx_override) {
@@ -3859,7 +3860,7 @@ void finalize_vm_core() {
     delete g_vm_cases_builtins;
     delete g_vm_index_manager;
 }
-/// Name of the option to disable vm_overrides.
+
 void initialize_vm() {
     g_ext = new vm_decls_reg();
     // g_may_update_vm_builtins = false;
