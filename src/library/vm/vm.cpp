@@ -3442,7 +3442,7 @@ void vm_state::run() {
                     goto main_loop;
                 }
             }
-            invoke(decl);
+            invoke_global(decl);
             goto main_loop;
         }
         case opcode::InvokeBuiltin: {
