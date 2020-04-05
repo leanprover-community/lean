@@ -134,8 +134,10 @@ bool is_anonymous_field_notation(expr const & e);
 name const & get_field_notation_field_name(expr const & e);
 unsigned get_field_notation_field_idx(expr const & e);
 
-environment compile_expr(environment const & env, name const & n, level_param_names const & ls, expr const & type, expr const & e, pos_info const & pos);
-vm_obj eval_closed_expr(environment const & env, name const & n, expr const & type, expr const & e, pos_info const & pos);
+environment compile_expr(environment const & env, options const & opts, name const & n,
+                         level_param_names const & ls, expr const & type, expr const & e, pos_info const & pos);
+vm_obj eval_closed_expr(environment const & env, options const & opts, name const & n,
+                        expr const & type, expr const & e, pos_info const & pos);
 
 expr mk_lean_list(parser & p, buffer<expr> const & es, pos_info const & pos);
 expr mk_lean_list(buffer<expr> const & es);

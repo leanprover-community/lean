@@ -186,7 +186,7 @@ name get_elim_name(name const & n) {
 }
 
 /**\ brief Return recursor name */
-name get_destr_name(name const & n) {
+name get_cases_on_name(name const & n) {
     return n + name("cases_on");
 }
 

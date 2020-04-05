@@ -938,13 +938,16 @@ unsigned get_num_nested_lambdas(expr const & e);
 /** \brief Add bytcode for the function named \c fn in \c env.
     \remark The index for \c fn must have been reserved using reserve_vm_index. */
 environment update_vm_code(environment const & env, name const & fn, unsigned code_sz, vm_instr const * code,
-                           list<vm_local_info> const & args_info, optional<pos_info> const & pos);
+                           list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                           bool enable_overrides);
 
 /** \brief Combines reserve_vm_index and update_vm_code */
 environment add_vm_code(environment const & env, name const & fn, expr const & e, unsigned code_sz, vm_instr const * code,
-                        list<vm_local_info> const & args_info, optional<pos_info> const & pos);
+                        list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                        bool enable_overrides);
 environment add_vm_code(environment const & env, name const & fn, unsigned arity, unsigned code_sz, vm_instr const * code,
-                        list<vm_local_info> const & args_info, optional<pos_info> const & pos);
+                        list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                        bool enable_overrides);
 
 /** \brief Return the internal idx for the given constant. Return none
     if the constant is not builtin nor it has code associated with it. */
@@ -953,9 +956,11 @@ optional<unsigned> get_vm_constant_idx(environment const & env, name const & n);
 /** \brief Return true iff \c fn is a VM function in the given environment. */
 bool is_vm_function(environment const & env, name const & fn);
 
-optional<name> get_vm_override_name(environment const & env, name const & decl_name);
+optional<name> get_vm_override_name(environment const & env, name const & decl_name, bool enable_overrides);
 
-optional<vm_decl> get_vm_decl(environment const & env, name const & n);
+optional<vm_decl> get_vm_decl(environment const & env, name const & n, bool enable_overrides);
+
+optional<vm_decl> get_vm_decl(environment const & env, name const & n, options const & opts);
 
 /** \brief Return the function idx of a builtin function.
     \remark This function must only be invoked after initialize_vm was invoked. */

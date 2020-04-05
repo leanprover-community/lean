@@ -1183,7 +1183,7 @@ struct vm_decls : public environment_extension {
         auto idx_override = get_vm_index(n_override);
         m_ovr.insert(n, n_override);
         vm_decl const * decl_override = m_decls.find(idx_override);
-        if ( !decl_override ) { return; }
+        if (!decl_override) { return; }
         vm_decl const * decl = m_decls.find(idx);
         if ( !decl ) {
             reserve(n, decl_override->get_arity());
@@ -1272,7 +1272,7 @@ environment add_override(environment const & env, name const & n, name const & n
             name rec_ovr(*ns, "rec");
             checker(rec, rec_ovr);
             ext.add_override(rec, rec_ovr);
-            name destr = inductive::get_destr_name(n);
+            name destr = inductive::get_cases_on_name(n);
             name destr_ovr(*ns, "cases_on");
             checker(destr, destr_ovr);
             ext.add_override(destr, destr_ovr);
@@ -1455,26 +1455,30 @@ environment reserve_vm_index(environment const & env, name const & fn, expr cons
 }
 
 environment update_vm_code(environment const & env, name const & fn, unsigned code_sz, vm_instr const * code,
-                           list<vm_local_info> const & args_info, optional<pos_info> const & pos) {
-    vm_decl decl(fn, get_vm_index(fn), get_vm_decl(env, fn)->get_arity(), code_sz, code, args_info, pos);
+                           list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                           bool enable_overrides) {
+    vm_decl decl(fn, get_vm_index(fn), get_vm_decl(env, fn, enable_overrides)->get_arity(), code_sz, code, args_info, pos);
     return module::add_and_perform(env, std::make_shared<vm_code_modification>(decl));
 }
 
 environment add_vm_code(environment const & env, name const & fn, expr const & e, unsigned code_sz, vm_instr const * code,
-                        list<vm_local_info> const & args_info, optional<pos_info> const & pos) {
+                        list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                        bool enable_overrides) {
     environment new_env = reserve_vm_index(env, fn, e);
-    return update_vm_code(new_env, fn, code_sz, code, args_info, pos);
+    return update_vm_code(new_env, fn, code_sz, code, args_info, pos, enable_overrides);
 }
 
 environment add_vm_code(environment const & env, name const & fn, unsigned arity, unsigned code_sz, vm_instr const * code,
-                        list<vm_local_info> const & args_info, optional<pos_info> const & pos) {
+                        list<vm_local_info> const & args_info, optional<pos_info> const & pos,
+                        bool enable_overrides) {
     environment new_env = reserve_vm_index(env, fn, arity);
-    return update_vm_code(new_env, fn, code_sz, code, args_info, pos);
+    return update_vm_code(new_env, fn, code_sz, code, args_info, pos, enable_overrides);
 }
 
-optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl) {
+optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl,
+                                       bool enable_overrides) {
     vm_decls const & ext = get_extension(env);
-    if (!get_vm_override_enabled(get_global_ios().get_options()))
+    if (!enable_overrides)
         return optional<vm_decl>();
     auto d = decl;
     if (auto idx = d.get_overridden()) {
@@ -1496,10 +1500,11 @@ optional<vm_decl> get_vm_decl_no_override(environment const & env, name const & 
         return optional<vm_decl>();
 }
 
-optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
+optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name,
+                              bool enable_overrides) {
     name n = decl_name;
     if (auto decl = get_vm_decl_no_override(env, n)) {
-        if (auto ovr = get_vm_override_decl(env, *decl))
+        if (auto ovr = get_vm_override_decl(env, *decl, enable_overrides))
             return optional<vm_decl>(ovr);
         else
             return decl;
@@ -1508,9 +1513,16 @@ optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name) {
     }
 }
 
-optional<name> get_vm_override_name(environment const & env, name const & decl_name) {
+optional<vm_decl> get_vm_decl(environment const & env, name const & decl_name,
+                              options const & opts) {
+    bool enable_overrides = get_vm_override_enabled(opts);
+    return get_vm_decl(env, decl_name, enable_overrides);
+}
+
+optional<name> get_vm_override_name(environment const & env, name const & decl_name,
+                                    bool enable_overrides) {
     if (auto decl = get_vm_decl_no_override(env, decl_name))
-        if (auto ovr = get_vm_override_decl(env, *decl))
+        if (auto ovr = get_vm_override_decl(env, *decl, enable_overrides))
             return optional<name>(ovr->get_name());
     return optional<name>();
 }

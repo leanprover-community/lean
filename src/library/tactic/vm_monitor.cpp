@@ -228,7 +228,7 @@ vm_obj vm_decl_args_info(vm_obj const & d) {
                       });
 }
 
-vm_obj vm_decl_overridden(vm_obj const & d) {
+vm_obj vm_decl_override_idx(vm_obj const & d) {
     if (optional<unsigned int> i = to_vm_decl(d).get_overridden()) {
         return mk_vm_some(mk_vm_nat(*i));
     } else {
@@ -295,7 +295,7 @@ static format default_format(vm_state const & vm, unsigned idx) {
                 name aux_name  = mk_unused_name(aux_env, "_to_fmt_obj");
                 auto cd = check(aux_env, mk_definition(aux_env, aux_name, {}, aux_type, aux_value, true, false));
                 aux_env = aux_env.add(cd);
-                aux_env = vm_compile(aux_env, aux_env.get(aux_name));
+                aux_env = vm_compile(aux_env, curr_vm.get_options(), aux_env.get(aux_name));
                 curr_vm.update_env(aux_env);
                 vm_obj fn = curr_vm.get_constant(aux_name);
                 vm_obj r  = invoke(fn, o);
@@ -477,7 +477,7 @@ void initialize_vm_monitor() {
     DECLARE_VM_BUILTIN(name({"vm_decl", "pos"}),             vm_decl_pos);
     DECLARE_VM_BUILTIN(name({"vm_decl", "olean"}),           vm_decl_olean);
     DECLARE_VM_BUILTIN(name({"vm_decl", "args_info"}),       vm_decl_args_info);
-    DECLARE_VM_BUILTIN(name({"vm_decl", "override_idx"}),    vm_decl_overridden);
+    DECLARE_VM_BUILTIN(name({"vm_decl", "override_idx"}),    vm_decl_override_idx);
     DECLARE_VM_BUILTIN(name({"vm", "get_env"}),              vm_get_env);
     DECLARE_VM_BUILTIN(name({"vm", "get_decl"}),             vm_get_decl);
     DECLARE_VM_BUILTIN(name({"vm", "decl_of_idx"}),          vm_decl_of_idx);

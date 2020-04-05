@@ -142,9 +142,9 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     optional<expr> apply_overrides_rec(expr const & e) {
         if (is_constant(e)) {
             name n = const_name(e);
-            if (auto override_name = get_vm_override_name(m_env, n)) {
+            if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
                 n = override_name.value();
-                while (auto override_name = get_vm_override_name(m_env, n)) {
+                while (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
                     n = override_name.value();
                 }
                 return optional<expr>(mk_constant(n, const_levels(e)));
@@ -183,9 +183,9 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     virtual expr visit_constant(expr const & e) override {
         if (m_enable_overrides) {
             name n = const_name(e);
-            if (auto override_name = get_vm_override_name(m_env, n)) {
+            if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
                 n = override_name.value();
-                while (auto override_name = get_vm_override_name(m_env, n)) {
+                while (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
                     n = override_name.value();
                 }
                 return default_visit_constant(mk_constant(n, const_levels(e)));
@@ -234,12 +234,14 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     }
 
 public:
-    inline_simple_definitions_fn(environment const & env, abstract_context_cache & cache):
+    inline_simple_definitions_fn(environment const & env, options const opts,
+                                 abstract_context_cache & cache):
         compiler_step_visitor(env, cache),
-        m_enable_overrides(get_vm_override_enabled(get_global_ios().get_options())) { }
+        m_enable_overrides(get_vm_override_enabled(opts)) { }
 };
 
-expr inline_simple_definitions(environment const & env, abstract_context_cache & cache, expr const & e) {
-    return inline_simple_definitions_fn(env, cache)(e);
+expr inline_simple_definitions(environment const & env, options const & opts,
+                               abstract_context_cache & cache, expr const & e) {
+    return inline_simple_definitions_fn(env, opts, cache)(e);
 }
 }

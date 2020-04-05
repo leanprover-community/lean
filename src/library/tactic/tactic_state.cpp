@@ -715,8 +715,8 @@ vm_obj tactic_add_decl(vm_obj const & _d, vm_obj const & _s) {
     try {
         declaration d       = to_declaration(_d);
         environment new_env = module::add(s.env(), check(s.env(), d));
-        new_env = vm_compile(new_env, d);
-         return tactic::mk_success(set_env(s, new_env));
+        new_env = vm_compile(new_env, s.get_options(), d);
+        return tactic::mk_success(set_env(s, new_env));
     } catch (throwable & ex) {
         return tactic::mk_exception(ex, s);
     }
@@ -811,12 +811,13 @@ format tactic_state::pp() const {
             expr code            = mk_app(mk_constant("to_fmt", {mk_level_zero()}), ts_expr, *to_fmt_inst);
             expr type            = ctx.infer(code);
             environment new_env  = ctx.env();
+            options opts         = ctx.get_options();
             bool use_conv_opt    = true;
             bool is_trusted      = false;
             name pp_name("_pp_tactic_state");
             auto cd              = check(new_env, mk_definition(new_env, pp_name, {}, type, code, use_conv_opt, is_trusted));
             new_env              = new_env.add(cd);
-            new_env              = vm_compile(new_env, new_env.get(pp_name));
+            new_env              = vm_compile(new_env, opts, new_env.get(pp_name));
             vm_state S(new_env, get_options());
             vm_obj r             = S.invoke(pp_name, to_obj(*this));
             std::ostringstream ss;
