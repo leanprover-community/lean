@@ -139,61 +139,36 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
         return ctx().reduce_projection(e);
     }
 
-    optional<expr> apply_overrides_rec(expr const & e) {
-        if (is_constant(e)) {
-            name n = const_name(e);
-            if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
-                n = override_name.value();
-                while (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
-                    n = override_name.value();
-                }
-                return optional<expr>(mk_constant(n, const_levels(e)));
-            }
-        } else if (is_app(e)) {
-            if (auto fn = apply_overrides_rec(app_fn(e))) {
-                return optional<expr>(mk_app(*fn, app_arg(e)));
-            }
-        }
-        return optional<expr>();
-    }
-
     expr apply_overrides(expr const & e) {
         if (m_enable_overrides) {
-            if (auto e2 = apply_overrides_rec(e)) {
-                return *e2;
-            } else {
-                return e;
+            buffer<expr> args;
+            expr const & fn = get_app_args(e, args);
+            if (is_constant(fn)) {
+                auto n = const_name(fn);
+                if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
+                    return mk_app(mk_constant(*override_name, const_levels(fn)), args);
+                }
             }
-        } else {
-            return e;
         }
+        return e;
     }
 
     virtual expr visit_constant(expr const & e) override {
         if (m_enable_overrides) {
             name n = const_name(e);
             if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
-                n = override_name.value();
-                while (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
-                    n = override_name.value();
-                }
-                return default_visit_constant(mk_constant(n, const_levels(e)));
-            } else {
-                return default_visit_constant(e);
+                return default_visit_constant(mk_constant(*override_name, const_levels(e)));
             }
-        } else {
-            return default_visit_constant(e);
         }
+        return default_visit_constant(e);
     }
 
     virtual expr visit_app(expr const & arg) override {
-        expr e = arg;
+        expr e = apply_overrides(arg);
         expr fn = get_app_fn(e);
         if (!is_constant(fn))
             return default_visit_app(e);
-        e = apply_overrides(arg);
-        fn = get_app_fn(e);
-        name const & n  = const_name(fn);
+        name const & n = const_name(fn);
 
         if (is_vm_builtin_function(n) || is_pack_unpack(env(), e))
             return default_visit_app(e);
