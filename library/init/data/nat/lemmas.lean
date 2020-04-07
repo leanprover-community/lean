@@ -91,11 +91,6 @@ lemma succ_mul : ∀ (n m : ℕ), (succ n) * m = (n * m) + m
     sort_add
   end
 
-protected lemma right_distrib : ∀ (n m k : ℕ), (n + m) * k = n * k + m * k
-| n m 0        := rfl
-| n m (succ k) :=
-  begin simp [mul_succ, right_distrib n m k], sort_add end
-
 protected lemma left_distrib : ∀ (n m k : ℕ), n * (m + k) = n * m + n * k
 | 0        m k := by simp [nat.zero_mul]
 | (succ n) m k :=
@@ -109,27 +104,21 @@ protected lemma mul_assoc : ∀ (n m k : ℕ), (n * m) * k = n * (m * k)
 | n m 0        := rfl
 | n m (succ k) := by simp [mul_succ, nat.left_distrib, mul_assoc n m k]
 
-protected lemma mul_one : ∀ (n : ℕ), n * 1 = n := nat.zero_add
-
 protected lemma one_mul (n : ℕ) : 1 * n = n :=
-by rw [nat.mul_comm, nat.mul_one]
+nat.mul_comm n 1 ▸ nat.zero_add n
 
 instance : comm_semiring nat :=
 {add            := nat.add,
  add_assoc      := nat.add_assoc,
  zero           := nat.zero,
  zero_add       := nat.zero_add,
- add_zero       := nat.add_zero,
  add_comm       := nat.add_comm,
  mul            := nat.mul,
  mul_assoc      := nat.mul_assoc,
  one            := nat.succ nat.zero,
  one_mul        := nat.one_mul,
- mul_one        := nat.mul_one,
  left_distrib   := nat.left_distrib,
- right_distrib  := nat.right_distrib,
  zero_mul       := nat.zero_mul,
- mul_zero       := nat.mul_zero,
  mul_comm       := nat.mul_comm}
 
 /- properties of inequality -/
@@ -300,7 +289,10 @@ protected lemma mul_lt_mul_of_pos_right {n m k : ℕ} (h : n < m) (hk : k > 0) :
 mul_comm k m ▸ mul_comm k n ▸ nat.mul_lt_mul_of_pos_left h hk
 
 instance : decidable_linear_ordered_semiring nat :=
-{ add_left_cancel            := @nat.add_left_cancel,
+{ mul_one                    := mul_one,
+  right_distrib              := right_distrib,
+  mul_zero                   := mul_zero,
+  add_left_cancel            := @nat.add_left_cancel,
   add_right_cancel           := @nat.add_right_cancel,
   lt                         := nat.lt,
   le                         := nat.le,

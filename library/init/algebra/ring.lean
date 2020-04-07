@@ -78,7 +78,15 @@ section semiring
   by simp [right_distrib]
 end semiring
 
-class comm_semiring (α : Type u) extends semiring α, comm_monoid α
+class comm_semiring (α : Type u) extends add_comm_monoid α, comm_monoid α :=
+(left_distrib : ∀ a b c : α, a * (b + c) = (a * b) + (a * c))
+(zero_mul : ∀ a : α, 0 * a = 0)
+
+instance comm_semiring.to_semiring (α : Type u) [I : comm_semiring α] : semiring α :=
+{ right_distrib := λ a b c, by rw [mul_comm, comm_semiring.left_distrib, mul_comm c, mul_comm c]; refl,
+  mul_one := mul_one,
+  mul_zero := λ a, by rw [mul_comm, comm_semiring.zero_mul]; refl,
+  ..I }
 
 section comm_semiring
   variables [comm_semiring α] (a b c : α)
@@ -160,7 +168,7 @@ end comm_semiring
 
 /- ring -/
 
-class ring (α : Type u) extends add_comm_group α, monoid α, distrib α
+class ring (α : Type u) extends add_group α, monoid α, distrib α
 
 local attribute [simp] sub_eq_add_neg
 
@@ -176,8 +184,20 @@ have 0 * a + 0 = 0 * a + 0 * a, from calc
         ... = 0 * a + 0 * a : by rewrite right_distrib,
 show 0 * a = 0, from  (add_left_cancel this).symm
 
+lemma ring.add_comm [ring α] (a b : α) : a + b = b + a :=
+have (a + a) + (b + b) = (a + b) + (a + b),
+  from calc (a + a) + (b + b) = (1 + 1) * (a + b) :
+    by rw [left_distrib, right_distrib, right_distrib]; simp
+  ... = (a + b) + (a + b) :
+    by rw [right_distrib, left_distrib]; simp,
+calc a + b = -a + ((a + a) + (b + b)) - b : by simp [add_assoc]
+... = b + a : by rw this; simp [add_assoc]
+
 instance ring.to_semiring [s : ring α] : semiring α :=
-{ mul_zero := ring.mul_zero, zero_mul := ring.zero_mul, ..s }
+{ mul_zero := ring.mul_zero, add_comm := ring.add_comm, zero_mul := ring.zero_mul, ..s }
+
+instance ring.to_add_comm_group [s : ring α] : add_comm_group α :=
+{ add_comm := ring.add_comm, ..s}
 
 lemma neg_mul_eq_neg_mul [s : ring α] (a b : α) : -(a * b) = -a * b :=
 neg_eq_of_add_eq_zero
@@ -216,21 +236,27 @@ calc
 
 def sub_mul := @mul_sub_right_distrib
 
-class comm_ring (α : Type u) extends ring α, comm_semigroup α
+class comm_ring (α : Type u) extends add_group α, comm_monoid α :=
+(left_distrib : ∀ a b c : α, a * (b + c) = (a * b) + (a * c))
+
+instance comm_ring.to_ring (α : Type u) [s : comm_ring α] : ring α :=
+{ mul_one := mul_one,
+  right_distrib := λ a b c, by rw [mul_comm, comm_ring.left_distrib, mul_comm c, mul_comm c]; refl,
+  ..s }
 
 instance comm_ring.to_comm_semiring [s : comm_ring α] : comm_semiring α :=
-{ mul_zero := mul_zero, zero_mul := zero_mul, ..s }
+{ zero_mul := zero_mul, add_comm := ring.add_comm, ..s }
 
 section comm_ring
   variable [comm_ring α]
 
-  local attribute [simp] add_assoc add_comm add_left_comm mul_comm
+  local attribute [simp] add_assoc add_comm add_left_comm mul_comm add_neg_cancel_left
 
   lemma mul_self_sub_mul_self_eq (a b : α) : a * a - b * b = (a + b) * (a - b) :=
-  begin simp [right_distrib, left_distrib], rw [add_comm (-(a*b)), add_left_comm (a*b)], simp end
+  begin simp [right_distrib, left_distrib] end
 
   lemma mul_self_sub_one_eq (a : α) : a * a - 1 = (a + 1) * (a - 1) :=
-  begin simp [right_distrib, left_distrib], rw [add_left_comm, add_comm (-a), add_left_comm a], simp end
+  begin simp [right_distrib, left_distrib] end
 
   lemma add_mul_self_eq (a b : α) : (a + b) * (a + b) = a*a + 2*a*b + b*b :=
   calc (a + b)*(a + b) = a*a + (1+1)*a*b + b*b : by simp [right_distrib, left_distrib]
