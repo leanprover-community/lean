@@ -39,7 +39,7 @@ implicit_infer_kind get_implicit_infer_kind(name_map<implicit_infer_kind> const 
     if (auto it = implicit_infer_map.find(n))
         return *it;
     else
-        return implicit_infer_kind::Implicit;
+        return implicit_infer_kind::RelaxedImplicit;
 }
 
 unsigned get_num_indices(environment const & env, expr const & ind) {

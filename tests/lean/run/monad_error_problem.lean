@@ -7,7 +7,7 @@ class monad_error (ε : out_param $ Type u) (m : Type w → Type v) :=
 set_option pp.all true
 
 def unreachable {α} {m} [monad_error string m] : m α :=
-monad_error.fail m "unreachable"
+monad_error.fail "unreachable"
 
 #check @unreachable
 end issue
@@ -21,7 +21,7 @@ class monad_error (ε : out_param $ Type u) (m : Type u → Type v) :=
 set_option pp.all true
 
 def unreachable {α} {m} [monad_error string m] : m α :=
-monad_error.fail m "unreachable"
+monad_error.fail "unreachable"
 
 #check @unreachable
 end original_issue

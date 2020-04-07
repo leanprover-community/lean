@@ -85,14 +85,14 @@ end state_t
     Note: This class can be seen as a simplification of the more "principled" definition
     ```
     class monad_state_lift (σ : out_param (Type u)) (n : Type u → Type u) :=
-    (lift {} {α : Type u} : (∀ {m : Type u → Type u} [monad m], state_t σ m α) → n α)
+    (lift {α : Type u} : (∀ {m : Type u → Type u} [monad m], state_t σ m α) → n α)
     ```
     which better describes the intent of "we can lift a `state_t` from anywhere in the monad stack".
     However, by parametricity the types `∀ m [monad m], σ → m (α × σ)` and `σ → α × σ` should be
     equivalent because the only way to obtain an `m` is through `pure`.
     -/
 class monad_state (σ : out_param (Type u)) (m : Type u → Type v) :=
-(lift {} {α : Type u} : state σ α → m α)
+(lift {α : Type u} : state σ α → m α)
 
 section
 variables {σ : Type u} {m : Type u → Type v}
@@ -147,7 +147,7 @@ end
     Note: This class can be seen as a simplification of the more "principled" definition
     ```
     class monad_state_functor (σ σ' : out_param (Type u)) (n n' : Type u → Type u) :=
-    (map {} {α : Type u} : (∀ {m : Type u → Type u} [monad m], state_t σ m α → state_t σ' m α) → n α → n' α)
+    (map {α : Type u} : (∀ {m : Type u → Type u} [monad m], state_t σ m α → state_t σ' m α) → n α → n' α)
     ```
     which better describes the intent of "we can map a `state_t` anywhere in the monad stack".
     If we look at the unfolded type of the first argument `∀ m [monad m], (σ → m (α × σ)) → σ' → m (α × σ')`, we see that it has the lens type `∀ f [functor f], (α → f α) → β → f β` with `f` specialized to `λ σ, m (α × σ)` (exercise: show that this is a lawful functor). We can build all lenses we are insterested in from the functions `split` and `join` as
@@ -157,7 +157,7 @@ end
     ```
     -/
 class monad_state_adapter (σ σ' : out_param (Type u)) (m m' : Type u → Type v) :=
-(adapt_state {} {σ'' α : Type u} (split : σ' → σ × σ'') (join : σ → σ'' → σ') : m α → m' α)
+(adapt_state {σ'' α : Type u} (split : σ' → σ × σ'') (join : σ → σ'' → σ') : m α → m' α)
 export monad_state_adapter (adapt_state)
 
 section

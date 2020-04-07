@@ -19,13 +19,13 @@ universes u v w
     but `n` does not have to be a monad transformer.
     Alternatively, an implementation of [MonadLayer](https://hackage.haskell.org/package/layers-0.1/docs/Control-Monad-Layer.html#t:MonadLayer) without `layerInvmap` (so far). -/
 class has_monad_lift (m : Type u → Type v) (n : Type u → Type w) :=
-(monad_lift {} : ∀ {α}, m α → n α)
+(monad_lift : ∀ {α}, m α → n α)
 
 /-- The reflexive-transitive closure of `has_monad_lift`.
     `monad_lift` is used to transitively lift monadic computations such as `state_t.get` or `state_t.put s`.
     Corresponds to [MonadLift](https://hackage.haskell.org/package/layers-0.1/docs/Control-Monad-Layer.html#t:MonadLift). -/
 class has_monad_lift_t (m : Type u → Type v) (n : Type u → Type w) :=
-(monad_lift {} : ∀ {α}, m α → n α)
+(monad_lift : ∀ {α}, m α → n α)
 
 export has_monad_lift_t (monad_lift)
 
@@ -48,13 +48,13 @@ instance has_monad_lift_t_refl (m) : has_monad_lift_t m m :=
     but not restricted to monad transformers.
     Alternatively, an implementation of [MonadTransFunctor](http://duairc.netsoc.ie/layers-docs/Control-Monad-Layer.html#t:MonadTransFunctor). -/
 class monad_functor (m m' : Type u → Type v) (n n' : Type u → Type w) :=
-(monad_map {} {α : Type u} : (∀ {α}, m α → m' α) → n α → n' α)
+(monad_map {α : Type u} : (∀ {α}, m α → m' α) → n α → n' α)
 
 /-- The reflexive-transitive closure of `monad_functor`.
     `monad_map` is used to transitively lift monad morphisms such as `state_t.zoom`.
     A generalization of [MonadLiftFunctor](http://duairc.netsoc.ie/layers-docs/Control-Monad-Layer.html#t:MonadLiftFunctor), which can only lift endomorphisms (i.e. m = m', n = n'). -/
 class monad_functor_t (m m' : Type u → Type v) (n n' : Type u → Type w) :=
-(monad_map {} {α : Type u} : (∀ {α}, m α → m' α) → n α → n' α)
+(monad_map {α : Type u} : (∀ {α}, m α → m' α) → n α → n' α)
 
 export monad_functor_t (monad_map)
 
@@ -78,6 +78,6 @@ instance monad_functor_t_refl (m m') : monad_functor_t m m' m m' :=
     ```
     -/
 class monad_run (out : out_param $ Type u → Type v) (m : Type u → Type v) :=
-(run {} {α : Type u} : m α → out α)
+(run {α : Type u} : m α → out α)
 
 export monad_run (run)

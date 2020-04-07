@@ -2,16 +2,16 @@ inductive imf {A B : Type} (f : A → B) : B → Type
 | mk : ∀ (a : A), imf (f a)
 
 definition g {A B : Type} {f : A → B} : ∀ {b : B}, imf f b → A
-| .(f a) (imf.mk .(f) a)  := a
+| _ (imf.mk a) := a
 
-example {A B : Type} (f : A → B) (a : A) : g (imf.mk f a) = a :=
+example {A B : Type} (f : A → B) (a : A) : g (imf.mk a : imf f _) = a :=
 rfl
 
 definition v₁ : imf nat.succ 1 :=
-(imf.mk nat.succ 0)
+imf.mk 0
 
 definition v₂ : imf (λ x, 1 + x) 1 :=
-(imf.mk (λ x, 1 + x) 0)
+imf.mk 0
 
 example : g v₁ = 0 :=
 rfl

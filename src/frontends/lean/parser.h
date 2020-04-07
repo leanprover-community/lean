@@ -252,7 +252,9 @@ class parser : public abstract_parser, public parser_info {
 
           - implicit_infer_kind::None if prefix is '()'
           - implicit_infer_kind::RelaxedImplicit if prefix is '{}'
-          - implicit_infer_kind::Implicit, otherwise. */
+          - implicit_infer_kind::Implicit, if prefix is '[]'.
+
+          The default is `RelaxedImplicit` */
         implicit_infer_kind * m_infer_kind{nullptr};
         /* (output) It is set to true if the last binder is surrounded
            with some kind of bracket (e.g., '()', '{}', '[]'). */

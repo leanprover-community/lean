@@ -9,4 +9,4 @@ instance : mono_monad bool bool :=
 
 #eval do b ← tt,
          b' ← ff,
-         mono_monad.pure _ b
+         mono_monad.pure b

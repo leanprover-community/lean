@@ -13,7 +13,7 @@ universes u v
 
 meta inductive interaction_monad.result (state : Type) (α : Type u)
 | success      : α → state → interaction_monad.result
-| exception {} : option (unit → format) → option pos → state → interaction_monad.result
+| exception    : option (unit → format) → option pos → state → interaction_monad.result
 
 open interaction_monad.result
 

@@ -190,7 +190,7 @@ section
 
   -- relational product is a subrelation of the lex
   def rprod_sub_lex : ∀ a b, rprod ra rb a b → lex ra rb a b :=
-  λ a b h, prod.rprod.rec_on h (λ a₁ b₁ a₂ b₂ h₁ h₂, lex.left rb b₁ b₂ h₁)
+  λ a b h, prod.rprod.rec_on h (λ a₁ b₁ a₂ b₂ h₁ h₂, lex.left b₁ b₂ h₁)
 
   -- The relational product of well founded relations is well-founded
   def rprod_wf (ha : well_founded ra) (hb : well_founded rb) : well_founded (rprod ra rb) :=

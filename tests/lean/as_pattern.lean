@@ -46,7 +46,7 @@ inductive imf {A : Type u} {B : Type v} (f : A → B) : B → Type (max 1 u v)
 | mk : ∀ (a : A), imf (f a)
 
 definition inv_1 {A : Type u} {B : Type v} (f : A → B) : ∀ (b : B), imf f b → A
-| x@.(f w) y@(imf.mk z@.(f) w@a) := w
+| x@.(f w) y@(imf.mk w@a) := w
 end involved
 
 def unicode : ℕ → ℕ

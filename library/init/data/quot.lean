@@ -233,10 +233,10 @@ variable {α : Type u}
 variable (r : α → α → Prop)
 
 inductive eqv_gen : α → α → Prop
-| rel {} : Π x y, r x y → eqv_gen x y
-| refl {} : Π x, eqv_gen x x
-| symm {} : Π x y, eqv_gen x y → eqv_gen y x
-| trans {} : Π x y z, eqv_gen x y → eqv_gen y z → eqv_gen x z
+| rel : Π x y, r x y → eqv_gen x y
+| refl : Π x, eqv_gen x x
+| symm : Π x y, eqv_gen x y → eqv_gen y x
+| trans : Π x y z, eqv_gen x y → eqv_gen y z → eqv_gen x z
 
 theorem eqv_gen.is_equivalence : equivalence (@eqv_gen α r) :=
 mk_equivalence _ eqv_gen.refl eqv_gen.symm eqv_gen.trans

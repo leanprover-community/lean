@@ -109,7 +109,7 @@ class inductive_cmd_fn {
         if (auto it = m_implicit_infer_map.find(n))
             return *it;
         else
-            return implicit_infer_kind::Implicit;
+            return implicit_infer_kind::RelaxedImplicit;
     }
 
     name mk_rec_name(name const & n) {
@@ -390,7 +390,7 @@ class inductive_cmd_fn {
                 ir_name = get_namespace(m_env) + ir_name;
             parser::local_scope S(m_p);
             buffer<expr> params;
-            implicit_infer_kind kind = implicit_infer_kind::Implicit;
+            implicit_infer_kind kind = implicit_infer_kind::RelaxedImplicit;
             m_p.parse_optional_binders(params, kind);
             m_implicit_infer_map.insert(ir_name, kind);
             for (expr const & param : params)

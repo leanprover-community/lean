@@ -37,7 +37,7 @@ preorder.le_refl
 preorder.le_trans
 
 lemma lt_iff_le_not_le [preorder α] : ∀ {a b : α}, a < b ↔ (a ≤ b ∧ ¬ b ≤ a) :=
-preorder.lt_iff_le_not_le _
+preorder.lt_iff_le_not_le
 
 lemma lt_of_le_not_le [preorder α] : ∀ {a b : α}, a ≤ b → ¬ b ≤ a → a < b
 | a b hab hba := lt_iff_le_not_le.mpr ⟨hab, hba⟩
@@ -219,13 +219,13 @@ class decidable_linear_order (α : Type u) extends linear_order α :=
     @decidable_lt_of_decidable_le _ _ decidable_le)
 
 instance [decidable_linear_order α] (a b : α) : decidable (a < b) :=
-decidable_linear_order.decidable_lt α a b
+decidable_linear_order.decidable_lt a b
 
 instance [decidable_linear_order α] (a b : α) : decidable (a ≤ b) :=
-decidable_linear_order.decidable_le α a b
+decidable_linear_order.decidable_le a b
 
 instance [decidable_linear_order α] (a b : α) : decidable (a = b) :=
-decidable_linear_order.decidable_eq α a b
+decidable_linear_order.decidable_eq a b
 
 lemma eq_or_lt_of_not_lt [decidable_linear_order α] {a b : α} (h : ¬ a < b) : a = b ∨ b < a :=
 if h₁ : a = b then or.inl h₁

@@ -37,7 +37,7 @@ lemma division_def (a b : α) : a / b = a * b⁻¹ :=
 rfl
 
 @[simp] lemma inv_zero : 0⁻¹ = (0:α) :=
-division_ring.inv_zero α
+division_ring.inv_zero
 
 @[simp]
 lemma inv_mul_cancel {a : α} (h : a ≠ 0) : a⁻¹ * a = 1 :=

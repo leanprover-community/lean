@@ -101,11 +101,11 @@ class monad_io_random (m : Type → Type → Type) :=
 (rand         : nat → nat → m io.error nat)
 
 instance monad_io_is_monad (m : Type → Type → Type) (e : Type) [monad_io m] : monad (m e) :=
-monad_io.monad m e
+monad_io.monad e
 
 instance monad_io_is_monad_fail (m : Type → Type → Type) [monad_io m] : monad_fail (m io.error) :=
-{ fail := λ α s, monad_io.fail _ _ _ (io.error.other s) }
+{ fail := λ α s, monad_io.fail _ _ (io.error.other s) }
 
 instance monad_io_is_alternative (m : Type → Type → Type) [monad_io m] : alternative (m io.error) :=
 { orelse  := λ α a b, monad_io.catch _ _ _ a (λ _, b),
-  failure := λ α, monad_io.fail _ _ _ (io.error.other "failure") }
+  failure := λ α, monad_io.fail _ _ (io.error.other "failure") }

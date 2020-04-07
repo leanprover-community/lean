@@ -53,20 +53,20 @@ res ← catch (sum.inr <$> a) (return ∘ sum.inl),
 cleanup,
 match res with
 | sum.inr res := return res
-| sum.inl error := monad_io.fail _ _ _ error
+| sum.inl error := monad_io.fail _ _ error
 end
 
 protected def fail {α : Type} (s : string) : io α :=
-monad_io.fail io_core _ _ (io.error.other s)
+monad_io.fail _ _ (io.error.other s)
 
 def put_str : string → io unit :=
-monad_io_terminal.put_str io_core
+monad_io_terminal.put_str
 
 def put_str_ln (s : string) : io unit :=
 put_str s >> put_str "\n"
 
 def get_line : io string :=
-monad_io_terminal.get_line io_core
+monad_io_terminal.get_line
 
 def cmdline_args : io (list string) :=
 return (monad_io_terminal.cmdline_args io_core)
@@ -81,16 +81,16 @@ def handle : Type :=
 monad_io.handle io_core
 
 def mk_file_handle (s : string) (m : mode) (bin : bool := ff) : io handle :=
-monad_io_file_system.mk_file_handle io_core s m bin
+monad_io_file_system.mk_file_handle s m bin
 
 def stdin : io handle :=
-monad_io_file_system.stdin io_core
+monad_io_file_system.stdin
 
 def stderr : io handle :=
-monad_io_file_system.stderr io_core
+monad_io_file_system.stderr
 
 def stdout : io handle :=
-monad_io_file_system.stdout io_core
+monad_io_file_system.stdout
 
 meta def serialize : handle → expr → io unit :=
 monad_io_serial.serialize
@@ -101,15 +101,15 @@ monad_io_serial.deserialize
 namespace env
 
 def get (env_var : string) : io (option string) :=
-monad_io_environment.get_env io_core env_var
+monad_io_environment.get_env env_var
 
 /-- get the current working directory -/
 def get_cwd : io string :=
-monad_io_environment.get_cwd io_core
+monad_io_environment.get_cwd
 
 /-- set the current working directory -/
 def set_cwd (cwd : string) : io unit :=
-monad_io_environment.set_cwd io_core cwd
+monad_io_environment.set_cwd cwd
 
 end env
 
@@ -118,13 +118,13 @@ def socket : Type :=
 monad_io_net_system.socket io_core
 
 def listen : string → nat → io socket :=
-monad_io_net_system.listen io_core
+monad_io_net_system.listen
 
 def accept : socket → io socket :=
 monad_io_net_system.accept
 
 def connect : string → io socket :=
-monad_io_net_system.connect io_core
+monad_io_net_system.connect
 
 def recv : socket → nat → io char_buffer :=
 monad_io_net_system.recv
@@ -184,22 +184,22 @@ do h ← mk_file_handle s io.mode.read bin,
    read_to_end h
 
 def file_exists : string → io bool :=
-monad_io_file_system.file_exists io_core
+monad_io_file_system.file_exists
 
 def dir_exists : string → io bool :=
-monad_io_file_system.dir_exists io_core
+monad_io_file_system.dir_exists
 
 def remove : string → io unit :=
-monad_io_file_system.remove io_core
+monad_io_file_system.remove
 
 def rename : string → string → io unit :=
-monad_io_file_system.rename io_core
+monad_io_file_system.rename
 
 def mkdir (path : string) (recursive : bool := ff) : io bool :=
-monad_io_file_system.mkdir io_core path recursive
+monad_io_file_system.mkdir path recursive
 
 def rmdir : string → io bool :=
-monad_io_file_system.rmdir io_core
+monad_io_file_system.rmdir
 
 end fs
 
@@ -217,21 +217,21 @@ def child.stderr : child → handle :=
 monad_io_process.stderr
 
 def spawn (p : io.process.spawn_args) : io child :=
-monad_io_process.spawn io_core p
+monad_io_process.spawn p
 
 def wait (c : child) : io nat :=
 monad_io_process.wait c
 
 def sleep (n : nat) : io unit :=
-monad_io_process.sleep io_core n
+monad_io_process.sleep n
 
 end proc
 
 def set_rand_gen : std_gen → io unit :=
-monad_io_random.set_rand_gen io_core
+monad_io_random.set_rand_gen
 
 def rand (lo : nat := std_range.1) (hi : nat := std_range.2) : io nat :=
-monad_io_random.rand io_core lo hi
+monad_io_random.rand lo hi
 
 end io
 
