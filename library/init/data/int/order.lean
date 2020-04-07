@@ -197,9 +197,7 @@ instance : decidable_linear_ordered_comm_ring int :=
   lt              := int.lt,
   lt_iff_le_not_le := @int.lt_iff_le_not_le,
   add_le_add_left := @int.add_le_add_left,
-  add_lt_add_left := @int.add_lt_add_left,
   zero_ne_one     := int.zero_ne_one,
-  mul_nonneg      := @int.mul_nonneg,
   mul_pos         := @int.mul_pos,
   le_total        := int.le_total,
   zero_lt_one     := int.zero_lt_one,
@@ -208,7 +206,7 @@ instance : decidable_linear_ordered_comm_ring int :=
   decidable_lt    := int.decidable_lt,
   ..int.comm_ring }
 
-instance : decidable_linear_ordered_comm_group int :=
+instance : decidable_linear_ordered_add_comm_group int :=
 by apply_instance
 
 lemma eq_nat_abs_of_zero_le {a : ℤ} (h : 0 ≤ a) : a = nat_abs a :=

@@ -48,6 +48,7 @@ public:
     }
 
     explicit operator bool() const { return m_some; }
+    bool has_value() const { return m_some; }
     T const * operator->() const { lean_assert(m_some); return &m_value; }
     T * operator->() { lean_assert(m_some); return &m_value; }
     T const & operator*() const { lean_assert(m_some); return m_value; }

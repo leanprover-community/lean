@@ -15,18 +15,18 @@
 About
 -----
 
+- **Important**: This is Lean 3.7.2c, a fork of Lean 3 maintained and updated by the Lean community. The last official release of Lean 3.x was Lean 3.4.2, which can be found [here](https://github.com/leanprover/lean). The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
 - [Lean Homepage](http://leanprover.github.io)
 - [Lean Prover Community Homepage](https://leanprover-community.github.io)
 - [Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/index.html)
 - [Change Log](doc/changes.md)
 - [Lean 3.4.2 FAQ](doc/faq.md)
-- **Important**: Lean 3.4.2 is the last official release for the Lean 3.x code base. 
-  This fork is maintained and updated by the Lean community.
-  The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
 - For HoTT mode, please use [Lean2](https://github.com/leanprover/lean2).
 
 Installation
 ------------
+
+The recommended way to install Lean is following [these instructions](https://github.com/leanprover-community/mathlib#installation).
 
 Stable binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases). 
 Nightly binary releases are available on the [nightly release page](https://github.com/leanprover-community/lean-nightly/releases).

@@ -304,8 +304,6 @@ instance : decidable_linear_ordered_semiring nat :=
   add_le_add_left            := @nat.add_le_add_left,
   le_of_add_le_add_left      := @nat.le_of_add_le_add_left,
   zero_lt_one                := zero_lt_succ 0,
-  mul_le_mul_of_nonneg_left  := assume a b c h₁ h₂, nat.mul_le_mul_left c h₁,
-  mul_le_mul_of_nonneg_right := assume a b c h₁ h₂, nat.mul_le_mul_right c h₁,
   mul_lt_mul_of_pos_left     := @nat.mul_lt_mul_of_pos_left,
   mul_lt_mul_of_pos_right    := @nat.mul_lt_mul_of_pos_right,
   decidable_lt               := nat.decidable_lt,
@@ -314,7 +312,7 @@ instance : decidable_linear_ordered_semiring nat :=
   ..nat.comm_semiring }
 
 -- all the fields are already included in the decidable_linear_ordered_semiring instance
-instance : decidable_linear_ordered_cancel_comm_monoid ℕ :=
+instance : decidable_linear_ordered_cancel_add_comm_monoid ℕ :=
 { add_left_cancel := @nat.add_left_cancel,
   ..nat.decidable_linear_ordered_semiring }
 

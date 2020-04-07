@@ -46,7 +46,7 @@ public:
     struct entry {
         /* m_expr is the term in the congruence closure
            module being represented by this entry */
-        unsigned    m_idx;
+        unsigned    m_idx = 0;
         occurrences m_R_occs[2];
         entry() {}
         entry(unsigned idx):m_idx(idx) {}

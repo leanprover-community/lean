@@ -14,10 +14,10 @@ meta constant attribute.get_instances : name → tactic (list name)
 meta constant attribute.fingerprint : name → tactic nat
 
 /-- Configuration for a user attribute cache. For example, the `simp` attribute has a cache of type simp_lemmas.
-    - `mk_cache` is a function where you are given all of the declarations tagged with your attribute and you return the new value for the cache.
-        That is, `mk_cache` makes the object you want to be cached.
-    - `dependencies` [TODO] is a list of other attributes whose caches need to be computed first.
- -/
+- `mk_cache` is a function where you are given all of the declarations tagged with your attribute and you return the new value for the cache.
+  That is, `mk_cache` makes the object you want to be cached.
+- `dependencies` is a list of other attributes whose caches need to be computed first.
+-/
 meta structure user_attribute_cache_cfg (cache_ty : Type) :=
 (mk_cache     : list name → tactic cache_ty)
 (dependencies : list name)

@@ -32,8 +32,14 @@ calc  a * 0 = 0           : by rw mul_zero
 lemma one_div_pos_of_pos {a : α} (h : 0 < a) : 0 < 1 / a :=
 lt_of_mul_lt_mul_left (mul_zero_lt_mul_inv_of_pos h) (le_of_lt h)
 
+lemma pos_of_one_div_pos {a : α} (h : 0 < 1 / a) : 0 < a :=
+one_div_one_div a ▸ one_div_pos_of_pos h
+
 lemma one_div_neg_of_neg {a : α} (h : a < 0) : 1 / a < 0 :=
 gt_of_mul_lt_mul_neg_left (mul_zero_lt_mul_inv_of_neg h) (le_of_lt h)
+
+lemma neg_of_one_div_neg {a : α} (h : 1 / a < 0) : a < 0 :=
+one_div_one_div a ▸ one_div_neg_of_neg h
 
 lemma le_mul_of_ge_one_right {a b : α} (hb : b ≥ 0) (h : a ≥ 1) : b ≤ b * a :=
 suffices b * 1 ≤ b * a, by rwa mul_one at this,
@@ -269,19 +275,8 @@ begin
   exact mul_le_mul_of_nonpos_right h (le_of_lt (one_div_neg_of_neg hc))
 end
 
-lemma two_pos : (2:α) > 0 :=
-begin unfold bit0, exact add_pos zero_lt_one zero_lt_one end
-
-lemma two_ne_zero : (2:α) ≠ 0 :=
-ne.symm (ne_of_lt two_pos)
-
 lemma add_halves (a : α) : a / 2 + a / 2 = a :=
-calc
-   a / 2 + a / 2 = (a + a) / 2 : by rw div_add_div_same
-    ... = (a * 1 + a * 1) / 2   : by rw mul_one
-    ... = (a * (1 + 1)) / 2     : by rw left_distrib
-    ... = (a * 2) / 2           : by rw one_add_one_eq_two
-    ... = a                     : by rw [@mul_div_cancel α _ _ _ two_ne_zero]
+by { rw [div_add_div_same, ← two_mul, mul_div_cancel_left], exact two_ne_zero }
 
 lemma sub_self_div_two (a : α) : a - a / 2 = a / 2 :=
 suffices a / 2 + a / 2 - a / 2 = a / 2, by rwa add_halves at this,
@@ -303,17 +298,6 @@ lemma add_self_div_two (a : α) : (a + a) / 2 = a :=
 eq.symm
   (iff.mpr (eq_div_iff_mul_eq _ _ (ne_of_gt (add_pos (@zero_lt_one α _) zero_lt_one)))
            (begin unfold bit0, rw [left_distrib, mul_one] end))
-
-lemma two_gt_one : (2:α) > 1 :=
-calc (2:α) = 1+1 : one_add_one_eq_two
-     ...   > 1+0 : add_lt_add_left zero_lt_one _
-     ...   = 1   : add_zero 1
-
-lemma two_ge_one : (2:α) ≥ 1 :=
-le_of_lt two_gt_one
-
-lemma four_pos : (4:α) > 0 :=
-add_pos two_pos two_pos
 
 lemma mul_le_mul_of_mul_div_le {a b c d : α} (h : a * (b / c) ≤ d) (hc : c > 0) : b * a ≤ d * c :=
 begin
@@ -444,31 +428,6 @@ begin
   apply one_div_lt_one_div_of_lt; assumption,
 end
 
-end linear_ordered_field
-
-class discrete_linear_ordered_field (α : Type u) extends linear_ordered_field α,
-      decidable_linear_ordered_comm_ring α
-
-section discrete_linear_ordered_field
-variables {α : Type u}
-
-variables [discrete_linear_ordered_field α]
-
-lemma pos_of_one_div_pos {a : α} (h : 0 < 1 / a) : 0 < a :=
- have h1 : 0 < 1 / (1 / a), from one_div_pos_of_pos h,
- have h2 : 1 / a ≠ 0, from
-   (assume h3 : 1 / a = 0,
-    have h4 : 1 / (1 / a) = 0, from eq.symm h3 ▸ div_zero 1,
-    absurd h4 (ne.symm (ne_of_lt h1))),
- (one_div_one_div a) ▸ h1
-
-lemma neg_of_one_div_neg {a : α} (h : 1 / a < 0) : a < 0 :=
-have h1 : 0 < - (1 / a), from neg_pos_of_neg h,
-have ha : a ≠ 0, from ne_zero_of_one_div_ne_zero (ne_of_lt h),
-have h2 : 0 < 1 / (-a), from eq.symm (one_div_neg_eq_neg_one_div a) ▸ h1,
-have h3 : 0 < -a, from pos_of_one_div_pos h2,
-neg_of_neg_pos h3
-
 lemma div_mul_le_div_mul_of_div_le_div_pos' {a b c d e : α} (h : a / b ≤ c / d)
           (he : e > 0) : a / (b * e) ≤ c / (d * e) :=
 begin
@@ -478,4 +437,7 @@ begin
   apply one_div_pos_of_pos he
 end
 
-end discrete_linear_ordered_field
+end linear_ordered_field
+
+class discrete_linear_ordered_field (α : Type u) extends linear_ordered_field α,
+      decidable_linear_ordered_comm_ring α
