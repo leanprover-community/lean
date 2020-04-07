@@ -9,7 +9,7 @@ open function
 universes u v
 
 class has_pure (f : Type u → Type v) :=
-(pure {} {α : Type u} : α → f α)
+(pure {α : Type u} : α → f α)
 
 export has_pure (pure)
 

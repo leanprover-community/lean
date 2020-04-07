@@ -63,7 +63,7 @@ rfl
 
 /- properties of inequality -/
 
-@[refl] protected def le_refl : ∀ a : ℕ, a ≤ a :=
+@[refl] protected def le_refl (a : ℕ) : a ≤ a :=
 less_than_or_equal.refl
 
 lemma le_succ (n : ℕ) : n ≤ succ n :=
@@ -127,12 +127,12 @@ protected lemma le_trans {n m k : ℕ} (h1 : n ≤ m) : m ≤ k → n ≤ k :=
 less_than_or_equal.rec h1 (λ p h2, less_than_or_equal.step)
 
 lemma pred_le : ∀ (n : ℕ), pred n ≤ n
-| 0        := less_than_or_equal.refl 0
-| (succ a) := less_than_or_equal.step (less_than_or_equal.refl a)
+| 0        := less_than_or_equal.refl
+| (succ a) := less_than_or_equal.step less_than_or_equal.refl
 
 lemma pred_lt : ∀ {n : ℕ}, n ≠ 0 → pred n < n
 | 0        h := absurd rfl h
-| (succ a) h := lt_succ_of_le (less_than_or_equal.refl _)
+| (succ a) h := lt_succ_of_le less_than_or_equal.refl
 
 lemma sub_le (a b : ℕ) : a - b ≤ a :=
 nat.rec_on b (nat.le_refl (a - 0)) (λ b₁, nat.le_trans (pred_le (a - b₁)))

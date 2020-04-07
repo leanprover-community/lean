@@ -1087,7 +1087,7 @@ void parser::parse_binders_core(buffer<expr> & r, parse_binders_config & cfg) {
             optional<binder_info> bi = parse_optional_binder_info(cfg.m_simple_only);
             if (bi) {
                 if (first && cfg.m_infer_kind != nullptr) {
-                    /* Parse {} or () prefix */
+                    /* Parse {}, [], or () prefix */
                     if (bi->is_implicit() && curr_is_token(get_rcurly_tk())) {
                         next();
                         *cfg.m_infer_kind = implicit_infer_kind::RelaxedImplicit;
@@ -1098,8 +1098,13 @@ void parser::parse_binders_core(buffer<expr> & r, parse_binders_config & cfg) {
                         *cfg.m_infer_kind = implicit_infer_kind::None;
                         first             = false;
                         continue;
-                    } else {
+                    } else if (bi->is_inst_implicit() && curr_is_token(get_rbracket_tk())) {
+                        next();
                         *cfg.m_infer_kind = implicit_infer_kind::Implicit;
+                        first             = false;
+                        continue;
+                    } else {
+                        *cfg.m_infer_kind = implicit_infer_kind::RelaxedImplicit;
                     }
                 }
                 unsigned rbp = 0;

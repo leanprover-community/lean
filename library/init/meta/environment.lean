@@ -47,8 +47,9 @@ structure projection_info :=
 
        inductive foo
        | one {} : foo -> foo   -- relaxed_implicit
-       | two ( ) : foo -> foo   -- none
-       | three : foo -> foo    -- implicit (default)
+       | two ( ) : foo -> foo  -- explicit
+       | two [] : foo -> foo   -- implicit
+       | three : foo -> foo    -- relaxed implicit (default)
 -/
 inductive implicit_infer_kind | implicit | relaxed_implicit | none
 instance implicit_infer_kind.inhabited : inhabited implicit_infer_kind := ⟨implicit_infer_kind.implicit⟩
@@ -80,7 +81,7 @@ meta constant get             : environment → name → exceptional declaration
 meta def      contains (env : environment) (d : name) : bool :=
 match env.get d with
 | exceptional.success _      := tt
-| exceptional.exception ._ _ := ff
+| exceptional.exception _ := ff
 end
 
 meta constant add_defn_eqns (env : environment) (opt : options)

@@ -3,12 +3,12 @@ inductive imf {A : Type u} {B : Type v} (f : A → B) : B → Type (max 1 u v)
 | mk : ∀ (a : A), imf (f a)
 
 definition inv_1 {A : Type u} {B : Type v} (f : A → B) : ∀ (b : B), imf f b → A
-| .(f a) (imf.mk .(f) a)  := a
+| .(f a) (imf.mk a)  := a
 
 definition inv_2 {A : Type u} {B : Type v} (f : A → B) : ∀ (b : B), imf f b → A
-| ._ (imf.mk ._ a)  := a
+| ._ (imf.mk a)  := a
 
-definition mk {A : Type u} {B : Type v} {f : A → B} (a : A) := imf.mk f a
+definition mk {A : Type u} {B : Type v} {f : A → B} (a : A) : imf f (f a) := imf.mk a
 
 definition inv_3 {A : Type u} {B : Type v} (f : A → B) : ∀ (b : B), imf f b → A
 | .(f a) (mk a)  := a -- Error, mk is not a constructor
@@ -44,16 +44,16 @@ section
 open vec1
 
 definition map_1 {A : Type u} (f : A → A → A) : Π {n}, vec1 A n → vec1 A n → vec1 A n
-| 0     (nil .(A))        (nil .(A))        := nil A
+| 0     (nil )        (nil )        := nil
 | (n+1) (cons .(n) h₁ v₁) (cons .(n) h₂ v₂) := cons n (f h₁ h₂) (map_1 v₁ v₂)
 
 definition map_2 {A : Type u} (f : A → A → A) : Π {n}, vec1 A n → vec1 A n → vec1 A n
-| 0     (nil ._)        (nil ._)        := nil A
+| 0     (nil)        (nil)        := nil
 | (n+1) (cons ._ h₁ v₁) (cons ._ h₂ v₂) := cons n (f h₁ h₂) (map_2 v₁ v₂)
 
 /- In map_3, we use the inaccessible terms to avoid pattern/matching on the first argument -/
 definition map_3 {A : Type u} (f : A → A → A) : Π {n}, vec1 A n → vec1 A n → vec1 A n
-| ._ (nil ._)      (nil ._)        := nil A
+| ._ (nil)      (nil)        := nil
 | ._ (cons n h₁ v₁) (cons .(n) h₂ v₂) := cons n (f h₁ h₂) (map_3 v₁ v₂)
 end
 

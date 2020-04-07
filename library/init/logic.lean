@@ -768,7 +768,7 @@ end
 /- inhabited -/
 
 class inhabited (α : Sort u) :=
-(default : α)
+(default [] : α)
 
 export inhabited (default)
 

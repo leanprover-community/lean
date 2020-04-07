@@ -105,7 +105,7 @@ section linear_ordered_semiring
 variable [linear_ordered_semiring α]
 
 lemma zero_lt_one : 0 < (1:α) :=
-linear_ordered_semiring.zero_lt_one α
+linear_ordered_semiring.zero_lt_one
 
 lemma zero_le_one : 0 ≤ (1:α) :=
 le_of_lt zero_lt_one

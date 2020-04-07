@@ -124,7 +124,7 @@ instance : comm_semiring nat :=
 /- properties of inequality -/
 
 protected lemma le_of_eq {n m : ℕ} (p : n = m) : n ≤ m :=
-p ▸ less_than_or_equal.refl n
+p ▸ less_than_or_equal.refl
 
 lemma le_succ_of_le {n m : ℕ} (h : n ≤ m) : n ≤ succ m :=
 nat.le_trans h (le_succ m)
@@ -216,8 +216,8 @@ lemma le_add_left (n m : ℕ): n ≤ m + n :=
 nat.add_comm n m ▸ le_add_right n m
 
 lemma le.dest : ∀ {n m : ℕ}, n ≤ m → ∃ k, n + k = m
-| n ._ (less_than_or_equal.refl ._)  := ⟨0, rfl⟩
-| n ._ (@less_than_or_equal.step ._ m h) :=
+| n _ less_than_or_equal.refl := ⟨0, rfl⟩
+| n _ (less_than_or_equal.step h) :=
   match le.dest h with
   | ⟨w, hw⟩ := ⟨succ w, hw ▸ add_succ n w⟩
   end

@@ -9,7 +9,7 @@ import init.data.ordering
 universes u v
 
 inductive rbnode (α : Type u)
-| leaf  {}                                                 : rbnode
+| leaf                                                     : rbnode
 | red_node   (lchild : rbnode) (val : α) (rchild : rbnode) : rbnode
 | black_node (lchild : rbnode) (val : α) (rchild : rbnode) : rbnode
 
@@ -158,7 +158,7 @@ def rbtree (α : Type u) (lt : α → α → Prop . rbtree.default_lt) : Type u 
 {t : rbnode α // t.well_formed lt }
 
 def mk_rbtree (α : Type u) (lt : α → α → Prop . rbtree.default_lt) : rbtree α lt :=
-⟨leaf, well_formed.leaf_wff lt⟩
+⟨leaf, well_formed.leaf_wff⟩
 
 namespace rbtree
 variables {α : Type u} {β : Type v} {lt : α → α → Prop}

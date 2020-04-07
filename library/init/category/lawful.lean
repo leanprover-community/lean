@@ -104,7 +104,7 @@ section
   @[simp] lemma run_map (f : α → β) [is_lawful_monad m] :
     (f <$> x).run st = (λ p : α × σ, (f (prod.fst p), prod.snd p)) <$> x.run st :=
   begin
-    rw ←bind_pure_comp_eq_map m,
+    rw ← bind_pure_comp_eq_map _ (x.run st),
     change (x >>= pure ∘ f).run st = _,
     simp
   end
@@ -143,7 +143,7 @@ namespace except_t
   rfl
   @[simp] lemma run_map (f : α → β) [is_lawful_monad m] : (f <$> x).run = except.map f <$> x.run :=
   begin
-    rw ←bind_pure_comp_eq_map m,
+    rw ← bind_pure_comp_eq_map _ x.run,
     change x.run >>= except_t.bind_cont (pure ∘ f) = _,
     apply bind_ext_congr,
     intro a; cases a; simp [except_t.bind_cont, except.map]
@@ -189,7 +189,7 @@ section
   @[simp] lemma run_bind (f : α → reader_t ρ m β) :
     (x >>= f).run r = x.run r >>= λ a, (f a).run r := rfl
   @[simp] lemma run_map (f : α → β) [is_lawful_monad m] : (f <$> x).run r = f <$> x.run r :=
-  by rw ←bind_pure_comp_eq_map m; refl
+  by rw ← bind_pure_comp_eq_map _ (x.run r); refl
   @[simp] lemma run_monad_lift {n} [has_monad_lift_t n m] (x : n α) :
     (monad_lift x : reader_t ρ m α).run r = (monad_lift x : m α) := rfl
   @[simp] lemma run_monad_map {m' n n'} [monad m'] [monad_functor_t n n' m m'] (f : ∀ {α}, n α → n' α) :
@@ -217,7 +217,7 @@ namespace option_t
   rfl
   @[simp] lemma run_map (f : α → β) [is_lawful_monad m] : (f <$> x).run = option.map f <$> x.run :=
   begin
-    rw ←bind_pure_comp_eq_map m,
+    rw ← bind_pure_comp_eq_map _ x.run,
     change x.run >>= option_t.bind_cont (pure ∘ f) = _,
     apply bind_ext_congr,
     intro a; cases a; simp [option_t.bind_cont, option.map, option.bind]

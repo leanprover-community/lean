@@ -17,17 +17,17 @@ namespace setoid
 variables {α : Sort u} [setoid α]
 
 @[refl] lemma refl (a : α) : a ≈ a :=
-match setoid.iseqv α with
+match setoid.iseqv with
 | ⟨h_refl, h_symm, h_trans⟩ := h_refl a
 end
 
 @[symm] lemma symm {a b : α} (hab : a ≈ b) : b ≈ a :=
-match setoid.iseqv α with
+match setoid.iseqv with
 | ⟨h_refl, h_symm, h_trans⟩ := h_symm hab
 end
 
 @[trans] lemma trans {a b c : α} (hab : a ≈ b) (hbc : b ≈ c) : a ≈ c :=
-match setoid.iseqv α with
+match setoid.iseqv with
 | ⟨h_refl, h_symm, h_trans⟩ := h_trans hab hbc
 end
 end setoid

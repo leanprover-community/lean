@@ -84,12 +84,12 @@ meta constant macro_def : Type
     The VM replaces instances of this datatype with the C++ implementation. -/
 meta inductive expr (elaborated : bool := tt)
 /- A bound variable with a de-Bruijn index. -/
-| var      {} : nat → expr
+| var         : nat → expr
 /- A type universe: `Sort u` -/
-| sort     {} : level → expr
+| sort        : level → expr
 /- A global constant. These include definitions, constants and inductive type stuff present
 in the environment as well as hard-coded definitions. -/
-| const    {} : name → list level → expr
+| const       : name → list level → expr
 /- [WARNING] Do not trust the types for `mvar` and `local_const`,
 they are sometimes dummy values. Use `tactic.infer_type` instead. -/
 /- An `mvar` is a 'hole' yet to be filled in by the elaborator or tactic state. -/
