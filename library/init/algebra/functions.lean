@@ -10,7 +10,7 @@ universe u
 
 definition min {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then a else b
 definition max {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then b else a
-definition abs {α : Type u} [decidable_linear_ordered_comm_group α] (a : α) : α := max a (-a)
+definition abs {α : Type u} [decidable_linear_ordered_add_comm_group α] (a : α) : α := max a (-a)
 
 section
 open decidable tactic
@@ -131,7 +131,7 @@ end
 
 
 section
-variables {α : Type u} [decidable_linear_ordered_cancel_comm_monoid α]
+variables {α : Type u} [decidable_linear_ordered_cancel_add_comm_monoid α]
 
 lemma min_add_add_left (a b c : α) : min (a + b) (a + c) = a + min b c :=
 eq.symm (eq_min
@@ -163,7 +163,7 @@ begin rw [add_comm a c, add_comm b c, add_comm _ c], apply max_add_add_left end
 end
 
 section
-variables {α : Type u} [decidable_linear_ordered_comm_group α]
+variables {α : Type u} [decidable_linear_ordered_add_comm_group α]
 
 lemma max_neg_neg (a b : α) : max (-a) (-b) = - min a b  :=
 eq.symm (eq_max
@@ -186,8 +186,8 @@ lemma max_eq_neg_min_neg_neg (a b : α) : max a b = - min (-a) (-b) :=
 by rw [min_neg_neg, neg_neg]
 end
 
-section decidable_linear_ordered_comm_group
-variables {α : Type u} [decidable_linear_ordered_comm_group α]
+section decidable_linear_ordered_add_comm_group
+variables {α : Type u} [decidable_linear_ordered_add_comm_group α]
 
 lemma abs_of_nonneg {a : α} (h : a ≥ 0) : abs a = a :=
 have h' : -a ≤ a, from le_trans (neg_nonpos_of_nonneg h) h,
@@ -365,7 +365,7 @@ begin
   apply hal
 end
 
-end decidable_linear_ordered_comm_group
+end decidable_linear_ordered_add_comm_group
 
 
 section decidable_linear_ordered_comm_ring
