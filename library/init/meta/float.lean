@@ -117,13 +117,13 @@ meta constant atanh : float → float
 
 meta constant abs : float → float
 /-- Nearest integer not less than the given value. -/
-meta constant ceil : float → float
+meta constant ceil : float → int
 /-- Nearest integer not greater than the given value. -/
-meta constant floor : float → float
+meta constant floor : float → int
 /-- Nearest integer not greater in magnitude than the given value. -/
-meta constant trunc : float → float
+meta constant trunc : float → int
 /-- Round to the nearest integer, rounding away from zero in halfway cases. -/
-meta constant round : float → float
+meta constant round : float → int
 
 meta constant lt : float → float → bool
 meta instance : has_lt float := ⟨λ x y, lt x y⟩
@@ -145,6 +145,8 @@ meta constant to_repr : float → string
 meta instance : has_repr float := ⟨to_repr⟩
 meta instance : has_to_string float := ⟨to_repr⟩
 meta instance : has_to_format float := ⟨format.of_string ∘ to_string⟩
+
+meta constant of_string : string → option float
 
 meta instance has_nat_pow : has_pow float nat :=
 ⟨λ a b, native.float.pow a (float.of_nat b)⟩

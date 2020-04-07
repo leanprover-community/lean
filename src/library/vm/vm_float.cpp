@@ -52,6 +52,14 @@ vm_obj float_repr(vm_obj const & a) {
     return to_obj(out.str());
 }
 
+vm_obj float_of_string(vm_obj const & s) {
+    try {
+        return mk_vm_some(mk_vm_float(std::stof(to_string(s))));
+    } catch (std::invalid_argument const & e) {
+        return mk_vm_none();
+    }
+}
+
 void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "specification", "radix"}),     []() { return mk_vm_nat(std::numeric_limits<float>::radix); });
     DECLARE_VM_BUILTIN(name({"native", "float", "specification", "precision"}), []() { return mk_vm_nat(std::numeric_limits<float>::digits);});
@@ -100,10 +108,10 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "sqrt"}),  [](vm_obj const & a) {return mk_vm_float(std::sqrt(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "cbrt"}),  [](vm_obj const & a) {return mk_vm_float(std::cbrt(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "abs"}),   [](vm_obj const & a) {return mk_vm_float(std::abs(to_float(a)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "ceil"}),  [](vm_obj const & a) {return mk_vm_float(std::ceil(to_float(a)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "floor"}), [](vm_obj const & a) {return mk_vm_float(std::floor(to_float(a)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "trunc"}), [](vm_obj const & a) {return mk_vm_float(std::trunc(to_float(a)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "round"}), [](vm_obj const & a) {return mk_vm_float(std::round(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "ceil"}),  [](vm_obj const & a) {return mk_vm_int(std::ceil(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "floor"}), [](vm_obj const & a) {return mk_vm_int(std::floor(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "trunc"}), [](vm_obj const & a) {return mk_vm_int(std::trunc(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "round"}), [](vm_obj const & a) {return mk_vm_int(std::round(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "exp"}),   [](vm_obj const & a) {return mk_vm_float(std::exp(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "exp2"}),  [](vm_obj const & a) {return mk_vm_float(std::exp2(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "log"}),   [](vm_obj const & a) {return mk_vm_float(std::log(to_float(a)));});
@@ -130,6 +138,7 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "of_nat"}),  float_of_nat);
     DECLARE_VM_BUILTIN(name({"native", "float", "of_int"}),  float_of_int);
     DECLARE_VM_BUILTIN(name({"native", "float", "to_repr"}), float_repr);
+    DECLARE_VM_BUILTIN(name({"native", "float", "of_string"}), float_of_string);
 }
 void finalize_vm_float() {
 }
