@@ -15,7 +15,7 @@ set_option old_structure_cmd true
 universe u
 
 class ordered_semiring (α : Type u)
-  extends semiring α, ordered_cancel_comm_monoid α :=
+  extends semiring α, ordered_cancel_add_comm_monoid α :=
 (mul_lt_mul_of_pos_left:     ∀ a b c : α, a < b → 0 < c → c * a < c * b)
 (mul_lt_mul_of_pos_right:    ∀ a b c : α, a < b → 0 < c → a * c < b * c)
 
@@ -196,7 +196,7 @@ end linear_ordered_semiring
 
 class decidable_linear_ordered_semiring (α : Type u) extends linear_ordered_semiring α, decidable_linear_order α
 
-class ordered_ring (α : Type u) extends ring α, ordered_comm_group α, zero_ne_one_class α :=
+class ordered_ring (α : Type u) extends ring α, ordered_add_comm_group α, zero_ne_one_class α :=
 (mul_pos    : ∀ a b : α, 0 < a → 0 < b → 0 < a * b)
 
 lemma ordered_ring.mul_nonneg {α} [s : ordered_ring α] (a b : α) (h₁ : 0 ≤ a) (h₂ : 0 ≤ b) : 0 ≤ a * b :=
@@ -397,7 +397,7 @@ instance linear_ordered_comm_ring.to_integral_domain [s: linear_ordered_comm_rin
   ..s }
 
 class decidable_linear_ordered_comm_ring (α : Type u) extends linear_ordered_comm_ring α,
-    decidable_linear_ordered_comm_group α
+    decidable_linear_ordered_add_comm_group α
 
 instance decidable_linear_ordered_comm_ring.to_decidable_linear_ordered_semiring [d : decidable_linear_ordered_comm_ring α] :
    decidable_linear_ordered_semiring α :=

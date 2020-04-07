@@ -320,7 +320,7 @@ instance : decidable_linear_ordered_semiring nat :=
   ..nat.comm_semiring }
 
 -- all the fields are already included in the decidable_linear_ordered_semiring instance
-instance : decidable_linear_ordered_cancel_comm_monoid ℕ :=
+instance : decidable_linear_ordered_cancel_add_comm_monoid ℕ :=
 { add_left_cancel := @nat.add_left_cancel,
   ..nat.decidable_linear_ordered_semiring }
 

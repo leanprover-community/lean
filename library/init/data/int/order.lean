@@ -203,7 +203,7 @@ instance : decidable_linear_ordered_comm_ring int :=
   decidable_lt    := int.decidable_lt,
   ..int.comm_ring }
 
-instance : decidable_linear_ordered_comm_group int :=
+instance : decidable_linear_ordered_add_comm_group int :=
 by apply_instance
 
 lemma eq_nat_abs_of_zero_le {a : ℤ} (h : 0 ≤ a) : a = nat_abs a :=

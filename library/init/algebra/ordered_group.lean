@@ -14,26 +14,26 @@ set_option old_structure_cmd true
 
 universe u
 
-class ordered_cancel_comm_monoid (α : Type u)
+class ordered_cancel_add_comm_monoid (α : Type u)
       extends add_comm_monoid α, add_left_cancel_semigroup α,
               add_right_cancel_semigroup α, partial_order α :=
 (add_le_add_left       : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b)
 (le_of_add_le_add_left : ∀ a b c : α, a + b ≤ a + c → b ≤ c)
 
-section ordered_cancel_comm_monoid
+section ordered_cancel_add_comm_monoid
 variable {α : Type u}
-variable [s : ordered_cancel_comm_monoid α]
+variable [s : ordered_cancel_add_comm_monoid α]
 
 lemma add_le_add_left {a b : α} (h : a ≤ b) (c : α) : c + a ≤ c + b :=
-@ordered_cancel_comm_monoid.add_le_add_left α s a b h c
+@ordered_cancel_add_comm_monoid.add_le_add_left α s a b h c
 
 lemma le_of_add_le_add_left {a b c : α} (h : a + b ≤ a + c) : b ≤ c :=
-@ordered_cancel_comm_monoid.le_of_add_le_add_left α s a b c h
-end ordered_cancel_comm_monoid
+@ordered_cancel_add_comm_monoid.le_of_add_le_add_left α s a b c h
+end ordered_cancel_add_comm_monoid
 
-section ordered_cancel_comm_monoid
+section ordered_cancel_add_comm_monoid
 variable {α : Type u}
-variable [ordered_cancel_comm_monoid α]
+variable [ordered_cancel_add_comm_monoid α]
 
 lemma add_lt_add_left {a b : α} (h : a < b) (c : α) : c + a < c + b :=
 lt_of_le_not_le (add_le_add_left (le_of_lt h) _) $
@@ -181,43 +181,43 @@ zero_add c ▸ add_lt_add ha hbc
 lemma add_lt_of_lt_of_neg {a b c : α} (hbc : b < c) (ha : a < 0) : b + a < c :=
 add_zero c ▸ add_lt_add hbc ha
 
-end ordered_cancel_comm_monoid
+end ordered_cancel_add_comm_monoid
 
-class ordered_comm_group (α : Type u) extends add_comm_group α, partial_order α :=
+class ordered_add_comm_group (α : Type u) extends add_comm_group α, partial_order α :=
 (add_le_add_left : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b)
 
-section ordered_comm_group
+section ordered_add_comm_group
 variable {α : Type u}
-variable [ordered_comm_group α]
+variable [ordered_add_comm_group α]
 
-lemma ordered_comm_group.add_lt_add_left (a b : α) (h : a < b) (c : α) : c + a < c + b :=
+lemma ordered_add_comm_group.add_lt_add_left (a b : α) (h : a < b) (c : α) : c + a < c + b :=
 begin
   rw lt_iff_le_not_le at h ⊢,
   split,
-  { apply ordered_comm_group.add_le_add_left _ _ h.1 },
+  { apply ordered_add_comm_group.add_le_add_left _ _ h.1 },
   { intro w,
-    have w : -c + (c + b) ≤ -c + (c + a) := ordered_comm_group.add_le_add_left _ _ w _,
+    have w : -c + (c + b) ≤ -c + (c + a) := ordered_add_comm_group.add_le_add_left _ _ w _,
     simp only [add_zero, add_comm, add_left_neg, add_left_comm] at w,
     exact h.2 w },
 end
 
-lemma ordered_comm_group.le_of_add_le_add_left {a b c : α} (h : a + b ≤ a + c) : b ≤ c :=
-have -a + (a + b) ≤ -a + (a + c), from ordered_comm_group.add_le_add_left _ _ h _,
+lemma ordered_add_comm_group.le_of_add_le_add_left {a b c : α} (h : a + b ≤ a + c) : b ≤ c :=
+have -a + (a + b) ≤ -a + (a + c), from ordered_add_comm_group.add_le_add_left _ _ h _,
 begin simp [neg_add_cancel_left] at this, assumption end
 
-lemma ordered_comm_group.lt_of_add_lt_add_left {a b c : α} (h : a + b < a + c) : b < c :=
-have -a + (a + b) < -a + (a + c), from ordered_comm_group.add_lt_add_left _ _ h _,
+lemma ordered_add_comm_group.lt_of_add_lt_add_left {a b c : α} (h : a + b < a + c) : b < c :=
+have -a + (a + b) < -a + (a + c), from ordered_add_comm_group.add_lt_add_left _ _ h _,
 begin simp [neg_add_cancel_left] at this, assumption end
-end ordered_comm_group
+end ordered_add_comm_group
 
-instance ordered_comm_group.to_ordered_cancel_comm_monoid (α : Type u) [s : ordered_comm_group α] : ordered_cancel_comm_monoid α :=
+instance ordered_add_comm_group.to_ordered_cancel_add_comm_monoid (α : Type u) [s : ordered_add_comm_group α] : ordered_cancel_add_comm_monoid α :=
 { add_left_cancel       := @add_left_cancel α _,
   add_right_cancel      := @add_right_cancel α _,
-  le_of_add_le_add_left := @ordered_comm_group.le_of_add_le_add_left α _,
+  le_of_add_le_add_left := @ordered_add_comm_group.le_of_add_le_add_left α _,
   ..s }
 
-section ordered_comm_group
-variables {α : Type u} [ordered_comm_group α]
+section ordered_add_comm_group
+variables {α : Type u} [ordered_add_comm_group α]
 
 lemma neg_le_neg {a b : α} (h : a ≤ b) : -b ≤ -a :=
 have 0 ≤ -a + b,           from add_left_neg a ▸ add_le_add_left h (-a),
@@ -615,20 +615,20 @@ begin
   apply le_refl
 end
 
-end ordered_comm_group
+end ordered_add_comm_group
 
-class decidable_linear_ordered_comm_group (α : Type u)
+class decidable_linear_ordered_add_comm_group (α : Type u)
     extends add_comm_group α, decidable_linear_order α :=
 (add_le_add_left : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b)
 
-instance decidable_linear_ordered_comm_group.to_ordered_comm_group (α : Type u)
-  [s : decidable_linear_ordered_comm_group α] : ordered_comm_group α :=
+instance decidable_linear_ordered_comm_group.to_ordered_add_comm_group (α : Type u)
+  [s : decidable_linear_ordered_add_comm_group α] : ordered_add_comm_group α :=
 { add := s.add, ..s }
 
-class decidable_linear_ordered_cancel_comm_monoid (α : Type u)
-      extends ordered_cancel_comm_monoid α, decidable_linear_order α
+class decidable_linear_ordered_cancel_add_comm_monoid (α : Type u)
+      extends ordered_cancel_add_comm_monoid α, decidable_linear_order α
 
-lemma decidable_linear_ordered_comm_group.add_lt_add_left {α} [decidable_linear_ordered_comm_group α]
+lemma decidable_linear_ordered_add_comm_group.add_lt_add_left {α} [decidable_linear_ordered_add_comm_group α]
   (a b : α) (h : a < b) (c : α) : c + a < c + b :=
-  ordered_comm_group.add_lt_add_left a b h c
+  ordered_add_comm_group.add_lt_add_left a b h c
   
