@@ -34,6 +34,9 @@ namespace option_t
   @[inline] protected def fail : option_t m α :=
   ⟨pure none⟩
 
+  @[inline] def of_option : option α → option_t m α
+  | o := ⟨pure o⟩
+
   instance : alternative (option_t m) :=
   { failure := @option_t.fail m _,
     orelse  := @option_t.orelse m _,

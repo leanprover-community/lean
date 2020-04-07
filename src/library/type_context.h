@@ -524,6 +524,7 @@ private:
        that cannot be solved precisely are ignored. This step is approximate, and it is
        useful to skip it until we have additional information. */
     bool                       m_full_postponed{true};
+    bool                       m_ignore_universes{false};
 
     std::function<bool(name const & e)> const * m_transparency_pred{nullptr}; // NOLINT
 
@@ -575,6 +576,8 @@ public:
 
     // TODO(Leo): avoid ::lean::mk_fresh_name
     virtual name next_name() override { return ::lean::mk_fresh_name(); }
+
+    void ignore_universes() { m_ignore_universes = true; }
 
     local_context const & lctx() const { return m_lctx; }
     metavar_context const & mctx() const { return m_mctx; }

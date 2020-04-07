@@ -67,6 +67,8 @@ meta constant pos       : vm_decl → option pos
 meta constant olean     : vm_decl → option string
 /-- Return names .olean file where the given VM declaration was imported from. -/
 meta constant args_info : vm_decl → list vm_local_info
+/-- If the given declaration is overridden by another declaration using the vm_override attribute, then this returns the overriding declaration.-/
+meta constant override_idx : vm_decl → option nat
 end vm_decl
 
 meta constant vm_core : Type → Type
@@ -81,7 +83,12 @@ meta instance : monad vm_core :=
 
 namespace vm
 meta constant get_env              : vm environment
+/-- Returns the vm declaration associated with the given name. Remark: does _not_ return the vm_override if present.-/
 meta constant get_decl             : name → vm vm_decl
+/-- Returns the vm declaration associated with the given index. Remark: does _not_ return the vm_override if present.-/
+meta constant decl_of_idx          : nat → vm vm_decl
+meta def get_override              : vm_decl → vm vm_decl
+| d := option_t.of_option d.override_idx >>= decl_of_idx
 meta constant get_options          : vm options
 meta constant stack_size           : vm nat
 /-- Return the vm_obj stored at the given position on the execution stack.

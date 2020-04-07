@@ -138,8 +138,10 @@ meta constant of_nat : nat → float
 meta constant of_int : int → float
 meta instance of_nat_coe : has_coe nat float := ⟨of_nat⟩
 meta instance of_int_coe : has_coe int float := ⟨of_int⟩
-meta instance : has_zero float := ⟨of_nat 0⟩
-meta instance : has_one float := ⟨of_nat 1⟩
+protected meta def zero : float := of_nat 0
+protected meta def one : float := of_nat 1
+meta instance : has_zero float := ⟨float.zero⟩
+meta instance : has_one float := ⟨float.one⟩
 
 meta constant to_repr : float → string
 meta instance : has_repr float := ⟨to_repr⟩

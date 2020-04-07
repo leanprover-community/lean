@@ -43,13 +43,14 @@ static unsigned parse_precedence_core(parser & p) {
         return p.parse_small_nat();
     } else {
         environment env = p.env();
+        options opts = p.get_options();
         env = open_prec_aliases(env);
         parser::local_scope scope(p, env);
         expr pre_val = p.parse_expr(get_max_prec());
         expr nat = mk_constant(get_nat_name());
         pre_val  = mk_typed_expr(nat, pre_val);
         expr val = p.elaborate("notation", list<expr>(), pre_val).first;
-        vm_obj p = eval_closed_expr(env, "_precedence", nat, val, pos);
+        vm_obj p = eval_closed_expr(env, opts, "_precedence", nat, val, pos);
         if (optional<unsigned> _p = try_to_unsigned(p)) {
             return *_p;
         } else {

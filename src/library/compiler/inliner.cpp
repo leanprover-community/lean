@@ -8,10 +8,10 @@ Author: Leonardo de Moura
 #include "kernel/inductive/inductive.h"
 #include "library/util.h"
 #include "library/module.h"
-#include "library/trace.h"
 #include "library/normalize.h"
 #include "library/attribute_manager.h"
 #include "library/vm/vm.h"
+#include "library/vm/vm_override.h"
 #include "library/compiler/util.h"
 #include "library/compiler/compiler_step_visitor.h"
 
@@ -43,6 +43,8 @@ void finalize_inliner() {
 }
 
 class inline_simple_definitions_fn : public compiler_step_visitor {
+    bool m_enable_overrides;
+
     /* Return true iff v is of the form (g y_1 ... y_n) where
        y_i is a constant or a variable.
        Moreover, y_i's variables are pairwise distinct. */
@@ -71,6 +73,14 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
 
     expr default_visit_app(expr const & e) {
         expr new_e = compiler_step_visitor::visit_app(e);
+        if (new_e != e)
+            return visit(new_e);
+        else
+            return new_e;
+    }
+
+    expr default_visit_constant(expr const & e) {
+        expr new_e = compiler_step_visitor::visit_constant(e);
         if (new_e != e)
             return visit(new_e);
         else
@@ -129,11 +139,37 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
         return ctx().reduce_projection(e);
     }
 
-    virtual expr visit_app(expr const & e) override {
-        expr const & fn = get_app_fn(e);
+    expr apply_overrides(expr const & e) {
+        if (m_enable_overrides) {
+            buffer<expr> args;
+            expr const & fn = get_app_args(e, args);
+            if (is_constant(fn)) {
+                auto n = const_name(fn);
+                if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
+                    return mk_app(mk_constant(*override_name, const_levels(fn)), args);
+                }
+            }
+        }
+        return e;
+    }
+
+    virtual expr visit_constant(expr const & e) override {
+        if (m_enable_overrides) {
+            name n = const_name(e);
+            if (auto override_name = get_vm_override_name(m_env, n, m_enable_overrides)) {
+                return default_visit_constant(mk_constant(*override_name, const_levels(e)));
+            }
+        }
+        return default_visit_constant(e);
+    }
+
+    virtual expr visit_app(expr const & arg) override {
+        expr e = apply_overrides(arg);
+        expr fn = get_app_fn(e);
         if (!is_constant(fn))
             return default_visit_app(e);
-        name const & n  = const_name(fn);
+        name const & n = const_name(fn);
+
         if (is_vm_builtin_function(n) || is_pack_unpack(env(), e))
             return default_visit_app(e);
         if (is_cases_on_recursor(env(), n) || is_nonrecursive_recursor(n))
@@ -164,11 +200,14 @@ class inline_simple_definitions_fn : public compiler_step_visitor {
     }
 
 public:
-    inline_simple_definitions_fn(environment const & env, abstract_context_cache & cache):
-        compiler_step_visitor(env, cache) {}
+    inline_simple_definitions_fn(environment const & env, options const opts,
+                                 abstract_context_cache & cache):
+        compiler_step_visitor(env, cache),
+        m_enable_overrides(get_vm_override_enabled(opts)) { }
 };
 
-expr inline_simple_definitions(environment const & env, abstract_context_cache & cache, expr const & e) {
-    return inline_simple_definitions_fn(env, cache)(e);
+expr inline_simple_definitions(environment const & env, options const & opts,
+                               abstract_context_cache & cache, expr const & e) {
+    return inline_simple_definitions_fn(env, opts, cache)(e);
 }
 }
