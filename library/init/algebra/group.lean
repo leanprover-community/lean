@@ -212,7 +212,7 @@ class add_right_cancel_semigroup (α : Type u) extends add_semigroup α :=
 class add_monoid (α : Type u) extends add_semigroup α, has_zero α :=
 (zero_add : ∀ a : α, 0 + a = a) (add_zero : ∀ a : α, a + 0 = a)
 
-class add_comm_monoid (α : Type u) extends add_comm_semigroup α, has_zero α :=
+class add_comm_monoid (α : Type u) extends add_semigroup α, has_zero α, add_comm_semigroup α :=
 (zero_add : ∀ a : α, 0 + a = a)
 
 class add_group (α : Type u) extends add_semigroup α, has_zero α, has_neg α :=
