@@ -316,9 +316,12 @@ protected lemma add_comm : ∀ a b : ℤ, a + b = b + a
 | -[1+ n]    (of_nat m) := rfl
 | -[1+ n]    -[1+m]     := by simp [nat.add_comm]
 
-protected lemma zero_add : ∀ a : ℤ, 0 + a = a
-| (of_nat n) := congr_arg of_nat (nat.zero_add n)
+protected lemma add_zero : ∀ a : ℤ, a + 0 = a
+| (of_nat n) := rfl
 | -[1+ n]   := rfl
+
+protected lemma zero_add (a : ℤ) : 0 + a = a :=
+int.add_comm a 0 ▸ int.add_zero a
 
 private lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
   sub_nat_nat (m - n) k = sub_nat_nat m (k + n) :=
@@ -512,25 +515,32 @@ protected lemma distrib_left : ∀ a b c : ℤ, a * (b + c) = a * b + a * c
 | (of_nat m) -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
 | (of_nat m) -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
-| -[1+ m]    (of_nat n) (of_nat k) := begin simp [mul_comm], rw [← right_distrib, mul_comm] end
+| -[1+ m]    (of_nat n) (of_nat k) := begin simp [mul_comm], rw [← nat.right_distrib, mul_comm] end
 | -[1+ m]    (of_nat n) -[1+ k]    := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
 | -[1+ m]    -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [← sub_nat_nat_add], reflexivity end
 | -[1+ m]    -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
 
+protected lemma distrib_right (a b c : ℤ) : (a + b) * c = a * c + b * c :=
+begin rw [int.mul_comm, int.distrib_left], simp [int.mul_comm] end
+
 instance : comm_ring int :=
 { add            := int.add,
   add_assoc      := int.add_assoc,
   zero           := int.zero,
   zero_add       := int.zero_add,
+  add_zero       := int.add_zero,
   neg            := int.neg,
   add_left_neg   := int.add_left_neg,
+  add_comm       := int.add_comm,
   mul            := int.mul,
   mul_assoc      := int.mul_assoc,
   one            := int.one,
   one_mul        := int.one_mul,
+  mul_one        := int.mul_one,
   left_distrib   := int.distrib_left,
+  right_distrib  := int.distrib_right,
   mul_comm       := int.mul_comm }
 
 /- Extra instances to short-circuit type class resolution -/
