@@ -186,7 +186,9 @@ meta constant expr.instantiate_var         : expr → expr → expr
 /-- ``instantiate_vars `(#0 #1 #2) [x,y,z] = `(%%x %%y %%z)`` -/
 meta constant expr.instantiate_vars        : expr → list expr → expr
 
-/-- Perform beta-reduction if the left expression is a lambda. Ie: ``expr.subst | `(λ x, %%Y) Z := Y[x/Z] | X Z := X`` -/
+/-- Perform beta-reduction if the left expression is a lambda, or construct an application otherwise.
+That is: ``expr.subst `(λ x, %%Y) Z = Y[x/Z]``, and
+``expr.subst X Z = X.app Z`` otherwise -/
 protected meta constant expr.subst : expr elab → expr elab → expr elab
 
 /-- `get_free_var_range e` returns one plus the maximum de-Bruijn value in `e`. Eg `get_free_var_range `(#1 #0)` yields `2` -/
@@ -255,10 +257,7 @@ id
 
 @[inline] meta def reflected.subst {α : Sort v} {β : α → Sort u} {f : Π a : α, β a} {a : α} :
   reflected f → reflected a → reflected (f a) :=
-λ ef ea, match ef with
-| (expr.lam _ _ _ _) := expr.subst ef ea
-| _                  := expr.app   ef ea
-end
+expr.subst
 
 attribute [irreducible] reflected reflected.subst reflected.to_expr
 
