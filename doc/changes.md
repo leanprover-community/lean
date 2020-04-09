@@ -11,6 +11,7 @@ Bug fixes:
   - Assertion violation in `simp_inductive` (#173)
 
 Changes:
+  - `expr.subst` constructs an application if the left expression is not a lambda (#180)
   - `if_simp_congr` is removed, simp now produces the correct decidability instance when simplifying if-then-else (#159)
   - `float.{ceil,floor,trunc,round}` now return integers (#176)
   - `default` is now an export (#161)

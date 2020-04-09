@@ -459,7 +459,7 @@ vm_obj expr_subst(vm_obj const &, vm_obj const & _e1, vm_obj const & _e2) {
     if (is_lambda(e1)) {
         return to_obj(instantiate(binding_body(e1), e2));
     } else {
-        return to_obj(e1);
+        return to_obj(mk_app(e1, e2));
     }
 }
 
