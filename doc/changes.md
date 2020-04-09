@@ -1,3 +1,25 @@
+v3.8.0c (9 April 2020)
+----------------------
+
+Features:
+  - The VM implementation of functions can be overriden (#48)
+  - More and better doc strings for the core library (#166)
+
+Bug fixes:
+  - `simp` instantiates the metavariables in the goal before simplifying (#170)
+  - `app_builder` is more robust (#165)
+  - Assertion violation in `simp_inductive` (#173)
+
+Changes:
+  - `if_simp_congr` is removed, simp now produces the correct decidability instance when simplifying if-then-else (#159)
+  - `float.{ceil,floor,trunc,round}` now return integers (#176)
+  - `default` is now an export (#161)
+  - `prod.map` and `function.uncurry` don't use pattern matching (#161)
+  - The type argument in `has_zero.zero` and `has_one.one` is implicit (#169)
+  - Inductives/structures/structure fields now default to implicit arguments (#175)
+  - `add_lt_add_left` and `mul_le_mul*` fields are removed (#167)
+  - `ordered_comm_group` is renamed to `ordered_add_comm_group` (#174)
+
 v3.7.2c (20 Mar 2020)
 ---------------------
 
