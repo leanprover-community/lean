@@ -623,6 +623,11 @@ json server::info(std::shared_ptr<module_info const> const & mod_info, pos_info 
     return j;
 }
 
+// task<server::cmd_res> server::handle_widget_action(server::cmd_req const & req) {
+//   std::string fn = req.m_payload.at("file_name");
+//   pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+// }
+
 task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
     cancel(m_bg_task_ctok);
     m_bg_task_ctok = mk_cancellation_token();

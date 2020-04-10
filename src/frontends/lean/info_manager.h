@@ -28,18 +28,22 @@ public:
     virtual ~info_data_cell() {}
     virtual void instantiate_mvars(metavar_context const &) {}
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) const = 0;
+    virtual void report(io_state_stream const & ios, json & record) = 0;
 #endif
 };
 
+/** A format thunk, as is generated through `tactic.save_info_thunk : pos -> (unit -> format) -> tactic unit`.  */
 class vm_obj_format_info : public info_data_cell {
+    /** The environment of the tactic state at the moment that save_info_thunk was called */
     environment      m_env;
+    /** The thunk provided from `save_info_thunk` */
     ts_vm_obj        m_thunk;
+    /** A memoised format from the thunk */
     optional<format> m_cache;
 public:
-    vm_obj_format_info(environment const & env, vm_obj const & thunk):m_env(env), m_thunk(thunk) {}
+    vm_obj_format_info(environment const & env, vm_obj const & thunk): m_env(env), m_thunk(thunk) {}
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) const;
+    virtual void report(io_state_stream const & ios, json & record) override;
 #endif
 };
 
@@ -54,12 +58,29 @@ public:
         m_state(s), m_args(args), m_begin_pos(b), m_end_pos(e) {}
 
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) const override;
+    virtual void report(io_state_stream const & ios, json & record) override;
 #endif
     tactic_state const & get_tactic_state() const { return m_state; }
     expr const & get_args() const { return m_args; }
     pos_info const & get_begin_pos() const { return m_begin_pos; }
     pos_info const & get_end_pos() const { return m_end_pos; }
+};
+
+class widget_info : public info_data_cell {
+    /** The initial tactic state for this widget */
+    ts_vm_obj    m_state;
+    ts_vm_obj    m_widget;
+    /** The cache of the view. */
+    optional<json> m_view;
+    optional<std::vector<ts_vm_obj>> m_event_handlers;
+    // rb_map<unsigned, ts_vm_obj, unsigned_cmp> m_event_handlers; // [todo] this can just be an array.
+    // pos_info     m_begin_pos;
+    // pos_info     m_end_pos
+public:
+    widget_info(vm_obj const & state, vm_obj const & widget): m_state(state), m_widget(widget) {}
+    void render();
+    virtual void report(io_state_stream const & ios, json & record) override;
+    void handleEvent(unsigned handler_idx, json const & event_args);
 };
 
 class info_data {
@@ -86,6 +107,8 @@ public:
 
 hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
+vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
+widget_info const * is_widget_info(info_data const & d);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
@@ -107,6 +130,7 @@ public:
     /* Takes type info from global declaration with the given name. */
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
+    void add_widget_info(pos_info pos, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
 
     line_info_data_set get_line_info_set(unsigned l) const;

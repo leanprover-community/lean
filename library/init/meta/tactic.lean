@@ -607,6 +607,7 @@ meta constant decl_name : tactic name
 
 /-- `save_type_info e ref` save (typeof e) at position associated with ref -/
 meta constant save_type_info {elab : bool} : expr → expr elab → tactic unit
+/-- Saves a message for rendering in the interactive window. Note that this only works if called within `tactic.save_info`. -/
 meta constant save_info_thunk : pos → (unit → format) → tactic unit
 /-- Return list of currently open namespaces -/
 meta constant open_namespaces : tactic (list name)
