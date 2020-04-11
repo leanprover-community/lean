@@ -36,6 +36,7 @@ Author: Leonardo de Moura
 #include "library/compiler/elim_unused_lets.h"
 #include "library/compiler/extract_values.h"
 #include "library/compiler/cse.h"
+#include "library/string.h"
 
 namespace lean {
 class expand_aux_fn : public compiler_step_visitor {
@@ -157,6 +158,14 @@ static expr expand_aux(environment const & env, abstract_context_cache & cache, 
     return expand_aux_fn(env, cache)(e);
 }
 
+expr find_string_values(expr const & e) {
+    return replace(e, [] (expr const & e) -> optional<expr> {
+        if (auto v = to_string(e))
+            return some_expr(copy_tag(e, from_string(*v)));
+        return {};
+    });
+}
+
 static name * g_tmp_prefix = nullptr;
 
 class preprocess_fn {
@@ -247,6 +256,7 @@ public:
         lean_trace(name({"compiler", "expand_aux"}), tout() << "\n" << v << "\n";);
         v = mark_comp_irrelevant_subterms(m_env, m_cache, v);
         lean_cond_assert("compiler", check(d, v));
+        v = find_string_values(v);
         v = find_nat_values(m_env, v);
         lean_cond_assert("compiler", check(d, v));
         v = eta_expand(m_env, m_cache, v);
