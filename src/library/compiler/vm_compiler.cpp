@@ -24,6 +24,7 @@ Author: Leonardo de Moura
 #include "library/compiler/nat_value.h"
 #include "library/compiler/preprocess.h"
 #include "library/compiler/comp_irrelevant.h"
+#include "library/string.h"
 
 namespace lean {
 static name * g_vm_compiler_fresh = nullptr;
@@ -283,6 +284,8 @@ class vm_compiler_fn {
             emit(mk_expr_instr(get_pexpr_quote_value(e)));
         } else if (is_sorry(e)) {
             compile_global(*get_vm_decl(m_env, "sorry", m_opts), 0, nullptr, bpz, m);
+        } else if (is_string_macro(e)) {
+            emit(mk_string_instr(*to_string(e)));
         } else {
             throw exception(sstream() << "code generation failed, unexpected kind of macro has been found: '"
                             << macro_def(e).get_name() << "'");

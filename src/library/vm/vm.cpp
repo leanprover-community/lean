@@ -32,7 +32,9 @@ Author: Leonardo de Moura
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_override.h"
 #include "library/vm/vm_expr.h"
+#include "library/vm/vm_string.h"
 #include "library/normalize.h"
+#include "library/string.h"
 
 #ifndef LEAN_DEFAULT_PROFILER_FREQ
 #define LEAN_DEFAULT_PROFILER_FREQ 1
@@ -545,6 +547,7 @@ void vm_instr::display(std::ostream & out) const {
     case opcode::Drop:          out << "drop " << m_num; break;
     case opcode::Goto:          out << "goto " << m_pc[0]; break;
     case opcode::SConstructor:  out << "scnstr #" << m_cidx; break;
+    case opcode::String:        out << "string " << quote_string_literal(*m_string); break;
     case opcode::Constructor:   out << "cnstr #" << m_cidx << " " << m_nfields; break;
     case opcode::Num:           out << "num " << *m_mpz; break;
     case opcode::Unreachable:   out << "unreachable"; break;
@@ -691,6 +694,12 @@ vm_instr mk_expr_instr(expr const &v) {
     return r;
 }
 
+vm_instr mk_string_instr(std::string const & v) {
+    vm_instr r(opcode::String);
+    r.m_string = new std::string(v);
+    return r;
+}
+
 vm_instr mk_local_info_instr(unsigned idx, name const & n, optional<expr> const & e) {
     vm_instr r(opcode::LocalInfo);
     r.m_local_idx  = idx;
@@ -828,6 +837,9 @@ void vm_instr::copy_args(vm_instr const & i) {
     case opcode::Expr:
         m_expr = new expr(*i.m_expr);
         break;
+    case opcode::String:
+        m_string = new std::string(*i.m_string);
+        break;
     case opcode::LocalInfo:
         m_local_idx  = i.m_local_idx;
         m_local_info = new vm_local_info(*i.m_local_info);
@@ -934,6 +946,9 @@ void vm_instr::serialize(serializer & s, std::function<name(unsigned)> const & i
     case opcode::Expr:
         s << *m_expr;
         break;
+    case opcode::String:
+        s << *m_string;
+        break;
     case opcode::LocalInfo:
         s << m_local_idx << m_local_info->first << m_local_info->second;
         break;
@@ -1004,6 +1019,8 @@ static vm_instr read_vm_instr(deserializer & d) {
         return mk_num_instr(read_mpz(d));
     case opcode::Expr:
         return mk_expr_instr(read_expr(d));
+    case opcode::String:
+        return mk_string_instr(d.read_string());
     case opcode::LocalInfo: {
         unsigned idx = d.read_unsigned();
         name n; optional<expr> t;
@@ -3156,6 +3173,17 @@ void vm_state::run() {
                                    e
             */
             m_stack.push_back(to_obj(instr.get_expr()));
+            m_pc++;
+            goto main_loop;
+        case opcode::String:
+            /** Instruction: string s
+
+                stack before,      after
+                ...                ...
+                v    ==>           v
+                                   s
+            */
+            m_stack.push_back(to_obj(instr.get_string()));
             m_pc++;
             goto main_loop;
         case opcode::LocalInfo:
