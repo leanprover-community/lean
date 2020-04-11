@@ -5,5 +5,5 @@ begin
   intro q,
   split,
   assumption,
-  assumption
+  assumption,
 end

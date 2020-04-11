@@ -37,7 +37,7 @@ public:
     }
 
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) override {
+    virtual void report(io_state_stream const & ios, json & record) const override {
         interactive_report_type(ios.get_environment(), ios.get_options(), m_expr, record);
     }
 #endif
@@ -49,7 +49,7 @@ public:
     identifier_info_data(name const & full_id): m_full_id(full_id) {}
 
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) override {
+    virtual void report(io_state_stream const & ios, json & record) const override {
         record["full-id"] = m_full_id.to_string();
         add_source_info(ios.get_environment(), m_full_id, record);
         if (auto doc = get_doc_string(ios.get_environment(), m_full_id))
@@ -59,7 +59,7 @@ public:
 };
 
 #ifdef LEAN_JSON
-void hole_info_data::report(io_state_stream const & ios, json & record) {
+void hole_info_data::report(io_state_stream const & ios, json & record) const {
     type_context_old ctx = mk_type_context_for(m_state);
     interactive_report_type(ios.get_environment(), ios.get_options(), ctx.infer(m_state.main()), record);
 }
@@ -82,12 +82,12 @@ widget_info const * is_widget_info(info_data const & d) {
 
 
 #ifdef LEAN_JSON
-void vm_obj_format_info::report(io_state_stream const & ios, json & record) {
+void vm_obj_format_info::report(io_state_stream const & ios, json & record) const {
     if (!m_cache) {
         vm_state S(m_env, ios.get_options());
         scope_vm_state scope(S);
         vm_obj thunk = m_thunk.to_vm_obj();
-        m_cache = to_format(S.invoke(thunk, mk_vm_unit()));
+        const_cast<vm_obj_format_info*>(this)->m_cache = to_format(S.invoke(thunk, mk_vm_unit()));
     }
     std::ostringstream ss;
     ss << mk_pair(*m_cache, ios.get_options());
@@ -116,8 +116,6 @@ void render_attr(vm_obj const & attr, json & record, std::vector<ts_vm_obj> & ha
 }
 
 void render_html(vm_obj const & html, json & j_arr, std::vector<ts_vm_obj> & handlers) {
-    // [note] doesn't support memoising subtrees atm, need to move handlers to a different model. eg store in a tree.
-    // [todo] add io_state_stream stuff
     switch (cidx(html)) {
         case 0: { // element : string -> list (attr) -> html -> html
             json entry;
@@ -143,30 +141,47 @@ void render_html(vm_obj const & html, json & j_arr, std::vector<ts_vm_obj> & han
         }
     }
 }
-
-void widget_info::render() {
+void widget_info::render(lean::vm_state & S) const {
     json view = json::array();
     std::vector<ts_vm_obj> handlers;
-    render_html(invoke(cfield(m_widget.to_vm_obj(), 2), m_state.to_vm_obj()), view, handlers);
-    m_view = view;
-    m_event_handlers = handlers;
+    render_html(S.invoke(cfield(m_widget.to_vm_obj(), 2), m_state.to_vm_obj()), view, handlers);
+    const_cast<widget_info*>(this)->m_view = view;
+    const_cast<widget_info*>(this)->m_event_handlers = handlers;
 }
 
-void widget_info::report(io_state_stream const & ios, json & record) {
-    // if (!m_view) {
-    //     render();
-    // }
-    // record["widget"] = *m_view;
-    record["widget"] = "hello from the widget";
+void widget_info::report(io_state_stream const & ios, json & record) const {
+    if (!m_view) {
+        vm_state S(m_env, ios.get_options());
+        scope_vm_state scope(S);
+        render(S);
+    }
+    record["widget"]["html"] = *m_view;
 }
 
-void widget_info::handleEvent(unsigned handler_idx, json const & event_args) {
+bool widget_info::handleEvent(io_state_stream const & ios, json const & message, json & record) const {
+    unsigned handler_idx = message["handler"];
+    json args = message["args"];
+    vm_state S(m_env, ios.get_options());
+    scope_vm_state scope(S);
+    unsigned handler_size = 0;
+    if (m_event_handlers) {
+        handler_size = (*m_event_handlers).size();
+    }
+    if (handler_idx >= handler_size) {
+        return false;
+    }
     // [todo] figure out the form of event_args and pass them through to the vm handler.
     auto handler = ((*m_event_handlers)[handler_idx]).to_vm_obj();
-    vm_obj update = invoke(cfield(m_widget.to_vm_obj(), 1), m_state.to_vm_obj(), invoke(handler, mk_vm_unit()));
-    m_state = cfield(update, 0);
+    vm_obj update = S.invoke(cfield(m_widget.to_vm_obj(), 1), m_state.to_vm_obj(), S.invoke(handler, mk_vm_unit()));
+    // [hack] morally, I should remove all the const qualifiers from widget info methods, since their content is _actually_
+    // mutating. I found that doing this caused a cascading chain of having to remove the 'const' from many things so in
+    // the name of preserving as much of the other lean source as possible I have opted to just add a const_cast here instead. e.w.ayers
+    const_cast<widget_info*>(this)->m_state = cfield(update, 0);
     vm_obj action = cfield(update, 1); // [todo] use this to perform some external state change.
-    render();
+    render(S);
+    record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
+    record["widget"]["html"] = *m_view;
+    return true;
 }
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }
@@ -174,11 +189,9 @@ info_data mk_identifier_info(name const & full_id) { return info_data(new identi
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
 }
-info_data mk_widget_info(vm_obj const & widget) {
-    vm_obj state = cfield(widget, 0); // widget.init
-    vm_obj update = cfield(widget, 1);
-    vm_obj view = cfield(widget, 2);
-    return info_data(new widget_info(state, widget));
+info_data mk_widget_info(environment const & env, vm_obj const & widget) {
+    vm_obj state =  cfield(widget, 0); // call widget.init to get the initial state.
+    return info_data(new widget_info(env, state, widget));
 }
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
     return info_data(new hole_info_data(s, hole_args, begin, end));
@@ -259,11 +272,11 @@ void info_manager::add_vm_obj_format_info(pos_info pos, environment const & env,
     add_info(pos, mk_vm_obj_format_info(env, thunk));
 }
 
-void info_manager::add_widget_info(pos_info pos, vm_obj const & widget) {
+void info_manager::add_widget_info(pos_info pos, environment const & env, vm_obj const & widget) {
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_info(widget));
+    add_info(pos, mk_widget_info(env, widget));
 }
 
 #ifdef LEAN_JSON
@@ -271,16 +284,40 @@ void info_manager::get_info_record(environment const & env, options const & o, i
                                    json & record, std::function<bool (info_data const &)> pred) const {
     type_context_old tc(env, o);
     io_state_stream out = regular(env, ios, tc).update_options(o);
-    get_line_info_set(pos.first).for_each([&](unsigned c, list<info_data> const & ds) {
-        if (c == pos.second) {
-            for (auto const & d : ds) {
-                if (!pred || pred(d))
-                    d.report(out, record);
-            }
+    auto ds = get_info(pos);
+    if (!ds) {return;}
+    for (auto const & d : *ds) {
+        if (!pred || pred(d)) {
+            d.report(out, record);
         }
-    });
+    }
 }
 #endif
+optional<list<info_data>> info_manager::get_info(pos_info pos) const{
+    auto ds = get_line_info_set(pos.first).find(pos.second);
+    optional<list<info_data>> result;
+    if (ds) { result = some(*ds); }
+    return result;
+}
+
+bool info_manager::update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const {
+    type_context_old tc(env, o);
+    io_state_stream out = regular(env, ios, tc).update_options(o);
+    auto ds = get_info(pos);
+    if (!ds) {
+        // record["status"] = "error";
+        // record["message"] = "could not find a widget at the given position";
+        return false;
+     }
+    for (auto & d : *ds) {
+        const widget_info* cw = is_widget_info(d);
+        widget_info * w = const_cast<widget_info*>(cw);
+        if (w) {
+            return w->update(out, message, record);
+        }
+    }
+    return false;
+}
 
 LEAN_THREAD_PTR(info_manager, g_info_m);
 scoped_info_manager::scoped_info_manager(info_manager *infom) {
@@ -309,7 +346,7 @@ vm_obj tactic_save_info_thunk(vm_obj const & pos, vm_obj const & thunk, vm_obj c
 vm_obj tactic_save_widget(vm_obj const & pos, vm_obj const & widget_fn, vm_obj const & s) {
     try {
         if (g_info_m) {
-            g_info_m->add_widget_info(to_pos_info(pos), invoke(widget_fn, s));
+            g_info_m->add_widget_info(to_pos_info(pos), tactic::to_state(s).env(), invoke(widget_fn, s));
         }
         return tactic::mk_success(tactic::to_state(s));
     } catch (exception & ex) {

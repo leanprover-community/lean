@@ -28,7 +28,7 @@ public:
     virtual ~info_data_cell() {}
     virtual void instantiate_mvars(metavar_context const &) {}
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) = 0;
+    virtual void report(io_state_stream const & ios, json & record) const = 0;
 #endif
 };
 
@@ -43,7 +43,7 @@ class vm_obj_format_info : public info_data_cell {
 public:
     vm_obj_format_info(environment const & env, vm_obj const & thunk): m_env(env), m_thunk(thunk) {}
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) override;
+    virtual void report(io_state_stream const & ios, json & record) const;
 #endif
 };
 
@@ -58,7 +58,7 @@ public:
         m_state(s), m_args(args), m_begin_pos(b), m_end_pos(e) {}
 
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) override;
+    virtual void report(io_state_stream const & ios, json & record) const override;
 #endif
     tactic_state const & get_tactic_state() const { return m_state; }
     expr const & get_args() const { return m_args; }
@@ -67,20 +67,21 @@ public:
 };
 
 class widget_info : public info_data_cell {
-    /** The initial tactic state for this widget */
+    environment  m_env;
     ts_vm_obj    m_state;
     ts_vm_obj    m_widget;
-    /** The cache of the view. */
     optional<json> m_view;
     optional<std::vector<ts_vm_obj>> m_event_handlers;
-    // rb_map<unsigned, ts_vm_obj, unsigned_cmp> m_event_handlers; // [todo] this can just be an array.
-    // pos_info     m_begin_pos;
-    // pos_info     m_end_pos
 public:
-    widget_info(vm_obj const & state, vm_obj const & widget): m_state(state), m_widget(widget) {}
-    void render();
-    virtual void report(io_state_stream const & ios, json & record) override;
-    void handleEvent(unsigned handler_idx, json const & event_args);
+    widget_info(environment const & env, vm_obj const & state, vm_obj const & widget): m_env(env), m_state(state), m_widget(widget) {}
+    void render(lean::vm_state & S) const;
+    virtual void report(io_state_stream const & ios, json & record) const override;
+    /** Given a message of the form `{handler : number, args}`, runs the event handler and updates the state.
+     * The record is updated to have `{status : "success", widget : {html : _}}` on success.
+     * [todo] behaviour upon errors?
+     */
+    bool update(io_state_stream const & ios, json const & message, json & record) const;
+    optional<json> & get_view() {return m_view; }
 };
 
 class info_data {
@@ -130,7 +131,7 @@ public:
     /* Takes type info from global declaration with the given name. */
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
-    void add_widget_info(pos_info pos, vm_obj const & widget);
+    void add_widget_info(pos_info pos, environment const & env, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
 
     line_info_data_set get_line_info_set(unsigned l) const;
@@ -143,6 +144,11 @@ public:
     void get_info_record(environment const & env, options const & o, io_state const & ios, pos_info pos,
                          json & record, std::function<bool (info_data const &)> pred = {}) const;
 #endif
+    optional<list<info_data>> get_info(pos_info pos) const;
+    /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
+     *  Returns true when the widget was successfully updated. [todo] throw an exception instead?
+     */
+    bool update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const;
 };
 
 info_manager * get_global_info_manager();

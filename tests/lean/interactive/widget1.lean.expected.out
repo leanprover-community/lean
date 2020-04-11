@@ -1,0 +1,3 @@
+{"msgs":[{"caption":"eval result","end_pos_col":12,"end_pos_line":75,"file_name":"widget1.lean","pos_col":0,"pos_line":75,"severity":"information","text":"\"adsf\""}],"response":"all_messages"}
+{"message":"file invalidated","response":"ok","seq_num":0}
+{"record":{"doc":"Repeatedly apply `intro1` and return the list of new local constants in order of introduction.","full-id":"tactic.intros","source":,"state":"HELLO HERE IS SOME INFO","tactic_params":[],"type":"tactic (list expr)","widget":[{"children":["hello","world",{"attributes":{"onClick":0},"children":["hello"],"tag":"button"}],"tag":"div"}]},"response":"ok","seq_num":65}

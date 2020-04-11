@@ -1,0 +1,108 @@
+
+on: [push]
+
+jobs:
+  build_ubuntu_job:
+    runs-on: ubuntu-latest
+    name : Build ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      # - name: "Cache build directory (key: ${{ runner.os }}-build-dir-${{ github.ref }})"
+      #   id: cache-build-dir
+      #   uses: actions/cache@v1
+      #   with:
+      #     path: ./build
+      #     key: ${{ runner.os }}-build-dir-${{ github.ref }}
+      - name: Build
+        run: |
+          cmake ../src
+          make -j2
+          cpack
+        working-directory: ./build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2-preview
+        with:
+          name: ubuntu-latest
+          path: ./build/lean-*
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
+  build_macos_job:
+    runs-on: macos-latest
+    name : Build macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - name: Install dependencies
+        run: |
+          brew install coreutils
+      - name: Build
+        run: |
+          cmake ../src
+          make -j2
+          cpack
+        working-directory: ./build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2-preview
+        with:
+          name: macos-latest
+          path: ./build/lean-*
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
+  build_windows_job:
+    runs-on: windows-latest
+    name: Build windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - uses: numworks/setup-msys2@v1
+        with:
+          update: true
+      - name: Install dependencies
+        run: |
+          choco upgrade git -y --no-progress
+          msys2do pacman -S --noconfirm base-devel --needed
+          msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
+      - name: Build
+        run: |
+          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
+          msys2do make -j2
+          msys2do cpack
+        working-directory: ./build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2-preview
+        with:
+          name: windows-latest
+          path: ./build/lean-*
+      - name: Test
+        run: |
+          msys2do ctest -j2 --output-on-failure
+        working-directory: ./build
+
+
+  build_emscripten_job:
+    runs-on: ubuntu-latest
+    container: trzeci/emscripten:sdk-incoming-64bit
+    name: Build emscripten
+    steps:
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get -y install --no-install-recommends apt-utils dialog 2>&1
+        apt-get install -y git iproute2 procps lsb-release build-essential cmake cppcheck valgrind libgmp-dev gdb m4
+# todo; prune the above install list.
+    - uses: actions/checkout@v2
+    - run: mkdir -p ./emscripten
+    - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
+      working-directory: ./emscripten
+    - run: NODE_OPTIONS="--max-old-space-size=4096" emmake make
+      working-directory: ./emscripten
+      # [todo] what artefacts should be uploaded?
+    - uses: actions/upload-artifact@v2-preview
+      with:
+        name: shell
+        path: ./emscripten/shell

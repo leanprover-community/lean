@@ -110,6 +110,33 @@ void report_completions(environment const & env, options const & opts, pos_info 
     j["prefix"] = prefix;
 }
 
+void update_widget(environment const & env, options const & opts, io_state const & ios,
+                 search_path const & path, module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos,
+                 break_at_pos_exception const & e, json & j, json const & message) { // [hack] copied from `report_info` make dry.
+    json record;
+    for (info_manager const & infom : info_managers) {
+        if (infom.get_file_name() == m_mod_info.m_id) {
+            json r1;
+            json r2;
+            if (e.m_goal_pos && infom.update_widget(env, opts, ios, *e.m_goal_pos, r1, message)) {
+                record = r1;
+                record["debug"]["msg"] = "from m_goal_pos";
+                record["debug"]["line"] = e.m_goal_pos->first;
+                record["debug"]["column"] = e.m_goal_pos->second;
+                break;
+            } else if (infom.update_widget(env, opts, ios, e.m_token_info.m_pos, r2, message)) {
+                record = r2;
+                record["debug"]["msg"] = "from e.m_token_info.m_pos";
+                record["debug"]["line"] = e.m_token_info.m_pos.first;
+                record["debug"]["column"] = e.m_token_info.m_pos.second;
+                break;
+            }
+        }
+    }
+    j["record"] = record;
+}
+
 void report_info(environment const & env, options const & opts, io_state const & ios,
                  search_path const & path, module_info const & m_mod_info,
                  std::vector<info_manager> const & info_managers, pos_info const & pos,
@@ -166,8 +193,10 @@ void report_info(environment const & env, options const & opts, io_state const &
     for (auto & infom : info_managers) {
         if (infom.get_file_name() == m_mod_info.m_id) {
             if (e.m_goal_pos) {
+                // in the case that e has a goal pos, report that.
+                // record["debug"]["msg"] = "from m_goal_pos";
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
-                            return dynamic_cast<vm_obj_format_info const *>(d.raw());
+                            return is_vm_obj_format_info(d) || is_widget_info(d);
                         });
             }
             // first check for field infos inside token
@@ -179,9 +208,12 @@ void report_info(environment const & env, options const & opts, io_state const &
                     infom.get_info_record(env, opts, ios, field_pos, record);
                     has_token_info = true;
                 }
+                //  record["debug"]["msg"] = "from field_pos";
             }
-            if (!has_token_info)
+            if (!has_token_info) {
+                // record["debug"]["msg"] = "from e.m_token_info.m_pos";
                 infom.get_info_record(env, opts, ios, e.m_token_info.m_pos, record);
+            }
         }
     }
 
