@@ -19,6 +19,7 @@ Author: Leonardo de Moura
 #include "library/compiler/comp_irrelevant.h"
 #include "library/compiler/rec_fn_macro.h"
 #include "library/compiler/compiler_step_visitor.h"
+#include "library/string.h"
 
 namespace lean {
 static expr * g_neutral_expr     = nullptr;
@@ -68,6 +69,8 @@ class erase_irrelevant_fn : public compiler_step_visitor {
         } else if (is_rec_fn_macro(e)) {
             return mk_constant(get_rec_fn_name(e));
         } else if (is_nat_value(e)) {
+            return e;
+        } else if (is_string_value(e)) {
             return e;
         } else if (auto r = macro_def(e).expand(e, m_ctx)) {
             return visit(*r);
