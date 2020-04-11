@@ -735,12 +735,12 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             }
             if (is_refl_app(proof)) {
                 // This case is for zeta-reduction, regular rfl-lemmas are already handled in add_core(name, ...)
-                new_s.insert(const_name(rel), mk_rfl_lemma(id, univ_metas, reverse_to_list(emetas),
-                                                           reverse_to_list(instances), lhs, rhs,
+                new_s.insert(const_name(rel), mk_rfl_lemma(id, univ_metas, to_list(emetas),
+                                                           to_list(instances), lhs, rhs,
                                                            proof, priority));
             } else {
-                new_s.insert(const_name(rel), mk_simp_lemma(id, univ_metas, reverse_to_list(emetas),
-                                                            reverse_to_list(instances), lhs, rhs,
+                new_s.insert(const_name(rel), mk_simp_lemma(id, univ_metas, to_list(emetas),
+                                                            to_list(instances), lhs, rhs,
                                                             proof, is_perm, priority));
             }
         }
@@ -1009,8 +1009,8 @@ static simp_lemmas add_congr_core(type_context_old & ctx, simp_lemmas const & s,
         }
     }
     simp_lemmas new_s = s;
-    new_s.insert(const_name(rel), mk_congr_lemma(n, ls, reverse_to_list(emetas),
-                                                 reverse_to_list(instances), lhs, rhs, proof, to_list(congr_hyps), prio));
+    new_s.insert(const_name(rel), mk_congr_lemma(n, ls, to_list(emetas), to_list(instances),
+        lhs, rhs, proof, to_list(congr_hyps), prio));
     return new_s;
 }
 
