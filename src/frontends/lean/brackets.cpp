@@ -56,12 +56,12 @@ static expr parse_fin_set(parser & p, pos_info const & pos, expr const & e) {
     }
     p.check_token_next(get_rcurly_tk(), "invalid explicit finite collection, '}' expected");
     unsigned i = stack.size() - 1;
-    auto [pos, e2] = stack[i];
-    expr r = mk_singleton(p, pos, e2);
+    auto e2 = stack[i];
+    expr r = mk_singleton(p, e2.first, e2.second);
     while (i--) {
-        auto [pos, e2] = stack[i];
-        expr insert = p.save_pos(mk_constant(get_has_insert_insert_name()), pos);
-        r = p.rec_save_pos(mk_app(insert, e2, r), pos);
+        e2 = stack[i];
+        expr insert = p.save_pos(mk_constant(get_has_insert_insert_name()), e2.first);
+        r = p.rec_save_pos(mk_app(insert, e2.second, r), e2.first);
     }
     return r;
 }
