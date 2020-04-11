@@ -7,7 +7,6 @@ Author: Leonardo de Moura
 #include <iostream>
 #include "util/sexpr/format.h"
 #include "library/trace.h"
-#include "library/parray.h"
 #include "kernel/scope_pos_info_provider.h"
 #include "library/vm/vm.h"
 #include "library/vm/vm_array.h"
@@ -90,8 +89,8 @@ vm_obj format_to_string(vm_obj const & fmt, vm_obj const & opts) {
 }
 
 /* TODO(jroesch): unify with IO */
-static vm_obj mk_buffer(parray<vm_obj> const & a) {
-    return mk_vm_pair(mk_vm_nat(a.size()), to_obj(a));
+static vm_obj mk_buffer(std::vector<vm_obj> const & a) {
+    return mk_vm_pair(mk_vm_nat(a.size()), to_obj_array(a));
 }
 
 vm_obj format_to_buffer(vm_obj const & fmt, vm_obj const & opts) {
@@ -100,7 +99,7 @@ vm_obj format_to_buffer(vm_obj const & fmt, vm_obj const & opts) {
 
     // TODO(jroesch): make this more performant?
     auto fmt_string = out.str();
-    parray<vm_obj> buffer;
+    std::vector<vm_obj> buffer;
 
     for (auto c : out.str()) {
         buffer.push_back(mk_vm_simple(c));

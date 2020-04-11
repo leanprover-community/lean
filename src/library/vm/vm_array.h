@@ -6,13 +6,13 @@ Author: Leonardo de Moura
 */
 #pragma once
 
-#include "library/parray.h"
 #include "library/vm/vm.h"
 
 namespace lean {
 
-parray<vm_obj> const & to_array(vm_obj const & o);
-vm_obj to_obj(parray<vm_obj> const & a);
+std::vector<vm_obj> const & to_array(vm_obj const & o);
+vm_obj to_obj_array(std::vector<vm_obj> const & a);
+vm_obj to_obj_array(std::vector<vm_obj> && a);
 
 void initialize_vm_array();
 void finalize_vm_array();

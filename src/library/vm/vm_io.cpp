@@ -243,8 +243,8 @@ static vm_obj fs_close(vm_obj const & h, vm_obj const &) {
     }
 }
 
-static vm_obj mk_buffer(parray<vm_obj> const & a) {
-    return mk_vm_pair(mk_vm_nat(a.size()), to_obj(a));
+static vm_obj mk_buffer(std::vector<vm_obj> const & a) {
+    return mk_vm_pair(mk_vm_nat(a.size()), to_obj_array(a));
 }
 
 static vm_obj net_listen(vm_obj const & fname, vm_obj const & backlog, vm_obj const &) {
@@ -308,7 +308,7 @@ static vm_obj net_recv(vm_obj const & h, vm_obj const & n, vm_obj const &) {
         return mk_io_failure(sstream() << "recv failed: " << SOCKET_GET_ERROR());
     }
 
-    parray<vm_obj> r;
+    std::vector<vm_obj> r;
     for (int i = 0; i < sz; i++) {
         r.push_back(mk_vm_simple(static_cast<unsigned char>(tmp[i])));
     }
@@ -318,7 +318,7 @@ static vm_obj net_recv(vm_obj const & h, vm_obj const & n, vm_obj const &) {
 static vm_obj net_send(vm_obj const & h, vm_obj const & b, vm_obj const &) {
     SOCKET fd = socket_to_fd(h);
     buffer<char> tmp;
-    parray<vm_obj> const & a = to_array(cfield(b, 1));
+    std::vector<vm_obj> const & a = to_array(cfield(b, 1));
     unsigned sz = a.size();
     for (unsigned i = 0; i < sz; i++) {
         push_unicode_scalar(tmp, cidx(a[i]));
@@ -359,7 +359,7 @@ static vm_obj fs_read(vm_obj const & h, vm_obj const & n, vm_obj const &) {
         clearerr(href->m_file);
         return mk_io_failure("read failed");
     }
-    parray<vm_obj> r;
+    std::vector<vm_obj> r;
     if (href->m_binary) {
         for (size_t i = 0; i < sz; i++) {
             r.push_back(mk_vm_simple(static_cast<unsigned char>(tmp[i])));
@@ -386,7 +386,7 @@ static vm_obj fs_write(vm_obj const & h, vm_obj const & b, vm_obj const &) {
     }
 
     buffer<char> tmp;
-    parray<vm_obj> const & a = to_array(cfield(b, 1));
+    std::vector<vm_obj> const & a = to_array(cfield(b, 1));
     unsigned sz = a.size();
     for (unsigned i = 0; i < sz; i++) {
         if (href->m_binary) {
@@ -411,7 +411,7 @@ static vm_obj fs_get_line(vm_obj const & h, vm_obj const &) {
         return mk_handle_has_been_closed_error();
     }
 
-    parray<vm_obj> r;
+    std::vector<vm_obj> r;
     while (true) {
         int c = fgetc(href->m_file);
         if (ferror(href->m_file)) {
