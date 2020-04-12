@@ -147,26 +147,33 @@ variables {n : nat} {α : Type u} {β : Type v}
 def nil {α} : array 0 α :=
 d_array.nil
 
+@[inline]
 def read (a : array n α) (i : fin n) : α :=
 d_array.read a i
 
+@[inline]
 def write (a : array n α) (i : fin n) (v : α) : array n α :=
 d_array.write a i v
 
 /-- Fold array starting from 0, folder function includes an index argument. -/
+@[inline]
 def iterate (a : array n α) (b : β) (f : fin n → α → β → β) : β :=
 d_array.iterate a b f
 
 /-- Map each element of the given array with an index argument. -/
+@[inline]
 def foreach (a : array n α) (f : fin n → α → α) : array n α :=
-iterate a a (λ i v a', a'.write i (f i v))
+d_array.foreach a f
 
+@[inline]
 def map (f : α → α) (a : array n α) : array n α :=
 foreach a (λ _, f)
 
+@[inline]
 def map₂ (f : α → α → α) (a b : array n α) : array n α :=
 foreach b (λ i, f (a.read i))
 
+@[inline]
 def foldl (a : array n α) (b : β) (f : α → β → β) : β :=
 iterate a b (λ _, f)
 
