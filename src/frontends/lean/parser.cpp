@@ -2472,7 +2472,9 @@ bool parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & im
                     module_name m(f);
                     imports.push_back(m);
                 }
-                bool should_consume_next = ([&] {
+                // HACK: always consume tokens with break_at_pos,
+                // otherwise go-to-definition doesn't work on last import.
+                bool should_consume_next = m_break_at_pos || ([&] {
                     scanner::lookahead_scope _scope(m_scanner);
                     auto curr = m_scanner.scan(m_env);
                     bool is_import_tk =
