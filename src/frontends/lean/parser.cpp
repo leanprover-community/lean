@@ -257,8 +257,11 @@ void parser_info::updt_options() {
 
 void parser::sync_command() {
     // Keep consuming tokens until we find a Command or End-of-file
-    while (curr() != token_kind::CommandKeyword && curr() != token_kind::Eof)
-        next();
+    while (curr() != token_kind::CommandKeyword && curr() != token_kind::Eof) {
+        try {
+            next();
+        } catch (parser_exception &) {}
+    }
 }
 
 tag parser::get_tag(expr e) {
@@ -2415,7 +2418,7 @@ void parser::parse_mod_doc_block() {
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
-void parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & imports) {
+bool parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & imports) {
     init_scanner();
     scanner::field_notation_scope scope(m_scanner, false);
     m_last_cmd_pos = pos();
@@ -2469,7 +2472,22 @@ void parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & im
                     module_name m(f);
                     imports.push_back(m);
                 }
-                next();
+                // HACK: always consume tokens with break_at_pos,
+                // otherwise go-to-definition doesn't work on last import.
+                bool should_consume_next = m_break_at_pos || ([&] {
+                    scanner::lookahead_scope _scope(m_scanner);
+                    auto curr = m_scanner.scan(m_env);
+                    bool is_import_tk =
+                        (curr == token_kind::Keyword || curr == token_kind::CommandKeyword) &&
+                        get_token_info().value() == get_import_tk();
+                    return m_scanner.get_pos() != 0 || is_import_tk;
+                })();
+                if (should_consume_next) {
+                    next();
+                } else {
+                    // let process_import scan this token again after importing the dependencies
+                    return true;
+                }
             } catch (break_at_pos_exception & e) {
                 if (k_init)
                     e.m_token_info.m_token = std::string(k + 1, '.') + e.m_token_info.m_token.to_string();
@@ -2479,6 +2497,7 @@ void parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & im
             }
         }
     }
+    return false;
 }
 
 void parser::process_imports() {
@@ -2487,8 +2506,9 @@ void parser::process_imports() {
 
     std::exception_ptr exception_during_scanning;
     auto begin_pos = pos();
+    bool needs_to_scan_again = false;
     try {
-        parse_imports(fingerprint, imports);
+        needs_to_scan_again = parse_imports(fingerprint, imports);
     } catch (parser_exception &) {
         exception_during_scanning = std::current_exception();
     }
@@ -2538,6 +2558,10 @@ void parser::process_imports() {
     m_env = activate_export_decls(m_env, {}); // explicitly activate exports in root namespace
     m_env = replay_export_decls_core(m_env, m_ios);
     m_imports_parsed = true;
+
+    if (needs_to_scan_again) {
+        next();
+    }
 
     if (exception_during_scanning) std::rethrow_exception(exception_during_scanning);
 }
