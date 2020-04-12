@@ -530,7 +530,7 @@ public:
 
     bool parse_command_like();
     void parse_command(cmd_meta const & meta);
-    void parse_imports(unsigned & fingerprint, std::vector<module_name> &);
+    bool parse_imports(unsigned & fingerprint, std::vector<module_name> &);
 
     struct quote_scope {
         parser &    m_p;
