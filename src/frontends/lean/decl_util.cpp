@@ -228,7 +228,7 @@ void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & 
 }
 
 /** \brief Sort local names by order of occurrence, and copy the associated parameters to ps */
-void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps) {
+static void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps) {
     buffer<expr> extra;
     name_set     explicit_param_names;
     for (expr const & p : ps) {
