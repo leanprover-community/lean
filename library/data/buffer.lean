@@ -101,7 +101,7 @@ def mmap {m} [monad m] (b : buffer α) (f : α → m β) : m (buffer β) := b.2.
 @[inline]
 def map (a : buffer n α) (f : α → β) : buffer n β := b.2.map f
 
-def map (f : α → α) : buffer α → buffer α
+def endomap (f : α → α) : buffer α → buffer α
 | ⟨n, a⟩ := ⟨n, a.map f⟩
 
 def foldl : buffer α → β → (α → β → β) → β
