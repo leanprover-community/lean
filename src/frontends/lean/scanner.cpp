@@ -359,7 +359,8 @@ void scanner::read_doc_block_core() {
         next();
         if (c == '/') {
             if (curr() == '-') {
-                m_buffer += c;
+                m_buffer += '/';
+                m_buffer += '-';
                 next();
                 read_comment_block_doc();
             }
@@ -413,13 +414,15 @@ void scanner::read_comment_block_doc() {
         next();
         if (c == '/') {
             if (curr() == '-') {
-                m_buffer += c;
+                m_buffer += '/';
+                c = '-';
                 next();
                 nesting++;
             }
         } else if (c == '-') {
             if (curr() == '/') {
-                m_buffer += c;
+                m_buffer += '-';
+                c = '/';
                 next();
                 nesting--;
                 if (nesting == 0)
