@@ -40,6 +40,9 @@ val r.full
 
 end reflectable
 
+meta def get_env : parser environment :=
+λ s, success s.env s
+
 meta constant set_env : environment → parser unit
 
 /-- Make sure the next token is an identifier, consume it, and
@@ -49,8 +52,26 @@ meta constant ident : parser name
 meta constant small_nat : parser nat
 /-- Check that the next token is `tk` and consume it. `tk` must be a registered token. -/
 meta constant tk (tk : string) : parser unit
-/-- Parse an unelaborated expression using the given right-binding power. -/
-protected meta constant pexpr (rbp := std.prec.max) : parser pexpr
+/-- Parse an unelaborated expression using the given right-binding power.
+     When `pat := tt`, the expression is parsed as a pattern, i.e. local
+     constants are not checked. -/
+protected meta constant pexpr (rbp := std.prec.max) (pat := ff) : parser pexpr
+
+
+/-- a variable to local scope -/
+meta constant add_local (v: expr) : parser unit
+meta constant list_include_var_names : parser (list name)
+meta constant list_include_variables : parser (list expr)
+
+meta constant push_local_scope : parser unit
+meta constant pop_local_scope : parser unit
+
+/--
+Control local declaration scope
+-/
+@[inline]
+meta def with_local_scope {α} (p : parser α) : parser α :=
+interaction_monad.bracket push_local_scope p pop_local_scope
 
 protected meta constant itactic_reflected : parser (reflected_value (tactic unit))
 

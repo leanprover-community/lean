@@ -88,6 +88,7 @@ public:
     void omit_variable(name const & n) { m_include_vars.erase(n); }
     bool is_include_variable(name const & n) const { return m_include_vars.contains(n); }
     void get_include_variables(buffer<expr> & vars) const;
+    void get_include_var_names(buffer<name> & vars) const;
     /** \brief Position of the local level declaration named \c n in the sequence of local level decls. */
     unsigned get_local_level_index(name const & n) const { return m_local_level_decls.find_idx(n); }
     bool is_local_level(name const & n) const { return m_local_level_decls.contains(n); }
@@ -490,6 +491,9 @@ public:
     expr parse_expr(unsigned rbp = 0);
     /** Tries to parse an expression, or else consumes no input. */
     optional<expr> maybe_parse_expr(unsigned rbp = 0);
+    /** Tries to parse a pattern in equation-based specifications,
+        or else consumes no input. */
+    optional<expr> maybe_parse_pattern(unsigned rbp);
     /** \brief Parse an (optionally) qualified expression.
         If the input is of the form <id> : <expr>, then return the pair (some(id), expr).
         Otherwise, parse the next expression and return (none, expr). */

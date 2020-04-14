@@ -4,11 +4,20 @@ open interactive
 open tactic
 
 reserve prefix `unquote! `:100
+reserve prefix `unquote2! `:100
 @[user_notation]
 meta def unquote_macro (_ : parse $ tk "unquote!") (e : parse lean.parser.pexpr) : parser pexpr :=
 ↑(to_expr e >>= eval_expr pexpr)
 
 #eval unquote! ``(1 + 1)
+
+@[user_notation]
+meta def unquote_macro' (_ : parse $ tk "unquote2!") (e : parse $ lean.parser.pexpr std.prec.max tt) : parser pexpr :=
+-- ↑(to_expr e >>= eval_expr pexpr)
+pure ``(1 : ℕ)
+
+#eval unquote2! (x + 1) -- this shouldn't cause an error because the expression is parsed
+                        -- as a pattern
 
 reserve infix ` +⋯+ `:65
 @[user_notation]

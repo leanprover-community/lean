@@ -637,7 +637,15 @@ unsigned parser_info::get_local_index(name const & n) const {
 
 void parser_info::get_include_variables(buffer<expr> & vars) const {
     m_include_vars.for_each([&](name const & n) {
-            vars.push_back(*get_local(n));
+            if (auto v = get_local(n)) {
+                vars.push_back(*v);
+            }
+        });
+}
+
+void parser_info::get_include_var_names(buffer<name> & vars) const {
+    m_include_vars.for_each([&](name const & n) {
+            vars.push_back(n);
         });
 }
 
@@ -2298,6 +2306,15 @@ optional<expr> parser::maybe_parse_expr(unsigned rbp) {
     auto _ = backtracking_scope();
     try {
         auto res = parse_expr(rbp);
+        if (consumed_input()) return some_expr(res);
+    } catch (backtracking_exception) {}
+    return none_expr();
+}
+
+optional<expr> parser::maybe_parse_pattern(unsigned rbp) {
+    auto _ = backtracking_scope();
+    try {
+        auto res = parse_pattern_or_expr(rbp);
         if (consumed_input()) return some_expr(res);
     } catch (backtracking_exception) {}
     return none_expr();

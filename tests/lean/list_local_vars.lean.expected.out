@@ -1,0 +1,18 @@
+[b, a]
+b
+a
+list_local_vars.lean:34:9: error: unknown identifier 'β'
+list_local_vars.lean:34:4: error: don't know how to synthesize placeholder
+context:
+a b : ℕ
+⊢ Sort ?
+x : ℕ → ℕ → ⁇
+parameter δ : Type
+list_local_vars.lean:42:0: error: unknown identifier β
+list_local_vars.lean:45:0: error: unknown identifier γ
+a
+[b, a]
+list_local_vars.lean:52:0: error: tactic failed, there are unsolved goals
+state:
+a b c : ℕ
+⊢ c ≤ 3

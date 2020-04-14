@@ -94,6 +94,14 @@ meta def interaction_monad.orelse' {α : Type u} (t₁ t₂ : m α) (use_first_e
 meta instance interaction_monad.monad_fail : monad_fail m :=
 { fail := λ α s, interaction_monad.fail (to_fmt s), ..interaction_monad.monad }
 
+@[inline]
+meta def interaction_monad.bracket {α β γ} (x : m α) (inside : m β) (y : m γ) : m β :=
+x >> λ s,
+match inside s with
+| success r s' := (y >> success r) s'
+| exception msg p s' := (y >> exception msg p) s'
+end
+
 -- TODO: unify `parser` and `tactic` behavior?
 -- meta instance interaction_monad.alternative : alternative m :=
 -- ⟨@interaction_monad_fmap, (λ α a s, success a s), (@fapp _ _), @interaction_monad.failed, @interaction_monad_orelse⟩
