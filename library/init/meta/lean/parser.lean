@@ -67,7 +67,9 @@ meta constant push_local_scope : parser unit
 meta constant pop_local_scope : parser unit
 
 /--
-Control local declaration scope
+Run the parser in a local declaration scope.
+
+Local declarations added via `add_local` do not propagate outside of this scope.
 -/
 @[inline]
 meta def with_local_scope {α} (p : parser α) : parser α :=
