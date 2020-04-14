@@ -220,8 +220,12 @@ vm_obj vm_parser_push_local_scope(vm_obj const & o) {
 
 vm_obj vm_parser_pop_local_scope(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
-    s.m_p->pop_local_scope();
-    return lean_parser::mk_success(s);
+    if (s.m_p->has_local_scopes()) {
+        s.m_p->pop_local_scope();
+        return lean_parser::mk_success(s);
+    } else {
+        return lean_parser::mk_exception("no pushed local scopes", s);
+    }
 }
 
 vm_obj vm_parser_pexpr(vm_obj const & vm_rbp, vm_obj const & vm_pat, vm_obj const & o) {
@@ -253,9 +257,6 @@ vm_obj vm_parser_pexpr(vm_obj const & vm_rbp, vm_obj const & vm_pat, vm_obj cons
         }
     CATCH;
 }
-
-// vm_obj vm_parser_pexpr(vm_obj const & vm_rbp, vm_obj const & o) {
-
 
 vm_obj vm_parser_itactic_reflected(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
