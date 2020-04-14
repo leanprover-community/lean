@@ -36,30 +36,11 @@ def iterate_aux (a : d_array n α) (f : Π i : fin n, α i → β → β) : Π (
 def iterate (a : d_array n α) (b : β) (f : Π i : fin n, α i → β → β) : β :=
 iterate_aux a f n (le_refl _) b
 
-def mmap_core {m} [monad m] (a : d_array n α) (f : Π i : fin n, α i → m (β i)) : ∀ i ≤ n, m (d_array i β)
-| 0 _ := pure array.nil
-| (i+1) h := do
-    bs ← array.mmap_core i (le_of_lt h),
-    b ← f i (a.read ⟨i, h⟩),
-    pure $ bs.push_back b
-
-/-- Monadically map a function over the array. -/
-def mmap {m} [monad m] (a : d_array n α) (f : Π i : fin n, α i → m (β i)) : m (d_array n β) :=
-a.mmap_core f _ (le_refl _)
-
-def map_core (a : array n α) (f : Π i : fin n, α i → β i) : ∀ i ≤ n, d_array i β
-| 0 _ := array.nil
-| (i+1) h := (array.map_core i (le_of_lt h)).push_back $ f i (a.read ⟨i, h⟩)
-
-/-- Map a function over the array. -/
-def map (a : array n α) (f : Π i : fin n, α i → β i) : d_array n β :=
-a.map_core f _ (le_refl _)
-
 /-- Map the array. Has builtin VM implementation. -/
 def foreach (a : d_array n α) (f : Π i : fin n, α i → α i) : d_array n α :=
 iterate a a $ λ i v a', a'.write i (f i v)
 
-def endomap (f : Π i : fin n, α i → α i) (a : d_array n α) : d_array n α :=
+def map (f : Π i : fin n, α i → α i) (a : d_array n α) : d_array n α :=
 foreach a f
 
 def map₂ (f : Π i : fin n, α i → α i → α i) (a b : d_array n α) : d_array n α :=
@@ -184,15 +165,32 @@ d_array.iterate a b f
 def foreach (a : array n α) (f : fin n → α → α) : array n α :=
 d_array.foreach a f
 
+/-- Auxilliary function for monadically mapping a function over an array. -/
+@[inline]
+def mmap_core {β : Type v} {m : Type v → Type w} [monad m] (a : array n α) (f : α → m β) :
+  ∀ i ≤ n, m (array i β)
+| 0 _ := pure d_array.nil
+| (i+1) h := do
+    bs ← mmap_core i (le_of_lt h),
+    b ← f (a.read ⟨i, h⟩),
+    pure $ bs.push_back b
+
 /-- Monadically map a function over the array. -/
 @[inline]
-def mmap {m} [monad m] (a : array n α) (f : α → m β) : m (array n β) :=
-d_array.mmap a (λ _, f)
+def mmap {β : Type v} {m} [monad m] (a : array n α) (f : α → m β) : m (array n β) :=
+a.mmap_core f _ (le_refl _)
+
+/-- Auxilliary function for mapping a function over an array. -/
+@[inline]
+def map_core {β : Type v} (a : array n α) (f : α → m β) :
+  ∀ i ≤ n, m (array i β)
+| 0 _ := d_array.nil
+| (i+1) h := (mmap_core i (le_of_lt h)).push_back $ f (a.read ⟨i, h⟩)
 
 /-- Map a function over the array. -/
 @[inline]
-def map (a : array n α) (f : α → β) : array n β :=
-d_array.map a (λ _, f)
+def map {β : Type v} (a : array n α) (f : α → β) : array n β :=
+a.map_core f _ (le_refl _)
 
 @[inline]
 def endomap (f : α → α) (a : array n α) : array n α :=
