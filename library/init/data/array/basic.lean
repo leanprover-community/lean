@@ -165,33 +165,6 @@ d_array.iterate a b f
 def foreach (a : array n α) (f : fin n → α → α) : array n α :=
 d_array.foreach a f
 
-/-- Auxilliary function for monadically mapping a function over an array. -/
-@[inline]
-def mmap_core {β : Type v} {m : Type v → Type w} [monad m] (a : array n α) (f : α → m β) :
-  ∀ i ≤ n, m (array i β)
-| 0 _ := pure d_array.nil
-| (i+1) h := do
-    bs ← mmap_core i (le_of_lt h),
-    b ← f (a.read ⟨i, h⟩),
-    pure $ bs.push_back b
-
-/-- Monadically map a function over the array. -/
-@[inline]
-def mmap {β : Type v} {m} [monad m] (a : array n α) (f : α → m β) : m (array n β) :=
-a.mmap_core f _ (le_refl _)
-
-/-- Auxilliary function for mapping a function over an array. -/
-@[inline]
-def map_core {β : Type v} (a : array n α) (f : α → m β) :
-  ∀ i ≤ n, m (array i β)
-| 0 _ := d_array.nil
-| (i+1) h := (mmap_core i (le_of_lt h)).push_back $ f (a.read ⟨i, h⟩)
-
-/-- Map a function over the array. -/
-@[inline]
-def map {β : Type v} (a : array n α) (f : α → β) : array n β :=
-a.map_core f _ (le_refl _)
-
 @[inline]
 def endomap (f : α → α) (a : array n α) : array n α :=
 foreach a (λ _, f)
@@ -229,6 +202,33 @@ nat.lt.step h
 /-- Discard _last_ element in the array. Has builtin VM implementation. -/
 def pop_back (a : array (n+1) α) : array n α :=
 {data := λ ⟨j, h⟩, a.read ⟨j, pop_back_idx h⟩}
+
+/-- Auxilliary function for monadically mapping a function over an array. -/
+@[inline]
+def mmap_core {β : Type v} {m : Type v → Type w} [monad m] (a : array n α) (f : α → m β) :
+  ∀ i ≤ n, m (array i β)
+| 0 _ := pure d_array.nil
+| (i+1) h := do
+    bs ← mmap_core i (le_of_lt h),
+    b ← f (a.read ⟨i, h⟩),
+    pure $ bs.push_back b
+
+/-- Monadically map a function over the array. -/
+@[inline]
+def mmap {β : Type v} {m} [monad m] (a : array n α) (f : α → m β) : m (array n β) :=
+a.mmap_core f _ (le_refl _)
+
+/-- Auxilliary function for mapping a function over an array. -/
+@[inline]
+def map_core {β : Type v} (a : array n α) (f : α → β) :
+  ∀ i ≤ n, (array i β)
+| 0 _ := d_array.nil
+| (i+1) h := (map_core i (le_of_lt h)).push_back $ f (a.read ⟨i, h⟩)
+
+/-- Map a function over the array. -/
+@[inline]
+def map {β : Type v} (a : array n α) (f : α → β) : array n β :=
+a.map_core f _ (le_refl _)
 
 protected def mem (v : α) (a : array n α) : Prop :=
 ∃ i : fin n, read a i = v
