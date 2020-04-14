@@ -4300,6 +4300,12 @@ static vm_obj tactic_save_type_info(vm_obj const &, vm_obj const & _e, vm_obj co
     return tactic::mk_success(s);
 }
 
+/*
+meta constant add_defn_eqns (env : environment) (opt : options)
+  (lp_params : list name) (params : list expr) (sig : expr)
+  (eqns : expr ff ⊕ list (list (expr ff) × expr ff))
+  (is_meta : bool) : exceptional environment
+*/
 static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
                                         vm_obj const &_lp_names, vm_obj const &_params,
                                         vm_obj const &_sig, vm_obj const &_eqns,
@@ -4316,11 +4322,18 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
         p.m_type = mk_as_is(mlocal_type(sig));
         lean::to_buffer_name(_lp_names, p.m_lp_params);
         to_buffer_expr(_params, p.m_params);
-        for (vm_obj const * it = &_eqns; !is_simple(*it); it = &cfield(*it, 1)) {
-            auto o = cfield(*it, 0);
-            buffer<expr> pat;
-            to_buffer_expr(cfield(o, 0), pat);
-            p.m_val.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
+        if (cidx(_eqns) == 0) {
+            p.m_val = optional<expr>(to_expr(cfield(_eqns, 0)));
+        } else {
+            buffer<pair<buffer<expr>, expr>> eqns;
+            for (vm_obj const * it = &cfield(_eqns, 0);
+                 !is_simple(*it); it = &cfield(*it, 1)) {
+                auto o = cfield(*it, 0);
+                buffer<expr> pat;
+                to_buffer_expr(cfield(o, 0), pat);
+                eqns.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
+            }
+            p.m_eqns = optional<buffer<pair<buffer<expr>, expr>>>(eqns);
         }
         return mk_vm_exceptional_success(to_obj(single_definition_cmd_core(p, kind, meta)));
     } catch (throwable & ex) {

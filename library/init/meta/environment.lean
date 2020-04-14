@@ -86,7 +86,8 @@ end
 
 meta constant add_defn_eqns (env : environment) (opt : options)
   (lp_params : list name) (params : list expr) (sig : expr)
-  (eqns : list (list (expr ff) × expr)) (is_meta : bool) : exceptional environment
+  (eqns : expr ff ⊕ list (list (expr ff) × expr ff))
+  (is_meta : bool) : exceptional environment
 
 /-- Register the given name as a namespace, making it available to the `open` command -/
 meta constant add_namespace   : environment → name → environment

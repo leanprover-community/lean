@@ -581,15 +581,17 @@ dummy_def_parser::parse_definition(buffer<name> & lp_names, buffer<expr> & param
     declaration_name_scope scope2;
     expr fn = parse_single_header(p, scope2, lp_names, params, is_example, is_instance);
     expr val;
-    {
+    if (m_val) {
+        val = *m_val;
+    } else {
         declaration_name_scope scope2("_main");
         fn = mk_local(mlocal_name(fn), mlocal_pp_name(fn), mlocal_type(fn), mk_rec_info(true));
         p.add_local(fn);
         buffer<expr> eqns;
-        if (p.get_val().empty()) {
+        if (p.m_eqns->empty()) {
             eqns.push_back(mk_no_equation());
         } else {
-            for (pair<buffer<expr>, expr> const &eq : p.get_val()) {
+            for (pair<buffer<expr>, expr> const &eq : *p.m_eqns) {
                 buffer<expr> pat; expr rhs;
                 collected_locals cl;
                 std::tie(pat, rhs) = eq;

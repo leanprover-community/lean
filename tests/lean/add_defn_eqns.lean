@@ -5,8 +5,9 @@ run_cmd do
   b ← mk_local_def `b `(bool),
   a ← mk_local_def `a `(bool),
   add_defn_equations [] [a,b] n
-         [ ([``(tt)], `(ff)),
-           ([``(ff)], `(tt))  ]
+    (sum.inr
+         [ ([``(tt)], ``(ff)),
+           ([``(ff)], ``(tt))  ])
          ff
 
 #print n._main
@@ -15,22 +16,21 @@ run_cmd do
 run_cmd do
   m ← mk_local_def  `m `(bool → bool),
   add_defn_equations [] [] m
-         [ ([``(tt)], `(ff)),
-           ([``(ff)], `(tt))  ]
+         (sum.inr [ ([``(tt)], ``(ff)),
+                    ([``(ff)], ``(tt))  ])
          tt
 
 #print m
 #print prefix m
 
 #eval m tt
-
 run_cmd do
   m ← mk_local_def  `mm `(bool → bool),
   b ← mk_local_def `b `(bool),
   a ← mk_local_def `a `(bool),
   add_defn_equations [] [a,b] m
-     [ ([``(tt)], m `(ff)),
-       ([``(ff)], m `(tt))  ]
+     (sum.inr [ ([``(tt)], to_pexpr $ m `(ff)),
+                ([``(ff)], to_pexpr $ m `(tt))  ])
      ff
 
 #print mm
@@ -40,7 +40,7 @@ run_cmd do
   b ← mk_local_def `b `(bool),
   a ← mk_local_def `a `(bool),
   add_defn_equations [] [a,b] mm
-    [  ]
+    (sum.inr [  ])
     ff
 
 #print mm._main
@@ -51,8 +51,8 @@ run_cmd do
   a ← mk_local_def `a `(nat),
   b ← mk_local_def `b `(nat),
   add_defn_equations [] [a,b] plus
-    [ ([ ``(nat.zero) ], b),
-      ([ ``(nat.succ %%x) ], plus x) ] ff
+    (sum.inr [ ([ ``(nat.zero) ], to_pexpr b),
+               ([ ``(nat.succ %%x) ], to_pexpr $ plus x) ]) ff
 
 #print plus'
 
@@ -70,8 +70,8 @@ run_cmd do
   ys ← mk_local_def `ys list_t,
   let list_cons := @const tt ``list.cons [u],
   add_defn_equations [`u] [α,xs] append
-    [ ([ ``(@list.nil %%α) ], xs),
-      ([ ``(%%y :: %%ys) ], list_cons α y $ append ys) ] ff
+    (sum.inr [ ([ ``(@list.nil %%α) ], to_pexpr xs),
+               ([ ``(%%y :: %%ys) ], to_pexpr $ list_cons α y $ append ys) ]) ff
 
 #print foo_append._main
 
@@ -97,8 +97,10 @@ run_cmd do
   let vec_nil := @const tt ``vec.nil [v],
   let vec_cons := @const tt ``vec.cons [v],
   add_defn_equations [`u,`v] [α,β,f] map
-    [ ([ ``(._), ``(@vec.nil %%α) ], vec_nil β),
-      ([ ``(.(nat.succ %%n)), ``(@vec.cons %%α %%n %%y %%ys) ], vec_cons β n (f y) $ map n ys ) ] ff
+    (sum.inr
+      [ ([ ``(._), ``(@vec.nil %%α) ], to_pexpr $ vec_nil β),
+        ([ ``(.(nat.succ %%n)), ``(@vec.cons %%α %%n %%y %%ys) ], to_pexpr $ vec_cons β n (f y) $ map n ys ) ] )
+    ff
 
 #print vec.map._main
 #print prefix vec.map
@@ -118,9 +120,23 @@ run_cmd do
   let vec_nil := @const tt ``vec.nil [v],
   let vec_cons := @const tt ``vec.cons [v],
   add_defn_equations [`u,`v] [α,β,f] map
-    [ ([ ``(._), ``(@vec.nil %%α) ], vec_nil β),
-      ([ ``(.(nat.succ %%n)), ``(@vec.cons %%α %%n %%y %%ys) ], vec_cons β n (f y) $ map n ys ) ] ff
+    (sum.inr [ ([ ``(._), ``(@vec.nil %%α) ], to_pexpr $ vec_nil β),
+               ([ ``(.(nat.succ %%n)), ``(@vec.cons %%α %%n %%y %%ys) ], to_pexpr $ vec_cons β n (f y) $ map n ys ) ])
+    ff
 
 #check vec.map'._main
 #print vec.map'._main
 #print prefix vec.map'
+#print vec.map'._main._meta_aux
+
+run_cmd do
+  n ← mk_local_def `n₂ `(bool),
+  b ← mk_local_def `b `(bool),
+  a ← mk_local_def `a `(bool),
+  e ← mk_app ``band [a,b],
+  add_defn_equations [] [a,b] n
+    (sum.inl $ to_pexpr e)
+         ff
+
+#print n₂
+#print prefix n₂

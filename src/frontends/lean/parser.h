@@ -621,7 +621,8 @@ public:
   buffer<name>    m_lp_params;
   buffer<expr>    m_params;
   expr            m_type;
-  buffer<pair<buffer<expr>, expr>> m_val;
+  optional<buffer<pair<buffer<expr>, expr>>> m_eqns;
+  optional<expr>  m_val;
   optional<expr>  m_wf_tac;
   optional<pos_info> m_break_at_pos;
 public:
@@ -650,7 +651,7 @@ public:
   name get_name() const { return m_name; }
   buffer<expr> const & get_binders() { return m_params; }
   expr const & get_type() { return m_type; }
-  const buffer<pair<buffer<expr>, expr>> & get_val() const { return m_val; }
+  /* const buffer<pair<buffer<expr>, expr>> & get_val() const { return m_val; } */
   virtual expr save_pos(expr const & e, pos_info) override { return e; }
   virtual expr rec_save_pos(expr const & e, pos_info) override { return e; }
   virtual expr rec_save_pos(expr const & e, optional<pos_info>) override { return e; }

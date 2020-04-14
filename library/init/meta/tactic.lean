@@ -1407,7 +1407,7 @@ do env ← get_env,
       | (nat.succ b) := my_add b
 -/
 meta def add_defn_equations (lp : list name) (params : list expr) (fn : expr)
-                            (eqns : list (list pexpr × expr)) (is_meta : bool) : tactic unit :=
+                            (eqns : pexpr ⊕ list (list pexpr × pexpr)) (is_meta : bool) : tactic unit :=
 do opt ← get_options,
    updateex_env $ λ e, e.add_defn_eqns opt lp params fn eqns is_meta
 
