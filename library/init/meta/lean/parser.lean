@@ -53,8 +53,8 @@ meta constant small_nat : parser nat
 /-- Check that the next token is `tk` and consume it. `tk` must be a registered token. -/
 meta constant tk (tk : string) : parser unit
 /-- Parse an unelaborated expression using the given right-binding power.
-     When `pat := tt`, the expression is parsed as a pattern, i.e. local
-     constants are not checked. -/
+When `pat := tt`, the expression is parsed as a pattern, i.e. local
+constants are not checked. -/
 protected meta constant pexpr (rbp := std.prec.max) (pat := ff) : parser pexpr
 
 
