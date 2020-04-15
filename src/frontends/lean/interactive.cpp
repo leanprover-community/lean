@@ -111,8 +111,8 @@ void report_completions(environment const & env, options const & opts, pos_info 
 }
 
 void update_widget(environment const & env, options const & opts, io_state const & ios,
-                 search_path const & path, module_info const & m_mod_info,
-                 std::vector<info_manager> const & info_managers, pos_info const & pos,
+                 search_path const &, module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const &,
                  break_at_pos_exception const & e, json & j, json const & message) { // [hack] copied from `report_info` make dry.
     json record;
     for (info_manager const & infom : info_managers) {

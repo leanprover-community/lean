@@ -8,6 +8,7 @@ Author: Leonardo de Moura
 #include <string>
 #include <utility>
 #include <limits>
+#include <vector>
 #include "util/pair.h"
 #include "util/name_map.h"
 #include "util/name_set.h"
@@ -17,10 +18,13 @@ Author: Leonardo de Moura
 #include "kernel/abstract_type_context.h"
 #include "frontends/lean/token_table.h"
 #include "util/numerics/mpz.h"
+#include "library/expr_address.h"
 
 namespace lean {
 class notation_entry;
-
+/** A subexpr is an expression `e` and an address of some larger expression saying where `e` is */
+typedef pair<expr, address> subexpr;
+template<typename T>
 class pretty_fn {
 public:
     static unsigned max_bp() { return get_max_prec(); }
@@ -36,15 +40,16 @@ public:
     class result {
         unsigned m_lbp;
         unsigned m_rbp;
-        format   m_fmt;
+        T   m_fmt;
     public:
         result():m_lbp(max_bp()), m_rbp(max_bp()) {}
-        result(format const & fmt):m_lbp(inf_bp()), m_rbp(inf_bp()), m_fmt(fmt) {}
-        result(unsigned rbp, format const & fmt):m_lbp(max_bp()), m_rbp(rbp), m_fmt(fmt) {}
-        result(unsigned lbp, unsigned rbp, format const & fmt):m_lbp(lbp), m_rbp(rbp), m_fmt(fmt) {}
+        result(T const & fmt):m_lbp(inf_bp()), m_rbp(inf_bp()), m_fmt(fmt) {}
+        result(unsigned rbp, T const & fmt):m_lbp(max_bp()), m_rbp(rbp), m_fmt(fmt) {}
+        result(unsigned lbp, unsigned rbp, T const & fmt):m_lbp(lbp), m_rbp(rbp), m_fmt(fmt) {}
         unsigned lbp() const { return m_lbp; }
         unsigned rbp() const { return m_rbp; }
-        format const & fmt() const { return m_fmt; }
+        T const & fmt() const { return m_fmt; }
+        result with(T const & fmt) const { return result(m_lbp, m_rbp, fmt); }
     };
 private:
     environment             m_env;
@@ -104,42 +109,43 @@ private:
     bool has_implicit_args(expr const & f);
     optional<name> is_aliased(name const & n) const;
 
-    format escape(name const & n);
+    T escape(name const & n);
 
-    format mk_link(name const & dest, format const & body);
+    T mk_link(name const & dest, T const & body);
     result mk_link(name const & dest, result const & body);
-    format mk_link(expr const & dest, format const & body);
+    T mk_link(expr const & dest, T const & body);
 
     format pp_child(level const & l);
     format pp_max(level l);
     format pp_meta(level const & l);
     format pp_level(level const & l);
 
-    format pp_binder(expr const & local);
-    format pp_binder_block(buffer<name> const & names, expr const & type, binder_info const & bi);
-    format pp_binders(buffer<expr> const & locals);
+    T pp_binder(expr const & local);
+    T pp_binder_at(expr const & local, address adr);
+    T pp_binder_block(buffer<name> const & names, expr const & type, binder_info const & bi);
+    T pp_binders(buffer<subexpr> const & locals);
 
     bool match(level const & p, level const & l);
-    bool match(expr const & p, expr const & e, buffer<optional<expr>> & args);
+    bool match(expr const & p, subexpr const & e, buffer<optional<subexpr>> & args);
     /** \brief pretty-print e parsed with rbp, terminated by a token with lbp */
     result pp_notation_child(expr const & e, unsigned rbp, unsigned lbp);
-    optional<result> pp_notation(notation_entry const & entry, buffer<optional<expr>> & args);
-    optional<result> pp_notation(expr const & e);
+    optional<result> pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args);
+    optional<result> pp_notation(subexpr const & e);
 
     result add_paren_if_needed(result const & r, unsigned bp);
-    std::pair<bool, token_table const *> needs_space_sep(token_table const * t, std::string const &s1, std::string const &s2) const;
 
     result pp_overriden_local_ref(expr const & e);
     optional<result> pp_local_ref(expr const & e);
 
     result pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide = false);
-    result pp_child_core(expr const & e, unsigned bp, bool ignore_hide = false);
+    // result pp_child_core(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_child(expr const & e, unsigned bp, bool ignore_hide = false);
+    result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false);
     result pp_subtype(expr const & e);
     result pp_sep(expr const & e);
     result pp_set_of(expr const & e);
-    result pp_explicit_collection(buffer<expr> const & elems);
+    result pp_explicit_collection(buffer<subexpr> const & elems);
     result pp_var(expr const & e);
     result pp_sort(expr const & e);
     result pp_const(expr const & e, optional<unsigned> const & num_ref_univs = optional<unsigned>());
@@ -153,7 +159,7 @@ private:
     result pp_pi(expr const & e);
     result pp_have(expr const & e);
     result pp_show(expr const & e);
-    format pp_equation(expr const & e);
+    T pp_equation(expr const & e);
     optional<result> pp_equations(expr const & e);
     result pp_macro_default(expr const & e);
     result pp_macro(expr const & e);
@@ -162,18 +168,137 @@ private:
     result pp_let(expr e);
     result pp_num(mpz const & n, unsigned bp);
     result pp_prod(expr const & e);
-    void set_options_core(options const & o);
+    void   set_options_core(options const & o);
+    expr   infer_type(expr const & e);
+    // result pp_at(expr const & e, address local_address, bool ignore_hide = false);
 
-    expr infer_type(expr const & e);
+    /* How pp works with addresses.
+       At certain points in the expression, called 'boundaries' we call `of_rec` with the current `m_address`, at which point the m_address is reset to empty.
+       At the moment I add a boundary for each call to `pp`, `pp_child`, and `pp_child_notation`.
+
+       At any point in the pp procedure, can push an `address_scope` which appends to m_address.
+       The idea is that you eventually build up an object where if you concatenate all of the addresses at the boundary, you should get the
+       address of that subexpression in the root expression.
+       If computing the address becomes too thorny, as occurs when we pp a macro, then a `give_up_scope` is used to stop appending boundaries, because we can no longer compute the address of the subexpressions.
+     */
+protected:
+    address    m_address;
+    bool       m_address_give_up;
+
+    struct address_scope {
+        pretty_fn & m_pfn;
+        address m_old;
+        address_scope(pretty_fn & pfn, address local_address) : m_pfn(pfn) {
+            if (!pfn.m_address_give_up) {
+                m_old = pfn.m_address;
+                pfn.m_address = append(local_address, pfn.m_address);
+            }
+        }
+        ~address_scope() {
+            if (!m_pfn.m_address_give_up) {
+                m_pfn.m_address = m_old;
+            }
+        }
+    };
+    struct address_give_up_scope : public flet<bool> {
+        address_give_up_scope(pretty_fn & pfn) : flet<bool>(pfn.m_address_give_up, true) {}
+    };
+    /** Use this to set the address back to empty. Use this after adding a boundary. */
+    struct address_reset_scope {
+        pretty_fn & m_pfn;
+        address m_adr;
+        address_reset_scope(pretty_fn & pfn) : m_pfn(pfn) {
+            m_adr = pfn.m_address;
+            m_pfn.m_address = address();
+        }
+        ~address_reset_scope() {
+            m_pfn.m_address = m_adr;
+        }
+    };
+    // address get_adr() {
+    //     if (m_address.size() == 0) { return address();
+    //     } else { return m_address.back(); }
+    // }
+    // virtual T fmt(format const & fmt) = 0;
+    virtual T of_rec(address const & a, expr const & e, T const & result) = 0;
+    result of_rec(address const & a, expr const & e, result const & result);
+    // virtual T group(T const & t) = 0;
+    // virtual T nest(unsigned i, T const & t) = 0;
+    // // also T has to implement `+` but I think you just get a compiler error for that.
 public:
     pretty_fn(environment const & env, options const & o, abstract_type_context & ctx);
+    result pp_core(expr const & e, bool ignore_hide = false);
+    result pp_at(expr const & e, address adr, bool ignore_hide = false);
     result pp(expr const & e, bool ignore_hide = false);
     void set_options(options const & o);
     options const & get_options() const { return m_options; }
-    format operator()(expr const & e);
+    T operator()(expr const & e);
+    std::pair<bool, token_table const *> needs_space_sep(token_table const * t, std::string const &s1, std::string const &s2) const;
+};
+
+/** Same as pretty_fn but with hooks determined by VM */
+class plain_pretty_fn : public pretty_fn<format> {
+    format of_rec(address const &, expr const &, format const & result) { return result; }
+public:
+    plain_pretty_fn(environment const & e, options const & o, abstract_type_context & ctx) : pretty_fn<format>(e, o, ctx) {
+        m_address_give_up = true;
+    }
 };
 
 formatter_factory mk_pretty_formatter_factory();
 void initialize_pp();
 void finalize_pp();
+
+
+
+// class magic {
+// public:
+//     magic(format const & f);
+//     explicit magic(sexpr const & v);
+//     explicit magic(std::string const & v);
+//     explicit magic(int v);
+//     explicit magic(name const & v);
+//     friend magic operator+(magic const & f1, magic const & f2);
+//     magic & operator+=(magic const & f) {
+//         *this = *this + f;
+//         return *this;
+//     }
+// };
+
+
+// // magic const & line();
+// // magic const & space();
+// // magic const & lp();
+// // magic const & rp();
+// // magic const & lsb();
+// // magic const & rsb();
+// // magic const & lcurly();
+// // magic const & rcurly();
+// // magic const & comma();
+// // magic const & colon();
+// // magic const & dot();
+// class magic_pp : public pretty_fn<magic> {
+//     magic of_rec(expr const & e, magic const & result) { return result; }
+// public:
+//     magic_pp(environment const & e, options const & o, abstract_type_context & ctx) : pretty_fn<magic>(e, o, ctx) {}
+// };
+
+
 }
+
+/*
+Problem, I can't just replace fmt with T because it is not just a list but a sexpr
+with depth and so on.
+
+
+Ideas:
+1. add sexpr_atom_ext, will require modifying some of the code in format.cpp
+2. rewrite pp to use a more generic form of format. Very hard, will require
+   modifying and debugging >2000 lines of code.
+3. get pp to generate a _source map_ sending expression addresses to format source locations.
+   this is also hard because format is actually a tree of information.
+4. add a 'tag' property to the format containing some random information.
+5. write my own version of pp in Lean.
+
+
+ */

@@ -158,7 +158,7 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     record["widget"]["html"] = *m_view;
 }
 
-bool widget_info::handleEvent(io_state_stream const & ios, json const & message, json & record) const {
+bool widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
     unsigned handler_idx = message["handler"];
     json args = message["args"];
     vm_state S(m_env, ios.get_options());

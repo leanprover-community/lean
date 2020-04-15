@@ -27,6 +27,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_float.h"
 #include "library/vm/vm_module_info.h"
 #include "library/vm/vm_override.h"
+#include "library/vm/vm_pp.h"
 
 namespace lean {
 void initialize_vm_core_module() {
@@ -53,6 +54,7 @@ void initialize_vm_core_module() {
     initialize_vm_float();
     initialize_vm_module_info();
     initialize_vm_override();
+    initialize_vm_pp();
 }
 
 void finalize_vm_core_module() {
@@ -80,6 +82,7 @@ void finalize_vm_core_module() {
     finalize_vm_core();
     finalize_vm_float();
     finalize_vm_override();
+    finalize_vm_pp();
 }
 
 void initialize_vm_module() {
