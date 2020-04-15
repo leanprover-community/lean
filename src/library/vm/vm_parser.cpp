@@ -242,6 +242,13 @@ vm_obj vm_parser_add_local(vm_obj const & e, vm_obj const & o) {
     return lean_parser::mk_success(s);
 }
 
+vm_obj vm_parser_add_local_level(vm_obj const & e, vm_obj const & o) {
+    auto const & s = lean_parser::to_state(o);
+    auto n = to_name(e);
+    s.m_p->add_local_level(n, mk_param_univ(n), true);
+    return lean_parser::mk_success(s);
+}
+
 vm_obj vm_parser_push_local_scope(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
     s.m_p->push_local_scope();
@@ -434,6 +441,7 @@ void initialize_vm_parser() {
     DECLARE_VM_BUILTIN(name({"lean", "parser", "skip_info"}),         vm_parser_skip_info);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "add_local"}),         vm_parser_add_local);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "list_available_include_vars"}), vm_parser_list_available_include_vars);
+    DECLARE_VM_BUILTIN(name({"lean", "parser", "add_local_level"}),   vm_parser_add_local_level);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "list_include_var_names"}), vm_parser_list_include_var_names);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "include_var"}),        vm_parser_include_var);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "omit_var"}),           vm_parser_omit_var);

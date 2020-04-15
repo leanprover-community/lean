@@ -34,6 +34,7 @@ meta def add_var_cmd (_ : parse $ tk "add_var") : lean.parser unit :=
 do (n,t) ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
    t ← tactic.to_expr t,
    v ← tactic.mk_local_def n t,
+   add_local_level `u,
    lean.parser.add_local v,
    include_var v.local_pp_name,
    (n',t') ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
@@ -47,7 +48,6 @@ do (n,t) ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
    trace_state
 
 end tactic.interactive
--- stuff 1
 variables (a b c : ℕ)
 include a b
 variables {α : Type}
@@ -57,7 +57,7 @@ def x := β
 def y := γ
 #check x
 section
-add_var (β : Type) (γ : Type)
+add_var (β : Type) (γ : Type u)
 def x' : β → β := id
 def y' : γ → γ := id
 end
