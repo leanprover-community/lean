@@ -11,7 +11,9 @@ open interactive.types
 @[user_command]
 meta def tac_cmd (_ : parse $ tk "stuff") : lean.parser unit :=
 with_local_scope $
-do ls ← lean.parser.list_include_variables,
+do ls ← lean.parser.list_available_include_vars,
+   trace ls,
+   ls ← lean.parser.list_include_var_names,
    (n,t) ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
    t ← tactic.to_expr t,
    v ← tactic.mk_local_def n t,
@@ -20,9 +22,29 @@ do ls ← lean.parser.list_include_variables,
    t' ← tactic.to_expr t',
    v ← tactic.mk_local_def n' t',
    lean.parser.add_local v,
+   include_var v.local_pp_name,
+   trace ls,
+   ls ← tactic.local_context,
    trace ls,
    brackets "(" ")" texpr,
    ↑(ls.mmap' $ trace ∘ to_string)
+
+@[user_command]
+meta def add_var_cmd (_ : parse $ tk "add_var") : lean.parser unit :=
+do (n,t) ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
+   t ← tactic.to_expr t,
+   v ← tactic.mk_local_def n t,
+   lean.parser.add_local v,
+   include_var v.local_pp_name,
+   (n',t') ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
+   t' ← tactic.to_expr t',
+   v ← tactic.mk_local_def n' t',
+   lean.parser.add_local v,
+   include_var v.local_pp_name,
+   omit_var v.local_pp_name,
+   ls ← lean.parser.list_include_var_names,
+   trace ls,
+   trace_state
 
 end tactic.interactive
 -- stuff 1
@@ -32,8 +54,17 @@ variables {α : Type}
 section
 stuff (β : Type) (γ : Type) (α × β × γ)
 def x := β
-
+def y := γ
 #check x
+section
+add_var (β : Type) (γ : Type)
+def x' : β → β := id
+def y' : γ → γ := id
+end
+def x'' := β
+def y'' := γ
+#check x'
+#check y'
 section
 parameter δ : Type
 

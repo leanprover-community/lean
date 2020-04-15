@@ -199,16 +199,46 @@ vm_obj vm_parser_list_include_var_names(vm_obj const & o) {
     return lean_parser::mk_success(to_obj(r), s);
 }
 
-vm_obj vm_parser_list_include_variables(vm_obj const & o) {
+vm_obj vm_parser_list_available_include_vars(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
     buffer<expr> r;
-    s.m_p->get_include_variables(r);
+    s.m_p->get_available_include_var_names(r);
     return lean_parser::mk_success(to_obj(r), s);
+}
+
+vm_obj vm_parser_include_var(vm_obj const & v, vm_obj const & o) {
+    auto const & s = lean_parser::to_state(o);
+    auto n = to_name(v);
+    if (s.m_p->get_local(n)) {
+        if (!s.m_p->is_include_variable(n)) {
+            s.m_p->include_variable(to_name(v));
+            return lean_parser::mk_success(s);
+        } else {
+            return lean_parser::mk_exception(sstream() << "invalid include command, '" << n << "' has already been included", s);
+        }
+    }  else {
+        return lean_parser::mk_exception(sstream() << "invalid include/omit command, '" << n << "' is not a parameter/variable", s);
+    }
+}
+
+vm_obj vm_parser_omit_var(vm_obj const & v, vm_obj const & o) {
+    auto const & s = lean_parser::to_state(o);
+    auto n = to_name(v);
+    if (s.m_p->get_local(n)) {
+        if (s.m_p->is_include_variable(n)) {
+            s.m_p->omit_variable(n);
+            return lean_parser::mk_success(s);
+        } else {
+            return lean_parser::mk_exception(sstream() << "invalid omit command, '" << n << "' has not been included", s);
+        }
+    }  else {
+        return lean_parser::mk_exception(sstream() << "invalid include/omit command, '" << n << "' is not a parameter/variable", s);
+    }
 }
 
 vm_obj vm_parser_add_local(vm_obj const & e, vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
-    s.m_p->add_local(to_expr(e));
+    s.m_p->add_local(to_expr(e), true);
     return lean_parser::mk_success(s);
 }
 
@@ -403,8 +433,10 @@ void initialize_vm_parser() {
     DECLARE_VM_BUILTIN(name({"lean", "parser", "itactic_reflected"}), vm_parser_itactic_reflected);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "skip_info"}),         vm_parser_skip_info);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "add_local"}),         vm_parser_add_local);
-    DECLARE_VM_BUILTIN(name({"lean", "parser", "list_include_variables"}), vm_parser_list_include_variables);
+    DECLARE_VM_BUILTIN(name({"lean", "parser", "list_available_include_vars"}), vm_parser_list_available_include_vars);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "list_include_var_names"}), vm_parser_list_include_var_names);
+    DECLARE_VM_BUILTIN(name({"lean", "parser", "include_var"}),        vm_parser_include_var);
+    DECLARE_VM_BUILTIN(name({"lean", "parser", "omit_var"}),           vm_parser_omit_var);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "set_goal_info_pos"}), vm_parser_set_goal_info_pos);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "with_input"}),        vm_parser_with_input);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "of_tactic"}),         vm_parser_of_tactic);

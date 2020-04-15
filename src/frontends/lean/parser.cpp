@@ -649,6 +649,16 @@ void parser_info::get_include_var_names(buffer<name> & vars) const {
         });
 }
 
+void parser_info::get_available_include_var_names(buffer<expr> & vars) const {
+    for_each(m_local_decls.get_entries(),
+             [&](pair<name, expr> p) {
+                 if (m_variables.contains(mlocal_name(p.second))) {
+                     vars.push_back(p.second);
+                 }
+             } );
+}
+
+
 list<expr> parser_info::locals_to_context() const {
     return map_filter<expr>(m_local_decls.get_entries(),
                             [](pair<name, expr> const & p, expr & out) {
