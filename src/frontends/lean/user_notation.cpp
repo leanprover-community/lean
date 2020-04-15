@@ -24,7 +24,7 @@ static environment add_user_notation(environment const & env, name const & d, un
         auto parser = app_fn(binding_domain(type));
         if (is_app(parser)) {
             parser = app_arg(parser);
-            if (is_app_of(parser, get_lean_parser_pexpr_name(), 1)) {
+            if (is_app_of(parser, get_lean_parser_pexpr_name(), 2)) {
                 is_nud = false;
                 type = binding_body(type);
             }
