@@ -93,8 +93,15 @@ def iterate : Π b : buffer α, β → (fin b.size → α → β → β) → β
 def foreach : Π b : buffer α, (fin b.size → α → α) → buffer α
 | ⟨n, a⟩ f := ⟨n, a.foreach f⟩
 
-def map (f : α → α) : buffer α → buffer α
-| ⟨n, a⟩ := ⟨n, a.map f⟩
+/-- Monadically map a function over the buffer. -/
+@[inline]
+def mmap {m} [monad m] (b : buffer α) (f : α → m β) : m (buffer β) :=
+do b' ← b.2.mmap f, return b'.to_buffer
+
+/-- Map a function over the buffer. -/
+@[inline]
+def map : buffer α → (α → β) → buffer β
+| ⟨n, a⟩ f := ⟨n, a.map f⟩
 
 def foldl : buffer α → β → (α → β → β) → β
 | ⟨_, a⟩ b f := a.foldl b f
