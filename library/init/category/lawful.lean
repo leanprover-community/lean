@@ -108,9 +108,9 @@ section
     change (x >>= pure ∘ f).run st = _,
     simp
   end
-  @[simp] lemma run_monad_lift {n} [has_monad_lift_t n m] (x : n α) :
+  @[simp] lemma run_monad_lift (x : m α) :
     (monad_lift x : state_t σ m α).run st = do a ← (monad_lift x : m α), pure (a, st) := rfl
-  @[simp] lemma run_monad_map {m' n n'} [monad m'] [monad_functor_t n n' m m'] (f : ∀ {α}, n α → n' α) :
+  @[simp] lemma run_monad_map {m'} [monad m'] (f : ∀ {α}, m α → m' α) :
     (monad_map @f x : state_t σ m' α).run st = monad_map @f (x.run st) := rfl
   @[simp] lemma run_adapt {σ' σ''} (st : σ) (split : σ → σ' × σ'') (join : σ' → σ'' → σ)
     (x : state_t σ' m α) :
@@ -148,9 +148,9 @@ namespace except_t
     apply bind_ext_congr,
     intro a; cases a; simp [except_t.bind_cont, except.map]
   end
-  @[simp] lemma run_monad_lift {n} [has_monad_lift_t n m] (x : n α) :
+  @[simp] lemma run_monad_lift (x : m α) :
     (monad_lift x : except_t ε m α).run = except.ok <$> (monad_lift x : m α) := rfl
-  @[simp] lemma run_monad_map {m' n n'} [monad m'] [monad_functor_t n n' m m'] (f : ∀ {α}, n α → n' α) :
+  @[simp] lemma run_monad_map {m'} [monad m'] (f : ∀ {α}, m α → m' α) :
     (monad_map @f x : except_t ε m' α).run = monad_map @f x.run := rfl
 end except_t
 
@@ -190,9 +190,9 @@ section
     (x >>= f).run r = x.run r >>= λ a, (f a).run r := rfl
   @[simp] lemma run_map (f : α → β) [is_lawful_monad m] : (f <$> x).run r = f <$> x.run r :=
   by rw ← bind_pure_comp_eq_map _ (x.run r); refl
-  @[simp] lemma run_monad_lift {n} [has_monad_lift_t n m] (x : n α) :
+  @[simp] lemma run_monad_lift (x : m α) :
     (monad_lift x : reader_t ρ m α).run r = (monad_lift x : m α) := rfl
-  @[simp] lemma run_monad_map {m' n n'} [monad m'] [monad_functor_t n n' m m'] (f : ∀ {α}, n α → n' α) :
+  @[simp] lemma run_monad_map {m'} [monad m'] (f : ∀ {α}, m α → m' α) :
     (monad_map @f x : reader_t ρ m' α).run r = monad_map @f (x.run r) := rfl
   @[simp] lemma run_read : (reader_t.read : reader_t ρ m ρ).run r = pure r := rfl
 end
@@ -222,9 +222,9 @@ namespace option_t
     apply bind_ext_congr,
     intro a; cases a; simp [option_t.bind_cont, option.map, option.bind]
   end
-  @[simp] lemma run_monad_lift {n} [has_monad_lift_t n m] (x : n α) :
+  @[simp] lemma run_monad_lift (x : m α) :
     (monad_lift x : option_t m α).run = some <$> (monad_lift x : m α) := rfl
-  @[simp] lemma run_monad_map {m' n n'} [monad m'] [monad_functor_t n n' m m'] (f : ∀ {α}, n α → n' α) :
+  @[simp] lemma run_monad_map {m'} [monad m'] (f : ∀ {α}, m α → m' α) :
     (monad_map @f x : option_t m' α).run = monad_map @f x.run := rfl
 end option_t
 

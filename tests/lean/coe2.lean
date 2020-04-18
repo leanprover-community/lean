@@ -16,7 +16,7 @@ constants i j : int
 constants x y : real
 
 #check sine x
-#check sine n
+#check sine ((n : int) : real)
 #check sine i
 
 constant int_has_add  : has_add int
@@ -32,9 +32,9 @@ attribute [instance] int_has_add real_has_add
 /- The workaround is to use the explicit lift -/
 #check ↑i + x
 
-#check x + n
+#check x + (n : int)
 
 #check n + x -- FAIL
 
-#check ↑n + x
+#check ((n:int):real) + x
 end hidden

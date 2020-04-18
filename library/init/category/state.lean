@@ -57,7 +57,7 @@ section
   ⟨λ s, do a ← t, pure (a, s)⟩
 
   instance : has_monad_lift m (state_t σ m) :=
-  ⟨@state_t.lift σ m _⟩
+  ⟨λ α x, state_t.lift x⟩
 
   @[inline] protected def monad_map {σ m m'} [monad m] [monad m'] {α} (f : Π {α}, m α → m' α) :
     state_t σ m α → state_t σ m' α :=
@@ -96,11 +96,6 @@ class monad_state (σ : out_param (Type u)) (m : Type u → Type v) :=
 
 section
 variables {σ : Type u} {m : Type u → Type v}
-
--- NOTE: The ordering of the following two instances determines that the top-most `state_t` monad layer
--- will be picked first
-instance monad_state_trans {n : Type u → Type w} [has_monad_lift m n] [monad_state σ m] : monad_state σ n :=
-⟨λ α x, monad_lift (monad_state.lift x : m α)⟩
 
 instance [monad m] : monad_state σ (state_t σ m) :=
 ⟨λ α x, ⟨λ s, pure (x.run s)⟩⟩
@@ -163,13 +158,9 @@ export monad_state_adapter (adapt_state)
 section
 variables {σ σ' : Type u} {m m' : Type u → Type v}
 
-instance monad_state_adapter_trans {n n' : Type u → Type v} [monad_functor m m' n n'] [monad_state_adapter σ σ' m m'] : monad_state_adapter σ σ' n n' :=
-⟨λ σ'' α split join, monad_map (λ α, (adapt_state split join : m α → m' α))⟩
-
 instance [monad m] : monad_state_adapter σ σ' (state_t σ m) (state_t σ' m) :=
 ⟨λ σ'' α, state_t.adapt⟩
 end
-
 
 instance (σ m out) [monad_run out m] : monad_run (λ α, σ → out (α × σ)) (state_t σ m) :=
 ⟨λ α x, run ∘ (λ σ, x.run σ)⟩

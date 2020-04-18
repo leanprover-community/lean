@@ -565,27 +565,27 @@ optional<expr> elaborator::mk_coercion_core(expr const & e, expr const & e_type,
     if (e_type == mk_Prop() && m_ctx.is_def_eq(type, mk_bool())) {
         return mk_Prop_to_bool_coercion(e, ref);
     } else if (!has_expr_metavar(e_type) && !has_expr_metavar(type)) {
-        expr has_coe_t;
+        expr has_coe;
         try {
-            has_coe_t = mk_app(m_ctx, get_has_coe_t_name(), e_type, type);
+            has_coe = mk_app(m_ctx, get_has_coe_name(), e_type, type);
         } catch (app_builder_exception & ex) {
             trace_coercion_failure(e_type, type, ref,
-                                   "failed create type class expression 'has_coe_t' "
+                                   "failed create type class expression 'has_coe' "
                                    "('set_option trace.app_builder true' for more information)");
             return none_expr();
         }
         optional<expr> inst;
         try {
-            inst = m_ctx.mk_class_instance_at(m_ctx.lctx(), has_coe_t);
+            inst = m_ctx.mk_class_instance_at(m_ctx.lctx(), has_coe);
         } catch (class_exception &) {
             trace_coercion_failure(e_type, type, ref,
-                                   "failed to synthesize class instance for 'has_coe_t' "
+                                   "failed to synthesize class instance for 'has_coe' "
                                    "('set_option trace.class_instances true' for more information)");
             return none_expr();
         }
         if (!inst) {
             trace_coercion_failure(e_type, type, ref,
-                                   "failed to synthesize 'has_coe_t' type class instance "
+                                   "failed to synthesize 'has_coe' type class instance "
                                    "('set_option trace.class_instances true' for more information)");
             return none_expr();
         }

@@ -107,7 +107,7 @@ has_well_founded.r
 has_well_founded.wf
 has_zero
 has_zero.zero
-has_coe_t
+has_coe
 heq
 heq.refl
 heq.symm
@@ -155,6 +155,7 @@ int.neg_ne_zero_of_ne
 int.zero_ne_neg_of_ne
 interactive.param_desc
 interactive.parse
+interactive.executor
 io_core
 monad_io_impl
 monad_io_terminal_impl
@@ -162,6 +163,7 @@ monad_io_file_system_impl
 monad_io_environment_impl
 monad_io_process_impl
 monad_io_random_impl
+monad_io_net_system_impl
 io_rand_nat
 io
 is_associative
@@ -171,6 +173,7 @@ is_commutative.comm
 ite
 lean.parser
 lean.parser.pexpr
+lean.parser.reflectable.expr
 lean.parser.tk
 left_distrib
 left_comm

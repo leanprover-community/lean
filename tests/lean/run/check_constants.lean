@@ -112,7 +112,7 @@ run_cmd script_check_id `has_well_founded.r
 run_cmd script_check_id `has_well_founded.wf
 run_cmd script_check_id `has_zero
 run_cmd script_check_id `has_zero.zero
-run_cmd script_check_id `has_coe_t
+run_cmd script_check_id `has_coe
 run_cmd script_check_id `heq
 run_cmd script_check_id `heq.refl
 run_cmd script_check_id `heq.symm
@@ -160,6 +160,7 @@ run_cmd script_check_id `int.neg_ne_zero_of_ne
 run_cmd script_check_id `int.zero_ne_neg_of_ne
 run_cmd script_check_id `interactive.param_desc
 run_cmd script_check_id `interactive.parse
+run_cmd script_check_id `interactive.executor
 run_cmd script_check_id `io_core
 run_cmd script_check_id `monad_io_impl
 run_cmd script_check_id `monad_io_terminal_impl
@@ -167,6 +168,7 @@ run_cmd script_check_id `monad_io_file_system_impl
 run_cmd script_check_id `monad_io_environment_impl
 run_cmd script_check_id `monad_io_process_impl
 run_cmd script_check_id `monad_io_random_impl
+run_cmd script_check_id `monad_io_net_system_impl
 run_cmd script_check_id `io_rand_nat
 run_cmd script_check_id `io
 run_cmd script_check_id `is_associative
@@ -176,6 +178,7 @@ run_cmd script_check_id `is_commutative.comm
 run_cmd script_check_id `ite
 run_cmd script_check_id `lean.parser
 run_cmd script_check_id `lean.parser.pexpr
+run_cmd script_check_id `lean.parser.reflectable.expr
 run_cmd script_check_id `lean.parser.tk
 run_cmd script_check_id `left_distrib
 run_cmd script_check_id `left_comm

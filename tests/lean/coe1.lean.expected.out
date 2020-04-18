@@ -1,6 +1,6 @@
 ite ↥tt "a" "b" : string
 sine x : real
-sine ↑n : real
+sine ↑↑n : real
 sine ↑i : real
 x + ↑i : real
 coe1.lean:28:9: error: type mismatch at application
@@ -12,7 +12,7 @@ has type
 but is expected to have type
   int
 ↑i + x : real
-x + ↑n : real
+x + ↑↑n : real
 coe1.lean:35:9: error: type mismatch at application
   n + x
 term
@@ -21,6 +21,6 @@ has type
   real
 but is expected to have type
   ℕ
-↑n + x : real
+↑↑n + x : real
 ↑i + x : real
-↑n + x : real
+↑↑n + x : real

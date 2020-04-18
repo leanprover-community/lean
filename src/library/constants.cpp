@@ -112,7 +112,7 @@ name const * g_has_well_founded_r = nullptr;
 name const * g_has_well_founded_wf = nullptr;
 name const * g_has_zero = nullptr;
 name const * g_has_zero_zero = nullptr;
-name const * g_has_coe_t = nullptr;
+name const * g_has_coe = nullptr;
 name const * g_heq = nullptr;
 name const * g_heq_refl = nullptr;
 name const * g_heq_symm = nullptr;
@@ -158,17 +158,17 @@ name const * g_int_neg_ne_of_pos = nullptr;
 name const * g_int_ne_neg_of_pos = nullptr;
 name const * g_int_neg_ne_zero_of_ne = nullptr;
 name const * g_int_zero_ne_neg_of_ne = nullptr;
-name const * g_interactive_executor = nullptr;
 name const * g_interactive_param_desc = nullptr;
 name const * g_interactive_parse = nullptr;
+name const * g_interactive_executor = nullptr;
 name const * g_io_core = nullptr;
 name const * g_monad_io_impl = nullptr;
 name const * g_monad_io_terminal_impl = nullptr;
-name const * g_monad_io_net_system_impl = nullptr;
 name const * g_monad_io_file_system_impl = nullptr;
 name const * g_monad_io_environment_impl = nullptr;
 name const * g_monad_io_process_impl = nullptr;
 name const * g_monad_io_random_impl = nullptr;
+name const * g_monad_io_net_system_impl = nullptr;
 name const * g_io_rand_nat = nullptr;
 name const * g_io = nullptr;
 name const * g_is_associative = nullptr;
@@ -472,7 +472,7 @@ void initialize_constants() {
     g_has_well_founded_wf = new name{"has_well_founded", "wf"};
     g_has_zero = new name{"has_zero"};
     g_has_zero_zero = new name{"has_zero", "zero"};
-    g_has_coe_t = new name{"has_coe_t"};
+    g_has_coe = new name{"has_coe"};
     g_heq = new name{"heq"};
     g_heq_refl = new name{"heq", "refl"};
     g_heq_symm = new name{"heq", "symm"};
@@ -518,17 +518,17 @@ void initialize_constants() {
     g_int_ne_neg_of_pos = new name{"int", "ne_neg_of_pos"};
     g_int_neg_ne_zero_of_ne = new name{"int", "neg_ne_zero_of_ne"};
     g_int_zero_ne_neg_of_ne = new name{"int", "zero_ne_neg_of_ne"};
-    g_interactive_executor = new name{"interactive", "executor"};
     g_interactive_param_desc = new name{"interactive", "param_desc"};
     g_interactive_parse = new name{"interactive", "parse"};
+    g_interactive_executor = new name{"interactive", "executor"};
     g_io_core = new name{"io_core"};
     g_monad_io_impl = new name{"monad_io_impl"};
     g_monad_io_terminal_impl = new name{"monad_io_terminal_impl"};
-    g_monad_io_net_system_impl = new name{"monad_io_net_system_impl"};
     g_monad_io_file_system_impl = new name{"monad_io_file_system_impl"};
     g_monad_io_environment_impl = new name{"monad_io_environment_impl"};
     g_monad_io_process_impl = new name{"monad_io_process_impl"};
     g_monad_io_random_impl = new name{"monad_io_random_impl"};
+    g_monad_io_net_system_impl = new name{"monad_io_net_system_impl"};
     g_io_rand_nat = new name{"io_rand_nat"};
     g_io = new name{"io"};
     g_is_associative = new name{"is_associative"};
@@ -833,7 +833,7 @@ void finalize_constants() {
     delete g_has_well_founded_wf;
     delete g_has_zero;
     delete g_has_zero_zero;
-    delete g_has_coe_t;
+    delete g_has_coe;
     delete g_heq;
     delete g_heq_refl;
     delete g_heq_symm;
@@ -879,17 +879,17 @@ void finalize_constants() {
     delete g_int_ne_neg_of_pos;
     delete g_int_neg_ne_zero_of_ne;
     delete g_int_zero_ne_neg_of_ne;
-    delete g_interactive_executor;
     delete g_interactive_param_desc;
     delete g_interactive_parse;
+    delete g_interactive_executor;
     delete g_io_core;
     delete g_monad_io_impl;
     delete g_monad_io_terminal_impl;
-    delete g_monad_io_net_system_impl;
     delete g_monad_io_file_system_impl;
     delete g_monad_io_environment_impl;
     delete g_monad_io_process_impl;
     delete g_monad_io_random_impl;
+    delete g_monad_io_net_system_impl;
     delete g_io_rand_nat;
     delete g_io;
     delete g_is_associative;
@@ -1193,7 +1193,7 @@ name const & get_has_well_founded_r_name() { return *g_has_well_founded_r; }
 name const & get_has_well_founded_wf_name() { return *g_has_well_founded_wf; }
 name const & get_has_zero_name() { return *g_has_zero; }
 name const & get_has_zero_zero_name() { return *g_has_zero_zero; }
-name const & get_has_coe_t_name() { return *g_has_coe_t; }
+name const & get_has_coe_name() { return *g_has_coe; }
 name const & get_heq_name() { return *g_heq; }
 name const & get_heq_refl_name() { return *g_heq_refl; }
 name const & get_heq_symm_name() { return *g_heq_symm; }
@@ -1239,17 +1239,17 @@ name const & get_int_neg_ne_of_pos_name() { return *g_int_neg_ne_of_pos; }
 name const & get_int_ne_neg_of_pos_name() { return *g_int_ne_neg_of_pos; }
 name const & get_int_neg_ne_zero_of_ne_name() { return *g_int_neg_ne_zero_of_ne; }
 name const & get_int_zero_ne_neg_of_ne_name() { return *g_int_zero_ne_neg_of_ne; }
-name const & get_interactive_executor_name() { return *g_interactive_executor; }
 name const & get_interactive_param_desc_name() { return *g_interactive_param_desc; }
 name const & get_interactive_parse_name() { return *g_interactive_parse; }
+name const & get_interactive_executor_name() { return *g_interactive_executor; }
 name const & get_io_core_name() { return *g_io_core; }
 name const & get_monad_io_impl_name() { return *g_monad_io_impl; }
 name const & get_monad_io_terminal_impl_name() { return *g_monad_io_terminal_impl; }
-name const & get_monad_io_net_system_impl_name() { return *g_monad_io_net_system_impl; }
 name const & get_monad_io_file_system_impl_name() { return *g_monad_io_file_system_impl; }
 name const & get_monad_io_environment_impl_name() { return *g_monad_io_environment_impl; }
 name const & get_monad_io_process_impl_name() { return *g_monad_io_process_impl; }
 name const & get_monad_io_random_impl_name() { return *g_monad_io_random_impl; }
+name const & get_monad_io_net_system_impl_name() { return *g_monad_io_net_system_impl; }
 name const & get_io_rand_nat_name() { return *g_io_rand_nat; }
 name const & get_io_name() { return *g_io; }
 name const & get_is_associative_name() { return *g_is_associative; }
