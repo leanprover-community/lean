@@ -1,0 +1,67 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "make",
+            "command": "/usr/bin/nice",
+            "args": [
+                "make",
+                "bin_lean",
+                "-j8",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build/debug"
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": "absolute"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "make all",
+            "command": "/usr/bin/nice",
+            "args": [
+                "make",
+                "-j8",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build/debug"
+            },
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": "absolute"
+                }
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "test",
+            "command" : "nice",
+            "args": [
+                "ctest",
+                "-j8",
+                "--output-on-failure",
+                "--progress",
+            ],
+            "options": {
+                "cwd" : "${workspaceFolder/build/debug}",
+            },
+            "dependsOn" : "make all",
+            "group" : {
+                "kind": "test", "isDefault": true,
+            }
+        }
+    ]
+}
