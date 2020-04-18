@@ -100,10 +100,8 @@ do b' ← b.2.mmap f, return b'.to_buffer
 
 /-- Map a function over the buffer. -/
 @[inline]
-def map (b : buffer α) (f : α → β) : buffer β := (b.2.map f).to_buffer
-
-def endomap (f : α → α) : buffer α → buffer α
-| ⟨n, a⟩ := ⟨n, a.map f⟩
+def map : buffer α → (α → β) → buffer β
+| ⟨n, a⟩ f := ⟨n, a.map f⟩
 
 def foldl : buffer α → β → (α → β → β) → β
 | ⟨_, a⟩ b f := a.foldl b f
