@@ -3171,7 +3171,7 @@ class visit_structure_instance_fn {
                          * Note that `ensure_has_type` has already unified their types, so this should not result
                          * in any missed unifications.
                          */
-                        lean_always_assert(m_ctx.match(e, *val2));
+                        m_ctx.match(e, *val2);
                         trace_elab_detail(tout() << "inserted field '" << S_fname << "' with value '" << *val2 << "'"
                                                  << "\n";)
                         progress = true;
