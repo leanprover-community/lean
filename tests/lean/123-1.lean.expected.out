@@ -1,0 +1,6 @@
+123-1.lean:34:18: error: don't know how to synthesize placeholder
+context:
+G : Type,
+_inst_1 : has_mul G,
+V : Type
+⊢ G → V → Ring
