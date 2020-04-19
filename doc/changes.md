@@ -1,3 +1,33 @@
+v3.9.0c (19 April 2020)
+----------------------
+
+Features:
+  - The VM supports string literals (#185, #187)
+  - Imports are parsed in an indentation-sensitive way. Compare:
+    ```lean
+    import foo
+      bar
+    open_locale classical -- runs user command
+    ```
+    and
+    ```lean
+    import foo
+      bar
+      open_locale classical -- imports open_locale and classical modules
+    ```
+    This makes it easier to run user commands at the start of files. (#188)
+  - The parser now has access to the local scope and can parse expressions as patterns (#192)
+  - `mmap` and `map` functions for `d_array`, `array`, and `buffer` (#190)
+
+Bug fixes:
+  - The order of emetas has been reversed in `simp_lemmas` (#183)
+  - Universe parameters are collected from anonymous instances (#189)
+  - Nested comments in doc strings fixed (#191)
+
+Changes:
+  - The performance of `array.map` has been greatly improved (#186)
+  - A frequently-hit assertion violation was removed from the elaborator (#194)
+    
 v3.8.0c (9 April 2020)
 ----------------------
 
