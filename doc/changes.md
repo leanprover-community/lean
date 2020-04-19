@@ -22,11 +22,11 @@ Features:
 Bug fixes:
   - The order of emetas has been reversed in `simp_lemmas` (#183)
   - Universe parameters are collected from anonymous instances (#189)
-  - Nested comments in doc strings fixed (#191)
+  - Nested comment parsing in doc strings was fixed (#191)
 
 Changes:
   - The performance of `array.map` has been greatly improved (#186)
-  - A frequently-hit assertion violation was removed from the elaborator (#194)
+  - A frequently-violated assertion was removed from the elaborator (#194)
     
 v3.8.0c (9 April 2020)
 ----------------------
