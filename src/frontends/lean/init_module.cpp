@@ -30,6 +30,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/completion.h"
 #include "frontends/lean/user_notation.h"
 #include "frontends/lean/user_command.h"
+#include "frontends/lean/widget.h"
 
 namespace lean {
 void initialize_frontend_lean_module() {
@@ -59,6 +60,7 @@ void initialize_frontend_lean_module() {
     initialize_completion();
     initialize_user_notation();
     initialize_user_command();
+    initialize_widget();
 }
 void finalize_frontend_lean_module() {
     finalize_user_command();
@@ -87,5 +89,6 @@ void finalize_frontend_lean_module() {
     finalize_tokens();
     finalize_prenum();
     finalize_decl_attributes();
+    finalize_widget();
 }
 }

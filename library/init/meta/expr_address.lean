@@ -64,7 +64,13 @@ instance has_lt : has_lt address := show has_lt (list coord), by apply_instance
 
 instance dec_lt : decidable_rel ((<) : address → address → Prop) := by apply_instance
 
+protected def to_string : address → string := λ a, to_string $ list.map coord.repr a
+
+instance has_repr : has_repr address := ⟨address.to_string⟩
+instance has_to_string : has_to_string address := ⟨address.to_string⟩
+
 instance has_append : has_append address := ⟨list.append⟩
+
 
 /-- `as_below x y` is some z when it finds `∃ z, x = y ++ z` -/
 def as_below : address → address → option address

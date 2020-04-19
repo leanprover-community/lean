@@ -95,92 +95,38 @@ void vm_obj_format_info::report(io_state_stream const & ios, json & record) cons
 }
 #endif
 
-void render_attr(vm_obj const & attr, json & record, std::vector<ts_vm_obj> & handlers) {
-    switch (cidx(attr)) {
-        case 0: // val : string -> string -> attr
-            record[to_string(cfield(attr, 0))] = to_string(cfield(attr, 1));
-            break;
-        case 1: // on_click
-            record["onClick"] = handlers.size();
-            handlers.push_back(cfield(attr, 0));
-            break;
-        case 2: { // style
-            auto l = cfield(attr, 0);
-            while (!is_simple(l)) {
-                auto h = head(l);
-                record["style"][to_string(cfield(h, 0))] = to_string(cfield(h, 1));
-                l = tail(l);
-            }
-            break;}
-    }
-}
-
-void render_html(vm_obj const & html, json & j_arr, std::vector<ts_vm_obj> & handlers) {
-    switch (cidx(html)) {
-        case 0: { // element : string -> list (attr) -> html -> html
-            json entry;
-            entry["tag"] = to_string(cfield(html, 0));
-            vm_obj l = cfield(html, 1);
-            while (!is_simple(l)) {
-                render_attr(head(l), entry["attributes"], handlers);
-                l = tail(l);
-            }
-            entry["children"] = json::array();
-            render_html(cfield(html, 2), entry["children"], handlers);
-            j_arr.push_back(entry);
-            break; }
-        case 1: // of_string : string -> html
-            j_arr.push_back(to_string(cfield(html, 0)));
-            break;
-        case 2: // empty : html
-            break;
-        case 3: { // append : html -> html -> html
-            render_html(cfield(html, 0), j_arr, handlers);
-            render_html(cfield(html, 1), j_arr, handlers);
-            break;
-        }
-    }
-}
-void widget_info::render(lean::vm_state & S) const {
-    json view = json::array();
-    std::vector<ts_vm_obj> handlers;
-    render_html(S.invoke(cfield(m_widget.to_vm_obj(), 2), m_state.to_vm_obj()), view, handlers);
-    const_cast<widget_info*>(this)->m_view = view;
-    const_cast<widget_info*>(this)->m_event_handlers = handlers;
+json widget_info::to_json() const {
+    vdom * vd = const_cast<vdom*>(&m_vdom);
+    return vd->to_json();
 }
 
 void widget_info::report(io_state_stream const & ios, json & record) const {
-    if (!m_view) {
-        vm_state S(m_env, ios.get_options());
-        scope_vm_state scope(S);
-        render(S);
-    }
-    record["widget"]["html"] = *m_view;
+    vm_state S(m_env, ios.get_options());
+    scope_vm_state scope(S);
+    record["widget"]["html"] = to_json();
 }
 
 bool widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
-    unsigned handler_idx = message["handler"];
-    json args = message["args"];
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
-    unsigned handler_size = 0;
-    if (m_event_handlers) {
-        handler_size = (*m_event_handlers).size();
+
+    unsigned handler_idx = message["handler"];
+    json j = message["route"]; // an array with the root index at the _back_.
+    list<unsigned> route; // now root index is at the _front_.
+    for (json::iterator it = j.begin(); it != j.end(); ++it) {
+      route = cons(unsigned(*it), route);
     }
-    if (handler_idx >= handler_size) {
-        return false;
-    }
-    // [todo] figure out the form of event_args and pass them through to the vm handler.
-    auto handler = ((*m_event_handlers)[handler_idx]).to_vm_obj();
-    vm_obj update = S.invoke(cfield(m_widget.to_vm_obj(), 1), m_state.to_vm_obj(), S.invoke(handler, mk_vm_unit()));
-    // [hack] morally, I should remove all the const qualifiers from widget info methods, since their content is _actually_
-    // mutating. I found that doing this caused a cascading chain of having to remove the 'const' from many things so in
-    // the name of preserving as much of the other lean source as possible I have opted to just add a const_cast here instead. e.w.ayers
-    const_cast<widget_info*>(this)->m_state = cfield(update, 0);
-    vm_obj action = cfield(update, 1); // [todo] use this to perform some external state change.
-    render(S);
+    route = tail(route); // [hack] disregard the top component id because that is the root component
+    json args = message["args"];
+    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
+
+    // [todo] replace mk_vm_unit() with args in VM-able form
+    // [TODO] if result is some then we should perform an editor action.
+
+    auto result = c->handleEvent(route, handler_idx, mk_vm_unit());
+
     record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
-    record["widget"]["html"] = *m_view;
+    record["widget"]["html"] = to_json();
     return true;
 }
 
@@ -189,9 +135,9 @@ info_data mk_identifier_info(name const & full_id) { return info_data(new identi
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
 }
-info_data mk_widget_info(environment const & env, vm_obj const & widget) {
-    vm_obj state =  cfield(widget, 0); // call widget.init to get the initial state.
-    return info_data(new widget_info(env, state, widget));
+info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj const & widget) {
+    vdom c = vdom(new component_instance(widget, props));
+    return info_data(new widget_info(env, c));
 }
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
     return info_data(new hole_info_data(s, hole_args, begin, end));
@@ -272,11 +218,11 @@ void info_manager::add_vm_obj_format_info(pos_info pos, environment const & env,
     add_info(pos, mk_vm_obj_format_info(env, thunk));
 }
 
-void info_manager::add_widget_info(pos_info pos, environment const & env, vm_obj const & widget) {
+void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj const & widget) {
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_info(env, widget));
+    add_info(pos, mk_widget_info(tactic::to_state(props).env(), props, widget));
 }
 
 #ifdef LEAN_JSON
@@ -343,10 +289,10 @@ vm_obj tactic_save_info_thunk(vm_obj const & pos, vm_obj const & thunk, vm_obj c
     }
 }
 
-vm_obj tactic_save_widget(vm_obj const & pos, vm_obj const & widget_fn, vm_obj const & s) {
+vm_obj tactic_save_widget(vm_obj const &, vm_obj const & pos, vm_obj const & widget, vm_obj const & s) {
     try {
         if (g_info_m) {
-            g_info_m->add_widget_info(to_pos_info(pos), tactic::to_state(s).env(), invoke(widget_fn, s));
+            g_info_m->add_widget_info(to_pos_info(pos), s, widget);
         }
         return tactic::mk_success(tactic::to_state(s));
     } catch (exception & ex) {

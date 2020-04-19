@@ -26,28 +26,15 @@ meta instance : interactive.executor my_tactic :=
   execute_with := λ n tac, tac.run n >> pure ()
 }
 open html
-meta def like_widget (ts : tactic_state) : widget unit :=
--- trace "this is making a widget happen" $
-widget.mk unit bool ff (λ s b, (tt,b)) (λ s,
-  if s then "you liked this!" else
-  div ["here is a comment ", button "like this" ()]
-)
 
-meta def counter_widget (ts : tactic_state) : widget unit :=
-widget.mk int int 0 (λ x y, (x + y, ())) (λ s,
-  div [
-    button "+" 1,
-    to_string s,
-    button "-" (-1)
-  ]
-)
-
-meta def with_pos_widget (p : pos) (w : widget unit) : widget unit :=
-{ view := λ s, div [div [to_string p.line, ":", to_string p.column], w.view s], ..w}
+meta def depth_test_component : component nat empty :=
+component.stateless (λ n, match n with | 0 := ["0"] | (n+1) := [n, " ", html.of_component n depth_test_component] end)
 
 meta def save_info (p : pos) : my_tactic unit := do
-  tactic.save_info_thunk p (λ _, to_fmt "HELLO HERE IS SOME INFO"),
-  tactic.save_widget p (λ ts, with_pos_widget p $ counter_widget ts),
+  -- tactic.save_info_thunk p (λ _, to_fmt "HELLO HERE IS SOME INFO"),
+  tactic.save_widget p (widget.tactic_state_widget),
+  -- tactic.save_widget p (component.stateless (λ t, [html.of_component 1000 depth_test_component])),
+  -- tactic.save_widget p $ component.stateless (λ p, [of_component p counter_widget, of_component p counter_widget] ),
   pure ()
 
 end my_tactic
@@ -55,7 +42,6 @@ end my_tactic
 example {P Q : Prop} : P → Q → P ∧ Q :=
 begin [my_tactic]
   tactic.trace "a message",
-                    --^ "command": "info"
   tactic.intros,
   tactic.split,
   tactic.assumption, tactic.assumption,

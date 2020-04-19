@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm.h"
 #include "library/tactic/tactic_state.h"
 #include "frontends/lean/json.h"
+#include "frontends/lean/widget.h"
 
 namespace lean {
 class info_data;
@@ -68,20 +69,16 @@ public:
 
 class widget_info : public info_data_cell {
     environment  m_env;
-    ts_vm_obj    m_state;
-    ts_vm_obj    m_widget;
-    optional<json> m_view;
-    optional<std::vector<ts_vm_obj>> m_event_handlers;
+    vdom         m_vdom;
 public:
-    widget_info(environment const & env, vm_obj const & state, vm_obj const & widget): m_env(env), m_state(state), m_widget(widget) {}
-    void render(lean::vm_state & S) const;
+    widget_info(environment const & env, vdom const & vd): m_env(env), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
     /** Given a message of the form `{handler : number, args}`, runs the event handler and updates the state.
      * The record is updated to have `{status : "success", widget : {html : _}}` on success.
      * [todo] behaviour upon errors?
      */
     bool update(io_state_stream const & ios, json const & message, json & record) const;
-    optional<json> & get_view() {return m_view; }
+    json to_json() const;
 };
 
 class info_data {
@@ -131,7 +128,7 @@ public:
     /* Takes type info from global declaration with the given name. */
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
-    void add_widget_info(pos_info pos, environment const & env, vm_obj const & widget);
+    void add_widget_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
 
     line_info_data_set get_line_info_set(unsigned l) const;
