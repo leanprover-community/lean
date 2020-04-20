@@ -59,7 +59,7 @@ protected meta constant pexpr (rbp := std.prec.max) (pat := ff) : parser pexpr
 
 
 /-- a variable to local scope -/
-meta constant add_local (v: expr) : parser unit
+meta constant add_local (v: pexpr) : parser unit
 meta constant add_local_level (v: name) : parser unit
 meta constant list_include_var_names : parser (list name)
 meta constant list_available_include_vars : parser (list expr)

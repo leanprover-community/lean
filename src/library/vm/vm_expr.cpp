@@ -518,6 +518,8 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "lex_lt"}),           expr_lex_lt);
     DECLARE_VM_BUILTIN(name({"expr", "fold"}),             expr_fold);
     DECLARE_VM_BUILTIN(name({"expr", "replace"}),          expr_replace);
+    DECLARE_VM_BUILTIN(name({"pexpr", "fold"}),            expr_fold);
+    DECLARE_VM_BUILTIN(name({"pexpr", "replace"}),         expr_replace);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_univ_params"}), expr_instantiate_univ_params);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_nth_var"}),     expr_instantiate_nth_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_var"}),  expr_instantiate_var);

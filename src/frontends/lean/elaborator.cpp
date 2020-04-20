@@ -4318,10 +4318,18 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
         root_scope scope;
         dummy_def_parser p(env, lean::to_options(_opts));
         expr sig = to_expr(_sig);
+        if (!is_mlocal(sig))
+            return mk_vm_exceptional_exception
+                (exception(sstream() << "argument `sig` is expected to be a `local_const`\nsig: " << sig));
         p.m_name = mlocal_pp_name(sig);
-        p.m_type = mk_as_is(mlocal_type(sig));
+        p.m_type = mlocal_type(sig);
         lean::to_buffer_name(_lp_names, p.m_lp_params);
         to_buffer_expr(_params, p.m_params);
+        for(auto a : p.m_params) {
+            if (!is_mlocal(a))
+                return mk_vm_exceptional_exception
+                    (exception(sstream() << "argument `params` is expected to be a list of `local_const`\nparam: " << a));
+        }
         if (cidx(_eqns) == 0) {
             p.m_val = optional<expr>(to_expr(cfield(_eqns, 0)));
         } else {
@@ -4331,7 +4339,7 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
                 auto o = cfield(*it, 0);
                 buffer<expr> pat;
                 to_buffer_expr(cfield(o, 0), pat);
-                eqns.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
+                eqns.push_back(std::pair<buffer<expr>, expr>(std::move(pat), abstract(to_expr(cfield(o, 1)), sig)));
             }
             p.m_eqns = optional<buffer<pair<buffer<expr>, expr>>>(eqns);
         }

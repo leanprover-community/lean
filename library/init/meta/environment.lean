@@ -85,7 +85,7 @@ match env.get d with
 end
 
 meta constant add_defn_eqns (env : environment) (opt : options)
-  (lp_params : list name) (params : list expr) (sig : expr)
+  (lp_params : list name) (params : list $ expr ff) (sig : expr ff)
   (eqns : expr ff ⊕ list (list (expr ff) × expr ff))
   (is_meta : bool) : exceptional environment
 

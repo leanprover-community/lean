@@ -16,6 +16,16 @@ meta constant pexpr.mk_placeholder : pexpr
 meta constant pexpr.mk_field_macro : pexpr → name → pexpr
 meta constant pexpr.mk_explicit : pexpr → pexpr
 
+/-- `expr.fold e a f`: Traverses each subexpression of `e`. The `nat` passed to the folder `f` is the binder depth. -/
+meta constant pexpr.fold {α : Type} : pexpr → α → (pexpr → nat → α → α) → α
+/-- `expr.replace e f`
+ Traverse over an expr `e` with a function `f` which can decide to replace subexpressions or not.
+ For each subexpression `s` in the expression tree, `f s n` is called where `n` is how many binders are present above the given subexpression `s`.
+ If `f s n` returns `none`, the children of `s` will be traversed.
+ Otherwise if `some s'` is returned, `s'` will replace `s` and this subexpression will not be traversed further.
+ -/
+meta constant pexpr.replace : pexpr → (pexpr → nat → option pexpr) → pexpr
+
 /-- Choice macros are used to implement overloading. -/
 meta constant pexpr.is_choice_macro : pexpr → bool
 
