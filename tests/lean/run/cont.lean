@@ -6,7 +6,7 @@ Authors: Sebastian Ullrich
 The continuation monad transformer.
 -/
 
-import init.category.alternative init.category.combinators init.category.lift
+import init.control.alternative init.control.combinators init.control.lift
 import system.io
 universes u v w
 

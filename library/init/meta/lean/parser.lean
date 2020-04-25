@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Sebastian Ullrich
 -/
 prelude
-import init.meta.tactic init.meta.has_reflect init.category.alternative
+import init.meta.tactic init.meta.has_reflect init.control.alternative
 
 namespace lean
 
