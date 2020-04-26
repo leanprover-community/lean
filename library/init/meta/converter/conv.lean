@@ -14,7 +14,7 @@ universe u
 
 /-- `conv α` is a tactic for discharging goals of the form `lhs ~ rhs` for some relation `~` (usually equality) and fixed lhs, rhs.
 Known in the literature as a __conversion__ tactic.
-So for example, if one had the lemma `p : x = y`, then the conversion for `p` would be one that solves `p`. 
+So for example, if one had the lemma `p : x = y`, then the conversion for `p` would be one that solves `p`.
 -/
 meta def conv (α : Type u) :=
 tactic α
@@ -26,6 +26,9 @@ meta instance : monad_fail conv :=
 by dunfold conv; apply_instance
 
 meta instance : alternative conv :=
+by dunfold conv; apply_instance
+
+meta instance : interactive.executor conv :=
 by dunfold conv; apply_instance
 
 namespace conv

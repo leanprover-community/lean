@@ -15,6 +15,7 @@ Author: Leonardo de Moura
 #include "library/placeholder.h"
 #include "library/explicit.h"
 #include "kernel/scope_pos_info_provider.h"
+#include "library/vm/vm_name.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_format.h"
 #include "library/vm/vm_expr.h"
@@ -110,9 +111,30 @@ static expr concat(parser & p, expr const & tac1, expr const & tac2, pos_info co
     return p.save_pos(mk_app(mk_constant(get_has_bind_seq_name()), tac1, tac2), pos);
 }
 
-name get_interactive_tactic_full_name(name const & tac_class, name const & tac) {
-    return name(tac_class, "interactive") + tac;
-}
+// static name mk_tactic_resolve_tactic_name(environment const & env, name tac_class, name tactic_n);
+
+// name get_interactive_tactic_full_name(environment const & env, name const & tac_class, name const & tac) {
+    // std::cout << "full name\n";
+    // p.next();
+    // parser::local_scope scope1(p);
+    // meta_definition_scope scope2;
+    // p.clear_expr_locals();
+    // auto tac_pos = p.pos();
+    // try {
+    //     // bool use_istep    = true;
+    //     // expr tac  = parse_tactic(p, get_tactic_name(), use_istep);
+    //     tac = mk_tactic_resolve_name(tac, get_tactic_name());
+    //     expr type = mk_tactic_unit(get_tactic_name());
+    //     expr r    = p.save_pos(mk_typed_expr(type, tac), tac_pos);
+    //     return p.save_pos(mk_by(r), pos);
+    // } catch (break_at_pos_exception & ex) {
+    //     ex.report_goal_pos(tac_pos);
+    //     throw ex;
+    // }
+    // return mk_tactic_resolve_tactic_name(env, tac_class, tac);
+
+    // return name(tac_class, "interactive") + tac;
+// }
 
 static bool is_curr_exact_shortcut(parser & p) {
     return p.curr_is_token(get_calc_tk());
@@ -130,7 +152,7 @@ static optional<name> is_interactive_tactic(parser & p, name const & tac_class) 
         default:
             return {};
     }
-    id = get_interactive_tactic_full_name(tac_class, id);
+    id = get_interactive_tactic_full_name(p.env(), tac_class, id);
     if (p.env().find(id))
         return optional<name>(id);
     else
@@ -270,7 +292,8 @@ struct parse_tactic_fn {
             }
         } else if (is_curr_exact_shortcut(m_p)) {
             expr arg = parse_qexpr();
-            r = m_p.mk_app(m_p.save_pos(mk_constant(get_interactive_tactic_full_name(m_tac_class, "exact")), pos), arg, pos);
+            name full_name = get_interactive_tactic_full_name(m_p.env(), m_tac_class, "exact");
+            r = m_p.mk_app(m_p.save_pos(mk_constant(full_name), pos), arg, pos);
             if (m_use_istep) r = mk_tactic_istep(m_p, r, pos, pos, m_tac_class);
         } else {
             r = m_p.parse_expr();
@@ -416,6 +439,77 @@ static name parse_tactic_class(parser & p, name tac_class) {
     }
 }
 
+    /*  Constructs an app of:
+        interactive.executor.resolve_tactic_name : Π (m : Type → Type u)
+            [monad m] [interactive.executor m],
+        name → tactic name
+*/
+// static name mk_tactic_resolve_tactic_name(environment const & env, name tac_class, name tactic_n) {
+name get_interactive_tactic_full_name(environment const & env,
+                                      name const & tac_class,
+                                      name const & tactic_n) {
+
+    // std::cout << "tactic_n:  " << tactic_n  << std::endl;
+    // std::cout << "tac_class: " << tac_class << std::endl;
+    // unsigned nlvl = env.get(tac_class).get_num_univ_params();
+
+    name resolve_tactic_fn =
+        name(get_interactive_executor_name(),
+             "resolve_tactic_name");
+    metavar_context mctx = metavar_context();
+    local_context lctx = local_context();
+    environment l_env = env;
+    expr resolve_name_e; level_param_names ls;
+    std::tie(resolve_name_e, ls) =
+        lean::elaborate(l_env, options(), "_resolve_tactic", mctx, lctx,
+                        mk_app({ mk_constant(resolve_tactic_fn),
+                                    mk_constant(tac_class) }),
+                        true, false);
+    resolve_name_e = mctx.instantiate_mvars(resolve_name_e);
+    buffer<vm_obj> args;
+    args.push_back(to_obj(tac_class));
+    args.push_back(to_obj(tactic_n));
+    tactic_state s = mk_tactic_state_for(env, options(), "_resolve_tactic", mctx,
+                                         lctx, mk_true());
+
+    expr dummy;
+    type_context_old ctx = mk_type_context_for(s);
+    try {
+        vm_obj r = tactic::evaluator(ctx, options(), dummy)(resolve_name_e, args, s);
+        if (tactic::is_result_success(r)) {
+            return to_name(tactic::get_success_value(r));
+        } else {
+            vm_state S(env, options());
+            tactic::report_exception(S, r);
+        }
+    } catch (exception & ex) {
+        throw nested_exception(sstream() << "failed to resolve tactic name '" << tactic_n << "'", ex);
+    }
+    throw exception(sstream() << "failed to resolve tactic name '" << tactic_n << "'");
+
+    // expr prove_injective_eq(environment const & env, expr const & inj_eq_type, name const & inj_eq_name) {
+    // try {
+    //     type_context_old ctx(env, transparency_mode::Semireducible);
+    //     expr dummy_ref;
+    //     expr resolve_name_e = mk_app({
+    //             mk_constant(name(get_interactive_executor_name(),
+    //                              "resolve_tactic_name")),
+    //                 mk_constant(tac_class),
+    //                 tac
+    //                 });
+    //     tactic_state s = mk_tactic_state_for(env, options(), inj_eq_name, metavar_context(), local_context(), resolve_tactic_name);
+    //     vm_obj r = tactic_evaluator(ctx, options(), dummy_ref)(mk_constant(get_tactic_mk_inj_eq_name()), s);
+    //     if (auto new_s = tactic::is_success(r)) {
+    //         metavar_context mctx = new_s->mctx();
+    //         return mctx.instantiate_mvars(new_s->main());
+    //     }
+    // } catch (exception & ex) {
+    //     throw nested_exception(sstream() << "failed to generate auxiliary lemma '" << inj_eq_name << "'", ex);
+    // }
+    // throw exception(sstream() << "failed to generate auxiliary lemma '" << inj_eq_name << "'");
+
+}
+
 /*  Constructs an app of:
         interactive.executor.execute_explicit : Π (m : Type → Type u)
             [monad m] [interactive.executor m],
@@ -534,6 +628,7 @@ struct parse_begin_end_block_fn {
             ex.report_goal_pos(end_pos);
             throw;
         }
+        // std::cout << "here\n";
         if (!is_ext_tactic_class && m_tac_class != get_tactic_name()) {
             return r;
         } else if (cfg) {
@@ -576,14 +671,24 @@ expr parse_by(parser & p, unsigned, expr const *, pos_info const & pos) {
     p.clear_expr_locals();
     auto tac_pos = p.pos();
     try {
+        tactic_state s = mk_tactic_state_for(p.env(), options(), "_resolve_tactic",
+                                             metavar_context(),
+                                             local_context(), mk_true());
+
+        // std::cout << "\n> there\n";
         bool use_istep    = true;
         expr tac  = parse_tactic(p, get_tactic_name(), use_istep);
+        // std::cout << "> there B\n";
         tac = mk_tactic_execute(tac, get_tactic_name());
+        // std::cout << tac << std::endl;
+        // std::cout << "> there C\n";
         expr type = mk_tactic_unit(get_tactic_name());
         expr r    = p.save_pos(mk_typed_expr(type, tac), tac_pos);
         return p.save_pos(mk_by(r), pos);
     } catch (break_at_pos_exception & ex) {
+        // std::cout << ">> there (exception 1)\n";
         ex.report_goal_pos(tac_pos);
+        // std::cout << ">> there (exception 2)\n";
         throw ex;
     }
 }

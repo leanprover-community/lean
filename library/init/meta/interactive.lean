@@ -7,7 +7,7 @@ prelude
 import init.meta.tactic init.meta.rewrite_tactic init.meta.simp_tactic
 import init.meta.smt.congruence_closure init.control.combinators
 import init.meta.interactive_base init.meta.derive init.meta.match_tactic
-import init.meta.congr_tactic
+import init.meta.congr_tactic init.meta.executor
 
 open lean
 open lean.parser
@@ -1725,3 +1725,6 @@ by tactic.mk_inj_eq
 
 lemma nat.succ.inj_eq (n₁ n₂ : nat) : (nat.succ n₁ = nat.succ n₂) = (n₁ = n₂) :=
 by tactic.mk_inj_eq
+
+#print instances has_reflect
+#check has_reflect

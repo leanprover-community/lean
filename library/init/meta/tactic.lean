@@ -8,6 +8,7 @@ import init.function init.data.option.basic init.util
 import init.control.combinators init.control.monad init.control.alternative init.control.monad_fail
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.meta.interaction_monad
+       init.meta.has_reflect
 
 meta constant tactic_state : Type
 
@@ -29,6 +30,7 @@ meta constant format_expr : tactic_state → expr → format
 meta constant get_options : tactic_state → options
 meta constant set_options : tactic_state → options → tactic_state
 end tactic_state
+
 
 meta instance : has_to_format tactic_state :=
 ⟨tactic_state.to_format⟩
@@ -80,47 +82,6 @@ meta def {u₁ u₂} tactic.down {α : Type u₂} (t : tactic (ulift.{u₁} α))
 | success (ulift.up a) s' := success a s'
 | exception t ref s       := exception t ref s
 end
-
-namespace interactive
-
-/-- Typeclass for custom interaction monads, which provides
-    the information required to convert an interactive-mode
-    construction to a `tactic` which can actually be executed.
-
-    Given a `[monad m]`, `execute_with` explains how to turn a `begin ... end`
-    block, or a `by ...` statement into a `tactic α` which can actually be
-    executed. The `inhabited` first argument facilitates the passing of an
-    optional configuration parameter `config`, using the syntax:
-    ```
-    begin [custom_monad] with config,
-        ...
-    end
-    ```
--/
-meta class executor (m : Type → Type u) [monad m] :=
-(config_type : Type)
-[inhabited : inhabited config_type]
-(execute_with : config_type → m unit → tactic unit)
-
-attribute [inline] executor.execute_with
-
-@[inline]
-meta def executor.execute_explicit (m : Type → Type u)
-   [monad m] [e : executor m] : m unit → tactic unit :=
-executor.execute_with e.inhabited.default
-
-@[inline]
-meta def executor.execute_with_explicit (m : Type → Type u)
-   [monad m] [executor m] : executor.config_type m → m unit → tactic unit :=
-executor.execute_with
-
-/-- Default `executor` instance for `tactic`s themselves -/
-meta instance : executor tactic :=
-{ config_type := unit,
-  inhabited := ⟨()⟩,
-  execute_with := λ _, id }
-
-end interactive
 
 namespace tactic
 variables {α : Type u}
@@ -263,6 +224,7 @@ meta instance {α} (a : α) : has_to_tactic_format (reflected a) :=
 
 @[priority 10] meta instance has_to_format_to_has_to_tactic_format (α : Type) [has_to_format α] : has_to_tactic_format α :=
 ⟨(λ x, return x) ∘ to_fmt⟩
+
 
 namespace tactic
 open tactic_state
@@ -877,8 +839,6 @@ meta def save_info (p : pos) : tactic unit :=
 do s ← read,
    tactic.save_info_thunk p (λ _, tactic_state.to_format s)
 
-notation `‹` p `›` := (by assumption : p)
-
 /-- Swap first two goals, do nothing if tactic state does not have at least two goals. -/
 meta def swap : tactic unit :=
 do gs ← get_goals,
@@ -1204,8 +1164,6 @@ meta def get_arity (fn : expr) : tactic nat :=
 infer_type fn >>= get_pi_arity
 
 meta def triv : tactic unit := mk_const `trivial >>= exact
-
-notation `dec_trivial` := of_as_true (by tactic.triv)
 
 meta def by_contradiction (H : option name := none) : tactic expr :=
 do tgt : expr ← target,
