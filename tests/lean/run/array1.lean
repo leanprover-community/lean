@@ -5,7 +5,7 @@
 def v : array 10 nat :=
 @d_array.mk 10 (λ _, nat) (λ ⟨i, _⟩, i)
 
-#eval array.map (+10) v
+#eval v.map (+10)
 
 def w : array 10 nat :=
 (mk_array 9 1)^.push_back 3

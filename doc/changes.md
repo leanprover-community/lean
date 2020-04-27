@@ -1,3 +1,56 @@
+v3.9.0c (19 April 2020)
+----------------------
+
+Features:
+  - The VM supports string literals (#185, #187)
+  - Imports are parsed in an indentation-sensitive way. Compare:
+    ```lean
+    import foo
+      bar
+    open_locale classical -- runs user command
+    ```
+    and
+    ```lean
+    import foo
+      bar
+      open_locale classical -- imports open_locale and classical modules
+    ```
+    This makes it easier to run user commands at the start of files. (#188)
+  - The parser now has access to the local scope and can parse expressions as patterns (#192)
+  - `mmap` and `map` functions for `d_array`, `array`, and `buffer` (#190)
+
+Bug fixes:
+  - The order of emetas has been reversed in `simp_lemmas` (#183)
+  - Universe parameters are collected from anonymous instances (#189)
+  - Nested comment parsing in doc strings was fixed (#191)
+
+Changes:
+  - The performance of `array.map` has been greatly improved (#186)
+  - A frequently-violated assertion was removed from the elaborator (#194)
+    
+v3.8.0c (9 April 2020)
+----------------------
+
+Features:
+  - The VM implementation of functions can be overriden (#48)
+  - More and better doc strings for the core library (#166)
+
+Bug fixes:
+  - `simp` instantiates the metavariables in the goal before simplifying (#170)
+  - `app_builder` is more robust (#165)
+  - Assertion violation in `simp_inductive` (#173)
+
+Changes:
+  - `expr.subst` constructs an application if the left expression is not a lambda (#180)
+  - `if_simp_congr` is removed, simp now produces the correct decidability instance when simplifying if-then-else (#159)
+  - `float.{ceil,floor,trunc,round}` now return integers (#176)
+  - `default` is now an export (#161)
+  - `prod.map` and `function.uncurry` don't use pattern matching (#161)
+  - The type argument in `has_zero.zero` and `has_one.one` is implicit (#169)
+  - Inductives/structures/structure fields now default to implicit arguments (#175)
+  - `add_lt_add_left` and `mul_le_mul*` fields are removed (#167)
+  - `ordered_comm_group` is renamed to `ordered_add_comm_group` (#174)
+
 v3.7.2c (20 Mar 2020)
 ---------------------
 

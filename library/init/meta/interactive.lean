@@ -5,7 +5,7 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.meta.tactic init.meta.rewrite_tactic init.meta.simp_tactic
-import init.meta.smt.congruence_closure init.category.combinators
+import init.meta.smt.congruence_closure init.control.combinators
 import init.meta.interactive_base init.meta.derive init.meta.match_tactic
 import init.meta.congr_tactic
 
@@ -1196,6 +1196,7 @@ do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    -- Erase `h` from the default simp set for calls of the form `simp [←h]`.
    let to_erase := hs.foldl (λ l h, match h with
                                     | (const id _, tt) := id :: l
+                                    | (local_const id _ _ _, tt) := id :: l
                                     | _ := l
                                     end ) [],
    let s := s.erase to_erase,

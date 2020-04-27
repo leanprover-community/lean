@@ -80,7 +80,8 @@ public:
     environment add_local_ref(environment const & env, name const & n, expr const & ref);
     void add_variable(name const & n, expr const & p);
     void add_parameter(name const & n, expr const & p);
-    void add_local(expr const & p) { return add_local_expr(mlocal_pp_name(p), p); }
+    void add_local(expr const & p, bool is_variable = false) {
+        return add_local_expr(mlocal_pp_name(p), p, is_variable); }
     bool has_params() const { return m_has_params; }
     /** \brief Update binder information for the section parameter n, return true if success, and false if n is not a section parameter. */
     bool update_local_binder_info(name const & n, binder_info const & bi);
@@ -88,6 +89,8 @@ public:
     void omit_variable(name const & n) { m_include_vars.erase(n); }
     bool is_include_variable(name const & n) const { return m_include_vars.contains(n); }
     void get_include_variables(buffer<expr> & vars) const;
+    void get_include_var_names(buffer<name> & vars) const;
+    void get_available_include_var_names(buffer<expr> & vars) const;
     /** \brief Position of the local level declaration named \c n in the sequence of local level decls. */
     unsigned get_local_level_index(name const & n) const { return m_local_level_decls.find_idx(n); }
     bool is_local_level(name const & n) const { return m_local_level_decls.contains(n); }
@@ -490,6 +493,9 @@ public:
     expr parse_expr(unsigned rbp = 0);
     /** Tries to parse an expression, or else consumes no input. */
     optional<expr> maybe_parse_expr(unsigned rbp = 0);
+    /** Tries to parse a pattern in equation-based specifications,
+        or else consumes no input. */
+    optional<expr> maybe_parse_pattern(unsigned rbp);
     /** \brief Parse an (optionally) qualified expression.
         If the input is of the form <id> : <expr>, then return the pair (some(id), expr).
         Otherwise, parse the next expression and return (none, expr). */
@@ -530,7 +536,7 @@ public:
 
     bool parse_command_like();
     void parse_command(cmd_meta const & meta);
-    void parse_imports(unsigned & fingerprint, std::vector<module_name> &);
+    bool parse_imports(unsigned & fingerprint, std::vector<module_name> &);
 
     struct quote_scope {
         parser &    m_p;

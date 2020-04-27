@@ -12,7 +12,7 @@ structure d_array (n : nat) (α : fin n → Type u) :=
 (data : Π i : fin n, α i)
 
 namespace d_array
-variables {n : nat} {α : fin n → Type u} {β : Type v}
+variables {n : nat} {α : fin n → Type u} {α' : fin n → Type v} {β : Type w}
 
 /-- The empty array. -/
 def nil {α} : d_array 0 α :=
@@ -37,13 +37,14 @@ def iterate (a : d_array n α) (b : β) (f : Π i : fin n, α i → β → β) :
 iterate_aux a f n (le_refl _) b
 
 /-- Map the array. Has builtin VM implementation. -/
-def foreach (a : d_array n α) (f : Π i : fin n, α i → α i) : d_array n α :=
-iterate a a $ λ i v a', a'.write i (f i v)
+def foreach (a : d_array n α) (f : Π i : fin n, α i → α' i) : d_array n α' :=
+⟨λ i, f _ (a.read i)⟩
 
-def map (f : Π i : fin n, α i → α i) (a : d_array n α) : d_array n α :=
+def map (f : Π i : fin n, α i → α' i) (a : d_array n α) : d_array n α' :=
 foreach a f
 
-def map₂ (f : Π i : fin n, α i → α i → α i) (a b : d_array n α) : d_array n α :=
+def map₂ {α'' : fin n → Type w} (f : Π i : fin n, α i → α' i → α'' i) (a : d_array n α) (b : d_array n α') :
+  d_array n α'' :=
 foreach b (λ i, f i (a.read i))
 
 def foldl (a : d_array n α) (b : β) (f : Π i : fin n, α i → β → β) : β :=
@@ -147,26 +148,29 @@ variables {n : nat} {α : Type u} {β : Type v}
 def nil {α} : array 0 α :=
 d_array.nil
 
+@[inline]
 def read (a : array n α) (i : fin n) : α :=
 d_array.read a i
 
+@[inline]
 def write (a : array n α) (i : fin n) (v : α) : array n α :=
 d_array.write a i v
 
 /-- Fold array starting from 0, folder function includes an index argument. -/
+@[inline]
 def iterate (a : array n α) (b : β) (f : fin n → α → β → β) : β :=
 d_array.iterate a b f
 
 /-- Map each element of the given array with an index argument. -/
-def foreach (a : array n α) (f : fin n → α → α) : array n α :=
-iterate a a (λ i v a', a'.write i (f i v))
+@[inline]
+def foreach (a : array n α) (f : fin n → α → β) : array n β :=
+d_array.foreach a f
 
-def map (f : α → α) (a : array n α) : array n α :=
-foreach a (λ _, f)
-
+@[inline]
 def map₂ (f : α → α → α) (a b : array n α) : array n α :=
 foreach b (λ i, f (a.read i))
 
+@[inline]
 def foldl (a : array n α) (b : β) (f : α → β → β) : β :=
 iterate a b (λ _, f)
 
@@ -195,6 +199,26 @@ nat.lt.step h
 /-- Discard _last_ element in the array. Has builtin VM implementation. -/
 def pop_back (a : array (n+1) α) : array n α :=
 {data := λ ⟨j, h⟩, a.read ⟨j, pop_back_idx h⟩}
+
+/-- Auxilliary function for monadically mapping a function over an array. -/
+@[inline]
+def mmap_core {β : Type v} {m : Type v → Type w} [monad m] (a : array n α) (f : α → m β) :
+  ∀ i ≤ n, m (array i β)
+| 0 _ := pure d_array.nil
+| (i+1) h := do
+    bs ← mmap_core i (le_of_lt h),
+    b ← f (a.read ⟨i, h⟩),
+    pure $ bs.push_back b
+
+/-- Monadically map a function over the array. -/
+@[inline]
+def mmap {β : Type v} {m} [monad m] (a : array n α) (f : α → m β) : m (array n β) :=
+a.mmap_core f _ (le_refl _)
+
+/-- Map a function over the array. -/
+@[inline]
+def map {β : Type v} (a : array n α) (f : α → β) : array n β :=
+a.map (λ _, f)
 
 protected def mem (v : α) (a : array n α) : Prop :=
 ∃ i : fin n, read a i = v

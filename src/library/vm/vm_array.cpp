@@ -127,7 +127,8 @@ vm_obj d_array_mk(vm_obj const & n, vm_obj const & /* alpha */, vm_obj const & f
     return to_obj(a);
 }
 
-vm_obj d_array_foreach(vm_obj const & n, vm_obj const & /* alpha */, vm_obj const & a, vm_obj const & fn) {
+vm_obj d_array_foreach(vm_obj const & n, vm_obj const & /* alpha */, vm_obj const & /* alpha' */,
+        vm_obj const & a, vm_obj const & fn) {
     /* TODO(Leo): handle case where n is too big */
     unsigned _n = force_to_unsigned(n);
     parray<vm_obj> const & p = to_array(a);
