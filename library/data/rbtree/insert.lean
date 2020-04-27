@@ -132,16 +132,16 @@ end
 lemma is_searchable_ins {t x} [is_strict_weak_order α lt] : ∀ {lo hi} (h : is_searchable lt t lo hi), lift lt lo (some x) → lift lt (some x) hi → is_searchable lt (ins lt t x) lo hi :=
 begin
   with_cases { apply ins.induction lt t x; intros; simp! [*] at * {eta := ff}; is_searchable_tactic },
-  case is_red_lt { apply ih h_hs₁, assumption, simp [*] },
+  case is_red_lt hs₁ { apply ih h_hs₁, assumption, simp [*] },
   case is_red_eq hs₁ { apply is_searchable_of_is_searchable_of_incomp hc, assumption },
   case is_red_eq hs₂ { apply is_searchable_of_incomp_of_is_searchable hc, assumption },
-  case is_red_gt { apply ih h_hs₂, cases hi; simp [*], assumption },
+  case is_red_gt hs₂ { apply ih h_hs₂, cases hi; simp [*], assumption },
   case is_black_lt_red { apply is_searchable_balance1_node, apply ih h_hs₁, assumption, simp [*], assumption },
-  case is_black_lt_not_red { apply ih h_hs₁, assumption, simp [*] },
+  case is_black_lt_not_red hs₁ { apply ih h_hs₁, assumption, simp [*] },
   case is_black_eq hs₁ { apply is_searchable_of_is_searchable_of_incomp hc, assumption },
   case is_black_eq hs₂ { apply is_searchable_of_incomp_of_is_searchable hc, assumption },
   case is_black_gt_red { apply is_searchable_balance2_node, assumption, apply ih h_hs₂, simp [*], assumption },
-  case is_black_gt_not_red { apply ih h_hs₂, assumption, simp [*] }
+  case is_black_gt_not_red hs₂ { apply ih h_hs₂, assumption, simp [*] }
 end
 
 lemma is_searchable_mk_insert_result {c t} : is_searchable lt t none none → is_searchable lt (mk_insert_result c t) none none :=

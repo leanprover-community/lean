@@ -105,6 +105,12 @@ meta def name.is_prefix_of : name → name → bool
 | p n              :=
   if p = n then tt else name.is_prefix_of p n.get_prefix
 
+meta def name.is_suffix_of : name → name → bool
+| anonymous _ := tt
+| (mk_string s n) (mk_string s' n') := (s = s') && name.is_suffix_of n n'
+| (mk_numeral v n) (mk_numeral v' n') := (v = v') && name.is_suffix_of n n'
+| _ _ := ff
+
 meta def name.replace_prefix : name → name → name → name
 | anonymous        p p' := anonymous
 | (mk_string s c)  p p' := if c = p then mk_string s p' else mk_string s (name.replace_prefix c p p')
