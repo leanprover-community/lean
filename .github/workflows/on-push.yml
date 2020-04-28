@@ -86,9 +86,8 @@ jobs:
     - name: Install dependencies
       run: |
         apt-get update
-        apt-get -y install --no-install-recommends apt-utils dialog 2>&1
-        apt-get install -y git iproute2 procps lsb-release build-essential cmake cppcheck valgrind libgmp-dev gdb m4
-    - uses: actions/checkout@v2
+        apt-get install -y m4
+    - uses: actions/checkout@v1
     - run: mkdir -p ./emscripten
     - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
       working-directory: ./emscripten
