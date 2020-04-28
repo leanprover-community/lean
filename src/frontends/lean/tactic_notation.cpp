@@ -270,7 +270,7 @@ struct parse_tactic_fn {
             }
         } else if (is_curr_exact_shortcut(m_p)) {
             expr arg = parse_qexpr();
-            r = m_p.mk_app(m_p.save_pos(mk_constant(get_interactive_tactic_full_name(m_tac_class, "exact")), pos), arg, pos);
+            r = m_p.mk_app(m_p.save_pos(mk_constant(get_interactive_tactic_full_name(m_tac_class, "refine")), pos), arg, pos);
             if (m_use_istep) r = mk_tactic_istep(m_p, r, pos, pos, m_tac_class);
         } else {
             r = m_p.parse_expr();
