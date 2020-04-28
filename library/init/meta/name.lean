@@ -51,8 +51,7 @@ def name.update_prefix : name → name → name
 | (mk_string s p)  new_p := mk_string s new_p
 | (mk_numeral s p) new_p := mk_numeral s new_p
 
-/- The (decidable_eq string) has not been defined yet.
-   So, we disable the use of if-then-else when compiling the following definitions. -/
+-- Without this option, we get errors when defining the following definitions.
 set_option eqn_compiler.ite false
 
 def name.to_string_with_sep (sep : string) : name → string
