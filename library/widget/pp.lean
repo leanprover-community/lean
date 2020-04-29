@@ -97,11 +97,6 @@ meta def tactic.run_simple {α} : tactic_state → tactic α → option α
           | (interaction_monad.result.exception _ _ _) := none
           end
 
--- meta inductive interactive_expression.state
--- | focus : (expr × expr.address) → interactive_expression.state
--- | unfocussed : interactive_expression.state
-
-/-- -/
 meta def mk {γ} (ts : tactic_state) (tooltip : component (expr × expr.address) γ) : component expr γ :=
 let tooltip_comp := component.map_action (action.on_tooltip_action) tooltip in
 component.mk

@@ -90,10 +90,12 @@ inductive mouse_event_kind
 /-- An attribute for an html element. For example the `id="mydiv"` in `<div id="mydiv"/>`. React conventions are used.  -/
 meta inductive html.attr (Action : Type) : Type
 | val (name : string) (value : string) : html.attr
-| on_mouse_event : mouse_event_kind → (unit → Action) → html.attr
+| mouse_event : mouse_event_kind → (unit → Action) → html.attr
 | style : list (string × string) → html.attr -- [NOTE] multiple style attributes will get merged.
 /-- If this is set, then a popper will render containing the given content pointing to this element. -/
 | tooltip : html Action → html.attr
+/-- For use with textboxes, otherwise it won't fire. -/
+| text_change_event : (string → Action) → html.attr
 -- [todo] more coming...
 -- drop_target : ()
 
@@ -132,8 +134,11 @@ meta constant component.view (c : component π α) : (π → c.state → list (h
 
 namespace component
 
+meta def filter_map_action {π α β : Type} (f : α → option β) : component π α → component π β
+| c := mk c.event c.state c.init (λ p s b, let ⟨s,a⟩ := c.update p s b in ⟨s, a >>= f⟩) c.view
+
 meta def map_action {π α β : Type} (f : α → β) : component π α → component π β
-| c := mk c.event c.state c.init (λ p s b, let ⟨s,a⟩ := c.update p s b in ⟨s, f <$> a⟩) c.view
+| c := filter_map_action (pure ∘ f) c
 
 meta def map_props  {π ρ α : Type} (f : ρ → π) : component π α → component ρ α
 | c := component.mk c.event c.state (c.init ∘ f) (c.update ∘ f) (c.view ∘ f)

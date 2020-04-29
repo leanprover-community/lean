@@ -18,7 +18,8 @@ with attr.map_action  : attr α → attr β
 | (attr.val k v) := attr.val k v
 | (attr.style s) := attr.style s
 | (attr.tooltip h) := attr.tooltip $ map_action h
-| (attr.on_mouse_event k a) := attr.on_mouse_event k (f ∘ a)
+| (attr.mouse_event k a) := attr.mouse_event k (f ∘ a)
+| (attr.text_change_event a) := attr.text_change_event (f ∘ a)
 with map_action : html α → html β
 | h := html.cases
   (λ e, html.of_element $ element.map_action e)
@@ -53,13 +54,13 @@ meta def className : string → html.attr α
 | s := html.attr.val "className" $ s
 
 meta def on_click : (unit → α) → html.attr α
-| a := html.attr.on_mouse_event mouse_event_kind.on_click a
+| a := html.attr.mouse_event mouse_event_kind.on_click a
 
 meta def on_mouse_enter : (unit → α) → html.attr α
-| a := html.attr.on_mouse_event mouse_event_kind.on_mouse_enter a
+| a := html.attr.mouse_event mouse_event_kind.on_mouse_enter a
 
 meta def on_mouse_leave : (unit → α) → html.attr α
-| a := html.attr.on_mouse_event mouse_event_kind.on_mouse_leave a
+| a := html.attr.mouse_event mouse_event_kind.on_mouse_leave a
 
 
 end attr
@@ -69,6 +70,9 @@ html.of_element $ element.mk tag attributes children
 
 meta def button : string → thunk α → H
 | s t := h "button" [html.attr.on_click t] [s]
+
+meta def textbox : string → (string → α) → H
+| s t := h "input" [html.attr.val "type" "text", html.attr.val "value" s, attr.text_change_event t] []
 
 meta def div : list H →  H
 | l := h "div" [] l

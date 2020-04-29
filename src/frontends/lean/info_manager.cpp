@@ -109,7 +109,6 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
 bool widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
-
     unsigned handler_idx = message["handler"];
     json j = message["route"]; // an array with the root index at the _back_.
     list<unsigned> route; // now root index is at the _front_.
@@ -117,28 +116,37 @@ bool widget_info::update(io_state_stream const & ios, json const & message, json
       route = cons(unsigned(*it), route);
     }
     route = tail(route); // [hack] disregard the top component id because that is the root component
-    json args = message["args"];
+    json j_args = message["args"];
     component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
-
-    // [todo] replace mk_vm_unit() with args in VM-able form
-    // [TODO] if result is some then we should perform an editor action.
-
-    auto result = c->handleEvent(route, handler_idx, mk_vm_unit());
-
+    vm_obj vm_args;
+    std::string arg_type = j_args["type"];
+    if (arg_type == "unit") {
+        vm_args = mk_vm_unit();
+    } else if (arg_type == "string") {
+          std::string arg = j_args["value"];
+          vm_args = to_obj(arg);
+    } else {
+        lean_unreachable(); // [todo] throw more informative error.
+    }
+    optional<vm_obj> result = c->handleEvent(route, handler_idx, vm_args);
     record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
     record["widget"]["html"] = to_json();
     return true;
 }
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }
+
 info_data mk_identifier_info(name const & full_id) { return info_data(new identifier_info_data(full_id)); }
+
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
 }
+
 info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj const & widget) {
     vdom c = vdom(new component_instance(widget, props));
     return info_data(new widget_info(env, c));
 }
+
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
     return info_data(new hole_info_data(s, hole_args, begin, end));
 }

@@ -237,6 +237,10 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                 tooltip = optional<vdom>(tooltip_child);
                 break;
             }
+            case 4: { // text_change_event : (string -> Action) -> html.attr
+                render_event("onChange", cfield(attr, 0), events, handlers);
+                break;
+            }
             default : {
                 lean_unreachable();
                 break;
