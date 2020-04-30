@@ -9,6 +9,8 @@ import init.control.combinators init.control.monad init.control.alternative init
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.meta.interaction_monad
 
+open native
+
 meta constant tactic_state : Type
 
 universes u v
@@ -1411,7 +1413,85 @@ meta def add_defn_equations (lp : list name) (params : list expr) (fn : expr)
 do opt ← get_options,
    updateex_env $ λ e, e.add_defn_eqns opt lp params fn eqns is_meta
 
+/-- Get the revertible part of the local context. These are the hypotheses that
+appear after the last frozen local instance in the local context. We call them
+revertible because `revert` can revert them, unlike those hypotheses which occur
+before a frozen instance. -/
+meta def revertible_local_context : tactic (list expr) :=
+do ctx ← local_context,
+   frozen ← frozen_local_instances,
+   pure $
+     match frozen with
+     | none := ctx
+     | some [] := ctx
+     | some (h :: _) := ctx.after (eq h)
+     end
+
+/--
+Rename local hypotheses according to the given `name_map`. The `name_map`
+contains as keys those hypotheses that should be renamed; the associated values
+are the new names.
+
+This tactic can only rename hypotheses which occur after the last frozen local
+instance. If you need to rename earlier hypotheses, try
+`unfreeze_local_instances`.
+
+If `strict` is true, we fail if `name_map` refers to hypotheses that do not
+appear in the local context or that appear before a frozen local instance.
+Conversely, if `strict` is false, some entries of `name_map` may be silently
+ignored.
+
+If `use_unique_names` is true, the keys of `name_map` should be the unique names
+of hypotheses to be renamed. Otherwise, the keys should be display names.
+
+Note that we allow shadowing, so renamed hypotheses may have the same name
+as other hypotheses in the context. If `use_unique_names` is false and there are
+multiple hypotheses with the same display name in the context, they are all
+renamed.
+-/
+meta def rename_many (renames : name_map name) (strict := tt) (use_unique_names := ff)
+: tactic unit :=
+do let hyp_name : expr → name :=
+     if use_unique_names then expr.local_uniq_name else expr.local_pp_name,
+   ctx ← revertible_local_context,
+   -- The part of the context after (but including) the first hypthesis that
+   -- must be renamed.
+   let ctx_suffix := ctx.drop_while (λ h, (renames.find $ hyp_name h).is_none),
+   when strict $ do {
+     let ctx_names := rb_map.set_of_list (ctx_suffix.map hyp_name),
+     let invalid_renames :=
+       (renames.to_list.map prod.fst).filter (λ h, ¬ ctx_names.contains h),
+     when ¬ invalid_renames.empty $ fail $ format.join
+       [ "Cannot rename these hypotheses:\n"
+       , format.join $ (invalid_renames.map to_fmt).intersperse ", "
+       , format.line
+       , "This is because these hypotheses either do not occur in the\n"
+       , "context or they occur before a frozen local instance.\n"
+       , "In the latter case, try `tactic.unfreeze_local_instances`."
+       ]
+   },
+   -- The new names for all hypotheses in ctx_suffix.
+   let new_names :=
+     ctx_suffix.map $ λ h,
+       let current_name := hyp_name h in
+       (renames.find current_name).get_or_else current_name,
+   revert_lst ctx_suffix,
+   intro_lst new_names,
+   pure ()
+
+/--
+Rename a local hypothesis. This is a special case of `rename_many`;
+see there for caveats.
+-/
 meta def rename (curr : name) (new : name) : tactic unit :=
+rename_many (rb_map.of_list [⟨curr, new⟩])
+
+/--
+Rename a local hypothesis. Unlike `rename` and `rename_many`, this tactic does
+not preserve the order of hypotheses. Its implementation is simpler (and
+therefore probably faster) than that of `rename`.
+-/
+meta def rename_unstable (curr : name) (new : name) : tactic unit :=
 do h ← get_local curr,
    n ← revert h,
    intro new,

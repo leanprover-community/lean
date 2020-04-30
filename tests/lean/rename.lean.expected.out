@@ -1,0 +1,21 @@
+rename.lean:23:2: error: Cannot rename these hypotheses:
+d
+This is because these hypotheses either do not occur in the
+context or they occur before a frozen local instance.
+In the latter case, try `tactic.unfreeze_local_instances`.
+state:
+α : Sort ?,
+β : Sort ?,
+a : α,
+a : β
+⊢ unit
+rename.lean:32:2: error: Cannot rename these hypotheses:
+α
+This is because these hypotheses either do not occur in the
+context or they occur before a frozen local instance.
+In the latter case, try `tactic.unfreeze_local_instances`.
+state:
+α : Prop,
+_inst_1 : decidable α,
+a' : α
+⊢ unit
