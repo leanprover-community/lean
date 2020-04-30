@@ -1473,8 +1473,7 @@ do let hyp_name : expr → name :=
    -- The new names for all hypotheses in ctx_suffix.
    let new_names :=
      ctx_suffix.map $ λ h,
-       let current_name := hyp_name h in
-       (renames.find current_name).get_or_else current_name,
+       (renames.find $ hyp_name h).get_or_else h.local_pp_name,
    revert_lst ctx_suffix,
    intro_lst new_names,
    pure ()
