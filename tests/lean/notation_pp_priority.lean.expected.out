@@ -1,0 +1,4 @@
+noncomputable def test_high_before_low : some_type :=
+high_before_low
+noncomputable def test_high_after_low : some_type :=
+high_after_low
