@@ -182,13 +182,15 @@ private meta def rename_args_parser : parser (list (name × name)) :=
 Rename one or more local hypotheses. The renamings are given as follows:
 
 ```
-rename' x y             -- rename x to y
-rename' x → y           -- ditto
-rename' [x y, a b]      -- rename x to y and a to b
-rename' [x → y, a → b]  -- ditto
+rename x y             -- rename x to y
+rename x → y           -- ditto
+rename [x y, a b]      -- rename x to y and a to b
+rename [x → y, a → b]  -- ditto
 ```
 
-Brackets are necessary if multiple hypotheses should be renamed in parallel.
+Note that if there are multiple hypotheses called `x` in the context, then
+`rename x y` will rename *all* of them. If you want to rename only one, use
+`dedup` first.
 -/
 meta def rename (renames : parse rename_args_parser) : tactic unit :=
 propagate_tags $ tactic.rename_many $ native.rb_map.of_list renames
