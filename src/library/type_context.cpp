@@ -1993,15 +1993,14 @@ bool type_context_old::process_assignment(expr const & m, expr const & v) {
     try {
         expr t1 = infer(mvar);
         expr t2 = infer(new_v);
-        /* TODO(Leo): check whether using transparency_mode::All hurts performance.
-           We use Semireducible to make sure we will not fail an unification step
+        /* We use Semireducible to make sure we will not fail an unification step
                    ?m := t
            because we cannot establish that the types of ?m and t are definitionally equal
            due to the current transparency setting.
            This change is consistent with the general approach used in the rest of the code
            base where spurious typing errors due reducibility are avoided by using
            relaxed_is_def_eq. */
-        relaxed_scope _(*this);
+        relaxed_scope _(*this, transparency_mode::Semireducible);
         if (!is_def_eq_core(t1, t2)) {
             lean_trace(name({"type_context", "is_def_eq_detail"}),
                        scope_trace_env scope(env(), *this);
