@@ -4,7 +4,6 @@ open html
 
 namespace component
 
-
 meta class has_show_html (π : Type) :=
 (show_html' {α : Type}: π → html α)
 
@@ -60,11 +59,18 @@ component.mk (bool ⊕ α) bool
         html.of_element $ element.with_attrs ((attr.tooltip $ html.map_action sum.inr $ tooltip props) :: atrs) elt
     ])
 
-meta instance ignore_action {π α : Type} : has_coe (component π α) (component π empty) :=
-⟨component.filter_map_action (λ a, none)⟩
 
-meta instance component_of_no_action {π α : Type}: has_coe (component unit empty) (component π α) :=
-⟨λ c, component.map_action (λ o, empty.rec (λ _, α) o) $ component.map_props (λ p, ()) $ c⟩
+/- [note] there is a vm compiler bug that sometimes emerges when I include these coercions. -/
+-- meta instance ignore_action {π α : Type} : has_coe (component π α) (component π empty) :=
+-- ⟨component.filter_map_action (λ a, none)⟩
+-- meta instance component_of_no_action {π α : Type}: has_coe (component unit α) (component π α) :=
+-- ⟨λ c, component.map_action (λ (o : empty), empty.rec (λ _, α) o) $ component.map_props (λ p, ()) $ c⟩
+
+meta def initial_action {π α : Type} : component π α → component π empty
+| c := component.filter_map_action (λ a, none) c
+
+meta def terminal_props {π α : Type} : component unit α → component π α
+| c := component.map_props (λ p, ()) $ c
 
 inductive todo_list_action (α : Type)
 | insert : α → todo_list_action
@@ -77,7 +83,7 @@ component.mk (todo_list_action α) (nat × list (nat × α))
 (λ ⟨⟩ ⟨i,items⟩ b,
   match b with
   | (todo_list_action.insert a) := ((i+1, (i,a) :: items), none)
-  | (todo_list_action.delete j) := ((i, items.filter (λ p, p.1 = j)), none)
+  | (todo_list_action.delete j) := ((i, items.filter (λ p, p.1 ≠ j)), none)
   end
 )
 (λ ⟨⟩ ⟨i,items⟩,
@@ -92,6 +98,16 @@ component.mk (todo_list_action α) (nat × list (nat × α))
       (λ ⟨⟩ x, [html.map_action some $ has_to_editor.comp x, html.button "+" (none)])
   ]
 )
+
+-- meta def fake_todo_list (α : Type) : component unit empty :=
+-- component.mk (todo_list_action α) (nat)
+-- (λ _ _, 0)
+-- (λ _ _ _, (4, none))
+-- (λ _ _, ["hello world"])
+
+meta def string_todo_list : component tactic_state empty :=
+component.map_action (λ (o : empty), empty.rec (λ _, _) o) $ component.map_props (λ p, ()) $
+todo_list string
 
 
 end component

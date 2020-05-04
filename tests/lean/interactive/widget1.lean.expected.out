@@ -1,3 +1,1 @@
-{"msgs":[{"caption":"trace output","file_name":"widget1.lean","pos_col":2,"pos_line":44,"severity":"information","text":"a message\n"}],"response":"all_messages"}
-{"msgs":[{"caption":"trace output","file_name":"widget1.lean","pos_col":2,"pos_line":44,"severity":"information","text":"a message\n"},{"caption":"eval result","end_pos_col":12,"end_pos_line":56,"file_name":"widget1.lean","pos_col":0,"pos_line":56,"severity":"information","text":"\"adsf\""}],"response":"all_messages"}
 {"message":"file invalidated","response":"ok","seq_num":0}

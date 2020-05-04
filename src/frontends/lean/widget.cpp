@@ -341,9 +341,9 @@ void initialize_widget() {
     DECLARE_VM_BUILTIN(name({"component", "mk"}), vm_component_mk);
     DECLARE_VM_BUILTIN(name({"component", "state"}),   [](vm_obj const &, vm_obj const &) { return mk_vm_simple(0); });
     DECLARE_VM_BUILTIN(name({"component", "event"}),   [](vm_obj const &, vm_obj const &) { return mk_vm_simple(0); });
-    DECLARE_VM_BUILTIN(name({"component", "init"}),   [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 0); });
-    DECLARE_VM_BUILTIN(name({"component", "update"}),   [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 1); });
-    DECLARE_VM_BUILTIN(name({"component", "view"}),   [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 2); });
+    DECLARE_VM_BUILTIN(name({"component", "init"}),    [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 0); });
+    DECLARE_VM_BUILTIN(name({"component", "update"}),  [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 1); });
+    DECLARE_VM_BUILTIN(name({"component", "view"}),    [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 2); });
 }
 
 void finalize_widget() {}
