@@ -14,5 +14,5 @@ by do
   pr ← mk_app `eq.refl [ht],
   pr' ← mk_app `eq.refl [ht'],
   trace [ht, ht, pr', h],
-  mk_mapp `eq.mp [ht, ht, pr', h], -- takes 23s
+  try_for 100 $ mk_mapp `eq.mp [ht, ht, pr', h], -- slow step
   admit
