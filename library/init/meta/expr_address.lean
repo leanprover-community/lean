@@ -59,6 +59,9 @@ def address : Type := list coord
 
 namespace address
 
+instance has_dec_eq : decidable_eq address :=
+show decidable_eq (list coord), by apply_instance
+
 -- [todo] this should be a total ordering on addresses?
 instance has_lt : has_lt address := show has_lt (list coord), by apply_instance
 
