@@ -248,7 +248,7 @@ tactic.assumption
 
 /-- Try to apply `assumption` to all goals. -/
 meta def assumption' : tactic unit :=
-tactic.any_goals tactic.assumption
+tactic.any_goals' tactic.assumption
 
 private meta def change_core (e : expr) : option expr → tactic unit
 | none     := tactic.change e
@@ -457,7 +457,7 @@ meta def with_cases (t : itactic) : tactic unit :=
 with_enable_tags $ focus1 $ do
   input_hyp_uids ← collect_hyps_uids,
   t,
-  all_goals (revert_new_hyps input_hyp_uids)
+  all_goals' (revert_new_hyps input_hyp_uids)
 
 private meta def get_type_name (e : expr) : tactic name :=
 do e_type ← infer_type e >>= whnf,
@@ -854,8 +854,8 @@ tactic.contradiction
 -/
 meta def iterate (n : parse small_nat?) (t : itactic) : tactic unit :=
 match n with
-| none   := tactic.iterate t
-| some n := iterate_exactly n t
+| none   := tactic.iterate' t
+| some n := iterate_exactly' n t
 end
 
 /--
@@ -895,13 +895,13 @@ tactic.abstract tac id
 `all_goals { t }` applies the tactic `t` to every goal, and succeeds if each application succeeds.
 -/
 meta def all_goals : itactic → tactic unit :=
-tactic.all_goals
+tactic.all_goals'
 
 /--
 `any_goals { t }` applies the tactic `t` to every goal, and succeeds if at least one application succeeds.
 -/
 meta def any_goals : itactic → tactic unit :=
-tactic.any_goals
+tactic.any_goals'
 
 /--
 `focus { t }` temporarily hides all goals other than the first, applies `t`, and then restores the other goals. It fails if there are no goals.
