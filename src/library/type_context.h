@@ -784,7 +784,7 @@ public:
     struct relaxed_scope {
         transparency_scope m_transparency_scope;
         zeta_scope         m_zeta_scope;
-        relaxed_scope(type_context_old & ctx, transparency_mode m = transparency_mode::All):
+        relaxed_scope(type_context_old & ctx, transparency_mode m = transparency_mode::Semireducible):
             m_transparency_scope(ctx, m),
             m_zeta_scope(ctx, true) {}
     };
