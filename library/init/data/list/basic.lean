@@ -116,6 +116,14 @@ def reverse : list α → list α :=
 | _       []      := []
 | (x::xs) (y::ys) := f x y :: map₂ xs ys
 
+def mapi_core (f : α → nat → β) : list α → nat → list β
+| [] i := []
+| (a :: l) i := f a i :: mapi_core l (i + 1)
+
+/-- Map with index -/
+def mapi (f : α → nat → β) : list α → list β
+| l := mapi_core f l 0
+
 def join : list (list α) → list α
 | []        := []
 | (l :: ls) := l ++ join ls
