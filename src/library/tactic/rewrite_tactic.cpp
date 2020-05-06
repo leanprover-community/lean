@@ -35,7 +35,7 @@ static vm_obj rewrite_core(expr h, expr e, rewrite_cfg const & cfg, tactic_state
     tactic_state_context_cache cache(s);
     type_context_old ctx = cache.mk_type_context(cfg.m_mode);
     type_context_old::approximate_scope _(ctx, cfg.m_approx);
-    expr h_type      = ctx.infer(h);
+    expr h_type      = ctx.instantiate_mvars(ctx.infer(h));
     /* Generate meta-variables for arguments */
     buffer<expr> metas;
     buffer<bool> is_instance;
