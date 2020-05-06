@@ -2,13 +2,13 @@ import .interactive_expr
 
 /-- General purpose tactic for use with the widget system, setting the state to a component will render that component,
 so you can use this to show arbitrary components. -/
-meta def widget_tactic := state_t (component tactic_state empty) tactic
+meta def widget_tactic := state_t (component tactic_state string) tactic
 
 namespace widget_tactic
 section
 local attribute [reducible] widget_tactic
 meta instance : monad widget_tactic := by apply_instance
-meta instance : monad_state (component tactic_state empty) widget_tactic := by apply_instance
+meta instance : monad_state (component tactic_state string) widget_tactic := by apply_instance
 meta instance : has_monad_lift tactic widget_tactic := by apply_instance
 end
 meta instance (α : Type) : has_coe (tactic α) (widget_tactic α) := ⟨monad_lift⟩

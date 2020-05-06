@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2014 Microsoft Corporation. All rights reserved.
+Copyright (c) E.W.Ayers. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
@@ -126,36 +126,37 @@ json component_instance::to_json(list<unsigned> const & route) {
     return result;
 }
 
-optional<vm_obj> component_instance::handleAction(vm_obj const & a) {
+optional<vm_obj> component_instance::handle_action(vm_obj const & a) {
     auto p = update(m_props.to_vm_obj(), (*m_state).to_vm_obj(), a);
     m_state = p.first;
     render();
     return p.second;
 }
 
-optional<vm_obj> component_instance::handleEvent(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs) {
+optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args) {
     if (empty(route)) {
         if (m_handlers.find(handler_id) == m_handlers.end()) {
             // component may have rerendered, but handler_id refers to event handler on older component.
-            // in this case, the event should be dropped.
-            return optional<vm_obj>();
+            throw invalid_handler();
         }
         ts_vm_obj handler = m_handlers[handler_id];
-        auto action = invoke(handler.to_vm_obj(), eventArgs);
-        return handleAction(action);
+        // [todo] to prevent a VM error in the case of bad client code, we should check that the 'type' of the event_args here is the same as what the handler expects.
+        // the event record from the client should have a `type` member which can be checked. So each of `m_handlers` should also include a string 'type' to check against.
+        auto action = invoke(handler.to_vm_obj(), event_args);
+        return handle_action(action);
     }
     for (auto const & c : m_children) {
         if (c->m_id == head(route)) {
-            optional<vm_obj> a = c->handleEvent(tail(route), handler_id, eventArgs);
+            optional<vm_obj> a = c->handle_event(tail(route), handler_id, event_args);
             if (a) {
-                return handleAction(*a);
+                return handle_action(*a);
             } else {
                 return optional<vm_obj>();
             }
         }
     }
     // given component no longer exists. This happens if the ui is updated but there are events from an old
-    return optional<vm_obj>();
+    throw invalid_handler();
 }
 
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & olds) {

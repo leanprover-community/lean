@@ -117,7 +117,7 @@ void update_widget(environment const & env, options const & opts, io_state const
     json record;
     for (info_manager const & infom : info_managers) {
         if (infom.get_file_name() == m_mod_info.m_id) {
-            json r1;
+            json r1; // [todo] tidy these debug messages
             json r2;
             if (e.m_goal_pos && infom.update_widget(env, opts, ios, *e.m_goal_pos, r1, message)) {
                 record = r1;

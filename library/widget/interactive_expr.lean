@@ -176,7 +176,7 @@ meta def tactic_render : tactic (html empty) := do
   ),
   pure $ html.h "ul" [className "list m2 bg-light-gray near-black"] $ list.map (html.h "li" [className "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30"]) $ list.map (λ x, [x]) $ hs
 
-meta def tactic_state_widget : component tactic_state empty :=
+meta def tactic_state_widget : component tactic_state string :=
 widget.mk_tactic_widget () (λ _ _, failure) (λ _, tactic_render) (λ _ x, x)
 
 end widget

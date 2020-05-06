@@ -77,7 +77,7 @@ public:
      * The record is updated to have `{status : "success", widget : {html : _}}` on success.
      * [todo] behaviour upon errors?
      */
-    bool update(io_state_stream const & ios, json const & message, json & record) const;
+    void update(io_state_stream const & ios, json const & message, json & record) const;
     json to_json() const;
 };
 
@@ -143,7 +143,7 @@ public:
 #endif
     optional<list<info_data>> get_info(pos_info pos) const;
     /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
-     *  Returns true when the widget was successfully updated. [todo] throw an exception instead?
+     *  Returns true when the widget was successfully updated.
      */
     bool update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const;
 };
