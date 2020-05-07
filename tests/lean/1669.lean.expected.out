@@ -1,3 +1,3 @@
-1669.lean:1:4: error: failed to create auxiliary definition
 1669.lean:3:20: error: failed to synthesize type class instance for
-⊢ has_singleton ℕ (expr → list expr → tactic unit)
+⊢ has_singleton ? (expr → list expr → tactic unit)
+1669.lean:1:4: error: failed to create auxiliary definition
