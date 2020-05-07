@@ -343,6 +343,8 @@ class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
    Example: {a, b, c}. -/
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
+-- TODO: should I use `out_param` on one of the arguments?
+class has_singleton (α : Type u) (β : Type v) := (singleton : α → β)
 /- Type class used to implement the notation { a ∈ c | p a } -/
 class has_sep (α : out_param $ Type u) (γ : Type v) :=
 (sep : (α → Prop) → γ → γ)
@@ -400,9 +402,14 @@ attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
 
 export has_insert (insert)
 
-/-- The singleton collection -/
-def singleton {α : Type u} {γ : Type v} [has_emptyc γ] [has_insert α γ] (a : α) : γ :=
-insert a ∅
+class is_lawful_singleton (α : Type u) (β : Type v) [has_emptyc β] [has_insert α β]
+  [has_singleton α β] :=
+(insert_emptyc_eq : ∀ (x : α), (insert x ∅ : β) = {x})
+
+export has_singleton (singleton)
+export is_lawful_singleton (insert_emptyc_eq)
+
+attribute [simp] insert_emptyc_eq
 
 /- nat basic instances -/
 
