@@ -138,7 +138,11 @@ component.stateless (λ ⟨e,ea⟩,
         html.h "div" []
           ( (html.h "span" [className "bg-blue br3 ma1 ph2"] [html.of_component (expr.get_app_fn e) $ mk ts (type_tooltip)]) ::
             list.map (λ a, html.h "span" [className "bg-gray br3 ma1 ph2"] [html.of_component a $ mk ts (type_tooltip)]) (expr.get_app_args e)
-          )
+          ),
+        html.h "hr" [] [],
+        html.h "div" [className "gray"] [
+          ea.to_string
+        ]
       ]]
   end
 )
