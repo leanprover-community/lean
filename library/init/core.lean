@@ -343,8 +343,7 @@ class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
    Example: {a, b, c}. -/
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
--- TODO: should I use `out_param` on one of the arguments?
-class has_singleton (α : Type u) (β : Type v) := (singleton : α → β)
+class has_singleton (α : out_param $ Type u) (β : Type v) := (singleton : α → β)
 /- Type class used to implement the notation { a ∈ c | p a } -/
 class has_sep (α : out_param $ Type u) (γ : Type v) :=
 (sep : (α → Prop) → γ → γ)
