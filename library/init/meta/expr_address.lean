@@ -1,12 +1,11 @@
 prelude
 import init.meta.expr
-import init.meta.mk_dec_eq_instance
-import init.meta.interactive
+import init.data.list.basic
+import init.data.option.basic
 
 namespace expr
 
 /-- An enum representing a recursive argument in an `expr` constructor (except the types of variables). -/
-@[derive decidable_eq]
 inductive coord : Type
 | app_fn
 | app_arg
@@ -35,9 +34,13 @@ def repr: coord → string
 
 instance : has_repr coord := ⟨repr⟩
 
+-- [note] we can't use derive because we need to use this before `tactic`.
+meta constant has_decidable_eq : decidable_eq coord
+attribute [instance] expr.coord.has_decidable_eq
+
 instance has_lt : has_lt coord := ⟨λ x y, x.code < y.code⟩
 
-instance dec_lt : decidable_rel ((<) : coord → coord → Prop) := by apply_instance
+-- instance dec_lt : decidable_rel ((<) : coord → coord → Prop) := by apply_instance
 
 meta def follow : coord → expr → option expr
 | (coord.app_fn)          (expr.app f a)         := some f
@@ -59,13 +62,14 @@ def address : Type := list coord
 
 namespace address
 
-instance has_dec_eq : decidable_eq address :=
-show decidable_eq (list coord), by apply_instance
+meta def has_dec_eq : decidable_eq address :=
+@list.has_dec_eq _ expr.coord.has_decidable_eq
+-- show decidable_eq (list coord), by apply_instance
 
 -- [todo] this should be a total ordering on addresses?
-instance has_lt : has_lt address := show has_lt (list coord), by apply_instance
+-- instance has_lt : has_lt address := show has_lt (list coord), by apply_instance
 
-instance dec_lt : decidable_rel ((<) : address → address → Prop) := by apply_instance
+-- instance dec_lt : decidable_rel ((<) : address → address → Prop) := by apply_instance
 
 protected def to_string : address → string := λ a, to_string $ list.map coord.repr a
 
@@ -76,12 +80,13 @@ instance has_append : has_append address := ⟨list.append⟩
 
 
 /-- `as_below x y` is some z when it finds `∃ z, x = y ++ z` -/
-def as_below : address → address → option address
+meta def as_below : address → address → option address
 |a [] := some a -- [] ++ a = a
 |[] _ := none   -- (h::t) ++ _ ≠ []
 |(h₁ :: t₁) (h₂ :: t₂) := if h₁ = h₂ then as_below t₁ t₂ else none -- if t₂ ++ z = t₁ then (h₁ :: t₁) ++ z = (h₁ :: t₂)
 
-def is_below : address → address → bool | a₁ a₂ := option.is_some $ as_below a₁ a₂
+meta def is_below : address → address → bool
+| a₁ a₂ := option.is_some $ as_below a₁ a₂
 
 infixr  ` ≺ `:50 := is_below
 

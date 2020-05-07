@@ -1,4 +1,5 @@
-
+prelude
+import init.function init.data.option.basic init.util
 /-- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
 `component` is effectively implemented as
@@ -79,8 +80,6 @@ inductive html (Action : Type) : Type
 ```
 -/
 meta constant html (Action : Type) : Type
-
-meta constant tactic.save_widget : pos → component tactic_state string → tactic unit
 
 inductive mouse_event_kind
 | on_click

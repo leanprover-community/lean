@@ -1,5 +1,3 @@
-import widget.html
-
 open html
 open html.attr
 
@@ -29,13 +27,13 @@ meta def example_like_widget : component unit empty :=
 -- trace "this is making a widget happen" $
 component.mk unit bool (λ _ _, ff) (λ _ s b, (tt, none)) (λ _ s,
   if s then "you liked this!" else
-  div [html.of_string "here is a comment ", button "like this" ()]
+  html.h "div" [] [html.of_string "here is a comment ", button "like this" ()]
 )
 
 /-- A simple counter that can be incremented or decremented with some buttons. -/
 meta def counter_widget {π α : Type} : component π α :=
 component.mk int int (λ p x, 0 <| x) (λ _ x y, (x + y, none)) (λ _ s,
-  div [
+  html.h "div" [] [
     button "+" (1 : int),
     of_string $ to_string $ s,
     button "-" (-1)

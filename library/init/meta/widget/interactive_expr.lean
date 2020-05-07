@@ -1,7 +1,10 @@
 /- Author: E.W.Ayers -/
 /- This contains an experimental attempt to get pretty printing to keep expression information so that the user can hover over subterms of an expression in a widget and get information about that subterm.
 For example  -/
-import .html .widget .components
+prelude
+import init.meta.widget.html
+import init.meta.tactic
+import init.meta.expr_address
 
 /-- An alternative to format that keeps structural information about the expression. For lack of a better name I called it `magic`, rename suggestions welcome. -/
 meta inductive magic
@@ -185,8 +188,28 @@ meta def tactic_render : tactic (html empty) := do
   ),
   pure $ html.h "ul" [className "list m2 bg-light-gray near-black"] $ list.map (html.h "li" [className "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30"]) $ list.map (λ x, [x]) $ hs
 
+meta def mk_tactic_widget {α β σ : Type}
+  (init : σ)
+  (update : σ → β → tactic (σ × α))
+  (view : σ → tactic (html β))
+  (error : option format → σ → σ) : component tactic_state α :=
+component.mk β (σ × tactic_state)
+  (λ ts_new prev, match prev with | (some ⟨s,ts_old⟩) := ⟨s, ts_new⟩ | (none) := ⟨init, ts_new⟩ end)
+  (λ _ ⟨s,ts⟩ b,
+      match update s b ts with
+      | (interaction_monad.result.success ⟨s,a⟩ ts) := ⟨⟨s,ts⟩, some a⟩
+      | (interaction_monad.result.exception msg pos _) := ⟨⟨s,ts⟩, none⟩
+      end
+  )
+  (λ _ ⟨s,ts⟩,
+      match view s ts with
+      | (interaction_monad.result.success x ts) := x
+      | (interaction_monad.result.exception msg pos ts) := [html.of_string "view errored"]
+      end
+  )
+
 meta def tactic_state_widget : component tactic_state string :=
-widget.mk_tactic_widget () (λ _ _, failure) (λ _, tactic_render) (λ _ x, x)
+mk_tactic_widget () (λ _ _, failure) (λ _, tactic_render) (λ _ x, x)
 
 end widget
 

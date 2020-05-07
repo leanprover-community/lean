@@ -1,4 +1,3 @@
-import .interactive_expr
 
 /-- General purpose tactic for use with the widget system, setting the state to a component will render that component,
 so you can use this to show arbitrary components.

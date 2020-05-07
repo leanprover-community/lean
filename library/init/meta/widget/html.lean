@@ -1,6 +1,6 @@
 /- Some helpers for html. -/
-
-import widget.basic
+prelude
+import init.meta.widget.basic
 
 variables {π α : Type}
 
@@ -62,9 +62,9 @@ meta def on_mouse_enter : (unit → α) → html.attr α
 meta def on_mouse_leave : (unit → α) → html.attr α
 | a := html.attr.mouse_event mouse_event_kind.on_mouse_leave a
 
-
 end attr
 
+/-- Make an html element. -/
 meta def h (tag : string) (attributes : list (html.attr α)) (children : list (html α)) :=
 html.of_element $ element.mk tag attributes children
 
@@ -73,27 +73,6 @@ meta def button : string → thunk α → H
 
 meta def textbox : string → (string → α) → H
 | s t := h "input" [html.attr.val "type" "text", html.attr.val "value" s, attr.text_change_event t] []
-
-meta def div : list H →  H
-| l := h "div" [] l
-
-meta def span : list H → H
-| l := h "span" [] l
-
-meta def td :  H  → H
-| x := h "td" [] [x]
-
-meta def th : H → H
-| x := h "th" [] [x]
-
-meta def tr : list H → H
-| l := h "tr" [] l
-
-meta def li : H → H
-| l := h "li" [] [l]
-
-meta def mk_headerless_table : list (list H) → H
-| l := h "table" [] $ list.map (λ r, tr $ list.map td $ r) l
 
 meta def element.with_attrs : list (html.attr α) → element α → element α
 | as1 ⟨t, as2, c⟩ := ⟨t, as2 ++ as1, c⟩ -- [note] later attrs clobber earlier ones.
