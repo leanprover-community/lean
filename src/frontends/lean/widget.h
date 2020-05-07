@@ -100,8 +100,8 @@ public:
     }
     json to_json(list<unsigned> const & route) override;
     void reconcile(vdom const & old);
-    optional<vm_obj> handleAction(vm_obj const & a);
-    optional<vm_obj> handleEvent(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+    optional<vm_obj> handle_action(vm_obj const & a);
+    optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
@@ -116,5 +116,18 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
 
 void initialize_widget();
 void finalize_widget();
+
+/** This is thrown when an event is recieved from the client but the route list and handler do not point to a valid handler on the vdom.
+ * This can occur as the result of a bug in the client code, but it can also occur in multi-thread scenarios where multiple widget_events are
+ * sent in parallel and the vdom has updated before the second widget_event has been processed.
+ */
+class invalid_handler : public exception {
+public:
+    invalid_handler() {}
+    virtual ~invalid_handler() noexcept {}
+    virtual char const * what() const noexcept { return "invalid widget event handler"; }
+    virtual throwable * clone() const { return new invalid_handler(); }
+    virtual void rethrow() const { throw *this; }
+};
 
 }

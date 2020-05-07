@@ -106,7 +106,7 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     record["widget"]["html"] = to_json();
 }
 
-bool widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
+void widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
     unsigned handler_idx = message["handler"];
@@ -128,10 +128,18 @@ bool widget_info::update(io_state_stream const & ios, json const & message, json
     } else {
         throw exception("expecting arg_type to be either 'unit' or 'string' but was '" + arg_type + "'");
     }
-    optional<vm_obj> result = c->handleEvent(route, handler_idx, vm_args);
-    record["status"] = "success";
-    record["widget"]["html"] = to_json();
-    return true;
+    try {
+        optional<vm_obj> result = c->handle_event(route, handler_idx, vm_args);
+        record["widget"]["html"] = to_json();
+        if (result) {
+            record["status"] = "edit";
+            record["action"] = to_string(*result);
+        } else {
+            record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
+        }
+    } catch (const invalid_handler & e) {
+        record["status"] = "invalid_handler";
+    }
 }
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }
@@ -259,15 +267,16 @@ bool info_manager::update_widget(environment const & env, options const & o, io_
     io_state_stream out = regular(env, ios, tc).update_options(o);
     auto ds = get_info(pos);
     if (!ds) {
-        // record["status"] = "error";
-        // record["message"] = "could not find a widget at the given position";
+        record["status"] = "error";
+        record["message"] = "could not find a widget at the given position";
         return false;
      }
     for (auto & d : *ds) {
         const widget_info* cw = is_widget_info(d);
         widget_info * w = const_cast<widget_info*>(cw);
         if (w) {
-            return w->update(out, message, record);
+            w->update(out, message, record);
+            return true;
         }
     }
     return false;
@@ -297,7 +306,7 @@ vm_obj tactic_save_info_thunk(vm_obj const & pos, vm_obj const & thunk, vm_obj c
     }
 }
 
-vm_obj tactic_save_widget(vm_obj const &, vm_obj const & pos, vm_obj const & widget, vm_obj const & s) {
+vm_obj tactic_save_widget(vm_obj const & pos, vm_obj const & widget, vm_obj const & s) {
     try {
         if (g_info_m) {
             g_info_m->add_widget_info(to_pos_info(pos), s, widget);

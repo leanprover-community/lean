@@ -80,7 +80,7 @@ inductive html (Action : Type) : Type
 -/
 meta constant html (Action : Type) : Type
 
-meta constant tactic.save_widget {α : Type} : pos → component tactic_state α → tactic unit
+meta constant tactic.save_widget : pos → component tactic_state string → tactic unit
 
 inductive mouse_event_kind
 | on_click

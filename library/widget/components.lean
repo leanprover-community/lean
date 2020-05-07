@@ -81,7 +81,6 @@ h "div" [className "mw6"] $ rows.map (λ r,
   )
 )
 
-
 meta def dotted_border_list {α β : Type} (get_key : β → string) (view : β → html α ) : list β → html α | l :=
 h "div" [className "pa3 pa5-ns"] [
   h "ol" [className "list pl0 measure center"] $
@@ -152,9 +151,15 @@ component.stateless (λ _, [
 -- (λ _ _ _, (4, none))
 -- (λ _ _, ["hello world"])
 
-meta def string_todo_list : component tactic_state empty :=
+meta def string_todo_list : component tactic_state string :=
 component.map_action (λ (o : empty), empty.rec (λ _, _) o) $ component.map_props (λ p, ()) $
 todo_list string ["make some tasks", "delete some tasks"]
 
+
+meta def simple_action (cmd : string) : component tactic_state string :=
+component.mk unit nat
+(λ _ _, 0)
+(λ _ n _, (n+1, some (cmd ++ to_string n)))
+(λ _ n, [html.button ("add " ++ cmd ++ to_string n) ()])
 
 end component
