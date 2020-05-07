@@ -1,7 +1,9 @@
 import .interactive_expr
 
 /-- General purpose tactic for use with the widget system, setting the state to a component will render that component,
-so you can use this to show arbitrary components. -/
+so you can use this to show arbitrary components.
+The plan is that this will eventually replace `tactic`.
+ -/
 meta def widget_tactic := state_t (component tactic_state empty) tactic
 
 namespace widget_tactic

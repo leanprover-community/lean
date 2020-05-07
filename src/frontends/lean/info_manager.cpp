@@ -111,7 +111,7 @@ bool widget_info::update(io_state_stream const & ios, json const & message, json
     scope_vm_state scope(S);
     unsigned handler_idx = message["handler"];
     json j = message["route"]; // an array with the root index at the _back_.
-    list<unsigned> route; // now root index is at the _front_.
+    list<unsigned> route;      // now root index is at the _front_.
     for (json::iterator it = j.begin(); it != j.end(); ++it) {
       route = cons(unsigned(*it), route);
     }
@@ -126,10 +126,10 @@ bool widget_info::update(io_state_stream const & ios, json const & message, json
           std::string arg = j_args["value"];
           vm_args = to_obj(arg);
     } else {
-        lean_unreachable(); // [todo] throw more informative error.
+        throw exception("expecting arg_type to be either 'unit' or 'string' but was '" + arg_type + "'");
     }
     optional<vm_obj> result = c->handleEvent(route, handler_idx, vm_args);
-    record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
+    record["status"] = "success";
     record["widget"]["html"] = to_json();
     return true;
 }
