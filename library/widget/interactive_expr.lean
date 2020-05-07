@@ -113,7 +113,7 @@ component.mk
   (λ e ⟨ca, sa⟩,
     let m : sm  := sm.flatten $ to_simple $ tactic_state.pp_magic ts e in
     let m : sm  := sm.tag_expr [] e m in -- [hack] in pp.cpp I forgot to add an expr-boundary for the root expression.
-    [ html.h "div" [
+    [ html.h "span" [
           className "expr",
           key e.hash,
           on_mouse_leave (λ _, action.on_mouse_leave_all) ] $ view tooltip_comp (prod.snd <$> ca) (prod.snd <$> sa) ⟨e, []⟩ m
@@ -127,7 +127,16 @@ component.stateless (λ ⟨e,ea⟩,
   -- hopefully this doesn't crash if the locals aren't on the lctx or I'm in trouble.
   match tactic.run_simple ts (tactic.infer_type e) with
   | none := "error getting type at " ++ (repr $ ea)
-  | (some t) := expr.to_string t
+  | (some t) :=
+      let args := list.map (tactic_state.format_expr ts)  in
+      [html.h "div" [] [
+        html.h "div" [] [expr.to_string t],
+        html.h "hr" [] [],
+        html.h "div" []
+          ( (html.h "span" [className "bg-blue br3 ma1 ph2"] [html.of_component (expr.get_app_fn e) $ mk ts (type_tooltip)]) ::
+            list.map (λ a, html.h "span" [className "bg-gray br3 ma1 ph2"] [html.of_component a $ mk ts (type_tooltip)]) (expr.get_app_args e)
+          )
+      ]]
   end
 )
 
