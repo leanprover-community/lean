@@ -40,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: lean-nightly-linux
+          name: lean-nightly-linux-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -78,7 +78,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: lean-nightly-macos
+          name: lean-nightly-macos-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -122,7 +122,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: lean-nightly-windows
+          name: lean-nightly-windows-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Test
         run: |
