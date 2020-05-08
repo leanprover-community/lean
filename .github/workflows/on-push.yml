@@ -40,7 +40,7 @@ jobs:
           brew install coreutils
       - name: Build
         run: |
-          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
+          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           make -j2
           cpack
         working-directory: ./build
