@@ -18,7 +18,7 @@ jobs:
         working-directory: ./build
       - name: Build
         run: |
-          make -j2
+          make -j1
           cpack
         working-directory: ./build
       - name: Upload artifact
