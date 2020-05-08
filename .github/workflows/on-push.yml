@@ -22,9 +22,9 @@ jobs:
           cpack
         working-directory: ./build
       - name: Upload artifact
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v2
         with:
-          name: ubuntu-latest
+          name: lean-nightly-linux
           path: ./build/lean-*
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -53,9 +53,9 @@ jobs:
           cpack
         working-directory: ./build
       - name: Upload artifact
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v2
         with:
-          name: macos-latest
+          name: lean-nightly-macos
           path: ./build/lean-*
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -89,9 +89,9 @@ jobs:
           msys2do cpack
         working-directory: ./build
       - name: Upload artifact
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v2
         with:
-          name: windows-latest
+          name: lean-nightly-windows
           path: ./build/lean-*
       - name: Test
         run: |
@@ -114,7 +114,7 @@ jobs:
       working-directory: ./emscripten
     - run: NODE_OPTIONS="--max-old-space-size=4096" emmake make
       working-directory: ./emscripten
-    - uses: actions/upload-artifact@v2-preview
+    - uses: actions/upload-artifact@v2
       with:
-        name: shell
+        name: lean-nightly-emscripten
         path: ./emscripten/shell
