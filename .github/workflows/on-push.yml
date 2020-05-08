@@ -61,7 +61,7 @@ jobs:
           brew install coreutils
       - name: Configure
         run: |
-          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12
         working-directory: ./build
       - name: Build
         run: |
