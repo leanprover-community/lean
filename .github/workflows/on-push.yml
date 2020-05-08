@@ -4,13 +4,16 @@ on: [push]
 jobs:
   build_ubuntu_job:
     runs-on: ubuntu-latest
-    name: Build linux
+    name: Build linux ${{ matrix.build_type }}
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
       - name: Build
         run: |
-          cmake ../src
+          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
           make -j2
           cpack
         working-directory: ./build
@@ -25,7 +28,10 @@ jobs:
 
   build_macos_job:
     runs-on: macos-latest
-    name: Build macos
+    name: Build macos ${{ matrix.build_type }}
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
@@ -34,7 +40,7 @@ jobs:
           brew install coreutils
       - name: Build
         run: |
-          cmake ../src
+          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
           make -j2
           cpack
         working-directory: ./build
@@ -49,7 +55,10 @@ jobs:
 
   build_windows_job:
     runs-on: windows-latest
-    name: Build windows
+    name: Build windows ${{ matrix.build_type }}
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
@@ -63,7 +72,7 @@ jobs:
           msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
       - name: Build
         run: |
-          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
+          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
           msys2do make -j2
           msys2do cpack
         working-directory: ./build
