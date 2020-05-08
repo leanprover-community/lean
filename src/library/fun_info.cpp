@@ -213,6 +213,14 @@ static void trace_if_unsupported(type_context_old & ctx, expr const & fn,
 
 unsigned get_specialization_prefix_size(type_context_old & ctx, expr const & fn, unsigned nargs) {
     /*
+    Using the default algorithm, only the first argument of `coe_fn` would be specialized.
+    However we need to specialize the (2nd) type-class argument as well to detect whether the
+    coercion is a dependent coercion.
+    */
+    if (is_constant(fn) && const_name(fn) == get_coe_fn_name()) {
+        return nargs >= 2 ? 2 : nargs;
+    }
+    /*
       We say a function is "cheap" if it is of the form:
 
       a) 0 or more dependent parameters p s.t. there is at least one forward dependency x : C[p]

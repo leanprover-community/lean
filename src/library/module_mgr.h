@@ -93,6 +93,7 @@ public:
 class module_mgr {
     bool m_server_mode = false;
     bool m_save_olean = false;
+    bool m_use_old_oleans = false;
 
     search_path m_path;
     environment m_initial_env;
@@ -134,6 +135,9 @@ public:
 
     void set_save_olean(bool save_olean) { m_save_olean = save_olean; }
     bool get_save_olean() const { return m_save_olean; }
+
+    void set_use_old_oleans(bool use_old_oleans) { m_use_old_oleans = use_old_oleans; }
+    bool get_use_old_oleans() const { return m_use_old_oleans; }
 
     environment get_initial_env() const { return m_initial_env; }
     options get_options() const { return m_ios.get_options(); }

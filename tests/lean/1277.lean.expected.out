@@ -1,6 +1,5 @@
 1277.lean:8:2: error: rewrite tactic failed, motive is not type correct
-nested exception message:
-check failed, application type mismatch (use 'set_option trace.check true' for additional details)
+  λ (_a : α₁ → α₁), map f₁ f₂ = id = (map _a f₂ = id)
 state:
 α₁ : Type,
 α₂ : α₁ → Type,
