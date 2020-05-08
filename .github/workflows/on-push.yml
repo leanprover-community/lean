@@ -34,8 +34,8 @@ jobs:
     runs-on: macos-latest
     name: Build macos ${{ matrix.build_type }}
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: false
         build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
@@ -65,8 +65,8 @@ jobs:
     runs-on: windows-latest
     name: Build windows ${{ matrix.build_type }}
     strategy:
+      fail-fast: false
       matrix:
-        fail-fast: false
         build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
