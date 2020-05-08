@@ -4,7 +4,7 @@ on: [push]
 jobs:
   build_ubuntu_job:
     runs-on: ubuntu-latest
-    name : Build ubuntu-latest
+    name: Build linux
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
@@ -25,7 +25,7 @@ jobs:
 
   build_macos_job:
     runs-on: macos-latest
-    name : Build macos-latest
+    name: Build macos
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
@@ -49,7 +49,7 @@ jobs:
 
   build_windows_job:
     runs-on: windows-latest
-    name: Build windows-latest
+    name: Build windows
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
