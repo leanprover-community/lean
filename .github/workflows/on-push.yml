@@ -21,6 +21,13 @@ jobs:
           make -j2
           cpack
         working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/lean-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -52,6 +59,13 @@ jobs:
           make -j2
           cpack
         working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/lean-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -88,6 +102,13 @@ jobs:
           msys2do make -j2
           msys2do cpack
         working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/lean-*-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -109,12 +130,20 @@ jobs:
         apt-get update
         apt-get install -y m4
     - uses: actions/checkout@v1
-    - run: mkdir -p ./emscripten
+    - run: mkdir -p ./build
     - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
-      working-directory: ./emscripten
+      working-directory: ./build
     - run: NODE_OPTIONS="--max-old-space-size=4096" emmake make
-      working-directory: ./emscripten
+      working-directory: ./build
+    - run: ./script/ci_emscripten_zip.sh
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: build/lean-*-browser.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/upload-artifact@v2
       with:
         name: lean-nightly-emscripten
-        path: ./emscripten/shell
+        path: ./build/lean-*-browser.zip
