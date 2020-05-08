@@ -6,6 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build linux ${{ matrix.build_type }}
     strategy:
+      fail-fast: false
       matrix:
         build_type: [Release, Debug]
     steps:
@@ -31,6 +32,7 @@ jobs:
     name: Build macos ${{ matrix.build_type }}
     strategy:
       matrix:
+        fail-fast: false
         build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
@@ -58,6 +60,7 @@ jobs:
     name: Build windows ${{ matrix.build_type }}
     strategy:
       matrix:
+        fail-fast: false
         build_type: [Release, Debug]
     steps:
       - uses: actions/checkout@v2
