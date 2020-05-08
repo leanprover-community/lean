@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
+      - run: sudo apt install libgmp-dev
       - name: Configure
         run: |
           cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
