@@ -1,13 +1,14 @@
-<p align=center><a href="https://leanprover.github.io"><img src="https://leanprover.github.io/images/lean_logo.svg" alt="logo" width="300px"/></a></p>
+<p align=center><a href="https://leanprover-community.github.io"><img src="https://leanprover.github.io/images/lean_logo.svg" alt="logo" width="300px"/></a></p>
 <table>
   <tr>
-    <th>License</th><th>Windows</th><th>Linux / macOS</th><th>Test Coverage</th><th>Chat</th>
+    <th>License</th><th>Continuous integration</th><th>Chat</th>
   </tr>
   <tr>
     <td><a href="LICENSE"><img src="https://img.shields.io/badge/license-APACHE_2-green.svg?dummy" title="License"/></a></td>
-    <td><a href="https://ci.appveyor.com/project/cipher1024/lean"><img src="https://ci.appveyor.com/api/projects/status/jxjijjkijlio7u26/branch/master"/></a></td>
-    <td><a href="https://travis-ci.org/leanprover-community/lean"><img src="https://travis-ci.org/leanprover-community/lean.png?branch=master"/></a></td>
-    <td><a href="https://codecov.io/gh/leanprover-community/lean"><img src="https://codecov.io/gh/leanprover-community/lean/branch/master/graph/badge.svg" alt="Codecov"/></a></td>
+    <td>
+      <a href="https://github.com/leanprover-community/lean/actions"><img src="https://github.com/leanprover-community/lean/workflows/lean%20core%20build/badge.svg?branch=master" alt="github actions"/></a>
+      <a href="https://app.bors.tech/repositories/24760"><img src="https://bors.tech/images/badge_small.svg" alt="Bors enabled"/></a>
+    </td>
     <td><a href="https://leanprover.zulipchat.com"><img src="https://img.shields.io/badge/zulip-join_chat-brightgreen.svg" alt="Join the Zulip chat"/></a></td>
   </tr>
 </table>
@@ -39,6 +40,5 @@ Miscellaneous
 - [Coding Style](doc/coding_style.md)
 - [Library Style Conventions](doc/lean/library_style.org)
 - [Git Commit Conventions](doc/commit_convention.md)
-- [Automatic Builds](doc/make/travis.md)
 - [Syntax Highlight Lean Code in LaTeX](doc/syntax_highlight_in_latex.md)
 - [Exporting, and reference type-checkers](doc/export_format.md)
