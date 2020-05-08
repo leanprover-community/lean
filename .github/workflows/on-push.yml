@@ -12,9 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
-      - name: Build
+      - name: Configure
         run: |
           cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
+        working-directory: ./build
+      - name: Build
+        run: |
           make -j2
           cpack
         working-directory: ./build
@@ -40,9 +43,12 @@ jobs:
       - name: Install dependencies
         run: |
           brew install coreutils
-      - name: Build
+      - name: Configure
         run: |
           cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        working-directory: ./build
+      - name: Build
+        run: |
           make -j2
           cpack
         working-directory: ./build
@@ -73,9 +79,12 @@ jobs:
           choco upgrade git -y --no-progress
           msys2do pacman -S --noconfirm base-devel --needed
           msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
-      - name: Build
+      - name: Configure
         run: |
           msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
+        working-directory: ./build
+      - name: Build
+        run: |
           msys2do make -j2
           msys2do cpack
         working-directory: ./build
