@@ -3,7 +3,6 @@ status = [
   "Build windows Release",
   "Build macos Release",
   "Build linux Debug",
-  "Build windows Debug",
   "Build macos Debug",
   "Build emscripten"
 ]

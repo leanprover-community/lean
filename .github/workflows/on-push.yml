@@ -81,7 +81,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Release, Debug]
+        # not enough disk space for debug build :-(
+        build_type: [Release]
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
