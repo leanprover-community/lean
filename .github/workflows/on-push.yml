@@ -1,5 +1,12 @@
+name: lean core build
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      # ignore tmp branches used by bors
+      - 'staging.tmp*'
+      - 'trying.tmp*'
+      - 'staging*.tmp'
 
 jobs:
   build_ubuntu_job:
