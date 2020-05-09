@@ -168,11 +168,32 @@ h₂ : b = c
 meta def introv (ns : parse ident_*) : tactic unit :=
 propagate_tags (tactic.introv ns >> return ())
 
+/-- Parse a current name and new name for `rename`. -/
+private meta def rename_arg_parser : parser (name × name) :=
+  prod.mk <$> ident <*> (optional (tk "->") *> ident)
+
+/-- Parse the arguments of `rename`. -/
+private meta def rename_args_parser : parser (list (name × name)) :=
+  (functor.map (λ x, [x]) rename_arg_parser)
+  <|>
+  (tk "[" *> sep_by (tk ",") rename_arg_parser <* tk "]")
+
 /--
-The tactic `rename h₁ h₂` renames hypothesis `h₁` to `h₂` in the current local context.
+Rename one or more local hypotheses. The renamings are given as follows:
+
+```
+rename x y             -- rename x to y
+rename x → y           -- ditto
+rename [x y, a b]      -- rename x to y and a to b
+rename [x → y, a → b]  -- ditto
+```
+
+Note that if there are multiple hypotheses called `x` in the context, then
+`rename x y` will rename *all* of them. If you want to rename only one, use
+`dedup` first.
 -/
-meta def rename (h₁ h₂ : parse ident) : tactic unit :=
-propagate_tags (tactic.rename h₁ h₂)
+meta def rename (renames : parse rename_args_parser) : tactic unit :=
+propagate_tags $ tactic.rename_many $ native.rb_map.of_list renames
 
 /--
 The `apply` tactic tries to match the current goal against the conclusion of the type of term. The argument term should be a term well-formed in the local context of the main goal. If it succeeds, then the tactic returns as many subgoals as the number of premises that have not been fixed by type inference or type class resolution. Non-dependent premises are added before dependent ones.
@@ -665,7 +686,9 @@ private meta def find_case (goals : list expr) (ty : name) (idx : nat) (num_indi
   end else none
 
 private meta def rename_lams : expr → list name → tactic unit
-| (lam n _ _ e) (n'::ns) := (rename n n' >> rename_lams e ns) <|> rename_lams e (n'::ns)
+| (lam n _ _ e) (n'::ns) :=
+  (propagate_tags (tactic.rename_unstable n n') >> rename_lams e ns) <|>
+  rename_lams e (n'::ns)
 | _             _        := skip
 
 /--

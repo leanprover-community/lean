@@ -1,3 +1,30 @@
+v3.11.0c (8 May 2020)
+---------------------
+
+Feature:
+  - Do not unfold irreducible definitions in unification (#211)
+  - Instantiate metavariables in `rw` (#213)
+
+Bug fixes:
+  - Fix docstring of tactic.interactive.rename (#210)
+
+v3.10.0c (2 May 2020)
+---------------------
+
+Features:
+  - `by calc ...` is now equivalent to `by refine calc ...` (#203)
+  - Flag to use out-of-date oleans (#208)
+  - Order notation by priority in pretty-printer (#207)
+  - Improve congruence lemmas for `coe_fn` (#209)
+  - Port `rename` tactic from mathlib (#205)
+
+Bug fixes:
+  - `simp [← foo]` avoids looping if `foo` is already in the simp set (#198)
+
+Changes:
+  - `init.category` has been renamed to `init.control` (#202)
+  - `string.has_decidable_eq` is now implemented by foot (#204)
+
 v3.9.0c (19 April 2020)
 ----------------------
 

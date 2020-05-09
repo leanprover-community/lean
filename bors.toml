@@ -1,0 +1,12 @@
+status = [
+  "Build linux Release",
+  "Build windows Release",
+  "Build macos Release",
+  "Build linux Debug",
+  "Build macos Debug",
+  "Build emscripten"
+]
+use_squash_merge = true
+timeout_sec = 21600
+block_labels = ["WIP"]
+delete_merged_branches = true

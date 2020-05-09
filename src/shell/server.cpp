@@ -294,7 +294,8 @@ public:
     }
 };
 
-server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios) :
+server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios,
+        bool use_old_oleans) :
         m_path(path), m_initial_env(initial_env), m_ios(ios) {
     m_ios.set_regular_channel(std::make_shared<stderr_channel>());
     m_ios.set_diagnostic_channel(std::make_shared<stderr_channel>());
@@ -320,6 +321,7 @@ server::server(unsigned num_threads, search_path const & path, environment const
 
     set_task_queue(m_tq.get());
     m_mod_mgr.reset(new module_mgr(this, m_lt.get_root(), m_path, m_initial_env, m_ios));
+    m_mod_mgr->set_use_old_oleans(use_old_oleans);
     set_global_module_mgr(*m_mod_mgr);
     m_mod_mgr->set_server_mode(true);
     m_mod_mgr->set_save_olean(false);
