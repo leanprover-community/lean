@@ -1,3 +1,13 @@
+v3.11.0c (8 May 2020)
+---------------------
+
+Feature:
+  - Do not unfold irreducible definitions in unification (#211)
+  - Instantiate metavariables in `rw` (#213)
+
+Bug fixes:
+  - Fix docstring of tactic.interactive.rename (#210)
+
 v3.10.0c (2 May 2020)
 ---------------------
 
@@ -9,7 +19,7 @@ Features:
   - Port `rename` tactic from mathlib (#205)
 
 Bug fixes:
-  - `simp [← foo]` removes `foo` from the simp set (#198)
+  - `simp [← foo]` avoids looping if `foo` is already in the simp set (#198)
 
 Changes:
   - `init.category` has been renamed to `init.control` (#202)
