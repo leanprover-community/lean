@@ -45,7 +45,7 @@ meta instance : executor tactic :=
 
 end interactive
 
-meta constant tactic.save_widget : pos → component tactic_state string → tactic unit
+meta constant tactic.save_widget : pos → widget.component tactic_state string → tactic unit
 
 namespace tactic
 

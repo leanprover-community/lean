@@ -187,14 +187,15 @@ void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> cons
 void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers) {
     static unsigned handler_count = 0; // [fixme] threading issues here;
     unsigned handler_id = handler_count++;
-
     events[name] = handler_id;
     handlers[handler_id] = handler;
 }
 
 vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+    // | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
     std::string tag = to_string(cfield(elt, 0));
     vm_obj v_attrs = cfield(elt, 1);
+    vm_obj v_children = cfield(elt, 2);
     json attributes;
     std::map<std::string, unsigned> events;
     optional<vdom> tooltip;
@@ -202,10 +203,11 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
         vm_obj attr = head(v_attrs);
         v_attrs = tail(v_attrs);
         switch (cidx(attr)) {
-            case 0: { // val : string -> string -> attr
+            case 4: { // val {\a} : string -> string -> attr
                 std::string key = to_string(cfield(attr, 0));
                 std::string value = to_string(cfield(attr, 1));
-                if (key == "className" && attributes.find(key) != attributes.end()) { // [hack] className fields should be merged. Should really be handled in lean.
+                // [note] className fields should be merged.
+                if (key == "className" && attributes.find(key) != attributes.end()) {
                     std::string cn = attributes[key];
                     cn += " ";
                     cn += value;
@@ -214,61 +216,59 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     attributes[key] = value;
                 }
                 break;
-            }
-            case 1: {// on_mouse_event : mouse_event_kind -> (unit -> Action) -> html.attr
-                switch (cidx(cfield(attr, 0))) {
-                    case 0: render_event("onClick",      cfield(attr, 1), events, handlers); break;
-                    case 1: render_event("onMouseEnter", cfield(attr, 1), events, handlers); break;
-                    case 2: render_event("onMouseLeave", cfield(attr, 1), events, handlers); break;
+            } case 5: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
+                int mouse_event_kind = cidx(cfield(attr, 0));
+                vm_obj handler = cfield(attr, 1);
+                switch (mouse_event_kind) {
+                    case 0: render_event("onClick",      handler, events, handlers); break;
+                    case 1: render_event("onMouseEnter", handler, events, handlers); break;
+                    case 2: render_event("onMouseLeave", handler, events, handlers); break;
                     default: lean_unreachable();
                 }
                 break;
-            }
-            case 2: { // style : list (string × string) → html.attr
+            } case 6: { // style {a} : list (string × string) → html.attr
                 auto l = cfield(attr, 0);
                 while (!is_simple(l)) {
                     auto h = head(l);
-                    attributes["style"][to_string(cfield(h, 0))] = to_string(cfield(h, 1));
+                    auto k = to_string(cfield(h, 0));
+                    auto v = to_string(cfield(h, 1));
+                    attributes["style"][k] = v;
                     l = tail(l);
                 }
                 break;
-            }
-            case 3: { // tooltip : html Action → html.attr
-                vdom tooltip_child = render_html(cfield(attr, 0), components, handlers, route);
+            } case 7: { // tooltip {a} :  html Action → html.attr
+                auto content = cfield(attr, 0);
+                vdom tooltip_child = render_html(content, components, handlers, route);
                 tooltip = optional<vdom>(tooltip_child);
                 break;
-            }
-            case 4: { // text_change_event : (string -> Action) -> html.attr
-                render_event("onChange", cfield(attr, 0), events, handlers);
+            } case 8: { // text_change_event {a} : (string -> Action) -> html.attr
+                auto handler = cfield(attr, 0);
+                render_event("onChange", handler, events, handlers);
                 break;
-            }
-            default : {
+            } default : {
                 lean_unreachable();
                 break;
             }
         }
     }
-    std::vector<vdom> children = render_html_list(cfield(elt, 2), components, handlers, route);
+    std::vector<vdom> children = render_html_list(v_children, components, handlers, route);
     return vdom(new vdom_element(tag, attributes, events, children, tooltip));
 }
 
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
-        case 0: { // of_element : element -> html
-            vdom elt = render_element(cfield(html, 0), components, handlers, route);
+        case 1: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
+            vdom elt = render_element(html, components, handlers, route);
             return elt;
-        }
-        case 1: { // of_string : string -> html
+        } case 2: { // | of_string    {α : Type} : string → html α
             return vdom(new vdom_string(to_string(cfield(html, 0))));
-        }
-        case 2: { // of_component : {π : Type}: π → component π α → html
+        } case 3: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
             vm_obj props = cfield(html, 0);
-            vm_obj comp = cfield(html, 1);
+            vm_obj comp  = cfield(html, 1);
             component_instance * c = new component_instance(comp, props, route);
             components.push_back(c);
             return vdom(c);
-        }
-        default: {
+        } default: {
             lean_unreachable();
         }
     }
@@ -285,67 +285,7 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
     return elements;
 }
 
-// class vm_vdom : public vm_external {
-//     vdom m_val;
-//     vm_vdom(vdom const & v) : m_val(v) {}
-//     virtual ~vm_vdom() {}
-//     virtual void dealloc() { this->~vm_vdom(); get_vm_allocator().deallocate(sizeof(vm_vdom), this); }
-//     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_vdom(m_val); }
-//     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_vdom))) vm_vdom(m_val); }
-// }
-
-// vm_obj to_obj(vdom const & v) {
-//     return mk_vm_external(new(get_vm_allocator().allocate(sizeof(vm_vdom))) vm_vdom(v));
-// }
-
-// vdom to_vdom(vm_obj const & o) {
-//     lean_vm_check(dynamic_cast<vm_vdom*>(to_external(o)));
-//     return static_cast<vm_vdom*>(to_external(o))->m_val;
-// }
-
-vm_obj vm_of_element(vm_obj const &, vm_obj const & e) {
-    return mk_vm_constructor(0, e);
-}
-
-vm_obj vm_of_string(vm_obj const &, vm_obj const & o) {
-    return mk_vm_constructor(1, o);
-}
-
-vm_obj vm_of_component(vm_obj const &, vm_obj const &, vm_obj const & vprops, vm_obj const & vcomp) {
-    return mk_vm_constructor(2, vprops, vcomp);
-}
-
-vm_obj vm_html_cases(vm_obj const &, vm_obj const &, vm_obj const & fe, vm_obj const & fs, vm_obj const & fc, vm_obj const & html) {
-    switch (cidx(html)) {
-        case 0: return invoke(fe, cfield(html, 0));
-        case 1: return invoke(fs, cfield(html, 0));
-        case 2: return invoke(fc, mk_vm_simple(0), cfield(html, 0), cfield(html, 1));
-        default: lean_unreachable();
-    }
-}
-
-vm_obj vm_component_mk(
-    vm_obj const &, vm_obj const &,
-    vm_obj const &, vm_obj const &,
-    vm_obj const & i,
-    vm_obj const & u,
-    vm_obj const & v) {
-    return mk_vm_constructor(0, i, u, v);
-    }
-
-void initialize_widget() {
-    DECLARE_VM_BUILTIN(name({"html", "of_element"}), vm_of_element);
-    DECLARE_VM_BUILTIN(name({"html", "of_string"}),  vm_of_string);
-    DECLARE_VM_BUILTIN(name({"html", "of_component"}), vm_of_component);
-    DECLARE_VM_BUILTIN(name({"html", "cases"}),  vm_html_cases);
-
-    DECLARE_VM_BUILTIN(name({"component", "mk"}), vm_component_mk);
-    DECLARE_VM_BUILTIN(name({"component", "state"}),   [](vm_obj const &, vm_obj const &) { return mk_vm_simple(0); });
-    DECLARE_VM_BUILTIN(name({"component", "event"}),   [](vm_obj const &, vm_obj const &) { return mk_vm_simple(0); });
-    DECLARE_VM_BUILTIN(name({"component", "init"}),    [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 0); });
-    DECLARE_VM_BUILTIN(name({"component", "update"}),  [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 1); });
-    DECLARE_VM_BUILTIN(name({"component", "view"}),    [](vm_obj const &, vm_obj const &, vm_obj const & c) { return cfield(c, 2); });
-}
+void initialize_widget() {}
 
 void finalize_widget() {}
 

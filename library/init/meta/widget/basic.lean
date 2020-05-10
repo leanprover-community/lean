@@ -1,19 +1,7 @@
 prelude
 import init.function init.data.option.basic init.util
-/-- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
-`component` is effectively implemented as
-
-```
-structure component (Props Action : Type) :=
-(InnerAction : Type)
-(State : Type)
-(init : Props → option State → State)
-(update : Props → State → InnerAction → State × option Action)
-(view : Props → State → html InnerAction)
-```
-
-However the type parameters mean that it has to be implemented natively or the universe is too large.
+/- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
 ## Using widgets.
 
@@ -66,83 +54,142 @@ Some things that would be interesting to implement and which may improve perform
 - a parser from jsx-like expressions?!
 - currently component and html both have to be implemented natively for universe issues, it would be really cool if they could be non-meta and expressed as lean inductive datatypes.
 
- -/
-meta constant component (Props : Type) (Action : Type) : Type
-
-/-- `html` represents an abstract piece of html markup which may have nested `component`s.
-If universe / mutual induction issues were not a problem, the non-native definition would be:
-
-```
-inductive html (Action : Type) : Type
-| of_element : element Action → html
-| of_string : string → html
-| of_component : Π {Props : Type} → Props → component Props Action → html
-```
 -/
-meta constant html (Action : Type) : Type
+
+namespace widget
 
 inductive mouse_event_kind
 | on_click
 | on_mouse_enter
 | on_mouse_leave
 
-/-- An attribute for an html element. For example the `id="mydiv"` in `<div id="mydiv"/>`. React conventions are used.  -/
-meta inductive html.attr (Action : Type) : Type
-| val (name : string) (value : string) : html.attr
-| mouse_event : mouse_event_kind → (unit → Action) → html.attr
-| style : list (string × string) → html.attr -- [NOTE] multiple style attributes will get merged.
-/-- If this is set, then a popper will render containing the given content pointing to this element. -/
-| tooltip : html Action → html.attr
-/-- For use with textboxes, otherwise it won't fire. -/
-| text_change_event : (string → Action) → html.attr
--- [todo] more coming...
--- drop_target : ()
+meta mutual inductive component, html, attr
 
+with component : Type → Type → Type
+|mk {Props : Type}
+    {Action : Type}
+    (InnerAction : Type)
+    (State : Type)
+    (init : Props → option State → State)
+    (update : Props → State → InnerAction → State × option Action)
+    (view : Props → State → list (html InnerAction)) : component Props Action
 
-meta structure html.element (α : Type) : Type :=
-(tag : string)
-(attributes : list (attr α))
-(children : list (html α))
+with html : Type → Type
+| element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
+| of_string    {α : Type} : string → html α
+| of_component {α : Type} {Props : Type} : Props → component Props α → html α
 
-variables {α : Type}
-meta constant html.of_element : html.element α → html α
-meta constant html.of_string : string → html α
-meta constant html.of_component {π : Type} : π → component π α → html α
+with attr : Type → Type
+| val               {α : Type} (name : string) (value : string) : attr α
+| mouse_event       {α : Type} (kind : mouse_event_kind) (handler : unit → α) : attr α
+| style             {α : Type} : list (string × string) → attr α
+| tooltip           {α : Type} : html α → attr α
+| text_change_event {α : Type} (handler : string → α) : attr α
 
-protected meta constant html.cases {C : Type}
-  (element : html.element α → C)
-  (string : string → C)
-  (component : Π (π : Type), π → component π α → C)
- : html α → C
-
-variables {π : Type}
-
-meta constant component.mk
-  -- [decidable_eq π] -- [todo] for fast reconciling.
-  (β σ : Type)
-  (init : π → option σ → σ)
-  (update : π → σ → β → σ × option α)
-  (view : π → σ → list (html β))
-  : component π α
-
-meta constant component.state : component π α → Type
-meta constant component.event : component π α → Type
-meta constant component.init (c : component π α) : (π → option (c.state) → (c.state))
-meta constant component.update (c : component π α) : (π → c.state → c.event → c.state × option α)
-meta constant component.view (c : component π α) : (π → c.state → list (html c.event))
+variables {α : Type} {π : Type}
 
 namespace component
 
 meta def filter_map_action {π α β : Type} (f : α → option β) : component π α → component π β
-| c := mk c.event c.state c.init (λ p s b, let ⟨s,a⟩ := c.update p s b in ⟨s, a >>= f⟩) c.view
+| (component.mk γ σ init update view) := component.mk γ σ init (λ p s b, let ⟨s,a⟩ := update p s b in ⟨s, a >>= f⟩) view
 
 meta def map_action {π α β : Type} (f : α → β) : component π α → component π β
 | c := filter_map_action (pure ∘ f) c
 
 meta def map_props  {π ρ α : Type} (f : ρ → π) : component π α → component ρ α
-| c := component.mk c.event c.state (c.init ∘ f) (c.update ∘ f) (c.view ∘ f)
+| (component.mk γ σ init update view) := component.mk γ σ (init ∘ f) (update ∘ f) (view ∘ f)
 
 meta def stateless {π : Type} (view : π → list (html α)) : component π α :=
 component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p)
 
+meta def ignore_action {π α : Type} : component π α → component π empty
+| c := component.filter_map_action (λ a, none) c
+
+meta def ignore_props {π α : Type} : component unit α → component π α
+| c := component.map_props (λ p, ()) $ c
+
 end component
+
+variables {β : Type}
+
+meta mutual def attr.map_action, html.map_action (f : α → β)
+with attr.map_action : attr α → attr β
+| (attr.val k v) := attr.val k v
+| (attr.style s) := attr.style s
+| (attr.tooltip h) := attr.tooltip $ html.map_action h
+| (attr.mouse_event k a) := attr.mouse_event k (f ∘ a)
+| (attr.text_change_event a) := attr.text_change_event (f ∘ a)
+with html.map_action : html α → html β
+| (html.element t a c) := html.element t (list.map attr.map_action a) (list.map html.map_action c)
+| (html.of_string s) := html.of_string s
+| (html.of_component p c) := html.of_component p $ component.map_action f c
+
+meta instance attr.is_functor : functor attr :=
+{ map := @attr.map_action }
+
+meta instance html.is_functor : functor html :=
+{ map := λ _ _, html.map_action }
+
+namespace html
+
+meta instance to_string_coe [has_to_string β] : has_coe β (html α) :=
+⟨html.of_string ∘ to_string⟩
+
+meta instance : has_emptyc (html α) := ⟨of_string ""⟩
+
+meta instance list_coe : has_coe (html α) (list (html α)) := ⟨λ x, [x]⟩
+
+end html
+
+meta def as_element : html α → option (string × list (attr α) × list (html α))
+| (html.element t a c) := some ⟨t,a,c⟩
+| _ := none
+
+meta def key [has_to_string β] : β → attr α
+| s := attr.val "key" $ to_string s
+
+meta def className : string → attr α
+| s := attr.val "className" $ s
+
+meta def on_click : (unit → α) → attr α
+| a := attr.mouse_event mouse_event_kind.on_click a
+
+meta def on_mouse_enter : (unit → α) → attr α
+| a := attr.mouse_event mouse_event_kind.on_mouse_enter a
+
+meta def on_mouse_leave : (unit → α) → attr α
+| a := attr.mouse_event mouse_event_kind.on_mouse_leave a
+
+/-- Alias for `html.element`. -/
+meta def h : string → list (attr α) → list (html α) → html α := html.element
+/-- Alias for className. -/
+meta def cn : string → attr α := className
+
+meta def button : string → thunk α → html α
+| s t := h "button" [on_click t] [s]
+
+meta def textbox : string → (string → α) → html α
+| s t := h "input" [attr.val "type" "text", attr.val "value" s, attr.text_change_event t] []
+
+/-- If the html is not an of_element it will wrap it in a div. -/
+meta def with_attrs : list (attr α) →  html α → html α
+| a x := match as_element x with
+         | (some ⟨t,as,c⟩) := html.element t (a ++ as) c
+         | none := html.element "div" a [x]
+         end
+
+/-- If the html is not an of_element it will wrap it in a div. -/
+meta def with_attr : attr α →  html α → html α
+| a x := with_attrs [a] x
+
+meta def with_style : string → string → html α → html α
+| k v h := with_attr (attr.style [(k,v)]) h
+
+meta def with_cn : string → html α → html α
+| s h := with_attr (className s) h
+
+meta def with_key {β} [has_to_string β] : β → html α → html α
+| s h := with_attr (key s) h
+
+
+end widget

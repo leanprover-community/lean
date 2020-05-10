@@ -1,2 +1,2 @@
-import .components
+import .examples
 import .widget_interactive

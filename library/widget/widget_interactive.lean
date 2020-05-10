@@ -1,9 +1,9 @@
-
+open widget
 /-- General purpose tactic for use with the widget system, setting the state to a component will render that component,
 so you can use this to show arbitrary components.
 The plan is that this will eventually replace `tactic`.
  -/
-meta def widget_tactic := state_t (component tactic_state string) tactic
+meta def widget_tactic := state_t (widget.component tactic_state string) tactic
 
 namespace widget_tactic
 section
@@ -29,7 +29,6 @@ meta instance : interactive.executor widget_tactic :=
 { config_type := unit,
   execute_with := λ n tac, tac.run (widget.tactic_state_widget) >> pure ()
 }
-open html
 
 meta def depth_test_component : component nat empty :=
 component.stateless (λ n, match n with | 0 := ["0"] | (n+1) := [n, " ", html.of_component n depth_test_component] end)
