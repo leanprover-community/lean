@@ -45,7 +45,7 @@ reserve infixl ` - `:65
 reserve infixl ` * `:70
 reserve infixl ` / `:70
 reserve infixl ` % `:70
-reserve prefix `-`:100
+reserve prefix `-`:75
 reserve infixr ` ^ `:80
 
 reserve infixr ` ∘ `:90  -- function composition
