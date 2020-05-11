@@ -230,53 +230,6 @@ run_cmd script_check_id `nat.le_of_lt
 run_cmd script_check_id `nat.le_refl
 run_cmd script_check_id `ne
 run_cmd script_check_id `neq_of_not_iff
--- run_cmd script_check_id `norm_num.add1
--- run_cmd script_check_id `norm_num.add1_bit0
--- run_cmd script_check_id `norm_num.add1_bit1_helper
--- run_cmd script_check_id `norm_num.add1_one
--- run_cmd script_check_id `norm_num.add1_zero
--- run_cmd script_check_id `norm_num.add_div_helper
--- run_cmd script_check_id `norm_num.bin_add_zero
--- run_cmd script_check_id `norm_num.bin_zero_add
--- run_cmd script_check_id `norm_num.bit0_add_bit0_helper
--- run_cmd script_check_id `norm_num.bit0_add_bit1_helper
--- run_cmd script_check_id `norm_num.bit0_add_one
--- run_cmd script_check_id `norm_num.bit1_add_bit0_helper
--- run_cmd script_check_id `norm_num.bit1_add_bit1_helper
--- run_cmd script_check_id `norm_num.bit1_add_one_helper
--- run_cmd script_check_id `norm_num.div_add_helper
--- run_cmd script_check_id `norm_num.div_eq_div_helper
--- run_cmd script_check_id `norm_num.div_helper
--- run_cmd script_check_id `norm_num.div_mul_helper
--- run_cmd script_check_id `norm_num.mk_cong
--- run_cmd script_check_id `norm_num.mul_bit0_helper
--- run_cmd script_check_id `norm_num.mul_bit1_helper
--- run_cmd script_check_id `norm_num.mul_div_helper
--- run_cmd script_check_id `norm_num.neg_add_neg_helper
--- run_cmd script_check_id `norm_num.neg_add_pos_helper1
--- run_cmd script_check_id `norm_num.neg_add_pos_helper2
--- run_cmd script_check_id `norm_num.neg_mul_neg_helper
--- run_cmd script_check_id `norm_num.neg_mul_pos_helper
--- run_cmd script_check_id `norm_num.neg_neg_helper
--- run_cmd script_check_id `norm_num.neg_zero_helper
--- run_cmd script_check_id `norm_num.nonneg_bit0_helper
--- run_cmd script_check_id `norm_num.nonneg_bit1_helper
--- run_cmd script_check_id `norm_num.nonzero_of_div_helper
--- run_cmd script_check_id `norm_num.nonzero_of_neg_helper
--- run_cmd script_check_id `norm_num.nonzero_of_pos_helper
--- run_cmd script_check_id `norm_num.one_add_bit0
--- run_cmd script_check_id `norm_num.one_add_bit1_helper
--- run_cmd script_check_id `norm_num.one_add_one
--- run_cmd script_check_id `norm_num.pos_add_neg_helper
--- run_cmd script_check_id `norm_num.pos_bit0_helper
--- run_cmd script_check_id `norm_num.pos_bit1_helper
--- run_cmd script_check_id `norm_num.pos_mul_neg_helper
--- run_cmd script_check_id `norm_num.sub_nat_zero_helper
--- run_cmd script_check_id `norm_num.sub_nat_pos_helper
--- run_cmd script_check_id `norm_num.subst_into_div
--- run_cmd script_check_id `norm_num.subst_into_prod
--- run_cmd script_check_id `norm_num.subst_into_subtr
--- run_cmd script_check_id `norm_num.subst_into_sum
 run_cmd script_check_id `not
 run_cmd script_check_id `not_of_iff_false
 run_cmd script_check_id `not_of_eq_false
