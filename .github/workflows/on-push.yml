@@ -145,7 +145,7 @@ jobs:
       working-directory: ./build
     - run: |
         emmake make gmp
-        NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2 lean_js
+        NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2 lean_js_js lean_js_wasm
       working-directory: ./build
     - run: ./script/ci_emscripten_zip.sh
     - name: Release
