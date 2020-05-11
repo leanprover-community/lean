@@ -8,6 +8,7 @@ Auxiliary lemmas used to compare int numerals.
 prelude
 import init.data.int.order
 
+/- 
 namespace int
 /- Auxiliary lemmas for proving that to int numerals are different -/
 
@@ -118,3 +119,5 @@ protected lemma nat_abs_bit1_nonneg_step {a : int} {n : nat} (h₁ : a ≥ 0) (h
 begin rw [← h₂], apply int.nat_abs_bit1_nonneg h₁ end
 
 end int
+
+-/

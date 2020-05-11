@@ -43,9 +43,9 @@ section shift
     begin
       by_cases (i ≤ n),
       { have h₁ := sub_le n i,
-        rw [min_eq_right h], rw [min_eq_left h₁, ← nat.add_sub_assoc h, add_comm, nat.add_sub_cancel] },
+        rw [min_eq_right h], rw [min_eq_left h₁, ← nat.add_sub_assoc h, nat.add_comm, nat.add_sub_cancel] },
       { have h₁ := le_of_not_ge h,
-        rw [min_eq_left h₁, sub_eq_zero_of_le h₁, zero_min, add_zero] }
+        rw [min_eq_left h₁, sub_eq_zero_of_le h₁, zero_min, nat.add_zero] }
     end $
     repeat fill (min n i) ++ₜ take (n-i) x
 
@@ -158,7 +158,9 @@ section conversion
   theorem bits_to_nat_to_list {n : ℕ} (x : bitvec n)
   : bitvec.to_nat x = bits_to_nat (vector.to_list x)  := rfl
 
-  local attribute [simp] add_comm add_assoc add_left_comm mul_comm mul_assoc mul_left_comm
+  local attribute [simp] nat.add_comm nat.add_assoc nat.add_left_comm nat.mul_comm nat.mul_assoc
+  local attribute [simp] nat.zero_add nat.add_zero nat.one_mul nat.mul_one nat.zero_mul nat.mul_zero
+  -- mul_left_comm
 
   theorem to_nat_append {m : ℕ} (xs : bitvec m) (b : bool)
   : bitvec.to_nat (xs ++ₜ b::nil) = bitvec.to_nat xs * 2 + bitvec.to_nat (b::nil) :=
@@ -189,15 +191,10 @@ section conversion
   theorem to_nat_of_nat {k n : ℕ}
   : bitvec.to_nat (bitvec.of_nat k n) = n % 2^k :=
   begin
-    induction k with k generalizing n,
+    induction k with k ih generalizing n,
     { unfold pow nat.pow, simp [nat.mod_one], refl },
     { have h : 0 < 2, { apply le_succ },
-      rw [ of_nat_succ
-         , to_nat_append
-         , k_ih
-         , bits_to_nat_to_bool
-         , mod_pow_succ h],
-      ac_refl, }
+      rw [of_nat_succ, to_nat_append, ih, bits_to_nat_to_bool, mod_pow_succ h, nat.mul_comm] }
   end
 
   protected def to_int : Π {n : nat}, bitvec n → int

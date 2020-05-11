@@ -9,12 +9,12 @@ import init.data.list.qsort
 
 /- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
 lemma nat.lt_add_of_zero_lt_left (a b : nat) (h : 0 < b) : a < a + b :=
-suffices a + 0 < a + b, by {simp at this, assumption},
+show a + 0 < a + b,
 by {apply nat.add_lt_add_left, assumption}
 
 /- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
 lemma nat.zero_lt_one_add (a : nat) : 0 < 1 + a :=
-suffices 0 < a + 1, by {simp [add_comm], assumption},
+suffices 0 < a + 1, by {simp [nat.add_comm], assumption},
 nat.zero_lt_succ _
 
 /- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/

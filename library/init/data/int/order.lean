@@ -8,7 +8,7 @@ The order relation on the integers.
 prelude
 import init.data.int.basic init.data.ordering.basic
 
-local attribute [simp] sub_eq_add_neg
+-- local attribute [simp] sub_eq_add_neg
 
 namespace int
 
@@ -39,6 +39,8 @@ int.cases_on a (assume n, or.inl trivial) (assume n, or.inr trivial)
 
 lemma le.intro_sub {a b : ℤ} {n : ℕ} (h : b - a = n) : a ≤ b :=
 show nonneg (b - a), by rw h; trivial
+
+/-
 
 lemma le.intro {a b : ℤ} {n : ℕ} (h : a + n = b) : a ≤ b :=
 le.intro_sub (by rw [← h, add_comm]; simp)
@@ -303,5 +305,7 @@ eq_of_mul_eq_mul_right Hpos (by rw [one_mul, H])
 
 theorem eq_one_of_mul_eq_self_right {a b : ℤ} (Hpos : b ≠ 0) (H : b * a = b) : a = 1 :=
 eq_of_mul_eq_mul_left Hpos (by rw [mul_one, H])
+
+-/
 
 end int

@@ -33,7 +33,11 @@ lemma length_cons (a : α) (l : list α) : length (a :: l) = length l + 1 :=
 rfl
 
 @[simp] lemma length_append (s t : list α) : length (s ++ t) = length s + length t :=
-by induction s; simp [*, add_comm, add_left_comm]
+begin
+  induction s,
+  { show length t = 0 + length t, by rw nat.zero_add },
+  { simp [*, nat.add_comm, nat.add_left_comm] },
+end
 
 @[simp] lemma length_repeat (a : α) (n : ℕ) : length (repeat a n) = n :=
 by induction n; simp [*]; refl
@@ -186,7 +190,7 @@ by simp [min_le_left]
 
 theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length (remove_nth l i) = length l - 1
 | []      _     h := rfl
-| (x::xs) 0     h := by simp [remove_nth, -add_comm]
+| (x::xs) 0     h := by simp [remove_nth]
 | (x::xs) (i+1) h := have i < length xs, from lt_of_succ_lt_succ h,
   by dsimp [remove_nth]; rw [length_remove_nth xs i this, nat.sub_add_cancel (lt_of_le_of_lt (nat.zero_le _) this)]; refl
 

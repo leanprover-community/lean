@@ -201,7 +201,7 @@ lemma depth_max' : ∀ {c n} {t : rbnode α}, is_red_black t c n → depth max t
 begin
   intros c n' t h,
   induction h,
-  case leaf_rb { simp [max, depth, upper] },
+  case leaf_rb { simp [max, depth, upper, nat.mul_zero] },
   case red_rb {
     suffices : succ (max (depth max h_l) (depth max h_r)) ≤ 2 * h_n + 1,
     { simp [depth, upper, *] at * },
@@ -211,7 +211,7 @@ begin
     have : depth max h_l ≤ 2*h_n + 1, from le_trans h_ih_rb_l (upper_le _ _),
     have : depth max h_r ≤ 2*h_n + 1, from le_trans h_ih_rb_r (upper_le _ _),
     suffices new : max (depth max h_l) (depth max h_r) + 1 ≤ 2 * h_n + 2*1,
-    { simp [depth, upper, succ_eq_add_one, left_distrib, *] at * },
+    { simp [depth, upper, succ_eq_add_one, nat.left_distrib, *] at * },
     apply succ_le_succ, apply max_le; assumption
   }
 end

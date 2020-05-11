@@ -155,7 +155,7 @@ monad_io_file_system.write
 
 def get_char (h : handle) : io char :=
 do b ← read h 1,
-   if h : b.size = 1 then return $ b.read ⟨0, h.symm ▸ zero_lt_one⟩
+   if h : b.size = 1 then return $ b.read ⟨0, h.symm ▸ nat.zero_lt_one⟩
    else io.fail "get_char failed"
 
 def get_line : handle → io char_buffer :=

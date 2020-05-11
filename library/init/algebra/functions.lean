@@ -4,13 +4,15 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura
 -/
 prelude
-import init.algebra.ordered_field
+
+-- import init.algebra.ordered_field
+import init.algebra.order init.meta
 
 universe u
 
 definition min {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then a else b
 definition max {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then b else a
-definition abs {α : Type u} [decidable_linear_ordered_add_comm_group α] (a : α) : α := max a (-a)
+-- definition abs {α : Type u} [decidable_linear_ordered_add_comm_group α] (a : α) : α := max a (-a)
 
 section
 open decidable tactic
@@ -129,7 +131,7 @@ or.elim (le_or_gt a b)
   (assume h : a > b, by min_tac a b)
 end
 
-
+/-
 section
 variables {α : Type u} [decidable_linear_ordered_cancel_add_comm_monoid α]
 
@@ -482,3 +484,4 @@ lemma abs_one_div (a : α) : abs (1 / a) = 1 / abs a :=
 by rw [abs_div, abs_of_nonneg (zero_le_one : 1 ≥ (0 : α))]
 
 end discrete_linear_ordered_field
+-/
