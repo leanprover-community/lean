@@ -144,7 +144,7 @@ instance : has_to_string case_tag :=
 /--
 The constructor names associated with a case tag.
 -/
-meta def names : case_tag → list name
+meta def case_names : case_tag → list name
 | (pi ns _) := ns
 | (hyps ns _) := ns
 
@@ -282,7 +282,7 @@ nil                (fuzzy match)
 ```
 -/
 meta def match_tag (ns : list name) (t : case_tag) : match_result :=
-names_match ns.reverse t.names
+names_match ns.reverse t.case_names
 
 end case_tag
 end interactive
