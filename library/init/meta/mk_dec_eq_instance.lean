@@ -100,7 +100,7 @@ do
   else dec_eq_diff_constructor
 
 private meta def dec_eq_case_1 (I_name : name) (F_name : name) : tactic unit :=
-intro `w >>= cases >> all_goals (dec_eq_case_2 I_name F_name)
+intro `w >>= cases >> all_goals' (dec_eq_case_2 I_name F_name)
 
 meta def mk_dec_eq_instance_core : tactic unit :=
 do I_name ← get_dec_eq_type_name,
@@ -116,7 +116,7 @@ do I_name ← get_dec_eq_type_name,
    else intro v_name >> return (),
    -- Apply cases to first element of type (I ...)
    get_local v_name >>= cases,
-   all_goals (dec_eq_case_1 I_name F_name)
+   all_goals' (dec_eq_case_1 I_name F_name)
 
 meta def mk_dec_eq_instance : tactic unit :=
 do env ← get_env,

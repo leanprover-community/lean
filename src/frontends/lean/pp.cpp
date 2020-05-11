@@ -1716,8 +1716,8 @@ static bool is_emptyc(expr const & e) {
 
 static bool is_singleton(expr const & e) {
     return
-        is_constant(get_app_fn(e), get_singleton_name()) &&
-        get_app_num_args(e) == 5;
+        is_constant(get_app_fn(e), get_has_singleton_singleton_name()) &&
+        get_app_num_args(e) == 4;
 }
 
 static bool is_insert(expr const & e) {

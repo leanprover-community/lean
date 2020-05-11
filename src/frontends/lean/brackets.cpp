@@ -39,7 +39,7 @@ static expr parse_set_of(parser & p, pos_info const & pos, expr const & local) {
 
 /* Create singletoncollection for '{' expr '}' */
 static expr mk_singleton(parser & p, pos_info const & pos, expr const & e) {
-    return p.mk_app(p.save_pos(mk_constant(get_singleton_name()), pos), e, pos);
+    return p.mk_app(p.save_pos(mk_constant(get_has_singleton_singleton_name()), pos), e, pos);
 }
 
 /* Parse rest of the insertable '{' expr ... */
