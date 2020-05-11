@@ -1,6 +1,6 @@
 non_exhaustive_error.lean:2:4: error: non-exhaustive match, the following cases are missing:
 g (1, _)
-g (nat.succ (nat.succ _), _)
+g ((nat.succ _).succ, _)
 non_exhaustive_error.lean:2:0: warning: declaration 'g' uses sorry
 non_exhaustive_error.lean:6:11: error: non-exhaustive match, the following cases are missing:
 f "hello world" _

@@ -1,19 +1,19 @@
 bad_error1.lean:4:22: error: unexpected argument at application
-  nat.bit1_ne_bit0 n
+  n.bit1_ne_bit0
 given argument
   n
 expected argument
   m
 bad_error1.lean:4:22: error: unexpected argument at application
-  nat.bit1_ne_bit0 n m
+  n.bit1_ne_bit0 m
 given argument
   m
 expected argument
   n
 bad_error1.lean:4:13: error: type mismatch at application
-  ne.symm (nat.bit1_ne_bit0 n m)
+  (n.bit1_ne_bit0 m).symm
 term
-  nat.bit1_ne_bit0 n m
+  n.bit1_ne_bit0 m
 has type
   bit1 n ≠ bit0 m
 but is expected to have type

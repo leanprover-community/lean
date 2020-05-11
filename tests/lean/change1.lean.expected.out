@@ -1,6 +1,6 @@
 a b : ℕ,
 Heq : a = b
-⊢ succ (succ a) = succ (b + 1)
+⊢ a.succ.succ = (b + 1).succ
 ---- after change ----
 a b : ℕ,
 Heq : a = b
