@@ -650,7 +650,7 @@ do ⟨exact_matches, suffix_matches⟩ ← goals_with_matching_tag ns,
      "Invalid `case`: there is no goal tagged with suffix {ns}."
    | [] , [g] := pure g
    | [] , _   :=
-     let tags : list (list name) := suffix_matches.map (λ ⟨_, t⟩, t.names.reverse) in
+     let tags : list (list name) := suffix_matches.map (λ ⟨_, t⟩, t.case_names.reverse) in
      fail format!
      "Invalid `case`: there is more than one goal tagged with suffix {ns}.\nMatching tags: {tags}"
    | [g], _   := pure g
