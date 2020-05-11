@@ -102,7 +102,8 @@ meta def map_props  {π ρ α : Type} (f : ρ → π) : component π α → comp
 meta def stateless {π : Type} (view : π → list (html α)) : component π α :=
 component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p)
 
-meta def ignore_action {π α : Type} : component π α → component π empty
+/-- Returns a component that will never trigger an action. -/
+meta def ignore_action {π α β : Type} : component π α → component π β
 | c := component.filter_map_action (λ a, none) c
 
 meta def ignore_props {π α : Type} : component unit α → component π α

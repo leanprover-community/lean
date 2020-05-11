@@ -7,7 +7,12 @@ import init.meta.tactic
 import init.meta.expr_address
 
 /-- An alternative to format that keeps structural information about the expression.
-For lack of a better name I called it `magic`, rename suggestions welcome. -/
+For lack of a better name I called it `magic`, rename suggestions welcome.
+
+On tag_expr, note that the given `expr` is _not_ necessarily the subexpression of the root expression that `tactic_state.pp_magic` was
+called with. For example if the subexpression is under a binder then all of the `expr.var 0`s will be replaced with
+a local not in the local context with the name and type set to that of the binder.
+-/
 meta inductive magic
 | tag_expr : expr.address → expr → magic → magic
 | compose : magic → magic → magic
@@ -32,6 +37,12 @@ meta constant tactic_state.pp_magic   : tactic_state → expr → magic
 
 meta def tactic.pp_magic : expr → tactic magic
 | e := tactic.read >>= λ ts, pure $ tactic_state.pp_magic ts e
+
+meta def tactic.run_simple {α} : tactic_state → tactic α → option α
+| ts t := match t ts with
+          | (interaction_monad.result.success a ts') := some a
+          | (interaction_monad.result.exception _ _ _) := none
+          end
 
 namespace widget
 
@@ -80,7 +91,7 @@ meta def view {γ} (tooltip_component : component (expr × expr.address) (action
   (expr × expr.address) → sm → list (html (action γ))
 | ⟨ce, current_address⟩ (sm.tag_expr ea e m) :=
   let new_address := current_address ++ ea in
-  let select_attrs : list (attr (action γ)) := if some new_address = select_address then [className "select bg-light-blue"] else [] in
+  let select_attrs : list (attr (action γ)) := if some new_address = select_address then [className "highlight"] else [] in
   let click_attrs  : list (attr (action γ)) := if some new_address = click_address  then [tooltip $ html.of_component (e, new_address) $ tooltip_component] else [] in
   let as := [className "expr-boundary", key (expr.hash e)] ++ select_attrs ++ click_attrs in
   [h "span" as $ view (e, new_address) m]
@@ -91,11 +102,6 @@ meta def view {γ} (tooltip_component : component (expr × expr.address) (action
     on_click (λ _, action.on_click ca)
   ] [html.of_string s]]
 
-meta def tactic.run_simple {α} : tactic_state → tactic α → option α
-| ts t := match t ts with
-          | (interaction_monad.result.success a ts') := some a
-          | (interaction_monad.result.exception _ _ _) := none
-          end
 
 /-- Make an interactive expression. -/
 meta def mk {γ} (ts : tactic_state) (tooltip : component (expr × expr.address) γ) : component expr γ :=
@@ -125,40 +131,37 @@ component.mk
       ]
   )
 
+/-- Render the implicit arguments for an expression in fancy, little pills. -/
+meta def implicit_arg_list (ts : tactic_state) (tooltip : component (expr × expr.address) empty) (e : expr) : html empty :=
+h "div" []
+  ( (h "span" [className "bg-blue br3 ma1 ph2 white"] [html.of_component (expr.get_app_fn e) $ mk ts (tooltip)]) ::
+    list.map (λ a, h "span" [className "bg-gray br3 ma1 ph2 white"] [html.of_component a $ mk ts (tooltip)]) (expr.get_app_args e)
+  )
+
 meta def type_tooltip (ts : tactic_state) : component (expr × expr.address) empty :=
 component.stateless (λ ⟨e,ea⟩,
-  -- hopefully this doesn't crash if the locals aren't on the lctx or I'm in trouble.
-  match tactic.run_simple ts (tactic.infer_type e) with
-  | none := "error getting type at " ++ (repr $ ea)
-  | (some t) :=
-      let args := list.map (tactic_state.format_expr ts)  in
-      [h "div" [] [
-        h "div" [] [expr.to_string t],
-        h "hr" [] [],
-        h "div" []
-          ( (h "span" [className "bg-blue br3 ma1 ph2"] [html.of_component (expr.get_app_fn e) $ mk ts (type_tooltip)]) ::
-            list.map (λ a, h "span" [className "bg-gray br3 ma1 ph2"] [html.of_component a $ mk ts (type_tooltip)]) (expr.get_app_args e)
-          ),
-        h "hr" [] [],
-        h "div" [className "gray"] [
-          ea.to_string
+  match tactic.run_simple ts (do
+    y ← tactic.infer_type e,
+    pure [
+        h "div" [] [
+          h "div" [] [html.of_component y $ mk ts type_tooltip],
+          h "hr" [] [],
+          implicit_arg_list ts type_tooltip e,
+          h "hr" [] [],
+          h "div" [className "gray"] [
+            ea.to_string
+          ]
         ]
-      ]]
-  end
-)
-
-meta def dsimp_tooltip (ts : tactic_state) : component (expr × expr.address) empty :=
-component.stateless (λ ⟨e,ea⟩,
-  -- hopefully this doesn't crash if the locals aren't on the lctx or I'm in trouble.
-  match tactic.run_simple ts (tactic.infer_type e) with
+      ]
+  ) with
   | none := "error getting type at " ++ (repr $ ea)
-  | (some t) := expr.to_string t
+  | (some t) := t
   end
 )
 
 end interactive_expression
 
-meta def html.of_name : name → html empty
+meta def html.of_name {α : Type} : name → html α
 | n := html.of_string $ name.to_string n
 
 open tactic
@@ -176,7 +179,7 @@ meta def tactic_render : tactic (html empty) := do
       pure
         $ h "tr" [key $ to_string $ expr.local_uniq_name lc] [
             h "td" [] [html.of_name pn],
-            h "td" [] [" : "],
+            h "td" [] [html.of_string " : "],
             h "td" [] [html.of_component y $ interactive_expression.mk ts (interactive_expression.type_tooltip ts)]
         ]
     ),
@@ -190,7 +193,7 @@ meta def tactic_render : tactic (html empty) := do
        ]]
     ]
   ),
-  pure $ h "ul" [className "list m2 bg-light-gray near-black"]
+  pure $ h "ul" [className "list m2"]
        $ list.map (h "li" [className "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30"])
        $ list.map (λ x, [x])
        $ hs
