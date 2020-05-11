@@ -1748,7 +1748,7 @@ auto pretty_fn::pp_explicit_collection(buffer<expr> const & elems) -> result {
     } else {
         format r= pp_child(elems[elems.size() - 1], 0).fmt();
         for (unsigned i = elems.size() - 1; i > 0;) {
-            -- i;
+            --i;
             r += nest(m_indent, comma() + line() + pp_child(elems[i], 0).fmt());
         }
         r = group(bracket("{", r, "}"));
