@@ -877,6 +877,11 @@ expr mk_absurd(abstract_type_context & ctx, expr const & t, expr const & e, expr
     return mk_app(mk_constant(get_absurd_name(), {t_lvl}), e_type, t, e, not_e);
 }
 
+bool is_type(expr const & e) {
+    buffer<expr> telescope;
+    return is_sort(to_telescope(true, e, telescope, optional<binder_info>()));
+}
+
 bool is_exists(expr const & e, expr & A, expr & p) {
     if (is_app_of(e, get_Exists_name(), 2)) {
         A = app_arg(app_fn(e));

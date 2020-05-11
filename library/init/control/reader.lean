@@ -7,7 +7,7 @@ The reader monad transformer for passing immutable state.
 -/
 
 prelude
-import init.category.lift init.category.id init.category.alternative init.category.except
+import init.control.lift init.control.id init.control.alternative init.control.except
 universes u v w
 
 /-- An implementation of [ReaderT](https://hackage.haskell.org/package/transformers-0.5.5.0/docs/Control-Monad-Trans-Reader.html#t:ReaderT) -/
@@ -77,11 +77,11 @@ end reader_t
     Note: This class can be seen as a simplification of the more "principled" definition
     ```
     class monad_reader (ρ : out_param (Type u)) (n : Type u → Type u) :=
-    (lift {} {α : Type u} : (∀ {m : Type u → Type u} [monad m], reader_t ρ m α) → n α)
+    (lift {α : Type u} : (∀ {m : Type u → Type u} [monad m], reader_t ρ m α) → n α)
     ```
     -/
 class monad_reader (ρ : out_param (Type u)) (m : Type u → Type v) :=
-(read {} : m ρ)
+(read : m ρ)
 
 export monad_reader (read)
 
@@ -100,11 +100,11 @@ instance {ρ : Type u} {m : Type u → Type v} [monad m] : monad_reader ρ (read
     Note: This class can be seen as a simplification of the more "principled" definition
     ```
     class monad_reader_functor (ρ ρ' : out_param (Type u)) (n n' : Type u → Type u) :=
-    (map {} {α : Type u} : (∀ {m : Type u → Type u} [monad m], reader_t ρ m α → reader_t ρ' m α) → n α → n' α)
+    (map {α : Type u} : (∀ {m : Type u → Type u} [monad m], reader_t ρ m α → reader_t ρ' m α) → n α → n' α)
     ```
     -/
 class monad_reader_adapter (ρ ρ' : out_param (Type u)) (m m' : Type u → Type v) :=
-(adapt_reader {} {α : Type u} : (ρ' → ρ) → m α → m' α)
+(adapt_reader {α : Type u} : (ρ' → ρ) → m α → m' α)
 export monad_reader_adapter (adapt_reader)
 
 section

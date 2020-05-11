@@ -768,19 +768,15 @@ end
 /- inhabited -/
 
 class inhabited (α : Sort u) :=
-(default : α)
+(default [] : α)
 
-def default (α : Sort u) [inhabited α] : α :=
-inhabited.default α
+export inhabited (default)
 
 @[inline, irreducible] def arbitrary (α : Sort u) [inhabited α] : α :=
 default α
 
 instance prop.inhabited : inhabited Prop :=
 ⟨true⟩
-
-instance fun.inhabited (α : Sort u) {β : Sort v} [h : inhabited β] : inhabited (α → β) :=
-inhabited.rec_on h (λ b, ⟨λ a, b⟩)
 
 instance pi.inhabited (α : Sort u) {β : α → Sort v} [Π x, inhabited (β x)] : inhabited (Π x, β x) :=
 ⟨λ a, default (β a)⟩
@@ -880,17 +876,6 @@ lemma if_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidab
                (h_c : b ↔ c) (h_t : x = u) (h_e : y = v) :
         ite b x y = ite c u v :=
 @if_ctx_congr α b c dec_b dec_c x y u v h_c (λ h, h_t) (λ h, h_e)
-
-lemma if_ctx_simp_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] {x y u v : α}
-                        (h_c : b ↔ c) (h_t : c → x = u) (h_e : ¬c → y = v) :
-        ite b x y = (@ite c (decidable_of_decidable_of_iff dec_b h_c) α u v) :=
-@if_ctx_congr α b c dec_b (decidable_of_decidable_of_iff dec_b h_c) x y u v h_c h_t h_e
-
-@[congr]
-lemma if_simp_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] {x y u v : α}
-                    (h_c : b ↔ c) (h_t : x = u) (h_e : y = v) :
-        ite b x y = (@ite c (decidable_of_decidable_of_iff dec_b h_c) α u v) :=
-@if_ctx_simp_congr α b c dec_b x y u v h_c (λ h, h_t) (λ h, h_e)
 
 @[simp]
 lemma if_true {α : Sort u} {h : decidable true} (t e : α) : (@ite true h α t e) = t :=

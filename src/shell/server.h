@@ -108,7 +108,8 @@ class server : public module_vfs {
     json info(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos);
 
 public:
-    server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios);
+    server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,
+        bool use_old_oleans = false);
     ~server();
 
     std::shared_ptr<module_info> load_module(module_id const & id, bool can_use_olean) override;

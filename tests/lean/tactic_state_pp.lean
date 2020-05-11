@@ -5,7 +5,7 @@ inductive Vec (α : Type u) : nat → Type u
 | cons : ∀ {n}, α → Vec n → Vec (nat.succ n)
 
 constant f {α : Type u} {n : nat} : Vec α n → nat
-axiom fax1 (α : Type u) : f (Vec.nil α) = 0
+axiom fax1 (α : Type u) : f (Vec.nil : Vec α 0) = 0
 axiom fax2 {α : Type u} {n : nat} (v : Vec α (nat.succ n)) : f v = 1
 
 open tactic

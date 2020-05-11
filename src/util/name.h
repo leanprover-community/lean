@@ -141,6 +141,7 @@ public:
         \brief Return the prefix of a hierarchical name
     */
     name get_prefix() const { return is_atomic() ? name() : name(m_ptr->m_prefix); }
+    name drop_prefix() const;
     /** \brief Given a name of the form a_1.a_2. ... .a_k, return a_1 if k >= 1, or the empty name otherwise. */
     name get_root() const;
     /** \brief Convert this hierarchical name into a string. */

@@ -16,11 +16,11 @@ begin
   simp [foo],
 end
 
-example : 8 + 4 ≤ 12 :=
-begin
-  transitivity,
-  apply nat.add_le_add_right,
-  { apply le_refl, },
-
-  rw [norm_num.bit0_add_bit0],
-end
+-- example : 8 + 4 ≤ 12 :=
+-- begin
+--   transitivity,
+--   apply nat.add_le_add_right,
+--   { apply le_refl, },
+-- 
+--   rw [norm_num.bit0_add_bit0],
+-- end

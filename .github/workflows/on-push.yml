@@ -1,0 +1,184 @@
+name: lean core build
+
+on:
+  push:
+    branches-ignore:
+      # ignore tmp branches used by bors
+      - 'staging.tmp*'
+      - 'trying.tmp*'
+      - 'staging*.tmp'
+    tags:
+      - '*'
+
+jobs:
+  build_ubuntu_job:
+    runs-on: ubuntu-latest
+    name: Build linux ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release, Debug]
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - name: Configure
+        run: |
+          cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
+        working-directory: ./build
+      - name: Build
+        run: |
+          make -j2
+          cpack
+        working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        with:
+          files: build/lean-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: lean-nightly-linux-${{ matrix.build_type }}
+          path: ./build/lean-*
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
+  build_macos_job:
+    runs-on: macos-latest
+    name: Build macos ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release, Debug]
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - name: Install dependencies
+        run: |
+          brew install coreutils
+      - name: Configure
+        run: |
+          cmake ../src -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12
+        working-directory: ./build
+      - name: Build
+        run: |
+          make -j2
+          cpack
+        working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        with:
+          files: build/lean-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: lean-nightly-macos-${{ matrix.build_type }}
+          path: ./build/lean-*
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
+  build_windows_job:
+    runs-on: windows-latest
+    name: Build windows ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # not enough disk space for debug build :-(
+        build_type: [Release]
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - uses: numworks/setup-msys2@v1
+        with:
+          update: true
+      - name: Install dependencies
+        run: |
+          choco upgrade git -y --no-progress
+          msys2do pacman -S --noconfirm base-devel --needed
+          msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
+      - name: Configure
+        run: |
+          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
+        working-directory: ./build
+      - name: Build
+        run: |
+          msys2do make -j2
+          msys2do cpack
+        working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        with:
+          files: build/lean-*-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: lean-nightly-windows-${{ matrix.build_type }}
+          path: ./build/lean-*
+      - name: Test
+        run: |
+          msys2do ctest -j2 --output-on-failure
+        working-directory: ./build
+
+
+  build_emscripten_job:
+    runs-on: ubuntu-latest
+    container: trzeci/emscripten:sdk-incoming-64bit
+    name: Build emscripten
+    steps:
+    - name: Install dependencies
+      run: |
+        apt-get update
+        apt-get install -y m4
+    - uses: actions/checkout@v1
+    - run: mkdir -p ./build
+    - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
+      working-directory: ./build
+    - run: |
+        emmake make gmp
+        NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2
+      working-directory: ./build
+    - run: ./script/ci_emscripten_zip.sh
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: build/lean-*-browser.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/upload-artifact@v2
+      with:
+        name: lean-nightly-emscripten
+        path: ./build/lean-*-browser.zip
+
+  # takes a long time (70 minutes) and a few tests fail
+  #
+  # test_emscripten_job:
+  #   runs-on: ubuntu-latest
+  #   container: trzeci/emscripten:sdk-incoming-64bit
+  #   name: Test emscripten
+  #   steps:
+  #   - name: Install dependencies
+  #     run: |
+  #       apt-get update
+  #       apt-get install -y m4
+  #   - uses: actions/checkout@v1
+  #   - run: mkdir -p ./build
+  #   - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
+  #     working-directory: ./build
+  #   - run: |
+  #       emmake make gmp
+  #       NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2
+  #     working-directory: ./build
+  #   - name: Test
+  #     run: ctest -j2 --output-on-failure
+  #     working-directory: ./build

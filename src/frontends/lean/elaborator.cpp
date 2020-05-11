@@ -2311,7 +2311,7 @@ expr elaborator::mk_aux_meta_def(expr const & e, expr const & ref) {
     if (!is_constant(new_c)) {
         throw elaborator_exception(ref, "failed to create auxiliary definition");
     }
-    m_env = vm_compile(m_env, m_env.get(const_name(new_c)));
+    m_env = vm_compile(m_env, m_ctx.get_options(), m_env.get(const_name(new_c)));
     m_ctx.set_env(m_env);
     m_ctx.set_mctx(mctx);
     return new_c;
@@ -3171,7 +3171,7 @@ class visit_structure_instance_fn {
                          * Note that `ensure_has_type` has already unified their types, so this should not result
                          * in any missed unifications.
                          */
-                        lean_always_assert(m_ctx.match(e, *val2));
+                        m_ctx.match(e, *val2);
                         trace_elab_detail(tout() << "inserted field '" << S_fname << "' with value '" << *val2 << "'"
                                                  << "\n";)
                         progress = true;
@@ -3545,8 +3545,7 @@ expr elaborator::visit_suffices_expr(expr const & e, optional<expr> const & expe
 }
 
 static expr mk_emptyc(expr const & src) {
-    return copy_tag(src, mk_app(copy_tag(src, mk_constant(get_has_emptyc_emptyc_name())),
-                                copy_tag(src, mk_expr_placeholder())));
+    return copy_tag(src, mk_constant(get_has_emptyc_emptyc_name()));
 }
 
 expr elaborator::visit_emptyc_or_emptys(expr const & e, optional<expr> const & expected_type) {

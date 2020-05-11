@@ -67,10 +67,14 @@ static void display_string_literal(std::ostream & out, std::string const & s) {
     out << "\"";
 }
 
-format pp_string_literal(std::string const & s) {
+std::string quote_string_literal(std::string const & s) {
     std::ostringstream out;
     display_string_literal(out, s);
-    return format(out.str());
+    return out.str();
+}
+
+format pp_string_literal(std::string const & s) {
+    return format(quote_string_literal(s));
 }
 
 format pp_char_literal(unsigned c) {

@@ -105,22 +105,6 @@ levels collect_local_nonvar_levels(parser & p, level_param_names const & ls) {
     return to_list(section_ls_buffer.begin(), section_ls_buffer.end());
 }
 
-// Version of collect_locals(expr const & e, collected_locals & ls) that ignores local constants occurring in
-// tactics.
-static void collect_locals_ignoring_tactics(expr const & e, collected_locals & ls) {
-    if (!has_local(e))
-        return;
-    for_each(e, [&](expr const & e, unsigned) {
-            if (!has_local(e))
-                return false;
-            // if (is_by(e))
-            // return false; // do not visit children
-            if (is_local(e))
-                ls.insert(e);
-            return true;
-        });
-}
-
 void remove_local_vars(parser const & p, buffer<expr> & locals) {
     unsigned j = 0;
     for (unsigned i = 0; i < locals.size(); i++) {
@@ -137,20 +121,6 @@ levels remove_local_vars(parser const & p, levels const & ls) {
     return filter(ls, [&](level const & l) {
             return is_placeholder(l) || !is_param(l) || !p.is_local_level_variable(param_id(l));
         });
-}
-
-// TODO(Leo): delete these headers
-void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & locals);
-void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps);
-
-list<expr> locals_to_context(expr const & e, parser const & p) {
-    collected_locals ls;
-    collect_locals_ignoring_tactics(e, ls);
-    collect_annonymous_inst_implicit(p, ls);
-    buffer<expr> locals;
-    sort_locals(ls.get_collected(), p, locals);
-    std::reverse(locals.begin(), locals.end());
-    return to_list(locals.begin(), locals.end());
 }
 
 expr mk_local_ref(name const & n, levels const & ctx_ls, unsigned num_ctx_params, expr const * ctx_params) {
@@ -512,19 +482,22 @@ void initialize_frontend_lean_util() {
                                 });
 }
 
-environment compile_expr(environment const & env, name const & n, level_param_names const & ls, expr const & type, expr const & e, pos_info const & pos) {
+environment compile_expr(environment const & env, options const & opts,
+                         name const & n, level_param_names const & ls,
+                         expr const & type, expr const & e, pos_info const & pos) {
     environment new_env = env;
     bool use_conv_opt   = true;
     bool is_trusted     = false;
     auto cd = check(new_env, mk_definition(new_env, n, ls, type, e, use_conv_opt, is_trusted));
     new_env = new_env.add(cd);
     new_env = add_transient_decl_pos_info(new_env, n, pos);
-    return vm_compile(new_env, new_env.get(n));
+    return vm_compile(new_env, opts, new_env.get(n));
 }
 
-vm_obj eval_closed_expr(environment const & env, name const & n, expr const & type, expr const & e, pos_info const & pos) {
-    environment new_env = compile_expr(env, n, {}, type, e, pos);
-    vm_state vm(new_env, {});
+vm_obj eval_closed_expr(environment const & env, options const & opts,
+                        name const & n, expr const & type, expr const & e, pos_info const & pos) {
+    environment new_env = compile_expr(env, opts, n, {}, type, e, pos);
+    vm_state vm(new_env, opts);
     return vm.invoke(n, 0, nullptr);
 }
 

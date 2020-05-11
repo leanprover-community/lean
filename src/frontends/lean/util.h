@@ -38,15 +38,11 @@ bool is_eqn_prefix(parser & p, bool bar_only = false);
 levels collect_local_nonvar_levels(parser & p, level_param_names const & ls);
 /** \brief Collect local constants occurring in \c type and \c value, sort them, and store in ctx_ps */
 void collect_locals(expr const & type, expr const & value, parser const & p, buffer<expr> & ctx_ps);
-void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & ls);
 name_set collect_univ_params_ignoring_tactics(expr const & e, name_set const & ls = name_set());
-/** \brief Copy the local names to \c ps, then sort \c ps (using the order in which they were declared). */
-void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps);
 /** \brief Remove from \c ps local constants that are tagged as variables. */
 void remove_local_vars(parser const & p, buffer<expr> & ps);
 /** \brief Remove from \c ls any universe level that is tagged as variable in \c p */
 levels remove_local_vars(parser const & p, levels const & ls);
-list<expr> locals_to_context(expr const & e, parser const & p);
 /** \brief Create the term <tt>(as_atomic (@n.{ls} @params[0] ... @params[num_params-1]))</tt>
     When we declare \c n inside of a context, the parameters and universes are fixed.
     That is, when the user writes \c n inside the section she is really getting the term returned by this function.
@@ -134,8 +130,10 @@ bool is_anonymous_field_notation(expr const & e);
 name const & get_field_notation_field_name(expr const & e);
 unsigned get_field_notation_field_idx(expr const & e);
 
-environment compile_expr(environment const & env, name const & n, level_param_names const & ls, expr const & type, expr const & e, pos_info const & pos);
-vm_obj eval_closed_expr(environment const & env, name const & n, expr const & type, expr const & e, pos_info const & pos);
+environment compile_expr(environment const & env, options const & opts, name const & n,
+                         level_param_names const & ls, expr const & type, expr const & e, pos_info const & pos);
+vm_obj eval_closed_expr(environment const & env, options const & opts, name const & n,
+                        expr const & type, expr const & e, pos_info const & pos);
 
 expr mk_lean_list(parser & p, buffer<expr> const & es, pos_info const & pos);
 expr mk_lean_list(buffer<expr> const & es);

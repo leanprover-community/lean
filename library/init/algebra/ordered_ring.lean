@@ -15,11 +15,23 @@ set_option old_structure_cmd true
 universe u
 
 class ordered_semiring (α : Type u)
-  extends semiring α, ordered_cancel_comm_monoid α :=
-(mul_le_mul_of_nonneg_left:  ∀ a b c : α, a ≤ b → 0 ≤ c → c * a ≤ c * b)
-(mul_le_mul_of_nonneg_right: ∀ a b c : α, a ≤ b → 0 ≤ c → a * c ≤ b * c)
+  extends semiring α, ordered_cancel_add_comm_monoid α :=
 (mul_lt_mul_of_pos_left:     ∀ a b c : α, a < b → 0 < c → c * a < c * b)
 (mul_lt_mul_of_pos_right:    ∀ a b c : α, a < b → 0 < c → a * c < b * c)
+
+lemma ordered_semiring.mul_le_mul_of_nonneg_left {α} [s : ordered_semiring α] (a b c : α) (h₁ : a ≤ b) (h₂ : 0 ≤ c) : c * a ≤ c * b :=
+begin
+  cases classical.em (b ≤ a), { simp [le_antisymm h h₁] },
+  cases classical.em (c ≤ 0), { simp [le_antisymm h_1 h₂] },
+  exact (le_not_le_of_lt (ordered_semiring.mul_lt_mul_of_pos_left a b c (lt_of_le_not_le h₁ h) (lt_of_le_not_le h₂ h_1))).left,
+end
+
+lemma ordered_semiring.mul_le_mul_of_nonneg_right {α} [s : ordered_semiring α] (a b c : α) (h₁ : a ≤ b) (h₂ : 0 ≤ c) : a * c ≤ b * c :=
+begin
+  cases classical.em (b ≤ a), { simp [le_antisymm h h₁] },
+  cases classical.em (c ≤ 0), { simp [le_antisymm h_1 h₂] },
+  exact (le_not_le_of_lt (ordered_semiring.mul_lt_mul_of_pos_right a b c (lt_of_le_not_le h₁ h) (lt_of_le_not_le h₂ h_1))).left,
+end
 
 variable {α : Type u}
 
@@ -93,10 +105,26 @@ section linear_ordered_semiring
 variable [linear_ordered_semiring α]
 
 lemma zero_lt_one : 0 < (1:α) :=
-linear_ordered_semiring.zero_lt_one α
+linear_ordered_semiring.zero_lt_one
 
 lemma zero_le_one : 0 ≤ (1:α) :=
 le_of_lt zero_lt_one
+
+lemma two_pos : 0 < (2:α) := add_pos zero_lt_one zero_lt_one
+
+lemma two_ne_zero : (2:α) ≠ 0 :=
+ne.symm (ne_of_lt two_pos)
+
+lemma two_gt_one : (2:α) > 1 :=
+calc (2:α) = 1+1 : one_add_one_eq_two
+     ...   > 1+0 : add_lt_add_left zero_lt_one _
+     ...   = 1   : add_zero 1
+
+lemma two_ge_one : (2:α) ≥ 1 :=
+le_of_lt two_gt_one
+
+lemma four_pos : (4:α) > 0 :=
+add_pos two_pos two_pos
 
 lemma lt_of_mul_lt_mul_left {a b c : α} (h : c * a < c * b) (hc : c ≥ 0) : a < b :=
 lt_of_not_ge
@@ -168,9 +196,15 @@ end linear_ordered_semiring
 
 class decidable_linear_ordered_semiring (α : Type u) extends linear_ordered_semiring α, decidable_linear_order α
 
-class ordered_ring (α : Type u) extends ring α, ordered_comm_group α, zero_ne_one_class α :=
-(mul_nonneg : ∀ a b : α, 0 ≤ a → 0 ≤ b → 0 ≤ a * b)
+class ordered_ring (α : Type u) extends ring α, ordered_add_comm_group α, zero_ne_one_class α :=
 (mul_pos    : ∀ a b : α, 0 < a → 0 < b → 0 < a * b)
+
+lemma ordered_ring.mul_nonneg {α} [s : ordered_ring α] (a b : α) (h₁ : 0 ≤ a) (h₂ : 0 ≤ b) : 0 ≤ a * b :=
+begin
+  cases classical.em (a ≤ 0), { simp [le_antisymm h h₁] },
+  cases classical.em (b ≤ 0), { simp [le_antisymm h_1 h₂] },
+  exact (le_not_le_of_lt (ordered_ring.mul_pos a b (lt_of_le_not_le h₁ h) (lt_of_le_not_le h₂ h_1))).left,
+end
 
 lemma ordered_ring.mul_le_mul_of_nonneg_left [s : ordered_ring α] {a b c : α}
         (h₁ : a ≤ b) (h₂ : 0 ≤ c) : c * a ≤ c * b :=
@@ -214,8 +248,6 @@ instance ordered_ring.to_ordered_semiring [s : ordered_ring α] : ordered_semiri
   add_left_cancel            := @add_left_cancel α _,
   add_right_cancel           := @add_right_cancel α _,
   le_of_add_le_add_left      := @le_of_add_le_add_left α _,
-  mul_le_mul_of_nonneg_left  := @ordered_ring.mul_le_mul_of_nonneg_left α _,
-  mul_le_mul_of_nonneg_right := @ordered_ring.mul_le_mul_of_nonneg_right α _,
   mul_lt_mul_of_pos_left     := @ordered_ring.mul_lt_mul_of_pos_left α _,
   mul_lt_mul_of_pos_right    := @ordered_ring.mul_lt_mul_of_pos_right α _,
   ..s }
@@ -266,8 +298,6 @@ instance linear_ordered_ring.to_linear_ordered_semiring [s : linear_ordered_ring
   add_left_cancel            := @add_left_cancel α _,
   add_right_cancel           := @add_right_cancel α _,
   le_of_add_le_add_left      := @le_of_add_le_add_left α _,
-  mul_le_mul_of_nonneg_left  := @mul_le_mul_of_nonneg_left α _,
-  mul_le_mul_of_nonneg_right := @mul_le_mul_of_nonneg_right α _,
   mul_lt_mul_of_pos_left     := @mul_lt_mul_of_pos_left α _,
   mul_lt_mul_of_pos_right    := @mul_lt_mul_of_pos_right α _,
   le_total                   := linear_ordered_ring.le_total,
@@ -367,7 +397,7 @@ instance linear_ordered_comm_ring.to_integral_domain [s: linear_ordered_comm_rin
   ..s }
 
 class decidable_linear_ordered_comm_ring (α : Type u) extends linear_ordered_comm_ring α,
-    decidable_linear_ordered_comm_group α
+    decidable_linear_ordered_add_comm_group α
 
 instance decidable_linear_ordered_comm_ring.to_decidable_linear_ordered_semiring [d : decidable_linear_ordered_comm_ring α] :
    decidable_linear_ordered_semiring α :=
@@ -377,8 +407,6 @@ let s : linear_ordered_semiring α := @linear_ordered_ring.to_linear_ordered_sem
   add_left_cancel            := @linear_ordered_semiring.add_left_cancel α s,
   add_right_cancel           := @linear_ordered_semiring.add_right_cancel α s,
   le_of_add_le_add_left      := @linear_ordered_semiring.le_of_add_le_add_left α s,
-  mul_le_mul_of_nonneg_left  := @linear_ordered_semiring.mul_le_mul_of_nonneg_left α s,
-  mul_le_mul_of_nonneg_right := @linear_ordered_semiring.mul_le_mul_of_nonneg_right α s,
   mul_lt_mul_of_pos_left     := @linear_ordered_semiring.mul_lt_mul_of_pos_left α s,
   mul_lt_mul_of_pos_right    := @linear_ordered_semiring.mul_lt_mul_of_pos_right α s,
   ..d }

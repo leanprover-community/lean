@@ -271,10 +271,11 @@ static void throw_mk_aux_definition_error(local_context const & lctx, name const
     throw nested_exception(strm, ex);
 }
 
-void compile_aux_definition(environment & env, equations_header const & header, name const & user_name, name const & actual_name) {
+void compile_aux_definition(environment & env, options const & opts, equations_header const & header,
+                            name const & user_name, name const & actual_name) {
     if (header.m_gen_code) {
         try {
-            env = vm_compile(env, env.get(actual_name));
+            env = vm_compile(env, opts, env.get(actual_name));
         } catch (exception & ex) {
             if (!header.m_prev_errors) {
                 throw nested_exception(sstream() << "equation compiler failed to generate bytecode for "
@@ -288,6 +289,7 @@ pair<environment, expr> mk_aux_definition(environment const & env, options const
                                           equations_header const & header, name const & c, name const & actual_c, expr const & type, expr const & value) {
     lean_trace("eqn_compiler", tout() << "declaring auxiliary definition\n" << c << " : " << type << "\n";);
     environment new_env = env;
+
     expr new_type       = type;
     expr new_value      = value;
     bool zeta           = get_eqn_compiler_zeta(opts);
@@ -308,7 +310,7 @@ pair<environment, expr> mk_aux_definition(environment const & env, options const
     } catch (exception & ex) {
         throw_mk_aux_definition_error(lctx, c, new_type, new_value, ex);
     }
-    compile_aux_definition(new_env, header, c, new_c);
+    compile_aux_definition(new_env, opts, header, c, new_c);
     return mk_pair(new_env, r);
 }
 

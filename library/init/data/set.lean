@@ -5,7 +5,7 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.meta.interactive
-import init.category.lawful
+import init.control.lawful
 
 universes u v
 def set (α : Type u) := α → Prop
@@ -45,6 +45,11 @@ protected def insert (a : α) (s : set α) : set α :=
 
 instance : has_insert α (set α) :=
 ⟨set.insert⟩
+
+instance : has_singleton α (set α) := ⟨λ a, {b | b = a}⟩
+
+instance : is_lawful_singleton α (set α) :=
+⟨λ a, funext $ λ b, propext $ or_false _⟩
 
 protected def union (s₁ s₂ : set α) : set α :=
 {a | a ∈ s₁ ∨ a ∈ s₂}

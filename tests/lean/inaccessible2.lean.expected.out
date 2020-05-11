@@ -1,12 +1,16 @@
 inaccessible2.lean:5:8: error: invalid occurrence of 'inaccessible' annotation, it must only occur in patterns
 inaccessible2.lean:8:10: error: invalid pattern, must be an application, constant, variable, type ascription, aliasing pattern or inaccessible term
-inaccessible2.lean:8:45: error: unknown identifier 'a'
+inaccessible2.lean:8:40: error: unknown identifier 'a'
 inaccessible2.lean:7:11: error: equation compiler failed (use 'set_option trace.eqn_compiler.elim_match true' for additional details)
-inaccessible2.lean:11:39: error: inaccesible pattern notation `.(t)` can only be used in patterns
-inaccessible2.lean:11:46: error: invalid expression
-inaccessible2.lean:11:4: error: invalid application, function expected
-inaccessible2.lean:11:46: error: ill-formed match/equation expression
-inaccessible2.lean:11:46: error: command expected
+inaccessible2.lean:11:11: error: invalid pattern, must be an application, constant, variable, type ascription, aliasing pattern or inaccessible term
+inaccessible2.lean:11:39: error: don't know how to synthesize placeholder
+context:
+A : Sort ?,
+B : Sort ?,
+f : A → B,
+inv_3 : Π (b : B), imf f b → A
+⊢ A
+inaccessible2.lean:10:11: error: equation compiler failed (use 'set_option trace.eqn_compiler.elim_match true' for additional details)
 inaccessible2.lean:14:21: error: don't know how to synthesize placeholder
 context:
 A : Sort ?,

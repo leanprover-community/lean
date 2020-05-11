@@ -204,7 +204,7 @@ name_set collect_univ_params_ignoring_tactics(expr const & e, name_set const & l
 
         variable [decidable_eq A]
 */
-void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & locals) {
+static void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & locals, name_set & lp_found) {
     buffer<pair<name, expr>> entries;
     to_buffer(p.get_local_entries(), entries);
     unsigned i = entries.size();
@@ -221,14 +221,16 @@ void collect_annonymous_inst_implicit(parser_info const & p, collected_locals & 
                         ok = false;
                     return true;
                 });
-            if (ok)
+            if (ok) {
                 locals.insert(entry.second);
+                lp_found = collect_univ_params_ignoring_tactics(entry.second, lp_found);
+            }
         }
     }
 }
 
 /** \brief Sort local names by order of occurrence, and copy the associated parameters to ps */
-void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps) {
+static void sort_locals(buffer<expr> const & locals, parser_info const & p, buffer<expr> & ps) {
     buffer<expr> extra;
     name_set     explicit_param_names;
     for (expr const & p : ps) {
@@ -319,7 +321,7 @@ void collect_implicit_locals(parser_info & p, buffer<name> & lp_names, buffer<ex
         collect_locals_ignoring_tactics(e, locals);
         lp_found = collect_univ_params_ignoring_tactics(e, lp_found);
     }
-    collect_annonymous_inst_implicit(p, locals);
+    collect_annonymous_inst_implicit(p, locals, lp_found);
     sort_locals(locals.get_collected(), p, params);
     update_univ_parameters(p, lp_names, lp_found);
     /* Add as_is annotation to section variables and parameters */

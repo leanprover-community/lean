@@ -36,6 +36,7 @@ Author: Leonardo de Moura
 #include "library/compiler/elim_unused_lets.h"
 #include "library/compiler/extract_values.h"
 #include "library/compiler/cse.h"
+#include "library/string.h"
 
 namespace lean {
 class expand_aux_fn : public compiler_step_visitor {
@@ -157,10 +158,19 @@ static expr expand_aux(environment const & env, abstract_context_cache & cache, 
     return expand_aux_fn(env, cache)(e);
 }
 
+expr find_string_values(expr const & e) {
+    return replace(e, [] (expr const & e) -> optional<expr> {
+        if (auto v = to_string(e))
+            return some_expr(copy_tag(e, from_string(*v)));
+        return {};
+    });
+}
+
 static name * g_tmp_prefix = nullptr;
 
 class preprocess_fn {
     environment    m_env;
+    options        m_opts;
     context_cache  m_cache;
 
     bool check(declaration const & d, expr const & v) {
@@ -230,15 +240,15 @@ class preprocess_fn {
     }
 
 public:
-    preprocess_fn(environment const & env):
-        m_env(env) {}
+    preprocess_fn(environment const & env, options const & opts):
+        m_env(env), m_opts(opts) {}
 
     void operator()(declaration const & d, buffer<procedure> & procs) {
         if (compile_irrelevant(d, procs))
             return;
         expr v = d.get_value();
         lean_trace(name({"compiler", "input"}), tout() << "\n" << v << "\n";);
-        v = inline_simple_definitions(m_env, m_cache, v);
+        v = inline_simple_definitions(m_env, m_opts, m_cache, v);
         lean_cond_assert("compiler", check(d, v));
         lean_trace(name({"compiler", "inline"}), tout() << "\n" << v << "\n";);
         v = expand_aux(m_env, m_cache, v);
@@ -246,6 +256,7 @@ public:
         lean_trace(name({"compiler", "expand_aux"}), tout() << "\n" << v << "\n";);
         v = mark_comp_irrelevant_subterms(m_env, m_cache, v);
         lean_cond_assert("compiler", check(d, v));
+        v = find_string_values(v);
         v = find_nat_values(m_env, v);
         lean_cond_assert("compiler", check(d, v));
         v = eta_expand(m_env, m_cache, v);
@@ -275,14 +286,15 @@ public:
     }
 };
 
-void preprocess(environment const & env, declaration const & d, buffer<procedure> & result) {
-    return preprocess_fn(env)(d, result);
+void preprocess(environment const & env, options const & opts,
+                declaration const & d, buffer<procedure> & result) {
+    return preprocess_fn(env, opts)(d, result);
 }
 
-void preprocess(environment const & env, buffer<declaration> const & ds, buffer<procedure> & result) {
+void preprocess(environment const & env, options const & opts, buffer<declaration> const & ds, buffer<procedure> & result) {
     for (declaration const & d : ds) {
         buffer<procedure> procs;
-        preprocess(env, d, procs);
+        preprocess(env, opts, d, procs);
         result.append(procs);
     }
 }

@@ -346,6 +346,18 @@ name name::get_root() const {
     return n;
 }
 
+name name::drop_prefix() const {
+    if (m_ptr) {
+        if (m_ptr->m_is_string) {
+            return name(m_ptr->m_str);
+        } else {
+            return name(m_ptr->m_k);
+        }
+    } else {
+        return name();
+    }
+}
+
 std::string name::to_string(char const * sep) const {
     std::ostringstream s;
     imp::display(s, m_ptr, false, sep);

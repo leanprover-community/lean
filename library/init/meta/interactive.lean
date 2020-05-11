@@ -5,7 +5,7 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.meta.tactic init.meta.rewrite_tactic init.meta.simp_tactic
-import init.meta.smt.congruence_closure init.category.combinators
+import init.meta.smt.congruence_closure init.control.combinators
 import init.meta.interactive_base init.meta.derive init.meta.match_tactic
 import init.meta.congr_tactic
 
@@ -168,11 +168,32 @@ h₂ : b = c
 meta def introv (ns : parse ident_*) : tactic unit :=
 propagate_tags (tactic.introv ns >> return ())
 
+/-- Parse a current name and new name for `rename`. -/
+private meta def rename_arg_parser : parser (name × name) :=
+  prod.mk <$> ident <*> (optional (tk "->") *> ident)
+
+/-- Parse the arguments of `rename`. -/
+private meta def rename_args_parser : parser (list (name × name)) :=
+  (functor.map (λ x, [x]) rename_arg_parser)
+  <|>
+  (tk "[" *> sep_by (tk ",") rename_arg_parser <* tk "]")
+
 /--
-The tactic `rename h₁ h₂` renames hypothesis `h₁` to `h₂` in the current local context.
+Rename one or more local hypotheses. The renamings are given as follows:
+
+```
+rename x y             -- rename x to y
+rename x → y           -- ditto
+rename [x y, a b]      -- rename x to y and a to b
+rename [x → y, a → b]  -- ditto
+```
+
+Note that if there are multiple hypotheses called `x` in the context, then
+`rename x y` will rename *all* of them. If you want to rename only one, use
+`dedup` first.
 -/
-meta def rename (h₁ h₂ : parse ident) : tactic unit :=
-propagate_tags (tactic.rename h₁ h₂)
+meta def rename (renames : parse rename_args_parser) : tactic unit :=
+propagate_tags $ tactic.rename_many $ native.rb_map.of_list renames
 
 /--
 The `apply` tactic tries to match the current goal against the conclusion of the type of term. The argument term should be a term well-formed in the local context of the main goal. If it succeeds, then the tactic returns as many subgoals as the number of premises that have not been fixed by type inference or type class resolution. Non-dependent premises are added before dependent ones.
@@ -229,7 +250,7 @@ tactic.assumption
 
 /-- Try to apply `assumption` to all goals. -/
 meta def assumption' : tactic unit :=
-tactic.any_goals tactic.assumption
+tactic.any_goals' tactic.assumption
 
 private meta def change_core (e : expr) : option expr → tactic unit
 | none     := tactic.change e
@@ -438,7 +459,7 @@ meta def with_cases (t : itactic) : tactic unit :=
 with_enable_tags $ focus1 $ do
   input_hyp_uids ← collect_hyps_uids,
   t,
-  all_goals (revert_new_hyps input_hyp_uids)
+  all_goals' (revert_new_hyps input_hyp_uids)
 
 private meta def get_type_name (e : expr) : tactic name :=
 do e_type ← infer_type e >>= whnf,
@@ -665,7 +686,9 @@ private meta def find_case (goals : list expr) (ty : name) (idx : nat) (num_indi
   end else none
 
 private meta def rename_lams : expr → list name → tactic unit
-| (lam n _ _ e) (n'::ns) := (rename n n' >> rename_lams e ns) <|> rename_lams e (n'::ns)
+| (lam n _ _ e) (n'::ns) :=
+  (propagate_tags (tactic.rename_unstable n n') >> rename_lams e ns) <|>
+  rename_lams e (n'::ns)
 | _             _        := skip
 
 /--
@@ -833,8 +856,8 @@ tactic.contradiction
 -/
 meta def iterate (n : parse small_nat?) (t : itactic) : tactic unit :=
 match n with
-| none   := tactic.iterate t
-| some n := iterate_exactly n t
+| none   := tactic.iterate' t
+| some n := iterate_exactly' n t
 end
 
 /--
@@ -874,13 +897,13 @@ tactic.abstract tac id
 `all_goals { t }` applies the tactic `t` to every goal, and succeeds if each application succeeds.
 -/
 meta def all_goals : itactic → tactic unit :=
-tactic.all_goals
+tactic.all_goals'
 
 /--
 `any_goals { t }` applies the tactic `t` to every goal, and succeeds if at least one application succeeds.
 -/
 meta def any_goals : itactic → tactic unit :=
-tactic.any_goals
+tactic.any_goals'
 
 /--
 `focus { t }` temporarily hides all goals other than the first, applies `t`, and then restores the other goals. It fails if there are no goals.
@@ -1196,6 +1219,7 @@ do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    -- Erase `h` from the default simp set for calls of the form `simp [←h]`.
    let to_erase := hs.foldl (λ l h, match h with
                                     | (const id _, tt) := id :: l
+                                    | (local_const id _ _ _, tt) := id :: l
                                     | _ := l
                                     end ) [],
    let s := s.erase to_erase,

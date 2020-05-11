@@ -21,12 +21,19 @@ def list.as_string (s : list char) : string :=
 ⟨s⟩
 
 namespace string
+
 instance : has_lt string :=
 ⟨λ s₁ s₂, s₁.data < s₂.data⟩
 
 /- Remark: this function has a VM builtin efficient implementation. -/
 instance has_decidable_lt (s₁ s₂ : string) : decidable (s₁ < s₂) :=
 list.has_decidable_lt s₁.data s₂.data
+
+instance has_decidable_eq : decidable_eq string := λ ⟨x⟩ ⟨y⟩,
+match list.has_dec_eq x y with
+| is_true p := is_true (congr_arg string_imp.mk p)
+| is_false p := is_false (λ q, p (string_imp.mk.inj q))
+end
 
 def empty : string :=
 ⟨[]⟩

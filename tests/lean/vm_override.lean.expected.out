@@ -1,0 +1,106 @@
+@[vm_override]
+meta def hello : name :=
+id_rhs name (name.mk_string "name" (name.mk_string "hello" name.anonymous))
+hello_override.name
+hello.name
+hello_2.name
+hello_override.name
+vm_override.lean:42:0: error: unknown declaration 'native.float.mk'
+vm_override.lean:47:5: warning: declaration 'native.float₁.mk' uses sorry
+vm_override.lean:56:0: error: type mismatch with override:
+
+float₁.rec : Π {C : native.float → Sort l}, (Π (a : ℕ), C (native.float₁.mk a)) → Π (n : native.float), C n
+native.float₁.rec : ℕ
+vm_override.lean:64:5: warning: declaration 'native.float.rec' uses sorry
+vm_override.lean:66:5: warning: declaration 'native.float.cases_on' uses sorry
+0.5
+1.47059e+06
+[compiler.inline]
+λ (i : un_nat), ""
+[compiler.inline]
+{repr := bin.nat_ovr.repr}
+[compiler.inline]
+λ (n a : un_nat),
+  bin.nat.cases_on a n
+    (λ (a : bin.pos),
+       bin.pos.cases_on'._main
+         ((λ (a : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n a)) bin.nat.zero)
+         (λ (n_1 : bin.pos),
+            (λ (a : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n a)) (bin.nat.pos n_1))
+         a)
+[compiler.inline]
+λ (n : un_nat), add._main n
+[compiler.inline]
+λ (a : ℕ),
+  nat.cases_on a bin.nat_ovr.zero
+    (λ (a : ℕ),
+       bin.nat_ovr.add._main ([bin_example.mk_num._main._meta_aux] a)
+         (bin.nat_ovr.succ._main ([bin_example.mk_num._main._meta_aux] a)))
+[compiler.inline]
+mk_num._main
+[compiler.inline]
+λ (a : un_nat),
+  bin.nat.cases_on a bin.nat_ovr.zero
+    (λ (a : bin.pos),
+       bin.pos.cases_on'._main
+         ((λ (a : un_nat),
+             bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] a)
+               (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] a)))
+            bin.nat.zero)
+         (λ (n : bin.pos),
+            (λ (a : un_nat),
+               bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] a)
+                 (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] a)))
+              (bin.nat.pos n))
+         a)
+[compiler.inline]
+mk_num'._main
+11111
+[compiler.inline]
+bin.nat_ovr.repr._main (mk_num._main (bit1 (bit0 (nat.succ nat.zero))))
+11111
+[compiler.inline]
+bin.nat_ovr.repr._main
+  (mk_num'._main
+     (bin.nat_ovr.succ._main
+        (bin.nat_ovr.succ._main
+           (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main bin.nat_ovr.zero))))))
+[compiler.inline]
+λ (a : float₃),
+  (λ (f : Π (a : ℕ), (λ (a : float₃), string) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
+    (λ (a : ℕ), nat.repr a)
+[compiler.inline]
+float₃.repr._main
+[compiler.inline]
+{repr := float₃.repr}
+[compiler.inline]
+native.float₃.mk
+1
+[compiler.inline]
+float₃.repr._main ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero)))
+[compiler.inline]
+λ (a : float₃),
+  (λ (f : Π (a : ℕ), (λ (a : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
+    (λ (a : ℕ), a)
+[compiler.inline]
+get₂._main
+1
+[compiler.inline]
+nat.repr (get₂._main ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero))))
+[compiler.inline]
+native.float₃.cases_on
+3
+[compiler.inline]
+nat.repr (bit1 (nat.succ nat.zero))
+1
+[compiler.inline]
+nat.repr
+  ((λ (f : Π (a : ℕ), (λ (n : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
+     (λ (n : ℕ), n))
+1
+[compiler.inline]
+nat.repr
+  ((λ (f : Π (a : ℕ), (λ (n : float₃), ℕ) (native.float₃.mk a)) (n : native.float),
+      unchecked_cast (f (nat.succ nat.zero)))
+     (λ (n : ℕ), n)
+     ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero))))

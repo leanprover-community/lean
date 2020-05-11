@@ -28,6 +28,7 @@ bool is_char_value_core(expr const & e);
 optional<unsigned> to_char(abstract_type_context & ctx, expr const & e);
 bool is_char_value(abstract_type_context & ctx, expr const & e);
 
+std::string quote_string_literal(std::string const & s);
 format pp_string_literal(std::string const & s);
 format pp_char_literal(unsigned c);
 

@@ -14,7 +14,7 @@ universes u v
 (comm : ∀ a b, op a b = op b a)
 
 instance is_symm_op_of_is_commutative (α : Type u) (op : α → α → α) [is_commutative α op] : is_symm_op α α op :=
-{symm_op := is_commutative.comm op}
+{symm_op := is_commutative.comm}
 
 @[algebra] class is_associative (α : Type u) (op : α → α → α) : Prop :=
 (assoc : ∀ a b c, op (op a b) c = op a (op b c))
@@ -101,7 +101,7 @@ instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm �
 
 instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s : is_total_preorder α r] : is_preorder α r :=
 {trans := s.trans,
- refl  := λ a, or.elim (is_total.total r a a) id id}
+ refl  := λ a, or.elim (@is_total.total _ r _ a a) id id}
 
 @[algebra] class is_partial_order (α : Type u) (r : α → α → Prop) extends is_preorder α r, is_antisymm α r : Prop.
 
@@ -131,10 +131,10 @@ variables {α : Type u} {r : α → α → Prop}
 local infix `≺`:50 := r
 
 lemma irrefl [is_irrefl α r] (a : α) : ¬ a ≺ a :=
-is_irrefl.irrefl _ a
+is_irrefl.irrefl a
 
 lemma refl [is_refl α r] (a : α) : a ≺ a :=
-is_refl.refl _ a
+is_refl.refl a
 
 lemma trans [is_trans α r] {a b c : α} : a ≺ b → b ≺ c → a ≺ c :=
 is_trans.trans _ _ _
@@ -149,7 +149,7 @@ lemma asymm [is_asymm α r] {a b : α} : a ≺ b → ¬ b ≺ a :=
 is_asymm.asymm _ _
 
 lemma trichotomous [is_trichotomous α r] : ∀ (a b : α), a ≺ b ∨ a = b ∨ b ≺ a :=
-is_trichotomous.trichotomous r
+is_trichotomous.trichotomous
 
 lemma incomp_trans [is_incomp_trans α r] {a b c : α} : (¬ a ≺ b ∧ ¬ b ≺ a) → (¬ b ≺ c ∧ ¬ c ≺ b) → (¬ a ≺ c ∧ ¬ c ≺ a) :=
 is_incomp_trans.incomp_trans _ _ _
@@ -177,7 +177,7 @@ lemma asymm_of [is_asymm α r] {a b : α} : a ≺ b → ¬ b ≺ a := asymm
 
 @[elab_simple]
 lemma total_of [is_total α r] (a b : α) : a ≺ b ∨ b ≺ a :=
-is_total.total _ _ _
+is_total.total _ _
 
 @[elab_simple]
 lemma trichotomous_of [is_trichotomous α r] : ∀ (a b : α), a ≺ b ∨ a = b ∨ b ≺ a := trichotomous

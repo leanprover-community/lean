@@ -84,7 +84,8 @@ bool has_inaccessible_annotation(expr const & e);
 /* See comment at library/local_context.h */
 local_context erase_inaccessible_annotations(local_context const & lctx);
 
-void compile_aux_definition(environment & env, equations_header const & header, name const & user_name, name const & actual_name);
+void compile_aux_definition(environment & env, options const & opts, equations_header const & header,
+                            name const & user_name, name const & actual_name);
 
 /* Create an auxiliary definition.
 

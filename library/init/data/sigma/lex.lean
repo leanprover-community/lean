@@ -112,7 +112,7 @@ section
 
   def mk_skip_left {α : Type u} {β : Type v} {b₁ b₂ : β} {s : β → β → Prop}
                    (a₁ a₂ : α) (h : s b₁ b₂) : skip_left α s ⟨a₁, b₁⟩ ⟨a₂, b₂⟩ :=
-  rev_lex.right _ _ _ h
+  rev_lex.right _ _ h
 end
 
 instance has_well_founded {α : Type u} {β : α → Type v} [s₁ : has_well_founded α] [s₂ : ∀ a, has_well_founded (β a)] : has_well_founded (psigma β) :=

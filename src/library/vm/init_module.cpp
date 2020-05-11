@@ -26,6 +26,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_float.h"
 #include "library/vm/vm_module_info.h"
+#include "library/vm/vm_override.h"
 
 namespace lean {
 void initialize_vm_core_module() {
@@ -51,6 +52,7 @@ void initialize_vm_core_module() {
     initialize_vm_string();
     initialize_vm_float();
     initialize_vm_module_info();
+    initialize_vm_override();
 }
 
 void finalize_vm_core_module() {
@@ -76,6 +78,8 @@ void finalize_vm_core_module() {
     finalize_vm_int();
     finalize_vm_nat();
     finalize_vm_core();
+    finalize_vm_float();
+    finalize_vm_override();
 }
 
 void initialize_vm_module() {

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 -/
 prelude
-import init.logic init.category.applicative
+import init.logic init.control.applicative
 universes u v
 
 class has_orelse (f : Type u → Type v) : Type (max (u+1) v) :=
@@ -19,7 +19,7 @@ section
 variables {f : Type u → Type v} [alternative f] {α : Type u}
 
 @[inline] def failure : f α :=
-alternative.failure f
+alternative.failure
 /-- If the condition `p` is decided to be false, then fail, otherwise, return unit. -/
 @[inline] def guard {f : Type → Type v} [alternative f] (p : Prop) [decidable p] : f unit :=
 if p then pure () else failure

@@ -227,6 +227,7 @@ static struct option g_long_options[] = {
     {"run",          required_argument, 0, 'a'},
     {"githash",      no_argument,       0, 'g'},
     {"make",         no_argument,       0, 'm'},
+    {"old-oleans",   no_argument,       0, 'O'},
     {"recursive",    no_argument,       0, 'R'},
     {"export",       required_argument, 0, 'E'},
     {"only-export",  required_argument, 0, 'o'},
@@ -426,6 +427,7 @@ int main(int argc, char ** argv) {
 #endif
     ::initializer init;
     bool make_mode          = false;
+    bool use_old_oleans     = false;
     bool recursive          = false;
     unsigned trust_lvl      = LEAN_BELIEVER_TRUST_LEVEL+1;
     bool only_deps          = false;
@@ -473,6 +475,9 @@ int main(int argc, char ** argv) {
         case 'm':
             make_mode = true;
             recursive = true;
+            break;
+        case 'O':
+            use_old_oleans = true;
             break;
         case 'R':
             recursive = true;
@@ -588,7 +593,7 @@ int main(int argc, char ** argv) {
             std::cin.rdbuf(file_in->rdbuf());
         }
 
-        server(num_threads, path.get_path(), env, ios).run();
+        server(num_threads, path.get_path(), env, ios, use_old_oleans).run();
         return 0;
     }
 #endif
@@ -621,6 +626,7 @@ int main(int argc, char ** argv) {
 
         fs_module_vfs vfs;
         module_mgr mod_mgr(&vfs, lt.get_root(), path.get_path(), env, ios);
+        mod_mgr.set_use_old_oleans(use_old_oleans);
         set_global_module_mgr(mod_mgr);
 
         if (run_arg) {

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Sebastian Ullrich
 -/
 prelude
-import init.category.alternative init.category.lift init.category.except
+import init.control.alternative init.control.lift init.control.except
 
 universes u v
 
@@ -33,6 +33,9 @@ namespace option_t
 
   @[inline] protected def fail : option_t m α :=
   ⟨pure none⟩
+
+  @[inline] def of_option : option α → option_t m α
+  | o := ⟨pure o⟩
 
   instance : alternative (option_t m) :=
   { failure := @option_t.fail m _,

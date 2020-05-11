@@ -7,12 +7,12 @@ The except monad transformer.
 -/
 
 prelude
-import init.category.alternative init.category.lift
+import init.control.alternative init.control.lift
 universes u v w
 
 inductive except (ε : Type u) (α : Type v)
-| error {} : ε → except
-| ok {} : α → except
+| error : ε → except
+| ok : α → except
 
 namespace except
 section
@@ -97,8 +97,8 @@ end except_t
 
 /-- An implementation of [MonadError](https://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Except.html#t:MonadError) -/
 class monad_except (ε : out_param (Type u)) (m : Type v → Type w) :=
-(throw {} {α : Type v} : ε → m α)
-(catch {} {α : Type v} : m α → (ε → m α) → m α)
+(throw {α : Type v} : ε → m α)
+(catch {α : Type v} : m α → (ε → m α) → m α)
 
 namespace monad_except
 variables {ε : Type u} {m : Type v → Type w}
@@ -123,11 +123,11 @@ instance (m ε) [monad m] : monad_except ε (except_t ε m) :=
     Note: This class can be seen as a simplification of the more "principled" definition
     ```
     class monad_except_functor (ε ε' : out_param (Type u)) (n n' : Type u → Type u) :=
-    (map {} {α : Type u} : (∀ {m : Type u → Type u} [monad m], except_t ε m α → except_t ε' m α) → n α → n' α)
+    (map {α : Type u} : (∀ {m : Type u → Type u} [monad m], except_t ε m α → except_t ε' m α) → n α → n' α)
     ```
     -/
 class monad_except_adapter (ε ε' : out_param (Type u)) (m m' : Type u → Type v) :=
-(adapt_except {} {α : Type u} : (ε → ε') → m α → m' α)
+(adapt_except {α : Type u} : (ε → ε') → m α → m' α)
 export monad_except_adapter (adapt_except)
 
 section

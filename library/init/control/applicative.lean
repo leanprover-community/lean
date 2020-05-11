@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Sebastian Ullrich
 -/
 prelude
-import init.category.functor
+import init.control.functor
 open function
 universes u v
 
 class has_pure (f : Type u → Type v) :=
-(pure {} {α : Type u} : α → f α)
+(pure {α : Type u} : α → f α)
 
 export has_pure (pure)
 

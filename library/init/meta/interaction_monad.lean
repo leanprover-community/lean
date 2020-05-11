@@ -5,7 +5,7 @@ Authors: Leonardo de Moura, Sebastian Ullrich
 -/
 prelude
 import init.function init.data.option.basic init.util
-import init.category.combinators init.category.monad init.category.alternative init.category.monad_fail
+import init.control.combinators init.control.monad init.control.alternative init.control.monad_fail
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.data.to_string
 
@@ -13,7 +13,7 @@ universes u v
 
 meta inductive interaction_monad.result (state : Type) (α : Type u)
 | success      : α → state → interaction_monad.result
-| exception {} : option (unit → format) → option pos → state → interaction_monad.result
+| exception    : option (unit → format) → option pos → state → interaction_monad.result
 
 open interaction_monad.result
 
@@ -93,6 +93,14 @@ meta def interaction_monad.orelse' {α : Type u} (t₁ t₂ : m α) (use_first_e
 
 meta instance interaction_monad.monad_fail : monad_fail m :=
 { fail := λ α s, interaction_monad.fail (to_fmt s), ..interaction_monad.monad }
+
+@[inline]
+meta def interaction_monad.bracket {α β γ} (x : m α) (inside : m β) (y : m γ) : m β :=
+x >> λ s,
+match inside s with
+| success r s' := (y >> success r) s'
+| exception msg p s' := (y >> exception msg p) s'
+end
 
 -- TODO: unify `parser` and `tactic` behavior?
 -- meta instance interaction_monad.alternative : alternative m :=

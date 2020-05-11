@@ -146,7 +146,7 @@ def not (a : Prop) := a → false
 prefix `¬` := not
 
 inductive eq {α : Sort u} (a : α) : α → Prop
-| refl : eq a
+| refl [] : eq a
 
 /-
 Initialize the quotient module, which effectively adds the following definitions:
@@ -173,7 +173,7 @@ It's purpose is to write down equalities between terms whose types are not defin
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
  -/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
-| refl : heq a
+| refl [] : heq a
 
 structure prod (α : Type u) (β : Type v) :=
 (fst : α) (snd : β)
@@ -239,16 +239,16 @@ lemma pprod.mk.inj_arrow {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x�
 λ h₁ _ h₂, prod.no_confusion h₁ h₂
 
 inductive sum (α : Type u) (β : Type v)
-| inl {} (val : α) : sum
-| inr {} (val : β) : sum
+| inl (val : α) : sum
+| inr (val : β) : sum
 
 inductive psum (α : Sort u) (β : Sort v)
-| inl {} (val : α) : psum
-| inr {} (val : β) : psum
+| inl (val : α) : psum
+| inr (val : β) : psum
 
 inductive or (a b : Prop) : Prop
-| inl {} (h : a) : or
-| inr {} (h : b) : or
+| inl (h : a) : or
+| inr (h : b) : or
 
 def or.intro_left {a : Prop} (b : Prop) (ha : a) : or a b :=
 or.inl ha
@@ -289,14 +289,14 @@ def decidable_eq (α : Sort u) :=
 decidable_rel (@eq α)
 
 inductive option (α : Type u)
-| none {} : option
+| none : option
 | some (val : α) : option
 
 export option (none some)
 export bool (ff tt)
 
 inductive list (T : Type u)
-| nil {} : list
+| nil : list
 | cons (hd : T) (tl : list) : list
 
 notation h :: t  := list.cons h t
@@ -343,6 +343,7 @@ class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
    Example: {a, b, c}. -/
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
+class has_singleton (α : out_param $ Type u) (β : Type v) := (singleton : α → β)
 /- Type class used to implement the notation { a ∈ c | p a } -/
 class has_sep (α : out_param $ Type u) (γ : Type v) :=
 (sep : (α → Prop) → γ → γ)
@@ -369,7 +370,7 @@ infix ≤        := has_le.le
 infix <        := has_lt.lt
 infix ++       := has_append.append
 infix ;        := andthen
-notation `∅`   := has_emptyc.emptyc _
+notation `∅`   := has_emptyc.emptyc
 infix ∪        := has_union.union
 infix ∩        := has_inter.inter
 infix ⊆        := has_subset.subset
@@ -400,9 +401,14 @@ attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
 
 export has_insert (insert)
 
-/-- The singleton collection -/
-def singleton {α : Type u} {γ : Type v} [has_emptyc γ] [has_insert α γ] (a : α) : γ :=
-insert a ∅
+class is_lawful_singleton (α : Type u) (β : Type v) [has_emptyc β] [has_insert α β]
+  [has_singleton α β] :=
+(insert_emptyc_eq : ∀ (x : α), (insert x ∅ : β) = {x})
+
+export has_singleton (singleton)
+export is_lawful_singleton (insert_emptyc_eq)
+
+attribute [simp] insert_emptyc_eq
 
 /- nat basic instances -/
 
@@ -562,7 +568,7 @@ end combinator
     Later, we define a coercion from `bin_tree` into `list`.
 -/
 inductive bin_tree (α : Type u)
-| empty {}       : bin_tree
+| empty : bin_tree
 | leaf (val : α) : bin_tree
 | node (left right : bin_tree) : bin_tree
 

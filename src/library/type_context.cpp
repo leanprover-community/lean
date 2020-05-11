@@ -1101,7 +1101,7 @@ expr type_context_old::infer_lambda(expr e) {
 }
 
 optional<level> type_context_old::get_level_core(expr const & A) {
-    lean_assert(m_transparency_mode == transparency_mode::All);
+    // lean_assert(m_transparency_mode == transparency_mode::All);
     expr A_type = whnf(infer_core(A));
     while (true) {
         if (is_sort(A_type)) {
@@ -1174,7 +1174,7 @@ expr type_context_old::infer_app(expr const & e) {
         if (is_pi(f_type)) {
             f_type = binding_body(f_type);
         } else {
-            lean_assert(m_transparency_mode == transparency_mode::All);
+            // lean_assert(m_transparency_mode == transparency_mode::All);
             f_type = whnf(instantiate_rev(f_type, i-j, args.data()+j));
             if (!is_pi(f_type)) {
                 throw generic_exception(e, [=](formatter const & fmt) {
@@ -1490,6 +1490,8 @@ bool type_context_old::solve_u_eq_max_u_v(level const & lhs, level const & rhs) 
 }
 
 lbool type_context_old::is_def_eq_core(level const & l1, level const & l2, bool partial) {
+    if (m_ignore_universes) return l_true;
+
     if (is_equivalent(l1, l2))
         return l_true;
 
@@ -1560,16 +1562,19 @@ lbool type_context_old::is_def_eq_core(level const & l1, level const & l2, bool 
 }
 
 lbool type_context_old::partial_is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return l_true;
     return is_def_eq_core(l1, l2, true);
 }
 
 bool type_context_old::full_is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return true;
     lbool r = is_def_eq_core(l1, l2, false);
     lean_assert(r != l_undef);
     return r == l_true;
 }
 
 bool type_context_old::is_def_eq(level const & l1, level const & l2) {
+    if (m_ignore_universes) return true;
     lbool success = partial_is_def_eq(l1, l2);
     if (success == l_undef) {
         m_postponed.emplace_back(l1, l2);
@@ -1584,6 +1589,7 @@ bool type_context_old::is_def_eq(level const & l1, level const & l2) {
 }
 
 bool type_context_old::is_def_eq(levels const & ls1, levels const & ls2) {
+    if (m_ignore_universes) return true;
     if (is_nil(ls1) && is_nil(ls2)) {
         return true;
     } else if (!is_nil(ls1) && !is_nil(ls2)) {
@@ -1987,15 +1993,14 @@ bool type_context_old::process_assignment(expr const & m, expr const & v) {
     try {
         expr t1 = infer(mvar);
         expr t2 = infer(new_v);
-        /* TODO(Leo): check whether using transparency_mode::All hurts performance.
-           We use Semireducible to make sure we will not fail an unification step
+        /* We use Semireducible to make sure we will not fail an unification step
                    ?m := t
            because we cannot establish that the types of ?m and t are definitionally equal
            due to the current transparency setting.
            This change is consistent with the general approach used in the rest of the code
            base where spurious typing errors due reducibility are avoided by using
            relaxed_is_def_eq. */
-        relaxed_scope _(*this);
+        relaxed_scope _(*this, transparency_mode::Semireducible);
         if (!is_def_eq_core(t1, t2)) {
             lean_trace(name({"type_context", "is_def_eq_detail"}),
                        scope_trace_env scope(env(), *this);

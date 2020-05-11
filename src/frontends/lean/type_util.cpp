@@ -41,8 +41,12 @@ implicit_infer_kind parse_implicit_infer_modifier(parser & p) {
         p.next();
         p.check_token_next(get_rparen_tk(), "invalid introduction rule, ')' expected");
         return implicit_infer_kind::None;
-    } else {
+    } else if (p.curr_is_token(get_lbracket_tk())) {
+        p.next();
+        p.check_token_next(get_rbracket_tk(), "invalid introduction rule, ']' expected");
         return implicit_infer_kind::Implicit;
+    } else {
+        return implicit_infer_kind::RelaxedImplicit;
     }
 }
 }

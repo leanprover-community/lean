@@ -18,11 +18,13 @@ Author: Leonardo de Moura
 #include "library/replace_visitor.h"
 #include "library/vm/vm.h"
 #include "library/vm/optimize.h"
+#include "library/vm/vm_override.h"
 #include "library/compiler/simp_inductive.h"
 #include "library/compiler/erase_irrelevant.h"
 #include "library/compiler/nat_value.h"
 #include "library/compiler/preprocess.h"
 #include "library/compiler/comp_irrelevant.h"
+#include "library/string.h"
 
 namespace lean {
 static name * g_vm_compiler_fresh = nullptr;
@@ -31,6 +33,7 @@ class vm_compiler_fn {
     environment        m_env;
     name_generator     m_ngen;
     buffer<vm_instr> & m_code;
+    options m_opts;
 
     void emit(vm_instr const & i) {
         m_code.push_back(i);
@@ -94,7 +97,7 @@ class vm_compiler_fn {
             emit(mk_num_instr(mpz(0)));
         } else if (auto idx = is_internal_cnstr(e)) {
             emit(mk_sconstructor_instr(*idx));
-        } else if (optional<vm_decl> decl = get_vm_decl(m_env, n)) {
+        } else if (optional<vm_decl> decl = get_vm_decl(m_env, n, m_opts)) {
             compile_global(*decl, 0, nullptr, 0, name_map<unsigned>());
         } else {
             throw_unknown_constant(n);
@@ -195,7 +198,7 @@ class vm_compiler_fn {
         // Not sure if this is the best approach, trying to lazy load the required
         // dynamic libraries.
         std::cout << "external compile" << n << std::endl;
-        optional<vm_decl> decl = get_vm_decl(m_env, n);
+        optional<vm_decl> decl = get_vm_decl(m_env, n, m_opts);
         lean_assert(decl);
         compile_global(*decl, args.size(), args.data(), bpz, m);
     }
@@ -211,7 +214,7 @@ class vm_compiler_fn {
         } else if (is_constant(fn)) {
             if (is_neutral_expr(fn)) {
                 emit(mk_sconstructor_instr(0));
-            } else if (optional<vm_decl> decl = get_vm_decl(m_env, const_name(fn))) {
+            } else if (optional<vm_decl> decl = get_vm_decl(m_env, const_name(fn), m_opts)) {
                 compile_global(*decl, args.size(), args.data(), bpz, m);
             } else {
                 throw_unknown_constant(const_name(fn));
@@ -280,7 +283,9 @@ class vm_compiler_fn {
         } else if (is_pexpr_quote(e)) {
             emit(mk_expr_instr(get_pexpr_quote_value(e)));
         } else if (is_sorry(e)) {
-            compile_global(*get_vm_decl(m_env, "sorry"), 0, nullptr, bpz, m);
+            compile_global(*get_vm_decl(m_env, "sorry", m_opts), 0, nullptr, bpz, m);
+        } else if (is_string_macro(e)) {
+            emit(mk_string_instr(*to_string(e)));
         } else {
             throw exception(sstream() << "code generation failed, unexpected kind of macro has been found: '"
                             << macro_def(e).get_name() << "'");
@@ -312,8 +317,10 @@ class vm_compiler_fn {
     }
 
 public:
-    vm_compiler_fn(environment const & env, buffer<vm_instr> & code):
-        m_env(env), m_ngen(*g_vm_compiler_fresh), m_code(code) {}
+    vm_compiler_fn(environment const & env, buffer<vm_instr> & code,
+                   options const & opts):
+        m_env(env), m_ngen(*g_vm_compiler_fresh), m_code(code),
+        m_opts(opts) {}
 
     pair<unsigned, list<vm_local_info>> operator()(expr e) {
         buffer<expr> locals;
@@ -338,15 +345,16 @@ public:
     }
 };
 
-static environment vm_compile(environment const & env, buffer<procedure> const & procs, bool optimize_bytecode) {
+static environment vm_compile(environment const & env, buffer<procedure> const & procs, bool optimize_bytecode, options const & opts) {
     environment new_env = env;
+    bool enable_overrides = get_vm_override_enabled(opts);
     for (auto const & p : procs) {
         new_env = reserve_vm_index(new_env, p.m_name, p.m_code);
     }
 
     for (auto const & p : procs) {
         buffer<vm_instr> code;
-        vm_compiler_fn gen(new_env, code);
+        vm_compiler_fn gen(new_env, code, opts);
         list<vm_local_info> args_info;
         unsigned arity;
         std::tie(arity, args_info) = gen(p.m_code);
@@ -357,20 +365,21 @@ static environment vm_compile(environment const & env, buffer<procedure> const &
             lean_trace(name({"compiler", "optimize_bytecode"}), tout() << " " << p.m_name << " " << arity << "\n";
                        display_vm_code(tout().get_stream(), code.size(), code.data()););
         }
-        new_env = update_vm_code(new_env, p.m_name, code.size(), code.data(), args_info, p.m_pos);
+        new_env = update_vm_code(new_env, p.m_name, code.size(), code.data(), args_info, p.m_pos, enable_overrides);
     }
     return new_env;
 }
 
-environment vm_compile(environment const & env, buffer<declaration> const & ds, bool optimize_bytecode) {
+environment vm_compile(environment const & env, options const & opts,
+                       buffer<declaration> const & ds, bool optimize_bytecode) {
     buffer<procedure> procs;
-    preprocess(env, ds, procs);
-    return vm_compile(env, procs, optimize_bytecode);
+    preprocess(env, opts, ds, procs);
+    return vm_compile(env, procs, optimize_bytecode, opts);
 }
 
-static optional<environment> try_reuse_aux_meta_code(environment const & env, name const & d_name) {
+static optional<environment> try_reuse_aux_meta_code(environment const & env, name const & d_name, bool enable_overrides) {
     name aux_name = mk_aux_meta_rec_name(d_name);
-    optional<vm_decl> v_decl = get_vm_decl(env, aux_name);
+    optional<vm_decl> v_decl = get_vm_decl(env, aux_name, enable_overrides);
     if (!v_decl || !v_decl->is_bytecode())
         return optional<environment>();
     /* If we already compiled d_name._meta_aux (which is a meta definition),
@@ -381,19 +390,22 @@ static optional<environment> try_reuse_aux_meta_code(environment const & env, na
     */
     return optional<environment>(add_vm_code(env, d_name, v_decl->get_arity(),
                                              v_decl->get_code_size(), v_decl->get_code(),
-                                             v_decl->get_args_info(), v_decl->get_pos_info()));
+                                             v_decl->get_args_info(), v_decl->get_pos_info(),
+                                             enable_overrides));
 }
 
-environment vm_compile(environment const & env, declaration const & d, bool optimize_bytecode) {
+environment vm_compile(environment const & env, options const & opts,
+                       declaration const & d, bool optimize_bytecode) {
     if (!d.is_definition() || d.is_theorem() || is_noncomputable(env, d.get_name()) || is_vm_builtin_function(d.get_name()))
         return env;
 
-    if (auto new_env = try_reuse_aux_meta_code(env, d.get_name()))
+    bool enable_overrides = get_vm_override_enabled(opts);
+    if (auto new_env = try_reuse_aux_meta_code(env, d.get_name(), enable_overrides))
         return *new_env;
 
     buffer<declaration> ds;
     ds.push_back(d);
-    return vm_compile(env, ds, optimize_bytecode);
+    return vm_compile(env, opts, ds, optimize_bytecode);
 }
 
 void initialize_vm_compiler() {

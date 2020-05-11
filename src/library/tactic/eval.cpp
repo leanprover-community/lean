@@ -47,7 +47,7 @@ static vm_obj eval(expr const & A, expr a, tactic_state const & s) {
             return tactic::mk_exception(nested_exception_without_pos("eval_expr failed", ex), s);
         }
         try {
-            aux_env = vm_compile(aux_env, aux_env.get(eval_aux_name));
+            aux_env = vm_compile(aux_env, S.get_options(), aux_env.get(eval_aux_name));
         } catch (exception & ex) {
             return tactic::mk_exception(nested_exception_without_pos("eval_expr failed to compile given expression into bytecode", ex), s);
         }

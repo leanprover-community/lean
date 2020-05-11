@@ -4,12 +4,12 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
 prelude
-import init.category.lift init.data.string.basic
+import init.control.lift init.data.string.basic
 
 universes u v
 
 class monad_fail (m : Type u → Type v) :=
-(fail {} : Π {a}, string → m a)
+(fail : Π {a}, string → m a)
 
 def match_failed {α : Type u} {m : Type u → Type v} [monad_fail m] : m α :=
 monad_fail.fail "match failed"

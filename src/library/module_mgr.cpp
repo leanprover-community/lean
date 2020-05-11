@@ -193,7 +193,7 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
 
             // If anything in the reflexive-transitive closure of this module under the import relation
             // has changed, rebuild the module.
-            if (mod->m_trans_hash != actual_trans_hash)
+            if (mod->m_trans_hash != actual_trans_hash && !m_use_old_oleans)
                 return build_module(id, false, orig_module_stack);
 
             module_info::parse_result res;
@@ -297,7 +297,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
             return parse_res;
         }).build();
 
-    if (m_save_olean) {
+    if (m_save_olean && !m_use_old_oleans) {
         scope_log_tree_core lt3(&lt);
         mod->m_olean_task = compile_olean(mod, lt2.get());
     }

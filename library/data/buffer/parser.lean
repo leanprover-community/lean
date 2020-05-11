@@ -19,7 +19,7 @@ variables {α β γ : Type}
 protected def bind (p : parser α) (f : α → parser β) : parser β :=
 λ input pos, match p input pos with
 | parse_result.done pos a           := f a input pos
-| parse_result.fail ._ pos expected := parse_result.fail β pos expected
+| parse_result.fail pos expected := parse_result.fail pos expected
 end
 
 protected def pure (a : α) : parser α :=
@@ -45,7 +45,7 @@ all_goals {refl}
 end
 
 protected def fail (msg : string) : parser α :=
-λ _ pos, parse_result.fail α pos (dlist.singleton msg)
+λ _ pos, parse_result.fail pos (dlist.singleton msg)
 
 instance : monad parser :=
 { pure := @parser.pure, bind := @parser.bind }
@@ -59,20 +59,20 @@ instance : monad_fail parser :=
 { fail := @parser.fail, ..parser.monad }
 
 protected def failure : parser α :=
-λ _ pos, parse_result.fail α pos dlist.empty
+λ _ pos, parse_result.fail pos dlist.empty
 
 protected def orelse (p q : parser α) : parser α :=
 λ input pos, match p input pos with
-| parse_result.fail ._ pos₁ expected₁ :=
-  if pos₁ ≠ pos then parse_result.fail _ pos₁ expected₁ else
+| parse_result.fail pos₁ expected₁ :=
+  if pos₁ ≠ pos then parse_result.fail pos₁ expected₁ else
   match q input pos with
-  | parse_result.fail ._ pos₂ expected₂ :=
+  | parse_result.fail pos₂ expected₂ :=
     if pos₁ < pos₂ then
-      parse_result.fail _ pos₁ expected₁
+      parse_result.fail pos₁ expected₁
     else if pos₂ < pos₁ then
-      parse_result.fail _ pos₂ expected₂
+      parse_result.fail pos₂ expected₂
     else -- pos₁ = pos₂
-      parse_result.fail _ pos₁ (expected₁ ++ expected₂)
+      parse_result.fail pos₁ (expected₁ ++ expected₂)
   | ok := ok
   end
   | ok := ok
@@ -88,8 +88,8 @@ instance : inhabited (parser α) :=
 /-- Overrides the expected token name, and does not consume input on failure. -/
 def decorate_errors (msgs : thunk (list string)) (p : parser α) : parser α :=
 λ input pos, match p input pos with
-| parse_result.fail ._ _ expected :=
-  parse_result.fail _  pos (dlist.lazy_of_list (msgs ()))
+| parse_result.fail _ expected :=
+  parse_result.fail pos (dlist.lazy_of_list (msgs ()))
 | ok := ok
 end
 
@@ -105,9 +105,9 @@ if h : pos < input.size then
   if p c then
     parse_result.done (pos+1) $ input.read ⟨pos, h⟩
   else
-    parse_result.fail _ pos dlist.empty
+    parse_result.fail pos dlist.empty
 else
-  parse_result.fail _ pos dlist.empty
+  parse_result.fail pos dlist.empty
 
 /-- Matches the empty word. -/
 def eps : parser unit := return ()
@@ -212,7 +212,7 @@ left_ctx.map (λ _, ' ') ++ "^\n".to_char_buffer ++
 def run (p : parser α) (input : char_buffer) : sum string α :=
 match (p <* eof) input 0 with
 | parse_result.done pos res := sum.inr res
-| parse_result.fail ._ pos expected :=
+| parse_result.fail pos expected :=
   sum.inl $ buffer.to_string $ mk_error_msg input pos expected
 end
 

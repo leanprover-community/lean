@@ -5,9 +5,11 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.function init.data.option.basic init.util
-import init.category.combinators init.category.monad init.category.alternative init.category.monad_fail
+import init.control.combinators init.control.monad init.control.alternative init.control.monad_fail
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.meta.interaction_monad
+
+open native
 
 meta constant tactic_state : Type
 
@@ -123,58 +125,122 @@ meta instance : executor tactic :=
 end interactive
 
 namespace tactic
-variables {α : Type u}
 
-meta def try_core (t : tactic α) : tactic (option α) :=
-λ s, result.cases_on (t s)
- (λ a, success (some a))
- (λ e ref s', success none s)
+open interaction_monad.result
+
+variables {α : Type u}
 
 /-- Does nothing. -/
 meta def skip : tactic unit :=
 success ()
 
-meta def try (t : tactic α) : tactic unit :=
-try_core t >>[tactic] skip
+/--
+`try_core t` acts like `t`, but succeeds even if `t` fails. It returns the
+result of `t` if `t` succeeded and `none` otherwise.
+-/
+meta def try_core (t : tactic α) : tactic (option α) := λ s,
+match t s with
+| (exception _ _ _) := success none s
+| (success a s') := success (some a) s'
+end
+
+/--
+`try t` acts like `t`, but succeeds even if `t` fails.
+-/
+meta def try (t : tactic α) : tactic unit := λ s,
+match t s with
+| (exception _ _ _) := success () s
+| (success _ s') := success () s'
+end
 
 meta def try_lst : list (tactic unit) → tactic unit
 | []            := failed
 | (tac :: tacs) := λ s,
   match tac s with
-  | result.success _ s' := try (try_lst tacs) s'
-  | result.exception e p s' :=
+  | success _ s' := try (try_lst tacs) s'
+  | exception e p s' :=
     match try_lst tacs s' with
-    | result.exception _ _ _ := result.exception e p s'
+    | exception _ _ _ := exception e p s'
     | r := r
     end
   end
 
-meta def fail_if_success {α : Type u} (t : tactic α) : tactic unit :=
-λ s, result.cases_on (t s)
- (λ a s, mk_exception "fail_if_success combinator failed, given tactic succeeded" none s)
- (λ e ref s', success () s)
+/--
+`fail_if_success t` acts like `t`, but succeeds if `t` fails and fails if `t`
+succeeds. Changes made by `t` to the `tactic_state` are preserved only if `t`
+succeeds.
+-/
+meta def fail_if_success {α : Type u} (t : tactic α) : tactic unit := λ s,
+match (t s) with
+| (success a s) := mk_exception "fail_if_success combinator failed, given tactic succeeded" none s
+| (exception _ _ _) := success () s
+end
 
-meta def success_if_fail {α : Type u} (t : tactic α) : tactic unit :=
-λ s, match t s with
-| (interaction_monad.result.exception _ _ s') := success () s
-| (interaction_monad.result.success a s) :=
+/--
+`success_if_fail t` acts like `t`, but succeeds if `t` fails and fails if `t`
+succeeds. Changes made by `t` to the `tactic_state` are preserved only if `t`
+succeeds.
+-/
+meta def success_if_fail {α : Type u} (t : tactic α) : tactic unit := λ s,
+match t s with
+| (success a s) :=
    mk_exception "success_if_fail combinator failed, given tactic succeeded" none s
+| (exception _ _ _) := success () s
 end
 
 open nat
-/-- (iterate_at_most n t): repeat the given tactic at most n times or until t fails -/
-meta def iterate_at_most : nat → tactic unit → tactic unit
-| 0        t := skip
-| (succ n) t := (do t, iterate_at_most n t) <|> skip
 
-/-- (iterate_exactly n t) : execute t n times -/
-meta def iterate_exactly : nat → tactic unit → tactic unit
-| 0        t := skip
-| (succ n) t := do t, iterate_exactly n t
+/--
+`iterate_at_most n t` iterates `t` `n` times or until `t` fails, returning the
+result of each successful iteration.
+-/
+meta def iterate_at_most : nat → tactic α → tactic (list α)
+| 0       t := pure []
+| (n + 1) t := do
+  (some a) ← try_core t | pure [],
+  as ← iterate_at_most n t,
+  pure $ a :: as
 
-/-- Repeat the given tactic forever. -/
-meta def iterate : tactic unit → tactic unit :=
+/--
+`iterate_at_most' n t` repeats `t` `n` times or until `t` fails.
+-/
+meta def iterate_at_most' : nat → tactic unit → tactic unit
+| 0        t := skip
+| (succ n) t := do
+  (some _) ← try_core t | skip,
+  iterate_at_most' n t
+
+/--
+`iterate_exactly n t` iterates `t` `n` times, returning the result of
+each iteration. If any iteration fails, the whole tactic fails.
+-/
+meta def iterate_exactly : nat → tactic α → tactic (list α)
+| 0       t := pure []
+| (n + 1) t := do
+  a ← t,
+  as ← iterate_exactly n t,
+  pure $ a ::as
+
+/--
+`iterate_exactly' n t` executes `t` `n` times. If any iteration fails, the whole
+tactic fails.
+-/
+meta def iterate_exactly' : nat → tactic unit → tactic unit
+| 0       t := skip
+| (n + 1) t := t *> iterate_exactly' n t
+
+/--
+`iterate t` repeats `t` 100.000 times or until `t` fails, returning the
+result of each iteration.
+-/
+meta def iterate : tactic α → tactic (list α) :=
 iterate_at_most 100000
+
+/--
+`iterate' t` repeats `t` 100.000 times or until `t` fails.
+-/
+meta def iterate' : tactic unit → tactic unit :=
+iterate_at_most' 100000
 
 meta def returnopt (e : option α) : tactic α :=
 λ s, match e with
@@ -218,7 +284,7 @@ do o ← get_options,
 meta def returnex {α : Type} (e : exceptional α) : tactic α :=
 λ s, match e with
 | exceptional.success a      := success a s
-| exceptional.exception ._ f :=
+| exceptional.exception f :=
   match get_options s with
   | success opt _   := exception (some (λ u, f opt)) none s
   | exception _ _ _ := exception (some (λ u, f options.mk)) none s
@@ -955,38 +1021,57 @@ meta def first {α : Type u} : list (tactic α) → tactic α
 | (t::ts) := t <|> first ts
 
 /-- Applies the given tactic to the main goal and fails if it is not solved. -/
-meta def solve1 (tac : tactic unit) : tactic unit :=
+meta def solve1 {α} (tac : tactic α) : tactic α :=
 do gs ← get_goals,
    match gs with
    | []      := fail "solve1 tactic failed, there isn't any goal left to focus"
    | (g::rs) :=
      do set_goals [g],
-        tac,
+        a ← tac,
         gs' ← get_goals,
         match gs' with
-        | [] := set_goals rs
+        | [] := set_goals rs >> pure a
         | gs := fail "solve1 tactic failed, focused goal has not been solved"
         end
    end
 
 /-- `solve [t_1, ... t_n]` applies the first tactic that solves the main goal. -/
-meta def solve (ts : list (tactic unit)) : tactic unit :=
+meta def solve {α} (ts : list (tactic α)) : tactic α :=
 first $ map solve1 ts
 
-private meta def focus_aux : list (tactic unit) → list expr → list expr → tactic unit
+private meta def focus_aux {α} : list (tactic α) → list expr → list expr → tactic (list α)
+| []       []      rs := set_goals rs *> pure []
+| (t::ts)  []      rs := fail "focus' tactic failed, insufficient number of goals"
+| tts      (g::gs) rs :=
+  mcond (is_assigned g) (focus_aux tts gs rs) $
+    do set_goals [g],
+       t::ts ← pure tts | fail "focus' tactic failed, insufficient number of tactics",
+       a ← t,
+       rs' ← get_goals,
+       as ← focus_aux ts gs (rs ++ rs'),
+       pure $ a :: as
+
+/--
+`focus [t_1, ..., t_n]` applies t_i to the i-th goal. Fails if the number of
+goals is not n. Returns the results of t_i (one per goal).
+-/
+meta def focus {α} (ts : list (tactic α)) : tactic (list α) :=
+do gs ← get_goals, focus_aux ts gs []
+
+private meta def focus'_aux : list (tactic unit) → list expr → list expr → tactic unit
 | []       []      rs := set_goals rs
 | (t::ts)  []      rs := fail "focus tactic failed, insufficient number of goals"
 | tts      (g::gs) rs :=
-  mcond (is_assigned g) (focus_aux tts gs rs) $
+  mcond (is_assigned g) (focus'_aux tts gs rs) $
     do set_goals [g],
        t::ts ← pure tts | fail "focus tactic failed, insufficient number of tactics",
        t,
        rs' ← get_goals,
-       focus_aux ts gs (rs ++ rs')
+       focus'_aux ts gs (rs ++ rs')
 
-/-- `focus [t_1, ..., t_n]` applies t_i to the i-th goal. Fails if the number of goals is not n. -/
-meta def focus (ts : list (tactic unit)) : tactic unit :=
-do gs ← get_goals, focus_aux ts gs []
+/-- `focus' [t_1, ..., t_n]` applies t_i to the i-th goal. Fails if the number of goals is not n. -/
+meta def focus' (ts : list (tactic unit)) : tactic unit :=
+do gs ← get_goals, focus'_aux ts gs []
 
 meta def focus1 {α} (tac : tactic α) : tactic α :=
 do g::gs ← get_goals,
@@ -1000,44 +1085,111 @@ do g::gs ← get_goals,
       return a
    end
 
-private meta def all_goals_core (tac : tactic unit) : list expr → list expr → tactic unit
-| []        ac := set_goals ac
+private meta def all_goals_core {α} (tac : tactic α)
+  : list expr → list expr → tactic (list α)
+| []        ac := set_goals ac *> pure []
 | (g :: gs) ac :=
   mcond (is_assigned g) (all_goals_core gs ac) $
     do set_goals [g],
-       tac,
+       a ← tac,
        new_gs ← get_goals,
-       all_goals_core gs (ac ++ new_gs)
+       as ← all_goals_core gs (ac ++ new_gs),
+       pure $ a :: as
 
-/-- Apply the given tactic to all goals. -/
-meta def all_goals (tac : tactic unit) : tactic unit :=
+/--
+Apply the given tactic to all goals. Return one result per goal.
+-/
+meta def all_goals {α} (tac : tactic α) : tactic (list α) :=
 do gs ← get_goals,
    all_goals_core tac gs []
 
-private meta def any_goals_core (tac : tactic unit) : list expr → list expr → bool → tactic unit
-| []        ac progress := guard progress >> set_goals ac
+private meta def all_goals'_core (tac : tactic unit) : list expr → list expr → tactic unit
+| []        ac := set_goals ac
+| (g :: gs) ac :=
+  mcond (is_assigned g) (all_goals'_core gs ac) $
+    do set_goals [g],
+       tac,
+       new_gs ← get_goals,
+       all_goals'_core gs (ac ++ new_gs)
+
+/-- Apply the given tactic to all goals. -/
+meta def all_goals' (tac : tactic unit) : tactic unit :=
+do gs ← get_goals,
+   all_goals'_core tac gs []
+
+private meta def any_goals_core {α} (tac : tactic α) : list expr → list expr → bool → tactic (list (option α))
+| []        ac progress := guard progress *> set_goals ac *> pure []
 | (g :: gs) ac progress :=
   mcond (is_assigned g) (any_goals_core gs ac progress) $
     do set_goals [g],
-       succeeded ← try_core tac,
-       new_gs    ← get_goals,
-       any_goals_core gs (ac ++ new_gs) (succeeded.is_some || progress)
+       res ← try_core tac,
+       new_gs ← get_goals,
+       ress ← any_goals_core gs (ac ++ new_gs) (res.is_some || progress),
+       pure $ res :: ress
 
-/-- Apply the given tactic to any goal where it succeeds. The tactic succeeds only if
-   tac succeeds for at least one goal. -/
-meta def any_goals (tac : tactic unit) : tactic unit :=
+/--
+Apply `tac` to any goal where it succeeds. The tactic succeeds if `tac`
+succeeds for at least one goal. The returned list contains the result of `tac`
+for each goal: `some a` if tac succeeded, or `none` if it did not.
+-/
+meta def any_goals {α} (tac : tactic α) : tactic (list (option α)) :=
 do gs ← get_goals,
    any_goals_core tac gs [] ff
 
-/-- LCF-style AND_THEN tactic. It applies tac1, and if succeed applies tac2 to each subgoal produced by tac1 -/
-meta def seq (tac1 : tactic unit) (tac2 : tactic unit) : tactic unit :=
+private meta def any_goals'_core (tac : tactic unit) : list expr → list expr → bool → tactic unit
+| []        ac progress := guard progress >> set_goals ac
+| (g :: gs) ac progress :=
+  mcond (is_assigned g) (any_goals'_core gs ac progress) $
+    do set_goals [g],
+       succeeded ← try_core tac,
+       new_gs    ← get_goals,
+       any_goals'_core gs (ac ++ new_gs) (succeeded.is_some || progress)
+
+/-- Apply the given tactic to any goal where it succeeds. The tactic succeeds only if
+   tac succeeds for at least one goal. -/
+meta def any_goals' (tac : tactic unit) : tactic unit :=
+do gs ← get_goals,
+   any_goals'_core tac gs [] ff
+
+/--
+LCF-style AND_THEN tactic. It applies `tac1` to the main goal, then applies
+`tac2` to each goal produced by `tac1`.
+-/
+meta def seq {α β} (tac1 : tactic α) (tac2 : α → tactic β) : tactic (list β) :=
 do g::gs ← get_goals,
    set_goals [g],
-   tac1, all_goals tac2,
+   a ← tac1,
+   bs ← all_goals $ tac2 a,
+   gs' ← get_goals,
+   set_goals (gs' ++ gs),
+   pure bs
+
+/-- LCF-style AND_THEN tactic. It applies tac1, and if succeed applies tac2 to each subgoal produced by tac1 -/
+meta def seq' (tac1 : tactic unit) (tac2 : tactic unit) : tactic unit :=
+do g::gs ← get_goals,
+   set_goals [g],
+   tac1, all_goals' tac2,
    gs' ← get_goals,
    set_goals (gs' ++ gs)
 
-meta def seq_focus (tac1 : tactic unit) (tacs2 : list (tactic unit)) : tactic unit :=
+/--
+Applies `tac1` to the main goal, then applies each of the tactics in `tacs2` to
+one of the produced subgoals (like `focus'`).
+-/
+meta def seq_focus {α β} (tac1 : tactic α) (tacs2 : α → list (tactic β)) : tactic (list β) :=
+do g::gs ← get_goals,
+   set_goals [g],
+   a ← tac1,
+   bs ← focus $ tacs2 a,
+   gs' ← get_goals,
+   set_goals (gs' ++ gs),
+   pure bs
+
+/--
+Applies `tac1` to the main goal, then applies each of the tactics in `tacs2` to
+one of the produced subgoals (like `focus`).
+-/
+meta def seq_focus' (tac1 : tactic unit) (tacs2 : list (tactic unit)) : tactic unit :=
 do g::gs ← get_goals,
    set_goals [g],
    tac1, focus tacs2,
@@ -1045,10 +1197,10 @@ do g::gs ← get_goals,
    set_goals (gs' ++ gs)
 
 meta instance andthen_seq : has_andthen (tactic unit) (tactic unit) (tactic unit) :=
-⟨seq⟩
+⟨seq'⟩
 
 meta instance andthen_seq_focus : has_andthen (tactic unit) (list (tactic unit)) (tactic unit) :=
-⟨seq_focus⟩
+⟨seq_focus'⟩
 
 meta constant is_trace_enabled_for : name → bool
 
@@ -1278,7 +1430,7 @@ do dec_e ← (mk_app `decidable [e] <|> fail "by_cases tactic failed, type is no
    inst  ← (mk_instance dec_e <|> fail "by_cases tactic failed, type of given expression is not decidable"),
    t     ← target,
    tm    ← mk_mapp `dite [some e, some inst, some t],
-   seq (apply tm >> skip) (intro h >> skip)
+   seq' (apply tm >> skip) (intro h >> skip)
 
 meta def funext_core : list name → bool → tactic unit
 | []  tt       := return ()
@@ -1411,7 +1563,84 @@ meta def add_defn_equations (lp : list name) (params : list expr) (fn : expr)
 do opt ← get_options,
    updateex_env $ λ e, e.add_defn_eqns opt lp params fn eqns is_meta
 
+/-- Get the revertible part of the local context. These are the hypotheses that
+appear after the last frozen local instance in the local context. We call them
+revertible because `revert` can revert them, unlike those hypotheses which occur
+before a frozen instance. -/
+meta def revertible_local_context : tactic (list expr) :=
+do ctx ← local_context,
+   frozen ← frozen_local_instances,
+   pure $
+     match frozen with
+     | none := ctx
+     | some [] := ctx
+     | some (h :: _) := ctx.after (eq h)
+     end
+
+/--
+Rename local hypotheses according to the given `name_map`. The `name_map`
+contains as keys those hypotheses that should be renamed; the associated values
+are the new names.
+
+This tactic can only rename hypotheses which occur after the last frozen local
+instance. If you need to rename earlier hypotheses, try
+`unfreeze_local_instances`.
+
+If `strict` is true, we fail if `name_map` refers to hypotheses that do not
+appear in the local context or that appear before a frozen local instance.
+Conversely, if `strict` is false, some entries of `name_map` may be silently
+ignored.
+
+If `use_unique_names` is true, the keys of `name_map` should be the unique names
+of hypotheses to be renamed. Otherwise, the keys should be display names.
+
+Note that we allow shadowing, so renamed hypotheses may have the same name
+as other hypotheses in the context. If `use_unique_names` is false and there are
+multiple hypotheses with the same display name in the context, they are all
+renamed.
+-/
+meta def rename_many (renames : name_map name) (strict := tt) (use_unique_names := ff)
+: tactic unit :=
+do let hyp_name : expr → name :=
+     if use_unique_names then expr.local_uniq_name else expr.local_pp_name,
+   ctx ← revertible_local_context,
+   -- The part of the context after (but including) the first hypthesis that
+   -- must be renamed.
+   let ctx_suffix := ctx.drop_while (λ h, (renames.find $ hyp_name h).is_none),
+   when strict $ do {
+     let ctx_names := rb_map.set_of_list (ctx_suffix.map hyp_name),
+     let invalid_renames :=
+       (renames.to_list.map prod.fst).filter (λ h, ¬ ctx_names.contains h),
+     when ¬ invalid_renames.empty $ fail $ format.join
+       [ "Cannot rename these hypotheses:\n"
+       , format.join $ (invalid_renames.map to_fmt).intersperse ", "
+       , format.line
+       , "This is because these hypotheses either do not occur in the\n"
+       , "context or they occur before a frozen local instance.\n"
+       , "In the latter case, try `tactic.unfreeze_local_instances`."
+       ]
+   },
+   -- The new names for all hypotheses in ctx_suffix.
+   let new_names :=
+     ctx_suffix.map $ λ h,
+       (renames.find $ hyp_name h).get_or_else h.local_pp_name,
+   revert_lst ctx_suffix,
+   intro_lst new_names,
+   pure ()
+
+/--
+Rename a local hypothesis. This is a special case of `rename_many`;
+see there for caveats.
+-/
 meta def rename (curr : name) (new : name) : tactic unit :=
+rename_many (rb_map.of_list [⟨curr, new⟩])
+
+/--
+Rename a local hypothesis. Unlike `rename` and `rename_many`, this tactic does
+not preserve the order of hypotheses. Its implementation is simpler (and
+therefore probably faster) than that of `rename`.
+-/
+meta def rename_unstable (curr : name) (new : name) : tactic unit :=
 do h ← get_local curr,
    n ← revert h,
    intro new,

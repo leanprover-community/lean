@@ -243,12 +243,15 @@ struct structure_cmd_fn {
         expr                m_local; // name, type, and pos as an expr::local
         optional<expr>      m_default_val;
         field_kind          m_kind;
-        implicit_infer_kind m_infer_kind;
+        optional<implicit_infer_kind> m_infer_kind;
         bool                m_has_new_default; // if true, (re-)declare default value in this structure
 
         field_decl(expr const & local, optional<expr> const & default_val, field_kind kind,
-                   implicit_infer_kind infer_kind = implicit_infer_kind::Implicit):
+                   implicit_infer_kind infer_kind):
                 m_local(local), m_default_val(default_val), m_kind(kind), m_infer_kind(infer_kind),
+                m_has_new_default(default_val && kind == field_kind::new_field) {}
+        field_decl(expr const & local, optional<expr> const & default_val, field_kind kind) :
+                m_local(local), m_default_val(default_val), m_kind(kind), m_infer_kind(),
                 m_has_new_default(default_val && kind == field_kind::new_field) {}
 
         name const & get_name() const { return mlocal_name(m_local); }
@@ -802,7 +805,7 @@ struct structure_cmd_fn {
 
         expr type;
         optional<expr> default_value;
-        implicit_infer_kind kind = implicit_infer_kind::Implicit;
+        implicit_infer_kind kind = implicit_infer_kind::RelaxedImplicit;
         {
             parser::local_scope scope(m_p);
             buffer<expr> params;
@@ -1082,8 +1085,7 @@ struct structure_cmd_fn {
         for (field_decl const & field : m_fields) {
             if (!m_subobjects || field.m_kind != field_kind::from_parent) {
                 proj_names.push_back(m_name + mlocal_name(field.m_local));
-                infer_kinds.push_back(
-                        field.m_infer_kind != implicit_infer_kind::Implicit ? field.m_infer_kind : m_mk_infer);
+                infer_kinds.push_back(field.m_infer_kind ? *field.m_infer_kind : m_mk_infer);
             }
         }
         m_env = mk_projections(m_env, m_name, proj_names, infer_kinds, m_meta_info.m_attrs.has_class());
@@ -1253,7 +1255,7 @@ struct structure_cmd_fn {
                                                                              coercion_type, coercion_value, use_conv_opt);
             m_env = module::add(m_env, check(m_env, coercion_decl));
             add_alias(coercion_name);
-            m_env = vm_compile(m_env, m_env.get(coercion_name));
+            m_env = vm_compile(m_env, m_p.get_options(), m_env.get(coercion_name));
             if (!m_private_parents[i]) {
                 if (m_meta_info.m_attrs.has_class() && is_class(m_env, parent_name)) {
                     // if both are classes, then we also mark coercion_name as an instance
@@ -1302,7 +1304,7 @@ struct structure_cmd_fn {
             if (m_p.curr_is_token(get_lparen_tk()) || m_p.curr_is_token(get_lcurly_tk()) ||
                 m_p.curr_is_token(get_lbracket_tk())) {
                 m_mk_short = LEAN_DEFAULT_STRUCTURE_INTRO;
-                m_mk_infer = implicit_infer_kind::Implicit;
+                m_mk_infer = implicit_infer_kind::RelaxedImplicit;
             } else {
                 m_mk_short = m_p.check_atomic_id_next("invalid 'structure', atomic identifier expected");
                 m_mk_infer = parse_implicit_infer_modifier(m_p);
@@ -1314,7 +1316,7 @@ struct structure_cmd_fn {
         } else {
             m_mk_pos   = m_name_pos;
             m_mk_short = LEAN_DEFAULT_STRUCTURE_INTRO;
-            m_mk_infer = implicit_infer_kind::Implicit;
+            m_mk_infer = implicit_infer_kind::RelaxedImplicit;
             m_mk       = m_name + m_mk_short;
             process_empty_new_fields();
         }

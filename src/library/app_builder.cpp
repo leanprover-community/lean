@@ -616,11 +616,16 @@ public:
         }
         level A_lvl = get_level(A);
         expr mtype  = m_ctx.relaxed_whnf(m_ctx.infer(motive));
-        if (!is_pi(mtype) || !is_sort(binding_body(mtype))) {
+        if (!is_pi(mtype)) {
             lean_app_builder_trace(tout() << "failed to build eq.rec, invalid motive:\n" << motive << "\n";);
             throw app_builder_exception();
         }
-        level l_1    = sort_level(binding_body(mtype));
+        expr msort = m_ctx.relaxed_whnf(binding_body(mtype));
+        if (!is_sort(msort)) {
+            lean_app_builder_trace(tout() << "failed to build eq.rec, invalid motive:\n" << motive << "\n";);
+            throw app_builder_exception();
+        }
+        level l_1 = sort_level(msort);
         name const & eqrec = get_eq_rec_name();
         return ::lean::mk_app({mk_constant(eqrec, {l_1, A_lvl}), A, lhs, motive, H1, rhs, H2});
     }
