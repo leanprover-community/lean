@@ -234,53 +234,6 @@ name const * g_nat_zero_ne_bit1 = nullptr;
 name const * g_nat_zero_ne_one = nullptr;
 name const * g_ne = nullptr;
 name const * g_neq_of_not_iff = nullptr;
-name const * g_norm_num_add1 = nullptr;
-name const * g_norm_num_add1_bit0 = nullptr;
-name const * g_norm_num_add1_bit1_helper = nullptr;
-name const * g_norm_num_add1_one = nullptr;
-name const * g_norm_num_add1_zero = nullptr;
-name const * g_norm_num_add_div_helper = nullptr;
-name const * g_norm_num_bin_add_zero = nullptr;
-name const * g_norm_num_bin_zero_add = nullptr;
-name const * g_norm_num_bit0_add_bit0_helper = nullptr;
-name const * g_norm_num_bit0_add_bit1_helper = nullptr;
-name const * g_norm_num_bit0_add_one = nullptr;
-name const * g_norm_num_bit1_add_bit0_helper = nullptr;
-name const * g_norm_num_bit1_add_bit1_helper = nullptr;
-name const * g_norm_num_bit1_add_one_helper = nullptr;
-name const * g_norm_num_div_add_helper = nullptr;
-name const * g_norm_num_div_eq_div_helper = nullptr;
-name const * g_norm_num_div_helper = nullptr;
-name const * g_norm_num_div_mul_helper = nullptr;
-name const * g_norm_num_mk_cong = nullptr;
-name const * g_norm_num_mul_bit0_helper = nullptr;
-name const * g_norm_num_mul_bit1_helper = nullptr;
-name const * g_norm_num_mul_div_helper = nullptr;
-name const * g_norm_num_neg_add_neg_helper = nullptr;
-name const * g_norm_num_neg_add_pos_helper1 = nullptr;
-name const * g_norm_num_neg_add_pos_helper2 = nullptr;
-name const * g_norm_num_neg_mul_neg_helper = nullptr;
-name const * g_norm_num_neg_mul_pos_helper = nullptr;
-name const * g_norm_num_neg_neg_helper = nullptr;
-name const * g_norm_num_neg_zero_helper = nullptr;
-name const * g_norm_num_nonneg_bit0_helper = nullptr;
-name const * g_norm_num_nonneg_bit1_helper = nullptr;
-name const * g_norm_num_nonzero_of_div_helper = nullptr;
-name const * g_norm_num_nonzero_of_neg_helper = nullptr;
-name const * g_norm_num_nonzero_of_pos_helper = nullptr;
-name const * g_norm_num_one_add_bit0 = nullptr;
-name const * g_norm_num_one_add_bit1_helper = nullptr;
-name const * g_norm_num_one_add_one = nullptr;
-name const * g_norm_num_pos_add_neg_helper = nullptr;
-name const * g_norm_num_pos_bit0_helper = nullptr;
-name const * g_norm_num_pos_bit1_helper = nullptr;
-name const * g_norm_num_pos_mul_neg_helper = nullptr;
-name const * g_norm_num_sub_nat_pos_helper = nullptr;
-name const * g_norm_num_sub_nat_zero_helper = nullptr;
-name const * g_norm_num_subst_into_div = nullptr;
-name const * g_norm_num_subst_into_prod = nullptr;
-name const * g_norm_num_subst_into_subtr = nullptr;
-name const * g_norm_num_subst_into_sum = nullptr;
 name const * g_not = nullptr;
 name const * g_not_of_eq_false = nullptr;
 name const * g_not_of_iff_false = nullptr;
@@ -594,53 +547,6 @@ void initialize_constants() {
     g_nat_zero_ne_one = new name{"nat", "zero_ne_one"};
     g_ne = new name{"ne"};
     g_neq_of_not_iff = new name{"neq_of_not_iff"};
-    g_norm_num_add1 = new name{"norm_num", "add1"};
-    g_norm_num_add1_bit0 = new name{"norm_num", "add1_bit0"};
-    g_norm_num_add1_bit1_helper = new name{"norm_num", "add1_bit1_helper"};
-    g_norm_num_add1_one = new name{"norm_num", "add1_one"};
-    g_norm_num_add1_zero = new name{"norm_num", "add1_zero"};
-    g_norm_num_add_div_helper = new name{"norm_num", "add_div_helper"};
-    g_norm_num_bin_add_zero = new name{"norm_num", "bin_add_zero"};
-    g_norm_num_bin_zero_add = new name{"norm_num", "bin_zero_add"};
-    g_norm_num_bit0_add_bit0_helper = new name{"norm_num", "bit0_add_bit0_helper"};
-    g_norm_num_bit0_add_bit1_helper = new name{"norm_num", "bit0_add_bit1_helper"};
-    g_norm_num_bit0_add_one = new name{"norm_num", "bit0_add_one"};
-    g_norm_num_bit1_add_bit0_helper = new name{"norm_num", "bit1_add_bit0_helper"};
-    g_norm_num_bit1_add_bit1_helper = new name{"norm_num", "bit1_add_bit1_helper"};
-    g_norm_num_bit1_add_one_helper = new name{"norm_num", "bit1_add_one_helper"};
-    g_norm_num_div_add_helper = new name{"norm_num", "div_add_helper"};
-    g_norm_num_div_eq_div_helper = new name{"norm_num", "div_eq_div_helper"};
-    g_norm_num_div_helper = new name{"norm_num", "div_helper"};
-    g_norm_num_div_mul_helper = new name{"norm_num", "div_mul_helper"};
-    g_norm_num_mk_cong = new name{"norm_num", "mk_cong"};
-    g_norm_num_mul_bit0_helper = new name{"norm_num", "mul_bit0_helper"};
-    g_norm_num_mul_bit1_helper = new name{"norm_num", "mul_bit1_helper"};
-    g_norm_num_mul_div_helper = new name{"norm_num", "mul_div_helper"};
-    g_norm_num_neg_add_neg_helper = new name{"norm_num", "neg_add_neg_helper"};
-    g_norm_num_neg_add_pos_helper1 = new name{"norm_num", "neg_add_pos_helper1"};
-    g_norm_num_neg_add_pos_helper2 = new name{"norm_num", "neg_add_pos_helper2"};
-    g_norm_num_neg_mul_neg_helper = new name{"norm_num", "neg_mul_neg_helper"};
-    g_norm_num_neg_mul_pos_helper = new name{"norm_num", "neg_mul_pos_helper"};
-    g_norm_num_neg_neg_helper = new name{"norm_num", "neg_neg_helper"};
-    g_norm_num_neg_zero_helper = new name{"norm_num", "neg_zero_helper"};
-    g_norm_num_nonneg_bit0_helper = new name{"norm_num", "nonneg_bit0_helper"};
-    g_norm_num_nonneg_bit1_helper = new name{"norm_num", "nonneg_bit1_helper"};
-    g_norm_num_nonzero_of_div_helper = new name{"norm_num", "nonzero_of_div_helper"};
-    g_norm_num_nonzero_of_neg_helper = new name{"norm_num", "nonzero_of_neg_helper"};
-    g_norm_num_nonzero_of_pos_helper = new name{"norm_num", "nonzero_of_pos_helper"};
-    g_norm_num_one_add_bit0 = new name{"norm_num", "one_add_bit0"};
-    g_norm_num_one_add_bit1_helper = new name{"norm_num", "one_add_bit1_helper"};
-    g_norm_num_one_add_one = new name{"norm_num", "one_add_one"};
-    g_norm_num_pos_add_neg_helper = new name{"norm_num", "pos_add_neg_helper"};
-    g_norm_num_pos_bit0_helper = new name{"norm_num", "pos_bit0_helper"};
-    g_norm_num_pos_bit1_helper = new name{"norm_num", "pos_bit1_helper"};
-    g_norm_num_pos_mul_neg_helper = new name{"norm_num", "pos_mul_neg_helper"};
-    g_norm_num_sub_nat_pos_helper = new name{"norm_num", "sub_nat_pos_helper"};
-    g_norm_num_sub_nat_zero_helper = new name{"norm_num", "sub_nat_zero_helper"};
-    g_norm_num_subst_into_div = new name{"norm_num", "subst_into_div"};
-    g_norm_num_subst_into_prod = new name{"norm_num", "subst_into_prod"};
-    g_norm_num_subst_into_subtr = new name{"norm_num", "subst_into_subtr"};
-    g_norm_num_subst_into_sum = new name{"norm_num", "subst_into_sum"};
     g_not = new name{"not"};
     g_not_of_eq_false = new name{"not_of_eq_false"};
     g_not_of_iff_false = new name{"not_of_iff_false"};
@@ -955,53 +861,6 @@ void finalize_constants() {
     delete g_nat_zero_ne_one;
     delete g_ne;
     delete g_neq_of_not_iff;
-    delete g_norm_num_add1;
-    delete g_norm_num_add1_bit0;
-    delete g_norm_num_add1_bit1_helper;
-    delete g_norm_num_add1_one;
-    delete g_norm_num_add1_zero;
-    delete g_norm_num_add_div_helper;
-    delete g_norm_num_bin_add_zero;
-    delete g_norm_num_bin_zero_add;
-    delete g_norm_num_bit0_add_bit0_helper;
-    delete g_norm_num_bit0_add_bit1_helper;
-    delete g_norm_num_bit0_add_one;
-    delete g_norm_num_bit1_add_bit0_helper;
-    delete g_norm_num_bit1_add_bit1_helper;
-    delete g_norm_num_bit1_add_one_helper;
-    delete g_norm_num_div_add_helper;
-    delete g_norm_num_div_eq_div_helper;
-    delete g_norm_num_div_helper;
-    delete g_norm_num_div_mul_helper;
-    delete g_norm_num_mk_cong;
-    delete g_norm_num_mul_bit0_helper;
-    delete g_norm_num_mul_bit1_helper;
-    delete g_norm_num_mul_div_helper;
-    delete g_norm_num_neg_add_neg_helper;
-    delete g_norm_num_neg_add_pos_helper1;
-    delete g_norm_num_neg_add_pos_helper2;
-    delete g_norm_num_neg_mul_neg_helper;
-    delete g_norm_num_neg_mul_pos_helper;
-    delete g_norm_num_neg_neg_helper;
-    delete g_norm_num_neg_zero_helper;
-    delete g_norm_num_nonneg_bit0_helper;
-    delete g_norm_num_nonneg_bit1_helper;
-    delete g_norm_num_nonzero_of_div_helper;
-    delete g_norm_num_nonzero_of_neg_helper;
-    delete g_norm_num_nonzero_of_pos_helper;
-    delete g_norm_num_one_add_bit0;
-    delete g_norm_num_one_add_bit1_helper;
-    delete g_norm_num_one_add_one;
-    delete g_norm_num_pos_add_neg_helper;
-    delete g_norm_num_pos_bit0_helper;
-    delete g_norm_num_pos_bit1_helper;
-    delete g_norm_num_pos_mul_neg_helper;
-    delete g_norm_num_sub_nat_pos_helper;
-    delete g_norm_num_sub_nat_zero_helper;
-    delete g_norm_num_subst_into_div;
-    delete g_norm_num_subst_into_prod;
-    delete g_norm_num_subst_into_subtr;
-    delete g_norm_num_subst_into_sum;
     delete g_not;
     delete g_not_of_eq_false;
     delete g_not_of_iff_false;
@@ -1315,53 +1174,6 @@ name const & get_nat_zero_ne_bit1_name() { return *g_nat_zero_ne_bit1; }
 name const & get_nat_zero_ne_one_name() { return *g_nat_zero_ne_one; }
 name const & get_ne_name() { return *g_ne; }
 name const & get_neq_of_not_iff_name() { return *g_neq_of_not_iff; }
-name const & get_norm_num_add1_name() { return *g_norm_num_add1; }
-name const & get_norm_num_add1_bit0_name() { return *g_norm_num_add1_bit0; }
-name const & get_norm_num_add1_bit1_helper_name() { return *g_norm_num_add1_bit1_helper; }
-name const & get_norm_num_add1_one_name() { return *g_norm_num_add1_one; }
-name const & get_norm_num_add1_zero_name() { return *g_norm_num_add1_zero; }
-name const & get_norm_num_add_div_helper_name() { return *g_norm_num_add_div_helper; }
-name const & get_norm_num_bin_add_zero_name() { return *g_norm_num_bin_add_zero; }
-name const & get_norm_num_bin_zero_add_name() { return *g_norm_num_bin_zero_add; }
-name const & get_norm_num_bit0_add_bit0_helper_name() { return *g_norm_num_bit0_add_bit0_helper; }
-name const & get_norm_num_bit0_add_bit1_helper_name() { return *g_norm_num_bit0_add_bit1_helper; }
-name const & get_norm_num_bit0_add_one_name() { return *g_norm_num_bit0_add_one; }
-name const & get_norm_num_bit1_add_bit0_helper_name() { return *g_norm_num_bit1_add_bit0_helper; }
-name const & get_norm_num_bit1_add_bit1_helper_name() { return *g_norm_num_bit1_add_bit1_helper; }
-name const & get_norm_num_bit1_add_one_helper_name() { return *g_norm_num_bit1_add_one_helper; }
-name const & get_norm_num_div_add_helper_name() { return *g_norm_num_div_add_helper; }
-name const & get_norm_num_div_eq_div_helper_name() { return *g_norm_num_div_eq_div_helper; }
-name const & get_norm_num_div_helper_name() { return *g_norm_num_div_helper; }
-name const & get_norm_num_div_mul_helper_name() { return *g_norm_num_div_mul_helper; }
-name const & get_norm_num_mk_cong_name() { return *g_norm_num_mk_cong; }
-name const & get_norm_num_mul_bit0_helper_name() { return *g_norm_num_mul_bit0_helper; }
-name const & get_norm_num_mul_bit1_helper_name() { return *g_norm_num_mul_bit1_helper; }
-name const & get_norm_num_mul_div_helper_name() { return *g_norm_num_mul_div_helper; }
-name const & get_norm_num_neg_add_neg_helper_name() { return *g_norm_num_neg_add_neg_helper; }
-name const & get_norm_num_neg_add_pos_helper1_name() { return *g_norm_num_neg_add_pos_helper1; }
-name const & get_norm_num_neg_add_pos_helper2_name() { return *g_norm_num_neg_add_pos_helper2; }
-name const & get_norm_num_neg_mul_neg_helper_name() { return *g_norm_num_neg_mul_neg_helper; }
-name const & get_norm_num_neg_mul_pos_helper_name() { return *g_norm_num_neg_mul_pos_helper; }
-name const & get_norm_num_neg_neg_helper_name() { return *g_norm_num_neg_neg_helper; }
-name const & get_norm_num_neg_zero_helper_name() { return *g_norm_num_neg_zero_helper; }
-name const & get_norm_num_nonneg_bit0_helper_name() { return *g_norm_num_nonneg_bit0_helper; }
-name const & get_norm_num_nonneg_bit1_helper_name() { return *g_norm_num_nonneg_bit1_helper; }
-name const & get_norm_num_nonzero_of_div_helper_name() { return *g_norm_num_nonzero_of_div_helper; }
-name const & get_norm_num_nonzero_of_neg_helper_name() { return *g_norm_num_nonzero_of_neg_helper; }
-name const & get_norm_num_nonzero_of_pos_helper_name() { return *g_norm_num_nonzero_of_pos_helper; }
-name const & get_norm_num_one_add_bit0_name() { return *g_norm_num_one_add_bit0; }
-name const & get_norm_num_one_add_bit1_helper_name() { return *g_norm_num_one_add_bit1_helper; }
-name const & get_norm_num_one_add_one_name() { return *g_norm_num_one_add_one; }
-name const & get_norm_num_pos_add_neg_helper_name() { return *g_norm_num_pos_add_neg_helper; }
-name const & get_norm_num_pos_bit0_helper_name() { return *g_norm_num_pos_bit0_helper; }
-name const & get_norm_num_pos_bit1_helper_name() { return *g_norm_num_pos_bit1_helper; }
-name const & get_norm_num_pos_mul_neg_helper_name() { return *g_norm_num_pos_mul_neg_helper; }
-name const & get_norm_num_sub_nat_pos_helper_name() { return *g_norm_num_sub_nat_pos_helper; }
-name const & get_norm_num_sub_nat_zero_helper_name() { return *g_norm_num_sub_nat_zero_helper; }
-name const & get_norm_num_subst_into_div_name() { return *g_norm_num_subst_into_div; }
-name const & get_norm_num_subst_into_prod_name() { return *g_norm_num_subst_into_prod; }
-name const & get_norm_num_subst_into_subtr_name() { return *g_norm_num_subst_into_subtr; }
-name const & get_norm_num_subst_into_sum_name() { return *g_norm_num_subst_into_sum; }
 name const & get_not_name() { return *g_not; }
 name const & get_not_of_eq_false_name() { return *g_not_of_eq_false; }
 name const & get_not_of_iff_false_name() { return *g_not_of_iff_false; }
