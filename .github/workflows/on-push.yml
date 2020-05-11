@@ -143,7 +143,9 @@ jobs:
     - run: mkdir -p ./build
     - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
       working-directory: ./build
-    - run: NODE_OPTIONS="--max-old-space-size=4096" emmake make lean_js
+    - run: |
+        emmake make gmp
+        NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2 lean_js
       working-directory: ./build
     - run: ./script/ci_emscripten_zip.sh
     - name: Release
@@ -171,7 +173,9 @@ jobs:
     - run: mkdir -p ./build
     - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
       working-directory: ./build
-    - run: NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2
+    - run: |
+        emmake make gmp
+        NODE_OPTIONS="--max-old-space-size=4096" emmake make -j2
       working-directory: ./build
     - name: Test
       run: ctest -j2 --output-on-failure
