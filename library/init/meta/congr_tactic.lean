@@ -12,7 +12,7 @@ meta def apply_congr_core (clemma : congr_lemma) : tactic unit :=
 do assert `H_congr_lemma clemma.type,
    exact clemma.proof,
    get_local `H_congr_lemma >>= apply,
-   all_goals $ do
+   all_goals' $ do
      try (applyc `heq_of_eq),
      get_local `H_congr_lemma >>= clear
 
@@ -36,6 +36,6 @@ do tgt ← target,
    <|> fail "congr tactic failed"
 
 meta def congr : tactic unit :=
-do focus1 (try assumption >> congr_core >> all_goals (try reflexivity >> try congr))
+do focus1 (try assumption >> congr_core >> all_goals' (try reflexivity >> try congr))
 
 end tactic
