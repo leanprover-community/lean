@@ -10,6 +10,7 @@ Author: Leonardo de Moura
 
 namespace lean {
 class ro_metavar_env;
+expr instantiate(expr const & e, unsigned s, unsigned n, expr const * subst);
 /** \brief Replace the free variables with indices 0, ..., n-1 with s[0], ..., s[n-1] in e. */
 expr instantiate(expr const & e, unsigned n, expr const * s);
 expr instantiate(expr const & e, std::initializer_list<expr> const & l);

@@ -285,6 +285,11 @@ vm_obj expr_instantiate_vars(vm_obj const & e, vm_obj const & vs) {
     to_buffer_expr(vs, vs_buf);
     return to_obj(instantiate(to_expr(e), vs_buf.size(), vs_buf.data()));
 }
+vm_obj expr_instantiate_vars_core(vm_obj const & e, vm_obj const & s, vm_obj const & vs) {
+    buffer<expr> vs_buf;
+    to_buffer_expr(vs, vs_buf);
+    return to_obj(instantiate(to_expr(e), to_unsigned(s), vs_buf.size(), vs_buf.data()));
+}
 
 vm_obj expr_abstract_local(vm_obj const & e, vm_obj const & n) {
     return to_obj(abstract_local(to_expr(e), to_name(n)));
@@ -527,6 +532,7 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_nth_var"}),     expr_instantiate_nth_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_var"}),  expr_instantiate_var);
     DECLARE_VM_BUILTIN(name({"expr", "instantiate_vars"}), expr_instantiate_vars);
+    DECLARE_VM_BUILTIN(name({"expr", "instantiate_vars_core"}), expr_instantiate_vars_core);
     DECLARE_VM_BUILTIN(name({"expr", "subst"}),            expr_subst);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_local"}),   expr_abstract_local);
     DECLARE_VM_BUILTIN(name({"expr", "abstract_locals"}),  expr_abstract_locals);
