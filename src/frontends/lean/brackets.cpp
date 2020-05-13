@@ -45,16 +45,24 @@ static expr mk_singleton(parser & p, pos_info const & pos, expr const & e) {
 /* Parse rest of the insertable '{' expr ... */
 static expr parse_fin_set(parser & p, pos_info const & pos, expr const & e) {
     lean_assert(p.curr_is_token(get_comma_tk()) || p.curr_is_token(get_rcurly_tk()));
-    expr r = mk_singleton(p, pos, e);
+    buffer<pair<pos_info, expr>> stack;
+    stack.emplace_back(pos, e);
     while (p.curr_is_token(get_comma_tk())) {
         auto ins_pos = p.pos();
         p.next();
         if (p.curr_is_token(get_rcurly_tk())) break;
         expr e2 = p.parse_expr();
-        expr insert = p.save_pos(mk_constant(get_has_insert_insert_name()), ins_pos);
-        r = p.rec_save_pos(mk_app(insert, e2, r), ins_pos);
+        stack.emplace_back(ins_pos, e2);
     }
     p.check_token_next(get_rcurly_tk(), "invalid explicit finite collection, '}' expected");
+    unsigned i = stack.size() - 1;
+    auto e2 = stack[i];
+    expr r = mk_singleton(p, e2.first, e2.second);
+    while (i--) {
+        e2 = stack[i];
+        expr insert = p.save_pos(mk_constant(get_has_insert_insert_name()), e2.first);
+        r = p.rec_save_pos(mk_app(insert, e2.second, r), e2.first);
+    }
     return r;
 }
 

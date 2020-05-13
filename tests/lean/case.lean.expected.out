@@ -13,8 +13,8 @@ xs_tl : list ℕ
 ⊢ ℕ
 case.lean:18:4: error: solve1 tactic failed, focused goal has not been solved
 state:
-case list.cons
-xs_ih x x : ℕ,
+case list.cons, list.cons
+x xs_ih x : ℕ,
 xs : list ℕ
 ⊢ ℕ
 case.lean:26:2: error: solve1 tactic failed, focused goal has not been solved
@@ -23,4 +23,96 @@ case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ,
 xs_ih : ℕ
+⊢ ℕ
+case.lean:32:2: error: solve1 tactic failed, focused goal has not been solved
+state:
+case list.cons
+xs : list ℕ,
+y : ℕ,
+ys : list ℕ,
+h : xs = y :: ys
+⊢ ℕ
+case.lean:38:2: error: Invalid `case`: there is no goal tagged with suffix [no_such_case].
+state:
+2 goals
+case list.nil
+⊢ ℕ
+
+case list.cons
+xs_hd : ℕ,
+xs_tl : list ℕ
+⊢ ℕ
+case.lean:44:2: error: solve1 tactic failed, focused goal has not been solved
+state:
+case list.cons
+xs_hd : ℕ,
+xs_tl : list ℕ
+⊢ ℕ
+case.lean:50:2: error: Invalid `case`: there is more than one goal tagged with suffix [cons].
+Matching tags: [[list.nil, list.cons], [list.cons, list.cons]]
+state:
+4 goals
+case list.nil, list.nil
+⊢ ℕ
+
+case list.nil, list.cons
+ys_hd : ℕ,
+ys_tl : list ℕ
+⊢ ℕ
+
+case list.cons, list.nil
+xs_hd : ℕ,
+xs_tl : list ℕ
+⊢ ℕ
+
+case list.cons, list.cons
+xs_hd : ℕ,
+xs_tl : list ℕ,
+ys_hd : ℕ,
+ys_tl : list ℕ
+⊢ ℕ
+case.lean:56:2: error: Invalid `case`: You gave 3 names, but the case introduces
+         2 new hypotheses.
+state:
+2 goals
+case list.cons
+xs_hd : ℕ,
+xs_tl : list ℕ
+⊢ ℕ
+
+case list.nil
+⊢ ℕ
+case.lean:62:2: error: Invalid `case`: You gave 4 names, but the case introduces
+         3 new hypotheses.
+state:
+4 goals
+case list.cons, list.cons
+xs_hd : ℕ,
+xs_tl : list ℕ,
+xs_ih ys_hd : ℕ,
+ys_tl : list ℕ,
+ys_ih : ℕ
+⊢ ℕ
+
+case list.nil, list.nil
+⊢ ℕ
+
+case list.nil, list.cons
+ys_hd : ℕ,
+ys_tl : list ℕ,
+ys_ih : ℕ
+⊢ ℕ
+
+case list.cons, list.nil
+xs_hd : ℕ,
+xs_tl : list ℕ,
+xs_ih : ℕ
+⊢ ℕ
+case.lean:68:2: error: solve1 tactic failed, focused goal has not been solved
+state:
+x : ℕ,
+xs : list ℕ,
+ih_xs y : ℕ,
+ys : list ℕ,
+ih_ys : ℕ
 ⊢ ℕ

@@ -822,6 +822,18 @@ meta def introv : list name → tactic (list expr)
 | []      := intros_dep
 | (n::ns) := do hs ← intros_dep, h ← intro n, hs' ← introv ns, return (hs ++ h :: hs')
 
+/--
+`intron' n` introduces `n` hypotheses and returns the resulting local
+constants. Fails if there are not at least `n` arguments to introduce. If you do
+not need the return value, use `intron`.
+-/
+meta def intron' : ℕ → tactic (list expr)
+| 0 := pure []
+| (n + 1) := do
+  h ← intro1,
+  hs ← intron' n,
+  pure $ h :: hs
+
 /-- Returns n fully qualified if it refers to a constant, or else fails. -/
 meta def resolve_constant (n : name) : tactic name :=
 do (expr.const n _) ← resolve_name n,
@@ -1404,10 +1416,12 @@ revert_kdependencies e md
     Two different transparency modes are used `md` and `dmd`.
     The mode `md` is used with `cases_core` and `dmd` with `generalize` and `revert_kdeps`.
 
-    It returns the constructor names associated with each new goal. -/
-meta def cases (e : expr) (ids : list name := []) (md := semireducible) (dmd := semireducible) : tactic (list name) :=
+    It returns the constructor names associated with each new goal and the newly
+    introduced hypotheses.
+-/
+meta def cases (e : expr) (ids : list name := []) (md := semireducible) (dmd := semireducible) : tactic (list (name × list expr)) :=
 if e.is_local_constant then
-  do r ← cases_core e ids md, return $ r.map (λ t, t.1)
+  do r ← cases_core e ids md, return $ r.map (λ ⟨n, hs, _⟩, ⟨n, hs⟩)
 else do
   n ← revert_kdependencies e dmd,
   x ← get_unused_name,
@@ -1418,7 +1432,10 @@ else do
       get_local x >>= tactic.revert,
       return ()),
   h ← tactic.intro1,
-  focus1 (do r ← cases_core h ids md, all_goals (intron n), return $ r.map (λ t, t.1))
+  focus1 $ do
+    r ← cases_core h ids md,
+    hs' ← all_goals (intron' n),
+    return $ r.map₂ (λ ⟨n, hs, _⟩ hs', ⟨n, hs ++ hs'⟩) hs'
 
 /-- The same as `exact` except you can add proof holes. -/
 meta def refine (e : pexpr) : tactic unit :=
