@@ -193,9 +193,10 @@ meta def tactic_render : tactic (html empty) := do
        ]]
     ]
   ),
-  pure $ h "ul" [className "list m2"]
-       $ list.map (h "li" [className "lh-copy pv3 ba bl-0 bt-0 br-0 b--dotted b--black-30"])
-       $ list.map (λ x, [x])
+  pure $ h "ul" [className "list pl0"]
+       $ list.mapi (λ x i,
+         let border_cn := if i + 1 = hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
+         h "li" [className $ "lh-copy " ++ border_cn] [x])
        $ hs
 
 meta def mk_tactic_widget {α β σ : Type}
