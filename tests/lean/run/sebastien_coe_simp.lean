@@ -13,7 +13,7 @@ def my_equiv2 : my_equiv α :=
 
 @[simp] lemma one_eq_two : my_equiv1 α = my_equiv2 α := rfl
 
-lemma other (x : ℕ) : my_equiv1 ℕ (x + 0) = my_equiv2 ℕ x := by simp -- does not fail
+lemma other (x : ℕ) : my_equiv1 ℕ (x + 0) = my_equiv2 ℕ x := by simp [nat.add_zero] -- does not fail
 
 @[simp] lemma two_apply (x : α) : my_equiv2 α x = x := rfl
 
