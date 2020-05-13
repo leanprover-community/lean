@@ -125,18 +125,49 @@ inductive case_tag
 | pi (names : list name) (num_arguments : ℕ)
 | hyps (names : list name) (arguments : list name)
 
-/--
-Display a case tag.
--/
+open case_tag
+
+section
+
+open format
+
+protected meta def case_tag.to_format : case_tag → format
+| (pi names num_arguments) := join
+  [ "(pi "
+  , group $ nest 4 $ join $ list.intersperse line
+      [names.to_format, format.of_nat num_arguments]
+  , ")" ]
+| (hyps names arguments) := join
+  [ "(hyps "
+  , group $ nest 6 $ join $ list.intersperse line
+      [names.to_format, arguments.to_format]
+  , ")"
+  ]
+
+end
+
+protected def case_tag.repr : case_tag → string
+| (pi names num_arguments) :=
+  "(pi " ++ names.repr ++ " " ++ num_arguments.repr ++ ")"
+| (hyps names arguments) :=
+  "(hyps " ++ names.repr ++ " " ++ arguments.repr ++ ")"
+
 protected def case_tag.to_string : case_tag → string
-| (case_tag.pi names num_arguments) :=
-  "(case_tag.pi " ++ to_string names ++ " " ++ to_string num_arguments ++ ")"
-| (case_tag.hyps names arguments) :=
-  "(case_tag.hyps " ++ to_string names ++ " " ++ to_string arguments ++ ")"
+| (pi names num_arguments) :=
+  "(pi " ++ names.to_string ++ " " ++ to_string num_arguments ++ ")"
+| (hyps names arguments) :=
+  "(hyps " ++ names.to_string ++ " " ++ arguments.to_string ++ ")"
+
 
 namespace case_tag
 
 open name (mk_string mk_numeral)
+
+meta instance : has_to_format case_tag :=
+⟨case_tag.to_format⟩
+
+instance : has_repr case_tag :=
+⟨case_tag.repr⟩
 
 instance : has_to_string case_tag :=
 ⟨case_tag.to_string⟩
