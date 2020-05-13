@@ -46,10 +46,10 @@ protected lemma one_pos : (1:int) > 0 :=
 int.zero_lt_one
 
 protected lemma bit0_pos {a : ℤ} : a > 0 → bit0 a > 0 :=
-λ h, add_pos h h
+λ h, int.add_pos h h
 
 protected lemma bit1_pos {a : ℤ} : a ≥ 0 → bit1 a > 0 :=
-λ h, lt_add_of_le_of_pos (add_nonneg h h) int.zero_lt_one
+λ h, int.lt_add_of_le_of_pos (int.add_nonneg h h) int.zero_lt_one
 
 protected lemma zero_nonneg : (0:int) ≥ 0 :=
 le_refl 0
@@ -58,7 +58,7 @@ protected lemma one_nonneg : (1:int) ≥ 0 :=
 le_of_lt (int.zero_lt_one)
 
 protected lemma bit0_nonneg {a : ℤ} : a ≥ 0 → bit0 a ≥ 0 :=
-λ h, add_nonneg h h
+λ h, int.add_nonneg h h
 
 protected lemma bit1_nonneg {a : ℤ} : a ≥ 0 → bit1 a ≥ 0 :=
 λ h, le_of_lt (int.bit1_pos h)
