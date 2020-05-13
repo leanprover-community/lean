@@ -15,6 +15,7 @@ Author: Leonardo de Moura
 #include "library/cache_helper.h"
 #include "library/app_builder.h"
 #include "library/relation_manager.h"
+#include "library/util.h"
 
 namespace lean {
 static void trace_fun(name const & n) {
@@ -441,10 +442,6 @@ public:
         return ::lean::mk_app(mk_constant(get_eq_name(), {lvl}), A, a, b);
     }
 
-    expr mk_iff(expr const & a, expr const & b) {
-        return ::lean::mk_app(mk_constant(get_iff_name()), a, b);
-    }
-
     expr mk_heq(expr const & a, expr const & b) {
         expr A    = m_ctx.infer(a);
         expr B    = m_ctx.infer(b);
@@ -473,9 +470,6 @@ public:
         expr A     = m_ctx.infer(a);
         level lvl  = get_level(A);
         return ::lean::mk_app(mk_constant(get_eq_refl_name(), {lvl}), A, a);
-    }
-    expr mk_iff_refl(expr const & a) {
-        return ::lean::mk_app(mk_constant(get_iff_refl_name()), a);
     }
     expr mk_heq_refl(expr const & a) {
         expr A     = m_ctx.infer(a);
@@ -697,71 +691,6 @@ public:
         return mk_eq_rec(motive, minor, H);
     }
 
-    expr mk_partial_add(expr const & A) {
-        level lvl = get_level(A);
-        auto A_has_add = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_has_add_name(), {lvl}), A));
-        if (!A_has_add) {
-            trace_inst_failure(A, "has_add");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_has_add_add_name(), {lvl}), A, *A_has_add);
-    }
-
-    expr mk_partial_mul(expr const & A) {
-        level lvl = get_level(A);
-        auto A_has_mul = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_has_mul_name(), {lvl}), A));
-        if (!A_has_mul) {
-            trace_inst_failure(A, "has_mul");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_has_mul_mul_name(), {lvl}), A, *A_has_mul);
-    }
-
-    expr mk_zero(expr const & A) {
-        level lvl = get_level(A);
-        auto A_has_zero = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_has_zero_name(), {lvl}), A));
-        if (!A_has_zero) {
-            trace_inst_failure(A, "has_zero");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_has_zero_zero_name(), {lvl}), A, *A_has_zero);
-    }
-
-    expr mk_one(expr const & A) {
-        level lvl = get_level(A);
-        auto A_has_one = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_has_one_name(), {lvl}), A));
-        if (!A_has_one) {
-            trace_inst_failure(A, "has_one");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_has_one_one_name(), {lvl}), A, *A_has_one);
-    }
-
-    expr mk_partial_left_distrib(expr const & A) {
-        level lvl = get_level(A);
-        auto A_distrib = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_distrib_name(), {lvl}), A));
-        if (!A_distrib) {
-            trace_inst_failure(A, "distrib");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_left_distrib_name(), {lvl}), A, *A_distrib);
-    }
-
-    expr mk_partial_right_distrib(expr const & A) {
-        level lvl = get_level(A);
-        auto A_distrib = m_ctx.mk_class_instance(::lean::mk_app(mk_constant(get_distrib_name(), {lvl}), A));
-        if (!A_distrib) {
-            trace_inst_failure(A, "distrib");
-            throw app_builder_exception();
-        }
-        return ::lean::mk_app(mk_constant(get_right_distrib_name(), {lvl}), A, *A_distrib);
-    }
-
-    expr mk_ss_elim(expr const & A, expr const & ss_inst, expr const & old_e, expr const & new_e) {
-        level lvl = get_level(A);
-        return ::lean::mk_app(mk_constant(get_subsingleton_elim_name(), {lvl}), A, ss_inst, old_e, new_e);
-    }
-
     expr mk_false_rec(expr const & c, expr const & H) {
         level c_lvl = get_level(c);
         return ::lean::mk_app(mk_constant(get_false_rec_name(), {c_lvl}), c, H);
@@ -858,10 +787,6 @@ expr mk_eq(type_context_old & ctx, expr const & lhs, expr const & rhs) {
     return app_builder(ctx).mk_eq(lhs, rhs);
 }
 
-expr mk_iff(type_context_old & ctx, expr const & lhs, expr const & rhs) {
-    return app_builder(ctx).mk_iff(lhs, rhs);
-}
-
 expr mk_heq(type_context_old & ctx, expr const & lhs, expr const & rhs) {
     return app_builder(ctx).mk_heq(lhs, rhs);
 }
@@ -872,10 +797,6 @@ expr mk_refl(type_context_old & ctx, name const & relname, expr const & a) {
 
 expr mk_eq_refl(type_context_old & ctx, expr const & a) {
     return app_builder(ctx).mk_eq_refl(a);
-}
-
-expr mk_iff_refl(type_context_old & ctx, expr const & a) {
-    return app_builder(ctx).mk_iff_refl(a);
 }
 
 expr mk_heq_refl(type_context_old & ctx, expr const & a) {
@@ -1020,16 +941,6 @@ expr lift_from_eq(type_context_old & ctx, name const & R, expr const & H) {
     return app_builder(ctx).lift_from_eq(R, H);
 }
 
-expr mk_iff_false_intro(type_context_old & ctx, expr const & H) {
-    // TODO(Leo): implement custom version if bottleneck.
-    return mk_app(ctx, get_iff_false_intro_name(), {H});
-}
-
-expr mk_iff_true_intro(type_context_old & ctx, expr const & H) {
-    // TODO(Leo): implement custom version if bottleneck.
-    return mk_app(ctx, get_iff_true_intro_name(), {H});
-}
-
 expr mk_eq_false_intro(type_context_old & ctx, expr const & H) {
     return app_builder(ctx).mk_eq_false_intro(H);
 }
@@ -1051,69 +962,13 @@ expr mk_neq_of_not_iff(type_context_old & ctx, expr const & H) {
     return mk_app(ctx, get_neq_of_not_iff_name(), {H});
 }
 
-expr mk_not_of_iff_false(type_context_old & ctx, expr const & H) {
-    if (is_constant(get_app_fn(H), get_iff_false_intro_name())) {
-        // not_of_iff_false (iff_false_intro H) == H
-        return app_arg(H);
-    }
-    // TODO(Leo): implement custom version if bottleneck.
-    return mk_app(ctx, get_not_of_iff_false_name(), 2, {H});
-}
-
-expr mk_of_iff_true(type_context_old & ctx, expr const & H) {
-    if (is_constant(get_app_fn(H), get_iff_true_intro_name())) {
-        // of_iff_true (iff_true_intro H) == H
-        return app_arg(H);
-    }
-    // TODO(Leo): implement custom version if bottleneck.
-    return mk_app(ctx, get_of_iff_true_name(), {H});
-}
-
-expr mk_false_of_true_iff_false(type_context_old & ctx, expr const & H) {
-    // TODO(Leo): implement custom version if bottleneck.
-    return mk_app(ctx, get_false_of_true_iff_false_name(), {H});
-}
-
 expr mk_false_of_true_eq_false(type_context_old & ctx, expr const & H) {
     // TODO(Leo): implement custom version if bottleneck.
     return mk_app(ctx, get_false_of_true_eq_false_name(), {H});
 }
 
-expr mk_not(type_context_old & ctx, expr const & H) {
-    // TODO(dhs): implement custom version if bottleneck.
-    return mk_app(ctx, get_not_name(), {H});
-}
-
 expr mk_absurd(type_context_old & ctx, expr const & Hp, expr const & Hnp, expr const & b) {
     return mk_app(ctx, get_absurd_name(), {b, Hp, Hnp});
-}
-
-expr mk_partial_add(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_partial_add(A);
-}
-
-expr mk_partial_mul(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_partial_mul(A);
-}
-
-expr mk_zero(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_zero(A);
-}
-
-expr mk_one(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_one(A);
-}
-
-expr mk_partial_left_distrib(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_partial_left_distrib(A);
-}
-
-expr mk_partial_right_distrib(type_context_old & ctx, expr const & A) {
-    return app_builder(ctx).mk_partial_right_distrib(A);
-}
-
-expr mk_ss_elim(type_context_old & ctx, expr const & A, expr const & ss_inst, expr const & old_e, expr const & new_e) {
-    return app_builder(ctx).mk_ss_elim(A, ss_inst, old_e, new_e);
 }
 
 expr mk_false_rec(type_context_old & ctx, expr const & c, expr const & H) {
