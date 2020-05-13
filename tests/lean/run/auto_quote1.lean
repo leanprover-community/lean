@@ -54,7 +54,7 @@ begin
   induction m with m' ih,
   { -- Remark: Used change here to make sure nat.zero is replaced with polymorphic zero.
     -- dsimp tactic should fix that in the future.
-    change n + 0 = 0 + n, simp [zadd] },
+    change n + 0 = 0 + n, simp [zadd, nat.add_zero] },
   { change succ (n + m') = succ m' + n,
     rw [succ_add, ih] }
 end
@@ -70,7 +70,7 @@ begin
   induction m with m' ih,
   show n + 0 = 0 + n,
   begin
-    change n + 0 = 0 + n, simp [zadd]
+    change n + 0 = 0 + n, simp [zadd, nat.add_zero]
   end,
   show n + succ m' = succ m' + n, {
     change succ (n + m') = succ m' + n,
