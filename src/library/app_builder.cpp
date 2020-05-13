@@ -15,7 +15,6 @@ Author: Leonardo de Moura
 #include "library/cache_helper.h"
 #include "library/app_builder.h"
 #include "library/relation_manager.h"
-#include "library/util.h"
 
 namespace lean {
 static void trace_fun(name const & n) {
