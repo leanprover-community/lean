@@ -83,6 +83,10 @@ class comm_semiring (α : Type u) extends semiring α, comm_monoid α
 section comm_semiring
   variables [comm_semiring α] (a b c : α)
 
+  lemma add_mul_self_eq (a b : α) : (a + b) * (a + b) = a*a + 2*a*b + b*b :=
+  calc (a + b)*(a + b) = a*a + (1+1)*a*b + b*b : by simp [right_distrib, left_distrib]
+               ...     = a*a + 2*a*b + b*b     : by rw one_add_one_eq_two
+
   instance comm_semiring_has_dvd : has_dvd α :=
   has_dvd.mk (λ a b, ∃ c, b = a * c)
 
@@ -231,10 +235,6 @@ section comm_ring
 
   lemma mul_self_sub_one_eq (a : α) : a * a - 1 = (a + 1) * (a - 1) :=
   begin simp [right_distrib, left_distrib], rw [add_left_comm, add_comm (-a), add_left_comm a], simp end
-
-  lemma add_mul_self_eq (a b : α) : (a + b) * (a + b) = a*a + 2*a*b + b*b :=
-  calc (a + b)*(a + b) = a*a + (1+1)*a*b + b*b : by simp [right_distrib, left_distrib]
-               ...     = a*a + 2*a*b + b*b     : by rw one_add_one_eq_two
 
   theorem dvd_neg_of_dvd {a b : α} (h : a ∣ b) : (a ∣ -b) :=
   dvd.elim h
