@@ -72,7 +72,10 @@ with component : Type → Type → Type
     (State : Type)
     (init : Props → option State → State)
     (update : Props → State → InnerAction → State × option Action)
-    (view : Props → State → list (html InnerAction)) : component Props Action
+    (view : Props → State → list (html InnerAction))
+    /- If this returns true, then the component will not call 'view' again. -/
+    (props_eq : Props → Props → bool)
+    : component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
@@ -86,32 +89,34 @@ with attr : Type → Type
 | tooltip           {α : Type} : html α → attr α
 | text_change_event {α : Type} (handler : string → α) : attr α
 
-variables {α : Type} {π : Type}
+variables {α β : Type} {π : Type}
 
 namespace component
 
-meta def filter_map_action {π α β : Type} (f : α → option β) : component π α → component π β
-| (component.mk γ σ init update view) := component.mk γ σ init (λ p s b, let ⟨s,a⟩ := update p s b in ⟨s, a >>= f⟩) view
+meta def filter_map_action (f : α → option β) : component π α → component π β
+| (component.mk γ σ init update view props_are_eq) := component.mk γ σ init (λ p s b, let ⟨s,a⟩ := update p s b in ⟨s, a >>= f⟩) view props_are_eq
 
-meta def map_action {π α β : Type} (f : α → β) : component π α → component π β
+meta def map_action (f : α → β) : component π α → component π β
 | c := filter_map_action (pure ∘ f) c
 
-meta def map_props  {π ρ α : Type} (f : ρ → π) : component π α → component ρ α
-| (component.mk γ σ init update view) := component.mk γ σ (init ∘ f) (update ∘ f) (view ∘ f)
+variables {ρ : Type}
+meta def map_props (f : ρ → π) : component π α → component ρ α
+| (component.mk γ σ init update view props_are_eq) := component.mk γ σ (init ∘ f) (update ∘ f) (view ∘ f) (props_are_eq on f)
 
-meta def stateless {π : Type} (view : π → list (html α)) : component π α :=
-component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p)
+meta def stateless [decidable_eq π] (view : π → list (html α)) : component π α :=
+component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p) (λ x y, x = y)
 
 /-- Returns a component that will never trigger an action. -/
-meta def ignore_action {π α β : Type} : component π α → component π β
+meta def ignore_action : component π α → component π β
 | c := component.filter_map_action (λ a, none) c
 
-meta def ignore_props {π α : Type} : component unit α → component π α
-| c := component.map_props (λ p, ()) $ c
+meta def ignore_props : component unit α → component π α
+| c := component.map_props (λ p, ()) c
+
+meta def mk_simple [decidable_eq π] (β σ : Type) (init : σ) (update : π → σ → β → σ × option α) (view : π → σ → list (html β)) : component π α :=
+component.mk β σ (λ x o, init <| o) update view (λ x y, x = y)
 
 end component
-
-variables {β : Type}
 
 meta mutual def attr.map_action, html.map_action (f : α → β)
 with attr.map_action : attr α → attr β

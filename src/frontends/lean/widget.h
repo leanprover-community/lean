@@ -91,6 +91,7 @@ class component_instance : public vdom_cell {
     vm_obj init(vm_obj const & p, optional<vm_obj> const & s);
     pair<vm_obj, optional<vm_obj>> update(vm_obj const & p, vm_obj const & s, vm_obj const & a);
     vm_obj view(vm_obj const & p, vm_obj const & s);
+    bool props_are_equal(vm_obj const & p_old, vm_obj const & p_new);
 public:
     void render();
     component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>()) : m_component(c), m_props(props), m_route(route) {

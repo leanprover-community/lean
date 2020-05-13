@@ -64,6 +64,7 @@ vm_obj component_instance::init(vm_obj const & p, optional<vm_obj> const & s) {
     return invoke(cfield(m_component.to_vm_obj(), 0), p, os);
 }
 
+
 pair<vm_obj, optional<vm_obj>> component_instance::update(vm_obj const & p, vm_obj const & s, vm_obj const & a) {
     vm_obj sa = invoke(cfield(m_component.to_vm_obj(), 1), p, s, a);
     vm_obj oa = cfield(sa, 1);
@@ -74,6 +75,11 @@ pair<vm_obj, optional<vm_obj>> component_instance::update(vm_obj const & p, vm_o
 vm_obj component_instance::view(vm_obj const & p, vm_obj const & s) {
     return invoke(cfield(m_component.to_vm_obj(), 2), p, s);
 }
+
+bool component_instance::props_are_equal(vm_obj const & p_old, vm_obj const & p_new) {
+    return to_bool(invoke(cfield(m_component.to_vm_obj(), 3), p_old, p_new));
+}
+
 
 void component_instance::render() {
     std::vector<component_instance *> children;
@@ -90,9 +96,13 @@ void component_instance::render() {
 void component_instance::reconcile(vdom const & old) {
     lean_assert(!m_has_rendered);
     component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
-    if (ci_old->m_component.to_vm_obj().raw() == m_component.to_vm_obj().raw()) { // [todo] check this works
-        // copy over the state from our previous version.
-        if (m_props.to_vm_obj() == ci_old->m_props.to_vm_obj()) { // [todo] use dec-eq here
+    if (ci_old->m_component.to_vm_obj().raw() == m_component.to_vm_obj().raw()) {
+        // if the components are the same:
+        // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
+        vm_obj p_new = m_props.to_vm_obj();
+        vm_obj p_old = ci_old->m_props.to_vm_obj();
+        if (p_new == p_old || props_are_equal(p_old, p_new)) {
+            // the props are equal and the state didn't change, so we can just keep the old rendering.
             m_handlers = ci_old->m_handlers;
             m_children = ci_old->m_children;
             m_render   = ci_old->m_render;
@@ -101,12 +111,15 @@ void component_instance::reconcile(vdom const & old) {
             m_has_rendered = true;
             lean_assert(m_route == ci_old->m_route);
         } else {
+            // the props have changed, so we need to rerender this component.
+            // we use `init` to recompute the state.
             optional<vm_obj> old_state = some((*(ci_old->m_state)).to_vm_obj());
             ts_vm_obj new_state = init(m_props.to_vm_obj(), old_state);
             m_state = optional<ts_vm_obj>(new_state);
             render();
         }
     } else {
+        // The old component is completely different, so render as a fresh component.
         m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()));
         render();
     }
