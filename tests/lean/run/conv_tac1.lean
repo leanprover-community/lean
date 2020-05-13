@@ -1,4 +1,4 @@
-local attribute [simp] add_comm add_left_comm
+local attribute [simp] nat.add_comm nat.add_left_comm
 example (a b : nat) : (λ x, a + x) 0 = b + 1 + a :=
 begin
   conv in (_ + 1) { change nat.succ b },
@@ -67,20 +67,20 @@ end
 example (x y : nat) (f : nat → nat) (h : f (0 + x + y) = 0 + y) : f (x + y) = 0 + y :=
 begin
   -- use conv to rewrite subterm of a hypothesis
-  conv at h in (0 + _) { rw [zero_add] },
+  conv at h in (0 + _) { rw [nat.zero_add] },
   assumption
 end
 
 example (x y : nat) (f : nat → nat) (h : f (0 + x + y) = 0 + y) : f (0 + x + y) = y :=
 begin
   -- use conv to rewrite rhs a hypothesis
-  conv at h { to_rhs, rw [zero_add] },
+  conv at h { to_rhs, rw [nat.zero_add] },
   assumption
 end
 
 example (x : nat) (f : nat → nat) (h₁ : x = 0) (h₂ : ∀ x, f x = x + x) : f x = x :=
 begin
-  conv { to_rhs, rw [h₁, <- add_zero 0, <- h₁], },
+  conv { to_rhs, rw [h₁, <- nat.add_zero 0, <- h₁], },
   exact h₂ x
 end
 
