@@ -4,9 +4,15 @@ has type
   ℕ → ℕ
 but is expected to have type
   ℕ → ℕ → ℕ
+field_type_mismatch.lean:4:0: error: don't know how to synthesize placeholder (?add)
+context:
+⊢ ℕ → ℕ → ℕ
 field_type_mismatch.lean:11:14: error: type mismatch at field 'mul_assoc'
   trivial
 has type
   true
 but is expected to have type
   ∀ (x y z : ℕ), x * y * z = x * (y * z)
+field_type_mismatch.lean:10:0: error: don't know how to synthesize placeholder (?mul_assoc)
+context:
+⊢ ∀ (x y z : ℕ), x * y * z = x * (y * z)

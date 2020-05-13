@@ -16,10 +16,10 @@ instance : monad list :=
 { pure := @list.ret, map := @list.map, bind := @list.bind }
 
 instance : is_lawful_monad list :=
-{ bind_pure_comp_eq_map := by intros; induction x; simp [*, (<$>), pure] at *,
+{ bind_pure_comp_eq_map := by intros; induction x; simp [*, (<$>), (>>=), pure] at *,
   id_map := @list.map_id,
-  pure_bind := by intros; simp [pure],
-  bind_assoc := by intros; induction x; simp * }
+  pure_bind := by intros; simp [pure, (>>=)],
+  bind_assoc := by simp [(>>=)]; intros; induction x; simp * }
 
 instance : alternative list :=
 { failure := @list.nil,

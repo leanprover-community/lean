@@ -1,9 +1,19 @@
-123-2.lean:54:15: error: type mismatch at field 'commutes''
-  ?m_1
-has type
-  ∀ (r : R), (λ (b : B), ?m_1[b]) (⇑(algebra_map' R B) r) = ⇑(algebra_map' R C) r
-but is expected to have type
-  ∀ (r : R),
-    {to_fun := λ (b : B), ?m_1[b], map_one' := ?m_2, map_mul' := ?m_3, map_zero' := ?m_4, map_add' := ?m_5}.to_fun
-        (⇑(algebra_map' R B) r) =
-      ⇑(algebra_map' R C) r
+123-2.lean:49:17: error: don't know how to synthesize placeholder
+context:
+R : Type,
+_inst_6 : comm_ring R,
+A : Type,
+_inst_7 : comm_ring A,
+_inst_8 : algebra' R A,
+B : Type ?,
+_inst_9 : comm_ring B,
+_inst_10 : algebra' R B,
+C : Type,
+_inst_11 : comm_ring C,
+_inst_12 : algebra' R C,
+f : alg_hom' R A B,
+hf : surjective ⇑f,
+g : alg_hom' R A C,
+hfg : ∀ (a : A), ⇑f a = 0 → ⇑g a = 0,
+b : B
+⊢ C
