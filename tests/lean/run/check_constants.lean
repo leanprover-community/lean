@@ -6,10 +6,6 @@ do env ← get_env, (env^.get n >> return ()) <|> (guard $ env^.is_namespace n) 
 run_cmd script_check_id `absurd
 run_cmd script_check_id `acc.cases_on
 run_cmd script_check_id `acc.rec
-run_cmd script_check_id `add_comm_group
-run_cmd script_check_id `add_comm_semigroup
-run_cmd script_check_id `add_group
-run_cmd script_check_id `add_monoid
 run_cmd script_check_id `and
 run_cmd script_check_id `and.cases_on
 run_cmd script_check_id `and.elim_left
@@ -42,7 +38,6 @@ run_cmd script_check_id `congr_arg
 run_cmd script_check_id `congr_fun
 run_cmd script_check_id `decidable
 run_cmd script_check_id `decidable.to_bool
-run_cmd script_check_id `distrib
 run_cmd script_check_id `dite
 run_cmd script_check_id `empty
 run_cmd script_check_id `eq
@@ -67,7 +62,6 @@ run_cmd script_check_id `false
 run_cmd script_check_id `false.rec
 run_cmd script_check_id `false_of_true_eq_false
 run_cmd script_check_id `false_of_true_iff_false
-run_cmd script_check_id `field
 run_cmd script_check_id `fin.mk
 run_cmd script_check_id `fin.ne_of_vne
 run_cmd script_check_id `forall_congr
@@ -169,15 +163,11 @@ run_cmd script_check_id `is_commutative.comm
 run_cmd script_check_id `is_valid_char_range_1
 run_cmd script_check_id `is_valid_char_range_2
 run_cmd script_check_id `ite
-run_cmd script_check_id `le_refl
 run_cmd script_check_id `lean.parser
 run_cmd script_check_id `lean.parser.pexpr
 run_cmd script_check_id `lean.parser.reflectable.expr
 run_cmd script_check_id `lean.parser.tk
 run_cmd script_check_id `left_comm
-run_cmd script_check_id `left_distrib
-run_cmd script_check_id `linear_ordered_ring
-run_cmd script_check_id `linear_ordered_semiring
 run_cmd script_check_id `list
 run_cmd script_check_id `list.cons
 run_cmd script_check_id `list.nil
@@ -192,10 +182,6 @@ run_cmd script_check_id `monad_io_net_system_impl
 run_cmd script_check_id `monad_io_process_impl
 run_cmd script_check_id `monad_io_random_impl
 run_cmd script_check_id `monad_io_terminal_impl
-run_cmd script_check_id `monoid
-run_cmd script_check_id `mul_one
-run_cmd script_check_id `mul_zero
-run_cmd script_check_id `mul_zero_class
 run_cmd script_check_id `name.anonymous
 run_cmd script_check_id `name.mk_numeral
 run_cmd script_check_id `name.mk_string
@@ -267,10 +253,7 @@ run_cmd script_check_id `reflected
 run_cmd script_check_id `reflected.subst
 run_cmd script_check_id `repr
 run_cmd script_check_id `rfl
-run_cmd script_check_id `right_distrib
-run_cmd script_check_id `ring
 run_cmd script_check_id `scope_trace
-run_cmd script_check_id `semiring
 run_cmd script_check_id `set_of
 run_cmd script_check_id `sizeof
 run_cmd script_check_id `string
@@ -312,6 +295,3 @@ run_cmd script_check_id `well_founded_tactics
 run_cmd script_check_id `well_founded_tactics.dec_tac
 run_cmd script_check_id `well_founded_tactics.default
 run_cmd script_check_id `well_founded_tactics.rel_tac
-run_cmd script_check_id `zero_le_one
-run_cmd script_check_id `zero_lt_one
-run_cmd script_check_id `zero_mul
