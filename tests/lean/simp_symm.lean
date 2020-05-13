@@ -33,6 +33,6 @@ def op : nat → nat → nat := sorry
 @[simp] lemma op_assoc (a b c : nat) : op (op a b) c = op a (op b c) := sorry
 
 example (a b c : nat) : op (op a b) c = op a (op b c) := by tactic.try_for 1000 `[ simp [← op_assoc] ]
-example (a b c : nat) : a + b + c = a + (b + c) := by tactic.try_for 1000 `[ simp [← add_assoc] ]
+example (a b c : nat) : a + b + c = a + (b + c) := by tactic.try_for 1000 `[ simp [← nat.add_assoc] ]
 
 end reverse_conflict
