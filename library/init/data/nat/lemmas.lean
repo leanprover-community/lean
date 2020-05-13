@@ -114,6 +114,24 @@ protected lemma mul_one : ∀ (n : ℕ), n * 1 = n := nat.zero_add
 protected lemma one_mul (n : ℕ) : 1 * n = n :=
 by rw [nat.mul_comm, nat.mul_one]
 
+-- instance : comm_semiring nat :=
+-- {add            := nat.add,
+--  add_assoc      := nat.add_assoc,
+--  zero           := nat.zero,
+--  zero_add       := nat.zero_add,
+--  add_zero       := nat.add_zero,
+--  add_comm       := nat.add_comm,
+--  mul            := nat.mul,
+--  mul_assoc      := nat.mul_assoc,
+--  one            := nat.succ nat.zero,
+--  one_mul        := nat.one_mul,
+--  mul_one        := nat.mul_one,
+--  left_distrib   := nat.left_distrib,
+--  right_distrib  := nat.right_distrib,
+--  zero_mul       := nat.zero_mul,
+--  mul_zero       := nat.mul_zero,
+--  mul_comm       := nat.mul_comm}
+
 /- properties of inequality -/
 
 protected lemma le_of_eq {n m : ℕ} (p : n = m) : n ≤ m :=
@@ -297,37 +315,6 @@ le_of_not_gt
    have h2 : c * b < c * a, from nat.mul_lt_mul_of_pos_left h1 hc,
    not_le_of_gt h2 h)
 
-protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : c * a ≤ c * b :=
-begin
-  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.zero_mul] },
-  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
-end
-
-protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : a * c ≤ b * c :=
-begin
-  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.mul_zero] },
-  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
-end
-
-protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) (nn_c : 0 ≤ c) :  a * b < c * d :=
-calc
-  a * b < c * b : nat.mul_lt_mul_of_pos_right hac pos_b
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
-
-protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : b ≥ 0) (h4 : c > 0) :
-       a * b < c * d :=
-calc
-   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1 h3
-     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h4
-
--- TODO: there are four variations, depending on which variables we assume to be nonneg
-lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) (nn_b : 0 ≤ b) (nn_c : 0 ≤ c) : a * b ≤ c * d :=
-calc
-  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac nn_b
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
-
 instance : decidable_linear_order nat :=
 { lt                         := nat.lt,
   le                         := nat.le,
@@ -340,6 +327,31 @@ instance : decidable_linear_order nat :=
   decidable_le               := nat.decidable_le,
   decidable_eq               := nat.decidable_eq }
 
+-- instance : decidable_linear_ordered_semiring nat :=
+-- { add_left_cancel            := @nat.add_left_cancel,
+--   add_right_cancel           := @nat.add_right_cancel,
+--   lt                         := nat.lt,
+--   le                         := nat.le,
+--   le_refl                    := nat.le_refl,
+--   le_trans                   := @nat.le_trans,
+--   le_antisymm                := @nat.le_antisymm,
+--   le_total                   := @nat.le_total,
+--   lt_iff_le_not_le           := @lt_iff_le_not_le _ _,
+--   add_le_add_left            := @nat.add_le_add_left,
+--   le_of_add_le_add_left      := @nat.le_of_add_le_add_left,
+--   zero_lt_one                := zero_lt_succ 0,
+--   mul_lt_mul_of_pos_left     := @nat.mul_lt_mul_of_pos_left,
+--   mul_lt_mul_of_pos_right    := @nat.mul_lt_mul_of_pos_right,
+--   decidable_lt               := nat.decidable_lt,
+--   decidable_le               := nat.decidable_le,
+--   decidable_eq               := nat.decidable_eq,
+--   ..nat.comm_semiring }
+
+-- -- all the fields are already included in the decidable_linear_ordered_semiring instance
+-- instance : decidable_linear_ordered_cancel_add_comm_monoid ℕ :=
+-- { add_left_cancel := @nat.add_left_cancel,
+--   ..nat.decidable_linear_ordered_semiring }
+
 lemma le_of_lt_succ {m n : nat} : m < succ n → m ≤ n :=
 le_of_succ_le_succ
 
@@ -347,8 +359,8 @@ theorem eq_of_mul_eq_mul_left {m k n : ℕ} (Hn : n > 0) (H : n * m = n * k) : m
 le_antisymm (nat.le_of_mul_le_mul_left (le_of_eq H) Hn)
             (nat.le_of_mul_le_mul_left (le_of_eq H.symm) Hn)
 
-theorem eq_of_mul_eq_mul_right {n m k : ℕ} (Hm : m > 0) (H : n * m = k * m) : n = k :=
-by rw [nat.mul_comm n m, nat.mul_comm k m] at H; exact eq_of_mul_eq_mul_left Hm H
+-- theorem eq_of_mul_eq_mul_right {n m k : ℕ} (Hm : m > 0) (H : n * m = k * m) : n = k :=
+-- by rw [mul_comm n m, mul_comm k m] at H; exact eq_of_mul_eq_mul_left Hm H
 
 /- sub properties -/
 
@@ -484,6 +496,19 @@ protected lemma one_le_bit0 : ∀ (n : ℕ), n ≠ 0 → 1 ≤ bit0 n
   suffices 1 ≤ succ (succ (bit0 n)), from
     eq.symm (nat.bit0_succ_eq n) ▸ this,
   succ_le_succ (zero_le (succ (bit0 n)))
+
+-- /- Extra instances to short-circuit type class resolution -/
+-- instance : add_comm_monoid nat    := by apply_instance
+-- instance : add_monoid nat         := by apply_instance
+-- instance : monoid nat             := by apply_instance
+-- instance : comm_monoid nat        := by apply_instance
+-- instance : comm_semigroup nat     := by apply_instance
+-- instance : semigroup nat          := by apply_instance
+-- instance : add_comm_semigroup nat := by apply_instance
+-- instance : add_semigroup nat      := by apply_instance
+-- instance : distrib nat            := by apply_instance
+-- instance : semiring nat           := by apply_instance
+-- instance : ordered_semiring nat   := by apply_instance
 
 /- subtraction -/
 @[simp]
@@ -922,28 +947,24 @@ theorem lt_succ_of_lt {a b : nat} (h : a < b) : a < succ b := le_succ_of_le h
 
 def one_pos := nat.zero_lt_one
 
-lemma mul_pos {a b : ℕ} (ha : a > 0) (hb : b > 0) : a * b > 0 :=
-have h : 0 * b < a * b, from nat.mul_lt_mul_of_pos_right ha hb,
-by rwa nat.zero_mul at h
+-- theorem mul_self_le_mul_self {n m : ℕ} (h : n ≤ m) : n * n ≤ m * m :=
+-- mul_le_mul h h (zero_le _) (zero_le _)
 
-theorem mul_self_le_mul_self {n m : ℕ} (h : n ≤ m) : n * n ≤ m * m :=
-nat.mul_le_mul h h (zero_le _) (zero_le _)
+-- theorem mul_self_lt_mul_self : Π {n m : ℕ}, n < m → n * n < m * m
+-- | 0        m h := mul_pos h h
+-- | (succ n) m h := mul_lt_mul h (le_of_lt h) (succ_pos _) (zero_le _)
 
-theorem mul_self_lt_mul_self : Π {n m : ℕ}, n < m → n * n < m * m
-| 0        m h := mul_pos h h
-| (succ n) m h := nat.mul_lt_mul h (le_of_lt h) (succ_pos _) (zero_le _)
+-- theorem mul_self_le_mul_self_iff {n m : ℕ} : n ≤ m ↔ n * n ≤ m * m :=
+-- ⟨mul_self_le_mul_self, λh, decidable.by_contradiction $
+--   λhn, not_lt_of_ge h $ mul_self_lt_mul_self $ lt_of_not_ge hn⟩
 
-theorem mul_self_le_mul_self_iff {n m : ℕ} : n ≤ m ↔ n * n ≤ m * m :=
-⟨mul_self_le_mul_self, λh, decidable.by_contradiction $
-  λhn, not_lt_of_ge h $ mul_self_lt_mul_self $ lt_of_not_ge hn⟩
+-- theorem mul_self_lt_mul_self_iff {n m : ℕ} : n < m ↔ n * n < m * m :=
+-- iff.trans (lt_iff_not_ge _ _) $ iff.trans (not_iff_not_of_iff mul_self_le_mul_self_iff) $
+--   iff.symm (lt_iff_not_ge _ _)
 
-theorem mul_self_lt_mul_self_iff {n m : ℕ} : n < m ↔ n * n < m * m :=
-iff.trans (lt_iff_not_ge _ _) $ iff.trans (not_iff_not_of_iff mul_self_le_mul_self_iff) $
-  iff.symm (lt_iff_not_ge _ _)
-
-theorem le_mul_self : Π (n : ℕ), n ≤ n * n
-| 0     := le_refl _
-| (n+1) := by { have t := mul_le_mul_left (n+1) (succ_pos n), rwa [nat.mul_one] at t }
+-- theorem le_mul_self : Π (n : ℕ), n ≤ n * n
+-- | 0     := le_refl _
+-- | (n+1) := let t := mul_le_mul_left (n+1) (succ_pos n) in by simp at t; exact t
 
 /- subtraction -/
 
@@ -1203,6 +1224,10 @@ begin
     { apply (div_lt_iff_lt_mul _ _ npos).2, rwa nat.mul_comm } }
 end
 
+lemma mul_pos {a b : ℕ} (ha : a > 0) (hb : b > 0) : a * b > 0 :=
+have h : 0 * b < a * b, from nat.mul_lt_mul_of_pos_right ha hb,
+by rwa nat.zero_mul at h
+
 protected theorem div_div_eq_div_mul (m n k : ℕ) : m / n / k = m / (n * k) :=
 begin
   cases eq_zero_or_pos k with k0 kpos, {rw [k0, nat.mul_zero, nat.div_zero, nat.div_zero]},
@@ -1303,6 +1328,39 @@ exists.elim H (λl H1, by rw nat.mul_assoc at H1; exact ⟨_, eq_of_mul_eq_mul_l
 theorem dvd_of_mul_dvd_mul_right {m n k : ℕ} (kpos : k > 0) (H : m * k ∣ n * k) : m ∣ n :=
 by rw [nat.mul_comm m k, nat.mul_comm n k] at H; exact dvd_of_mul_dvd_mul_left kpos H
 
+/- --- -/
+
+protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : c * a ≤ c * b :=
+begin
+  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.zero_mul] },
+  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
+end
+
+protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : a * c ≤ b * c :=
+begin
+  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.mul_zero] },
+  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
+end
+
+protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) (nn_c : 0 ≤ c) :  a * b < c * d :=
+calc
+  a * b < c * b : nat.mul_lt_mul_of_pos_right hac pos_b
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
+
+protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : b ≥ 0) (h4 : c > 0) :
+       a * b < c * d :=
+calc
+   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1 h3
+     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h4
+
+-- TODO: there are four variations, depending on which variables we assume to be nonneg
+lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) (nn_b : 0 ≤ b) (nn_c : 0 ≤ c) : a * b ≤ c * d :=
+calc
+  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac nn_b
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
+
 /- pow -/
 
 @[simp] theorem pow_one (b : ℕ) : b^1 = b := by simp [pow_succ, nat.one_mul]
@@ -1376,6 +1434,8 @@ begin
       simp [h₁] },
     rw [eq.symm (mod_eq_sub_mod p_b_ge)] }
 end
+
+
 
 lemma div_lt_self {n m : nat} : n > 0 → m > 1 → n / m < n :=
 begin

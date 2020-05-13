@@ -191,6 +191,27 @@ begin
   apply nat.le_add_right
 end
 
+-- private lemma sub_nat_nat_add_right {m n : ℕ} :
+--   sub_nat_nat m (m + n + 1) = neg_succ_of_nat n :=
+-- calc sub_nat_nat._match_1 m (m + n + 1) (m + n + 1 - m) =
+--         sub_nat_nat._match_1 m (m + n + 1) (m + (n + 1) - m) : by simp
+--   ... = sub_nat_nat._match_1 m (m + n + 1) (n + 1) : by rw [nat.add_sub_cancel_left]
+--   ... = neg_succ_of_nat n : rfl
+
+-- private lemma sub_nat_nat_add_add (m n k : ℕ) : sub_nat_nat (m + k) (n + k) = sub_nat_nat m n :=
+-- sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
+--   (assume i n, have n + i + k = (n + k) + i, by simp [add_comm, add_left_comm],
+--     begin rw [this], exact sub_nat_nat_add_left end)
+--   (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp [add_comm, add_left_comm],
+--     begin rw [this], exact sub_nat_nat_add_right end)
+
+-- private lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m - n) :=
+-- sub_nat_nat_of_sub_eq_zero (sub_eq_zero_of_le h)
+
+-- private lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
+-- have n - m = succ (pred (n - m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
+-- by rewrite sub_nat_nat_of_sub_eq_succ this
+
 /- nat_abs -/
 
 @[simp] def nat_abs : ℤ → ℕ
@@ -308,6 +329,62 @@ protected lemma add_zero : ∀ a : ℤ, a + 0 = a
 protected lemma zero_add (a : ℤ) : 0 + a = a :=
 int.add_comm a 0 ▸ int.add_zero a
 
+-- private lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
+--   sub_nat_nat (m - n) k = sub_nat_nat m (k + n) :=
+-- calc
+--   sub_nat_nat (m - n) k = sub_nat_nat (m - n + n) (k + n) : by rewrite [sub_nat_nat_add_add]
+--                     ... = sub_nat_nat m (k + n)           : by rewrite [nat.sub_add_cancel h]
+
+-- private lemma sub_nat_nat_add (m n k : ℕ) : sub_nat_nat (m + n) k = of_nat m + sub_nat_nat n k :=
+-- begin
+--   have h := le_or_gt k n,
+--   cases h with h' h',
+--   { rw [sub_nat_nat_of_ge h'],
+--     have h₂ : k ≤ m + n, exact (le_trans h' (le_add_left _ _)),
+--     rw [sub_nat_nat_of_ge h₂], simp,
+--     rw nat.add_sub_assoc h' },
+--   rw [sub_nat_nat_of_lt h'], simp, rw [succ_pred_eq_of_pos (nat.sub_pos_of_lt h')],
+--   transitivity, rw [← nat.sub_add_cancel (le_of_lt h')],
+--   apply sub_nat_nat_add_add
+-- end
+
+-- private lemma sub_nat_nat_add_neg_succ_of_nat (m n k : ℕ) :
+--     sub_nat_nat m n + -[1+ k] = sub_nat_nat m (n + succ k) :=
+-- begin
+--   have h := le_or_gt n m,
+--   cases h with h' h',
+--   { rw [sub_nat_nat_of_ge h'], simp, rw [sub_nat_nat_sub h', add_comm] },
+--   have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (le_add_right _ _),
+--   have h₃ : m ≤ n + k, exact le_of_succ_le_succ h₂,
+--   rw [sub_nat_nat_of_lt h', sub_nat_nat_of_lt h₂], simp [add_comm],
+--   rw [← add_succ, succ_pred_eq_of_pos (nat.sub_pos_of_lt h'), add_succ, succ_sub h₃, pred_succ],
+--   rw [add_comm n, nat.add_sub_assoc (le_of_lt h')]
+-- end
+
+-- private lemma add_assoc_aux1 (m n : ℕ) :
+--     ∀ c : ℤ, of_nat m + of_nat n + c = of_nat m + (of_nat n + c)
+-- | (of_nat k) := by simp
+-- | -[1+ k]    := by simp [sub_nat_nat_add]
+
+-- private lemma add_assoc_aux2 (m n k : ℕ) :
+--   -[1+ m] + -[1+ n] + of_nat k = -[1+ m] + (-[1+ n] + of_nat k) :=
+-- begin
+--   simp [add_succ], rw [int.add_comm, sub_nat_nat_add_neg_succ_of_nat], simp [add_succ, succ_add, add_comm]
+-- end
+
+-- protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
+-- | (of_nat m) (of_nat n) c          := add_assoc_aux1 _ _ _
+-- | (of_nat m) b          (of_nat k) := by rw [int.add_comm, ← add_assoc_aux1, int.add_comm (of_nat k),
+--                                          add_assoc_aux1, int.add_comm b]
+-- | a          (of_nat n) (of_nat k) := by rw [int.add_comm, int.add_comm a, ← add_assoc_aux1,
+--                                          int.add_comm a, int.add_comm (of_nat k)]
+-- | -[1+ m]    -[1+ n]    (of_nat k) := add_assoc_aux2 _ _ _
+-- | -[1+ m]    (of_nat n) -[1+ k]    := by rw [int.add_comm, ← add_assoc_aux2, int.add_comm (of_nat n),
+--                                          ← add_assoc_aux2, int.add_comm -[1+ m] ]
+-- | (of_nat m) -[1+ n]    -[1+ k]    := by rw [int.add_comm, int.add_comm (of_nat m),
+--                                          int.add_comm (of_nat m), ← add_assoc_aux2,
+--                                          int.add_comm -[1+ k] ]
+-- | -[1+ m]    -[1+ n]    -[1+ k]    := by simp [add_succ, add_comm, add_left_comm, neg_of_nat_of_succ]
 
 /- negation -/
 
@@ -361,12 +438,12 @@ protected lemma mul_assoc : ∀ a b c : ℤ, a * b * c = a * (b * c)
 | -[1+ m]    -[1+ n]    (of_nat k) := by simp [nat.mul_assoc]
 | -[1+ m]    -[1+ n]   -[1+ k]     := by simp [nat.mul_assoc]
 
-protected lemma mul_one : ∀ (a : ℤ), a * 1 = a
-| (of_nat m) := show of_nat m * of_nat 1 = of_nat m, by simp [nat.mul_one]
-| -[1+ m]    := show -[1+ m] * of_nat 1 = -[1+ m], begin simp [nat.mul_one], reflexivity end
+-- protected lemma mul_one : ∀ (a : ℤ), a * 1 = a
+-- | (of_nat m) := show of_nat m * of_nat 1 = of_nat m, by simp
+-- | -[1+ m]    := show -[1+ m] * of_nat 1 = -[1+ m], begin simp, reflexivity end
 
-protected lemma one_mul (a : ℤ) : 1 * a = a :=
-int.mul_comm a 1 ▸ int.mul_one a
+-- protected lemma one_mul (a : ℤ) : 1 * a = a :=
+-- int.mul_comm a 1 ▸ int.mul_one a
 
 protected lemma mul_zero : ∀ (a : ℤ), a * 0 = 0
 | (of_nat m) := rfl
@@ -379,11 +456,156 @@ private lemma neg_of_nat_eq_sub_nat_nat_zero : ∀ n, neg_of_nat n = sub_nat_nat
 | 0        := rfl
 | (succ n) := rfl
 
+-- private lemma of_nat_mul_sub_nat_nat (m n k : ℕ) :
+--   of_nat m * sub_nat_nat n k = sub_nat_nat (m * n) (m * k) :=
+-- begin
+--   have h₀ : m > 0 ∨ 0 = m,
+--     exact lt_or_eq_of_le (zero_le _),
+--   cases h₀ with h₀ h₀,
+--   { have h := nat.lt_or_ge n k,
+--     cases h with h h,
+--     { have h' : m * n < m * k,
+--         exact nat.mul_lt_mul_of_pos_left h h₀,
+--       rw [sub_nat_nat_of_lt h, sub_nat_nat_of_lt h'],
+--       simp, rw [succ_pred_eq_of_pos (nat.sub_pos_of_lt h)],
+--       rw [← neg_of_nat_of_succ, nat.mul_sub_left_distrib],
+--       rw [← succ_pred_eq_of_pos (nat.sub_pos_of_lt h')], reflexivity },
+--     have h' : m * k ≤ m * n,
+--       exact mul_le_mul_left _ h,
+--     rw [sub_nat_nat_of_ge h, sub_nat_nat_of_ge h'], simp,
+--     rw [nat.mul_sub_left_distrib]
+--   },
+--   have h₂ : of_nat 0 = 0, exact rfl,
+--   subst h₀, simp [h₂, int.zero_mul]
+-- end
+
+-- private lemma neg_of_nat_add (m n : ℕ) :
+--   neg_of_nat m + neg_of_nat n = neg_of_nat (m + n) :=
+-- begin
+--   cases m,
+--   {  cases n,
+--     { simp, reflexivity },
+--       simp, reflexivity },
+--   cases n,
+--   { simp, reflexivity },
+--   simp [nat.succ_add], reflexivity
+-- end
+
+-- private lemma neg_succ_of_nat_mul_sub_nat_nat (m n k : ℕ) :
+--   -[1+ m] * sub_nat_nat n k = sub_nat_nat (succ m * k) (succ m * n) :=
+-- begin
+--   have h := nat.lt_or_ge n k,
+--   cases h with h h,
+--   { have h' : succ m * n < succ m * k,
+--       exact nat.mul_lt_mul_of_pos_left h (nat.succ_pos m),
+--     rw [sub_nat_nat_of_lt h, sub_nat_nat_of_ge (le_of_lt h')],
+--     simp [succ_pred_eq_of_pos (nat.sub_pos_of_lt h), nat.mul_sub_left_distrib]},
+--   have h' : n > k ∨ k = n,
+--     exact lt_or_eq_of_le h,
+--   cases h' with h' h',
+--   { have h₁ : succ m * n > succ m * k,
+--       exact nat.mul_lt_mul_of_pos_left h' (nat.succ_pos m),
+--     rw [sub_nat_nat_of_ge h, sub_nat_nat_of_lt h₁], simp [nat.mul_sub_left_distrib, nat.mul_comm],
+--     rw [nat.mul_comm k, nat.mul_comm n, ← succ_pred_eq_of_pos (nat.sub_pos_of_lt h₁),
+--         ← neg_of_nat_of_succ],
+--     reflexivity },
+--   subst h', simp, reflexivity
+-- end
+
+-- local attribute [simp] of_nat_mul_sub_nat_nat neg_of_nat_add neg_succ_of_nat_mul_sub_nat_nat
+
+-- protected lemma distrib_left : ∀ a b c : ℤ, a * (b + c) = a * b + a * c
+-- | (of_nat m) (of_nat n) (of_nat k) := by simp [nat.left_distrib]
+-- | (of_nat m) (of_nat n) -[1+ k]    := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
+--                                             rw ← sub_nat_nat_add, reflexivity end
+-- | (of_nat m) -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
+--                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
+-- | (of_nat m) -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
+-- | -[1+ m]    (of_nat n) (of_nat k) := begin simp [mul_comm], rw [← nat.right_distrib, mul_comm] end
+-- | -[1+ m]    (of_nat n) -[1+ k]    := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
+--                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
+-- | -[1+ m]    -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
+--                                             rw [← sub_nat_nat_add], reflexivity end
+-- | -[1+ m]    -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
+
+-- protected lemma distrib_right (a b c : ℤ) : (a + b) * c = a * c + b * c :=
+-- begin rw [int.mul_comm, int.distrib_left], simp [int.mul_comm] end
+
+-- instance : comm_ring int :=
+-- { add            := int.add,
+--   add_assoc      := int.add_assoc,
+--   zero           := int.zero,
+--   zero_add       := int.zero_add,
+--   add_zero       := int.add_zero,
+--   neg            := int.neg,
+--   add_left_neg   := int.add_left_neg,
+--   add_comm       := int.add_comm,
+--   mul            := int.mul,
+--   mul_assoc      := int.mul_assoc,
+--   one            := int.one,
+--   one_mul        := int.one_mul,
+--   mul_one        := int.mul_one,
+--   left_distrib   := int.distrib_left,
+--   right_distrib  := int.distrib_right,
+--   mul_comm       := int.mul_comm }
+
+-- /- Extra instances to short-circuit type class resolution -/
+-- instance : has_sub int            := by apply_instance
+-- instance : add_comm_monoid int    := by apply_instance
+-- instance : add_monoid int         := by apply_instance
+-- instance : monoid int             := by apply_instance
+-- instance : comm_monoid int        := by apply_instance
+-- instance : comm_semigroup int     := by apply_instance
+-- instance : semigroup int          := by apply_instance
+-- instance : add_comm_semigroup int := by apply_instance
+-- instance : add_semigroup int      := by apply_instance
+-- instance : comm_semiring int      := by apply_instance
+-- instance : semiring int           := by apply_instance
+-- instance : ring int               := by apply_instance
+-- instance : distrib int            := by apply_instance
+
 protected lemma zero_ne_one : (0 : int) ≠ 1 :=
 assume h : 0 = 1, succ_ne_zero _ (int.of_nat_inj h).symm
+
+-- instance : zero_ne_one_class ℤ :=
+-- { zero := 0, one := 1, zero_ne_one := int.zero_ne_one }
+
+-- lemma of_nat_sub {n m : ℕ} (h : m ≤ n) : of_nat (n - m) = of_nat n - of_nat m :=
+-- show of_nat (n - m) = of_nat n + neg_of_nat m, from match m, h with
+-- | 0, h := rfl
+-- | succ m, h := show of_nat (n - succ m) = sub_nat_nat n (succ m),
+--   by delta sub_nat_nat; rw sub_eq_zero_of_le h; refl
+-- end
+
+-- lemma neg_succ_of_nat_coe' (n : ℕ) : -[1+ n] = -↑n - 1 :=
+-- by rw [sub_eq_add_neg, ← neg_add]; refl
+
+-- protected lemma coe_nat_sub {n m : ℕ} : n ≤ m → (↑(m - n) : ℤ) = ↑m - ↑n := of_nat_sub
+
+-- local attribute [simp] sub_eq_add_neg
+
+-- protected lemma sub_nat_nat_eq_coe {m n : ℕ} : sub_nat_nat m n = ↑m - ↑n :=
+-- sub_nat_nat_elim m n (λm n i, i = ↑m - ↑n)
+--   (λi n, by simp [int.coe_nat_add, add_left_comm]; refl)
+--   (λi n, by simp [int.coe_nat_add, int.coe_nat_one, int.neg_succ_of_nat_eq, add_left_comm];
+--             apply congr_arg; rw[add_left_comm]; simp)
 
 def to_nat : ℤ → ℕ
 | (n : ℕ) := n
 | -[1+ n] := 0
+
+-- theorem to_nat_sub (m n : ℕ) : to_nat (m - n) = m - n :=
+-- by rw [← int.sub_nat_nat_eq_coe]; exact sub_nat_nat_elim m n
+--   (λm n i, to_nat i = m - n)
+--   (λi n, by rw [nat.add_sub_cancel_left]; refl)
+--   (λi n, by rw [add_assoc, nat.sub_eq_zero_of_le (nat.le_add_right _ _)]; refl)
+
+-- -- Since mod x y is always nonnegative when y ≠ 0, we can make a nat version of it
+-- def nat_mod (m n : ℤ) : ℕ := (m % n).to_nat
+
+-- theorem sign_mul_nat_abs : ∀ (a : ℤ), sign a * nat_abs a = a
+-- | (n+1:ℕ) := one_mul _
+-- | 0       := rfl
+-- | -[1+ n] := (neg_eq_neg_one_mul _).symm
 
 end int
