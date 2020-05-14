@@ -19,13 +19,13 @@ private:
     simp_lemma_cell * m_ptr;
     explicit simp_lemma(simp_lemma_cell * ptr);
     simp_lemma_cell * steal_ptr();
-    friend simp_lemma mk_simp_lemma(name const & id, levels const & umetas, list<expr> const & emetas,
+    friend simp_lemma mk_simp_lemma(name const & id, unsigned umetas, list<expr> const & emetas,
                                     list<bool> const & instances, expr const & lhs, expr const & rhs,
                                     expr const & proof, bool is_perm, unsigned priority);
-    friend simp_lemma mk_rfl_lemma(name const & id, levels const & umetas, list<expr> const & emetas,
+    friend simp_lemma mk_rfl_lemma(name const & id, unsigned umetas, list<expr> const & emetas,
                                    list<bool> const & instances, expr const & lhs, expr const & rhs, expr const & proof,
                                    unsigned priority);
-    friend simp_lemma mk_congr_lemma(name const & id, levels const & umetas, list<expr> const & emetas,
+    friend simp_lemma mk_congr_lemma(name const & id, unsigned umetas, list<expr> const & emetas,
                                      list<bool> const & instances, expr const & lhs, expr const & rhs,
                                      expr const & proof, list<expr> const & congr_hyps, unsigned priority);
 public:
