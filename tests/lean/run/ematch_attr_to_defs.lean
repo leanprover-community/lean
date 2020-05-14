@@ -25,7 +25,7 @@ def len : list α → nat
 | []       := 0
 | (a :: l) := len l + 1
 
-attribute [ematch] len add_zero zero_add
+attribute [ematch] len nat.add_zero nat.zero_add
 
 @[simp] lemma len_app (l₁ l₂ : list α) : len (app l₁ l₂) = len l₁ + len l₂ :=
 begin [smt]
