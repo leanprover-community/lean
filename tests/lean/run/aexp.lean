@@ -13,14 +13,14 @@ inductive aexp
 instance : decidable_eq aexp :=
 by mk_dec_eq_instance
 
-@[reducible]
-def value := nat
+-- @[reducible]
+-- def value := nat
 
-def state := uname → value
+def state := uname → nat
 
 open aexp
 
-def aval : aexp → state → value
+def aval : aexp → state → nat
 | (val n)      s := n
 | (var x)      s := s x
 | (plus a₁ a₂) s := aval a₁ s + aval a₂ s
@@ -29,7 +29,7 @@ def aval : aexp → state → value
 example : aval (plus (val 3) (var "x")) (λ x, 0) = 3 :=
 rfl
 
-def updt (s : state) (x : uname) (v : value) : state :=
+def updt (s : state) (x : uname) (v : nat) : state :=
 λ y, if x = y then v else s y
 
 def asimp_const : aexp → aexp
@@ -51,57 +51,7 @@ rfl
 
 attribute [ematch] asimp_const aval
 
--- attribute [ematch] nat.zero_add nat.add_zero nat.mul_one nat.one_mul nat.zero_mul nat.mul_zero
---   nat.add_sub_add_left nat.add_sub_add_right min_eq_right min_eq_left
---   nat.add_sub_cancel nat.add_sub_cancel_left
-
 set_option trace.smt.ematch true
-
--- set_option pp.all true
-
-meta def not_done : tactic unit := fail_if_success done
-
-class semiring (α : Type) extends has_zero α, has_one α, has_add α, has_mul α.
-
-instance foo : semiring ℕ :=
-{ zero := 0,
-  one := 1,
-  add := (+),
-  mul := (*) }
-
-section
-variables {α : Type} [semiring α] (a : α)
-
-lemma zero_add : (0:α) + a = a := sorry
-lemma add_zero : a + 0 = a := sorry
-lemma zero_mul : (0:α) * a = 0 := sorry
-lemma mul_zero : a * 0 = 0 := sorry
-lemma one_mul : (1:α) * a = a := sorry
-lemma mul_one : a * 1 = a := sorry
-
-end
-
-attribute [ematch] zero_add add_zero mul_one zero_mul mul_zero
-  nat.add_sub_add_left nat.add_sub_add_right min_eq_right min_eq_left
-  nat.add_sub_cancel nat.add_sub_cancel_left
-
-lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
-begin [smt]
-  smt_tactic.get_lemmas >>= smt_tactic.trace,
-end
-
-
--- lemma aval_asimp_const' (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
--- begin [smt]
---  induction a,
---  destruct (asimp_const a_a_1),
--- { destruct (asimp_const a_a),
---   { ematch, ematch,
---     smt_tactic.ematch >> smt_tactic.trace_state },
---   all_goals {admit}},
--- all_goals {admit}
--- end
-
 lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
 begin [smt]
  induction a,
