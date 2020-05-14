@@ -1134,7 +1134,7 @@ static environment on_add_simp_lemma(environment const & env, io_state const & i
         sls_buf.push_back({rel, sl});
     });
 
-    return get_simp_cache_attr().set(env, ios, c, prio, to_list(sls_buf), persistent);
+    return get_simp_cache_attr().set(env, ios, c, prio, reverse_to_list(sls_buf), persistent);
 }
 
 static void on_add_congr_lemma(environment const & env, name const & c, bool) {
