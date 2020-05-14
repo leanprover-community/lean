@@ -89,10 +89,7 @@ void simp_lemma_cell::dealloc() {
     }
 }
 
-static simp_lemma_cell * g_dummy = nullptr;
-
-simp_lemma::simp_lemma():simp_lemma(g_dummy) {
-}
+simp_lemma::simp_lemma() : m_ptr(nullptr) {}
 
 simp_lemma::simp_lemma(simp_lemma_cell * ptr):m_ptr(ptr) {
     if (m_ptr) m_ptr->inc_ref();
@@ -1675,7 +1672,6 @@ vm_obj vm_mk_simp_attr_decl_name(vm_obj const & n) {
 }
 
 void initialize_simp_lemmas() {
-    g_dummy               = new simp_lemma_cell();
     g_simp_lemmas_configs = new std::vector<simp_lemmas_config>();
     g_name2simp_token     = new name_map<unsigned>();
     g_default_token       = register_simp_attribute("default", {"simp", "wrapper_eq"}, {"congr"});
@@ -1710,7 +1706,6 @@ void finalize_simp_lemmas() {
     delete g_simp_cache;
     delete g_simp_lemmas_configs;
     delete g_name2simp_token;
-    delete g_dummy;
     delete g_refl_lemma_attr;
 }
 }
