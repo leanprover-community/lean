@@ -46,7 +46,6 @@ struct simp_lemma_cell {
     unsigned            m_priority;
     MK_LEAN_RC(); // Declare m_rc counter
     void dealloc();
-    simp_lemma_cell():m_kind(simp_lemma_kind::Simp) {}
     simp_lemma_cell(simp_lemma_kind k,
                     name const & id, unsigned umetas, list<expr> const & emetas,
                     list<bool> const & instances, expr const & lhs, expr const & rhs,
