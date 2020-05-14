@@ -13,19 +13,19 @@ end
 
 example (a b c : nat) : a + b + c = b + a + c :=
 begin
-  simp only [add_comm _ b]
+  simp only [nat.add_comm _ b]
 end
 
 example (a b c : nat) (h : c = 0) : a + b + 0 = b + a + c :=
 begin
-  simp only [add_comm _ b],
+  simp only [nat.add_comm _ b],
   guard_target b + a + 0 = b + a + c,
   rw h
 end
 
 example (a b c : nat) (h : c = 0) : 0 + (a + b) = b + a + c :=
 begin
-  simp only [add_comm _ c, add_comm a _],
+  simp only [nat.add_comm _ c, nat.add_comm a _],
   guard_target 0 + (b + a) = c + (b + a),
   rw h
 end
