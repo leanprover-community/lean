@@ -9,8 +9,15 @@ meta def no_ac : smt_config :=
 meta def blast : tactic unit :=
 using_smt_with no_ac $ intros >> iterate (ematch >> try close)
 
+class add_comm_monoid (α : Type*) extends has_zero α, has_add α.
+
 section add_comm_monoid
 variables [add_comm_monoid α]
+
+lemma add_assoc : ∀ a b c : α, a + b = a + (b + c) := sorry
+
+lemma add_comm : ∀ a b : α, a + b = b + a := sorry
+
 attribute [ematch] add_comm add_assoc
 
 theorem add_comm_three  (a b c : α) : a + b + c = c + b + a :=
@@ -20,9 +27,17 @@ theorem add.comm4 : ∀ (n m k l : α), n + m + (k + l) = n + k + (m + l) :=
 by blast
 end add_comm_monoid
 
+class group (α : Type*) extends has_one α, has_mul α, has_inv α.
 
 section group
 variable [group α]
+
+lemma one_mul (a : α) : (1:α) * a = a := sorry
+
+lemma mul_assoc (a b c : α) : a * b * c = a * (b * c) := sorry
+
+lemma mul_left_inv (a : α) : a⁻¹ * a = 1 := sorry
+
 attribute [ematch] mul_assoc mul_left_inv one_mul
 
 theorem inv_mul_cancel_left (a b : α) : a⁻¹ * (a * b) = b :=
@@ -39,12 +54,19 @@ lemma ex (a b c d : nat) : subt a b → subt b c → subt c d → subt a d :=
 by blast
 end subt
 
+class ring (α : Type*) extends has_one α, has_mul α, has_zero α, has_add α, has_neg α.
 
 section ring
 variables [ring α] (a b : α)
+
+lemma zero_mul : (0:α) * a = 0 := sorry
+
 attribute [ematch] zero_mul
 lemma ex2 : a = 0 → a * b = 0 :=
 by blast
+
+instance foo : ring int :=
+{ zero := 0, one := 1, add := (+), mul := (*), neg := λ n, -n }
 
 definition ex1 (a b : int) : a = 0 → a * b = 0 :=
 by blast

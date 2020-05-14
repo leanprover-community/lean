@@ -34,7 +34,10 @@ def reassoc : exp → exp
   | _              := Mult e1' e2'
   end
 
-attribute [simp] mul_add times reassoc eeval mul_comm mul_assoc mul_left_comm
+@[simp]
+lemma nat.mul_left_comm : ∀ (n m k : ℕ), n * (m * k) = m * (n * k) := sorry
+
+attribute [simp] nat.left_distrib nat.right_distrib times reassoc eeval nat.mul_comm nat.mul_assoc
 
 theorem eeval_times (k e) : eeval (times k e) = k * eeval e :=
 by induction e; simp [*]
