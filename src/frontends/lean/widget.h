@@ -73,6 +73,7 @@ struct vdom_string : public vdom_cell {
 
 class component_instance : public vdom_cell {
     ts_vm_obj const m_component;
+    unsigned m_component_hash;
 
     ts_vm_obj m_props;
     optional<ts_vm_obj> m_state;
@@ -87,6 +88,7 @@ class component_instance : public vdom_cell {
     list<unsigned> m_route;
 
     bool m_has_rendered;
+    unsigned m_reconcile_count;
 
     vm_obj init(vm_obj const & p, optional<vm_obj> const & s);
     pair<vm_obj, optional<vm_obj>> update(vm_obj const & p, vm_obj const & s, vm_obj const & a);
@@ -98,6 +100,8 @@ public:
       static unsigned count = 0; // [fixme] need to worry about thread safety here. use a global pointer or something.
       m_id = count++;
       m_has_rendered = false;
+      m_reconcile_count = 0;
+      m_component_hash = hash_ptr(c.raw());
     }
     json to_json(list<unsigned> const & route) override;
     void reconcile(vdom const & old);

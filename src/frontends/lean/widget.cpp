@@ -96,7 +96,9 @@ void component_instance::render() {
 void component_instance::reconcile(vdom const & old) {
     lean_assert(!m_has_rendered);
     component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
-    if (ci_old->m_component.to_vm_obj().raw() == m_component.to_vm_obj().raw()) {
+    // [hack] I want to perform a reference equals when the m_components are the same VM object.
+    //I can't figure out how to do this properly so I'm just compouting a hash when the component is made and hoping it is the same
+    if (ci_old->m_component_hash == m_component_hash) {
         // if the components are the same:
         // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
         vm_obj p_new = m_props.to_vm_obj();
@@ -109,6 +111,7 @@ void component_instance::reconcile(vdom const & old) {
             m_state    = ci_old->m_state;
             m_id       = ci_old->m_id;
             m_has_rendered = true;
+            m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
         } else {
             // the props have changed, so we need to rerender this component.

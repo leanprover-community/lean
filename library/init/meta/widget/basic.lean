@@ -103,6 +103,9 @@ variables {ρ : Type}
 meta def map_props (f : ρ → π) : component π α → component ρ α
 | (component.mk γ σ init update view props_are_eq) := component.mk γ σ (init ∘ f) (update ∘ f) (view ∘ f) (props_are_eq on f)
 
+meta def with_props_eq (e : π → π → bool) : component π α → component π α
+| (component.mk γ σ init update view props_are_eq) := component.mk γ σ init update view e
+
 meta def stateless [decidable_eq π] (view : π → list (html α)) : component π α :=
 component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p) (λ x y, x = y)
 
@@ -112,6 +115,9 @@ meta def ignore_action : component π α → component π β
 
 meta def ignore_props : component unit α → component π α
 | c := component.map_props (λ p, ()) c
+
+meta instance : has_coe (component π empty) (component π α)
+:= ⟨component.filter_map_action (λ x, none)⟩
 
 meta def mk_simple [decidable_eq π] (β σ : Type) (init : σ) (update : π → σ → β → σ × option α) (view : π → σ → list (html β)) : component π α :=
 component.mk β σ (λ x o, init <| o) update view (λ x y, x = y)

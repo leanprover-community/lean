@@ -1,3 +1,4 @@
+prelude
 import init.meta.tactic
 import init.meta.widget.basic
 
@@ -68,8 +69,16 @@ meta def mk_simple
   )
   (λ ⟨_,p1⟩ ⟨_,p2⟩, p1 = p2)
 
--- meta def run : tc unit α → component tactic_state α
--- | c := component.mk _ _ (λ )
+meta def stateless [decidable_eq π] (view : π → tactic (list (html α))) : tc π α :=
+tc.mk_simple α unit (λ p, pure ()) (λ _ _ b, pure ((),some b)) (λ p _, view p)
+
+meta def to_html : tc π α → π → tactic (html α)
+| c p ts := success (html.of_component (ts,p) c) ts
+
+meta def to_component : tc unit α → component tactic_state α
+| c := component.map_props (λ tc, (tc,())) c
+
+meta instance cfn : has_coe_to_fun (tc π α) := ⟨λ x, π → tactic (html α), to_html⟩
 
 end tc
 
