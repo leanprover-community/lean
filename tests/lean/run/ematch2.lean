@@ -1,3 +1,16 @@
+class add_comm_monoid (α : Type*) extends has_zero α, has_add α.
+
+section
+variables {α : Type*} [add_comm_monoid α] (a b c : α)
+
+lemma add_assoc : a + b + c = a + (b + c) := sorry
+lemma add_comm : a + b = b + a := sorry
+
+instance aa : is_associative α (+) := ⟨sorry⟩
+instance ac : is_commutative α (+) := ⟨sorry⟩
+
+end
+
 namespace foo
 universe variables u
 variables {α : Type u}

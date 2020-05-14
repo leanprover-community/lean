@@ -124,6 +124,8 @@ variables {ws : tuple α q}
 lemma ex6 : p = m + n  → zs == xs ++ ys →  zs ++ ws == xs ++ (ys ++ ws) :=
 by blast
 
+local attribute [ematch] nat.add_assoc
+
 def ex : p = n + m  → zs == xs ++ ys →  zs ++ ws == xs ++ (ys ++ ws) :=
 by blast
 end tuple

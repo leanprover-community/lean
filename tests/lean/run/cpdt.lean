@@ -34,10 +34,20 @@ def reassoc : exp → exp
   | _              := Mult e1' e2'
   end
 
-@[simp]
-lemma nat.mul_left_comm : ∀ (n m k : ℕ), n * (m * k) = m * (n * k) := sorry
+class semiring (α : Type) extends has_mul α, has_add α, has_one α, has_zero α.
 
-attribute [simp] nat.left_distrib nat.right_distrib times reassoc eeval nat.mul_comm nat.mul_assoc
+instance foo : semiring nat :=
+{ zero := 0, one := 1, add := (+), mul := (*) }
+
+variables {α : Type} [semiring α] (a b c : α)
+
+lemma left_distrib : a * (b + c) = a * b + a * c := sorry
+lemma right_distrib : (a + b) * c = a * c + b * c := sorry
+lemma mul_comm : a * b = b * a := sorry
+lemma mul_assoc : a * b * c = a * (b * c) := sorry
+lemma mul_left_comm : a * (b * c) = b * (a * c) := sorry
+
+attribute [simp] left_distrib right_distrib times reassoc eeval mul_comm mul_assoc mul_left_comm
 
 theorem eeval_times (k e) : eeval (times k e) = k * eeval e :=
 by induction e; simp [*]
