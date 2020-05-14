@@ -96,8 +96,12 @@ void component_instance::render() {
 void component_instance::reconcile(vdom const & old) {
     lean_assert(!m_has_rendered);
     component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
-    // [bug] There may still be false negatives here when the component vm object contains vm_externals,
-    // since I used the pointer hash for these.
+    // [FIXME] There are false negatives here when the
+    // component vm object contains vm_externals.
+    // If they contain vm_externals which are not hashable then we assume they are the same component.
+    // This is acceptable, but confusing, behaviour for now. It just means that the component won't always
+    // update correctly if a non-prop dependency of a component changes.
+    // But users of components should be using Props anyway so there is a workaround.
     if (ci_old->m_component_hash == m_component_hash) {
         // if the components are the same:
         // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
