@@ -10,5 +10,5 @@ h₁_ih :
     smallstep (h₁_c₁, h₁_σ) (c'₂, σ'₂) → (h₁_c₂, h₁_σ') = (c'₂, σ'₂),
 c'₂ : com,
 σ'₂ : state,
-h₂ : smallstep (com.seq h₁_c₁ h₁_c₂, h₁_σ) (c'₂, σ'₂)
-⊢ (com.seq h₁_c₁' h₁_c₂, h₁_σ') = (c'₂, σ'₂)
+h₂ : smallstep (h₁_c₁.seq h₁_c₂, h₁_σ) (c'₂, σ'₂)
+⊢ (h₁_c₁'.seq h₁_c₂, h₁_σ') = (c'₂, σ'₂)

@@ -32,7 +32,7 @@ vm_override.lean:64:5: warning: declaration 'native.float.cases_on' uses sorry
 λ (n : un_nat), add._main n
 [compiler.inline] 
 λ (a : ℕ),
-  nat.cases_on a bin.nat_ovr.zero
+  a.cases_on bin.nat_ovr.zero
     (λ (a : ℕ),
        bin.nat_ovr.add._main ([bin_example.mk_num._main._meta_aux] a)
          (bin.nat_ovr.succ._main ([bin_example.mk_num._main._meta_aux] a)))
@@ -57,7 +57,7 @@ mk_num._main
 mk_num'._main
 11111
 [compiler.inline] 
-bin.nat_ovr.repr._main (mk_num._main (bit1 (bit0 (nat.succ nat.zero))))
+bin.nat_ovr.repr._main (mk_num._main (bit1 (bit0 nat.zero.succ)))
 11111
 [compiler.inline] 
 bin.nat_ovr.repr._main
@@ -67,8 +67,8 @@ bin.nat_ovr.repr._main
            (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main bin.nat_ovr.zero))))))
 [compiler.inline] 
 λ (a : float₃),
-  (λ (f : Π (a : ℕ), (λ (a : float₃), string) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
-    (λ (a : ℕ), nat.repr a)
+  (λ (f : Π (a : ℕ), (λ (a : float₃), string) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
+    (λ (a : ℕ), a.repr)
 [compiler.inline] 
 float₃.repr._main
 [compiler.inline] 
@@ -77,30 +77,30 @@ float₃.repr._main
 native.float₃.mk
 1
 [compiler.inline] 
-float₃.repr._main ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero)))
+float₃.repr._main ((λ (_x : ℕ), native.float.one) (bit1 nat.zero.succ))
 [compiler.inline] 
 λ (a : float₃),
-  (λ (f : Π (a : ℕ), (λ (a : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
+  (λ (f : Π (a : ℕ), (λ (a : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
     (λ (a : ℕ), a)
 [compiler.inline] 
 get₂._main
 1
 [compiler.inline] 
-nat.repr (get₂._main ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero))))
+(get₂._main ((λ (_x : ℕ), native.float.one) (bit1 nat.zero.succ))).repr
 [compiler.inline] 
 native.float₃.cases_on
 3
 [compiler.inline] 
-nat.repr (bit1 (nat.succ nat.zero))
+(bit1 nat.zero.succ).repr
 1
 [compiler.inline] 
 nat.repr
-  ((λ (f : Π (a : ℕ), (λ (n : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f (nat.succ nat.zero)))
+  ((λ (f : Π (a : ℕ), (λ (n : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
      (λ (n : ℕ), n))
 1
 [compiler.inline] 
 nat.repr
   ((λ (f : Π (a : ℕ), (λ (n : float₃), ℕ) (native.float₃.mk a)) (n : native.float),
-      unchecked_cast (f (nat.succ nat.zero)))
+      unchecked_cast (f nat.zero.succ))
      (λ (n : ℕ), n)
-     ((λ (_x : ℕ), native.float.one) (bit1 (nat.succ nat.zero))))
+     ((λ (_x : ℕ), native.float.one) (bit1 nat.zero.succ)))
