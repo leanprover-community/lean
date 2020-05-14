@@ -33,7 +33,7 @@ begin
   intros n m,
   induction m with m' ih,
   {   change n + 0 = 0 + n, simp [zadd, nat.add_zero, nat.zero_add] },
-                                      --^ "command": "info"
+                                                                  --^ "command": "info"
   { change succ (n + m') = succ m' + n,
     rw [succ_add, ih]
   }
