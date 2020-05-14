@@ -262,6 +262,7 @@ deserializer & operator>>(deserializer & d, simp_lemma & sl) {
             sl = mk_rfl_lemma(id, num_umeta, emetas, instances, lhs, rhs, proof, priority);
             break;
         }
+        default: lean_unreachable();
     }
     return d;
 }
