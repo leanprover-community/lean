@@ -1149,7 +1149,7 @@ static simp_lemmas get_simp_lemmas_from_attribute(type_context_old & ctx, name c
     buffer<name> simp_lemmas;
     attr.get_instances(ctx.env(), simp_lemmas);
     std::reverse(simp_lemmas.begin(), simp_lemmas.end());
-    auto cache_attr = get_simp_cache_attr();
+    auto & cache_attr = get_simp_cache_attr();
     for (name const & id : simp_lemmas) {
         if (auto cached = cache_attr.get(ctx.env(), id)) {
             for (auto & sl : cached->m_sls) {
