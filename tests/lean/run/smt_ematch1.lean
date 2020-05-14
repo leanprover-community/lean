@@ -45,7 +45,7 @@ lemma ex6 (a b c d e : nat) : (∀ x, g x (f x) = 0) → a = f b → g b a + 0 =
 begin [smt]
    intros,
    have h : ∀ x, g x (f x) = 0,
-   add_lemma [h, fax, add_zero],
+   add_lemma [h, fax, nat.add_zero],
    ematch
 end
 
@@ -53,10 +53,10 @@ lemma ex7 (a b c d e : nat) : (∀ x, g x (f x) = 0) → a = f b → g b a + 0 =
 begin [smt]
    intros,
    have h : ∀ x, g x (f x) = 0,
-   ematch_using [h, fax, add_zero]
+   ematch_using [h, fax, nat.add_zero]
 end
 
-local attribute [ematch] fax add_zero
+local attribute [ematch] fax nat.add_zero
 
 open smt_tactic
 
