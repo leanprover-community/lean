@@ -31,8 +31,8 @@ template<typename F>
 struct cmd_info_tmpl {
     name        m_name;
     std::string m_descr;
-    F           m_fn;
-    bool        m_skip_token;
+    F           m_fn {};
+    bool        m_skip_token = false;
 public:
     cmd_info_tmpl(name const & n, char const * d, F const & fn, bool skip_token = true):
         m_name(n), m_descr(d), m_fn(fn), m_skip_token(skip_token) {}
