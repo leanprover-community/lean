@@ -52,5 +52,7 @@ attribute [simp] left_distrib right_distrib times reassoc eeval mul_comm mul_ass
 theorem eeval_times (k e) : eeval (times k e) = k * eeval e :=
 by induction e; simp [*]
 
+set_option trace.smt true
+
 theorem reassoc_correct (e) : eeval (reassoc e) = eeval e :=
 by induction e; simp [*]; cases (reassoc e_e2); rsimp

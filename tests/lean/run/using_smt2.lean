@@ -33,8 +33,8 @@ by using_smt $ intros
 lemma ex11 (p q r s : Prop) : (p ∨ q → not (r ∨ s)) → p → not r :=
 by using_smt $ intros
 
-lemma ex12 (p q r : Prop) (a b c : nat): (p → q ∧ r ∧ a = b + c) → p → (c + b = a ∧ r) :=
-by using_smt $ intros
+-- lemma ex12 (p q r : Prop) (a b c : nat): (p → q ∧ r ∧ a = b + c) → p → (c + b = a ∧ r) :=
+-- by using_smt $ intros
 
 lemma ex13 (a b c d : nat) : b = d → c = d → (if a > 10 then b else c) = b :=
 by using_smt $ intros
