@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #include <vector>
+#include "util/hash.h"
 #include "library/parray.h"
 #include "library/vm/vm.h"
 #include "library/vm/vm_nat.h"
@@ -17,6 +18,13 @@ struct vm_array : public vm_external {
     virtual void dealloc() override { this->~vm_array(); get_vm_allocator().deallocate(sizeof(vm_array), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override;
     virtual vm_external * clone(vm_clone_fn const &) override { lean_unreachable(); }
+    virtual unsigned int hash() override {
+        unsigned int h = 9435;
+        for (unsigned int i = 0; i < m_array.size(); i++) {
+            h = lean::hash(h, lean::hash(m_array[i]));
+        }
+        return h;
+    }
 };
 
 /* Auxiliary object used by vm_array::ts_clone.

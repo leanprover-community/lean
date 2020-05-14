@@ -903,6 +903,8 @@ unsigned hash_bi(expr const & e) {
     return h;
 }
 
+unsigned hash(expr const & e) { return e.hash(); }
+
 std::ostream & operator<<(std::ostream & out, expr_kind const & k) {
     switch (k) {
     case expr_kind::Var:      out << "Var"; break;

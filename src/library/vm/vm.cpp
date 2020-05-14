@@ -334,7 +334,8 @@ unsigned hash(vm_obj const & o) {
     } else if (is_external(o)) {
         // [hack] for now just hash the pointer. The VM hash is only used for quick equality checking
         // so its fine if two equal externals give different hashes.
-        return hash(h, hash_ptr(o.raw()));
+        unsigned int oh = to_external(o)->hash();
+        return oh == 0 ? hash(h, hash_ptr(o.raw())) : oh;
     } else if (is_native_closure(o)) {
         auto nc = to_native_closure(o);
         h = hash_ptr(nc->get_fn());

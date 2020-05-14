@@ -25,6 +25,7 @@ struct vm_format : public vm_external {
     virtual void dealloc() override { this->~vm_format(); get_vm_allocator().deallocate(sizeof(vm_format), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_format(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_format))) vm_format(m_val); }
+    virtual unsigned int hash() override { return m_val.hash(); }
 };
 
 bool is_format(vm_obj const & o) {
