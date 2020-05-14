@@ -4,9 +4,11 @@ constant p : nat → nat → Prop
 constant f : nat → nat
 axiom pf (a : nat) : p (f a) (f a) → p a a
 
+local attribute [ematch] nat.add_zero
+
 lemma ex1 (a b c : nat) : a = b + 0 → a + c = b + c :=
 by using_smt $ do
-  pr ← tactic.to_expr ```(add_zero b),
+  pr ← tactic.to_expr ```(nat.add_zero b),
   note `h none pr,
   trace_state, return ()
 
