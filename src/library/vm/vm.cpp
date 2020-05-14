@@ -18,6 +18,7 @@ Author: Leonardo de Moura
 #include "util/small_object_allocator.h"
 #include "util/sexpr/option_declarations.h"
 #include "util/shared_mutex.h"
+#include "util/hash.h"
 #include "kernel/replace_fn.h"
 #include "library/constants.h"
 #include "library/kernel_serializer.h"
@@ -314,6 +315,36 @@ void vm_obj_cell::dealloc() {
     } catch (std::bad_alloc&) {
         // We need this catch, because push_back may fail when expanding the buffer.
         // In this case, we avoid the crash, and "accept" the memory leak.
+    }
+}
+
+unsigned hash(vm_obj const & o) {
+    unsigned int h = 555; // just a seed for the hash
+    h = hash(h, (unsigned int)(kind(o)));
+    if (is_simple(o)) {
+        return hash(h, (unsigned int)(0));
+    } else if (is_constructor(o) || is_closure(o)) {
+        h = hash(h, is_closure(o) ? cfn_idx(o) : cidx(o));
+        for (unsigned i = 0; i < csize(o); i++) {
+            h = hash(h, hash(cfield(o, i)));
+        }
+        return h;
+    } else if (is_mpz(o)) {
+        return hash(h, to_mpz(o).hash());
+    } else if (is_external(o)) {
+        // [hack] for now just hash the pointer. The VM hash is only used for quick equality checking
+        // so its fine if two equal externals give different hashes.
+        return hash(h, hash_ptr(o.raw()));
+    } else if (is_native_closure(o)) {
+        auto nc = to_native_closure(o);
+        h = hash_ptr(nc->get_fn());
+        vm_obj const *  args = nc->get_args();
+        for (unsigned i = 0; i < nc->get_num_args(); i++) {
+            h = hash(h, hash(args[i]));
+        }
+        return h;
+    } else { // unknown
+        return h;
     }
 }
 

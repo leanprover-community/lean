@@ -96,8 +96,8 @@ void component_instance::render() {
 void component_instance::reconcile(vdom const & old) {
     lean_assert(!m_has_rendered);
     component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
-    // [hack] I want to perform a reference equals when the m_components are the same VM object.
-    //I can't figure out how to do this properly so I'm just compouting a hash when the component is made and hoping it is the same
+    // [bug] There may still be false negatives here when the component vm object contains vm_externals,
+    // since I used the pointer hash for these.
     if (ci_old->m_component_hash == m_component_hash) {
         // if the components are the same:
         // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.

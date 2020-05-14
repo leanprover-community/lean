@@ -59,6 +59,9 @@ public:
 #define lean_vm_check(cond) { if (LEAN_UNLIKELY(!(cond))) vm_check_failed(#cond); }
 #endif
 
+/** Hashes a VM object. If a vm_external is in the VM object then the hash of the pointer will be used.
+ * This means that it is possible that two equal vm_externals will have different hashes.  */
+unsigned hash(vm_obj const & o);
 void display(std::ostream & out, vm_obj const & o);
 
 /** \brief VM object */

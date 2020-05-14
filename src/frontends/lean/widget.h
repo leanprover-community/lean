@@ -73,7 +73,7 @@ struct vdom_string : public vdom_cell {
 
 class component_instance : public vdom_cell {
     ts_vm_obj const m_component;
-    unsigned m_component_hash;
+    unsigned int m_component_hash;
 
     ts_vm_obj m_props;
     optional<ts_vm_obj> m_state;
@@ -101,7 +101,7 @@ public:
       m_id = count++;
       m_has_rendered = false;
       m_reconcile_count = 0;
-      m_component_hash = hash_ptr(c.raw());
+      m_component_hash = hash(c);
     }
     json to_json(list<unsigned> const & route) override;
     void reconcile(vdom const & old);
