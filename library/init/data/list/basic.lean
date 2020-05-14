@@ -228,6 +228,11 @@ if a ∈ l then l else a :: l
 instance [decidable_eq α] : has_insert α (list α) :=
 ⟨list.insert⟩
 
+instance : has_singleton α (list α) := ⟨λ x, [x]⟩
+
+instance [decidable_eq α] : is_lawful_singleton α (list α) :=
+⟨λ x, show (if x ∈ ([] : list α) then [] else [x]) = [x], from if_neg not_false⟩
+
 protected def union [decidable_eq α] (l₁ l₂ : list α) : list α :=
 foldr insert l₂ l₁
 

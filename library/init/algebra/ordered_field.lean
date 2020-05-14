@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Robert Lewis, Leonardo de Moura
 -/
 prelude
-import init.algebra.ordered_ring .field
+import init.algebra.ordered_ring init.algebra.field
 
 set_option old_structure_cmd true
 

@@ -8,5 +8,5 @@ a_val : ℕ,
 a_right : tree,
 a_ih_left : foo a_left = a_left,
 a_ih_right : foo a_right = a_right
-⊢ foo (tree.node a_left a_val a_right) = tree.node a_left a_val a_right
+⊢ foo (a_left.node a_val a_right) = a_left.node a_val a_right
 induction_naming2.lean:7:0: warning: declaration '[anonymous]' uses sorry

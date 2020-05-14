@@ -1791,8 +1791,8 @@ static bool is_emptyc(expr const & e) {
 
 static bool is_singleton(expr const & e) {
     return
-        is_constant(get_app_fn(e), get_singleton_name()) &&
-        get_app_num_args(e) == 5;
+        is_constant(get_app_fn(e), get_has_singleton_singleton_name()) &&
+        get_app_num_args(e) == 4;
 }
 
 static bool is_insert(expr const & e) {
@@ -1826,9 +1826,12 @@ auto pretty_fn<T>::pp_explicit_collection(buffer<subexpr> const & elems) -> resu
     if (elems.empty()) {
         return result(T(m_unicode ? "∅" : "{}"));
     } else {
-        T r = pp_child_at(elems[0].first, 0, elems[0].second).fmt();
-        for (unsigned i = 1; i < elems.size(); i++) {
-            r += nest(m_indent, comma() + line() + pp_child_at(elems[i].first, 0, elems[i].second).fmt());
+        subexpr elem = elems[elems.size() - 1];
+        T r = pp_child_at(elem.first, 0, elem.second).fmt();
+        for (unsigned i = elems.size() - 1; i > 0;) {
+            --i;
+            elem = elems[i];
+            r += nest(m_indent, comma() + line() + pp_child_at(elem.first, 0, elem.second).fmt());
         }
         r = group(bracket("{", r, "}"));
         return result(r);

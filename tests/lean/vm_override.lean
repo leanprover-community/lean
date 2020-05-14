@@ -1,7 +1,5 @@
 /- Author: E.W.Ayers  -/
 
-instance : has_repr name := ⟨λ x, to_string x⟩
-
 meta def hello_override := `hello_override.name
 
 @[vm_override hello_override]        -- this means that the VM should replace the definition of `hello` with `hello_override` when evaluating.

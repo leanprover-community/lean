@@ -8,17 +8,17 @@ Hq : q
 ⊢ q ∨ p
 -----
 2 goals
-⊢ 0 = 0 ∨ 0 = succ (pred 0)
+⊢ 0 = 0 ∨ 0 = 0.pred.succ
 
 n' : ℕ,
-Hind : n' = 0 ∨ n' = succ (pred n')
-⊢ succ n' = 0 ∨ succ n' = succ (pred (succ n'))
+Hind : n' = 0 ∨ n' = n'.pred.succ
+⊢ n'.succ = 0 ∨ n'.succ = n'.succ.pred.succ
 -----
 2 goals
 H : 0 ≠ 0
-⊢ 0 > 0 → 0 = succ (pred 0)
+⊢ 0 > 0 → 0 = 0.pred.succ
 
 n_n : ℕ,
-n_ih : n_n ≠ 0 → n_n > 0 → n_n = succ (pred n_n),
-H : succ n_n ≠ 0
-⊢ succ n_n > 0 → succ n_n = succ (pred (succ n_n))
+n_ih : n_n ≠ 0 → n_n > 0 → n_n = n_n.pred.succ,
+H : n_n.succ ≠ 0
+⊢ n_n.succ > 0 → n_n.succ = n_n.succ.pred.succ

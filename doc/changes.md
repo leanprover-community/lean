@@ -1,3 +1,19 @@
+v3.12.0c (14 May 2020)
+----------------------
+
+Features:
+  - Tactic combinators with informative results (#212)
+  - `has_singleton` is a new typeclass (#217)
+  - Add instances for `has_repr name`, `has_repr case_tag`, and `has_to_format case_tag` (#230)
+
+Changes:
+  - `library/init/function`: use dot notation, add some docstrings (#216)
+  - `tactic.all_goals` is now called `tactic.all_goals'`, etc. (#212)
+  - `norm_num` is removed (#224)
+  - Parse `{a,b,c}` as right associative (#153)
+  - Refactor case tags (#228)
+  - Enable `pp.generalized_field_notation` by default (#227)
+
 v3.11.0c (8 May 2020)
 ---------------------
 

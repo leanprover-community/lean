@@ -38,7 +38,7 @@ def half_baked._main : ℕ → ℕ :=
           (ite (a = 42) (id_rhs ℕ (ite (2 ∈ 3) 3 ⁇))
              (ite (a = 7) (id_rhs ℕ ⁇) (ite (a = 10) (id_rhs ℕ ⁇) ⁇)))))
 2
-nat.succ (nat.succ (nat.succ (nat.succ ⁇)))
+⁇.succ.succ.succ.succ
 2
 elab_error_recovery.lean:22:13: error: type expected at
   0
