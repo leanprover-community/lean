@@ -1,5 +1,5 @@
 b : ℕ
-⊢ succ (succ b) = succ (b + 1)
+⊢ b.succ.succ = (b + 1).succ
 ---- after dsimp ----
 b : ℕ
 ⊢ b + 0 + 1 + 0 + 1 = b + 1 + 0 + 1

@@ -5,7 +5,7 @@ b : ℕ
 
 case nat.succ
 b a : ℕ
-⊢ nat.succ a + b = b + nat.succ a
+⊢ a.succ + b = b + a.succ
 induction_naming.lean:1:0: warning: declaration '[anonymous]' uses sorry
 2 goals
 case nat.zero
@@ -15,7 +15,7 @@ b : ℕ
 case nat.succ
 b a_n : ℕ,
 a_ih : a_n + b = b + a_n
-⊢ nat.succ a_n + b = b + nat.succ a_n
+⊢ a_n.succ + b = b + a_n.succ
 induction_naming.lean:8:0: warning: declaration '[anonymous]' uses sorry
 2 goals
 case nat.zero
@@ -25,5 +25,5 @@ b : ℕ
 case nat.succ
 b n : ℕ,
 ih : n + b = b + n
-⊢ nat.succ n + b = b + nat.succ n
+⊢ n.succ + b = b + n.succ
 induction_naming.lean:17:0: warning: declaration '[anonymous]' uses sorry

@@ -1,4 +1,4 @@
-nat.succ (nat.add a (nat.add 1 0))
-nat.succ (nat.add a (nat.add 1 0))
+(a.add (1.add 0)).succ
+(a.add (1.add 0)).succ
 f a
 a + 2

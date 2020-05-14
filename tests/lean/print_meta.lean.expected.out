@@ -3,5 +3,4 @@ meta def tactic.intro : name → tactic expr :=
   id_rhs (tactic expr)
     (tactic.target >>=
        λ (t : expr),
-         ite (↥(expr.is_pi t) ∨ ↥(expr.is_let t)) (tactic.intro_core n)
-           (tactic.whnf_target >> tactic.intro_core n))
+         ite (↥(t.is_pi) ∨ ↥(t.is_let)) (tactic.intro_core n) (tactic.whnf_target >> tactic.intro_core n))
