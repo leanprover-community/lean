@@ -1,4 +1,4 @@
-attribute [pre_smt] add_zero zero_add mul_one one_mul
+attribute [pre_smt] nat.add_zero nat.zero_add nat.mul_one nat.one_mul
 
 constant p    : nat → nat → Prop
 constants a b : nat
@@ -24,7 +24,7 @@ def foo : nat → nat
 lemma ex1 (n : nat) : n = 0 → foo (n+1) = 2*0 :=
 begin [smt]
   intros,
-  add_lemma [mul_zero, zero_mul],
+  add_lemma [nat.mul_zero, nat.zero_mul],
   add_eqn_lemmas foo,
   ematch
 end
@@ -32,7 +32,7 @@ end
 lemma ex2 (n : nat) : n = 0 → foo (n+1) = 2*0 :=
 begin [smt]
   intros,
-  ematch_using [foo, mul_zero, zero_mul],
+  ematch_using [foo, nat.mul_zero, nat.zero_mul],
 end
 
 lemma ex3 (n : nat) : n = 0 → foo n = 0 :=
