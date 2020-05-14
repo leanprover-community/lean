@@ -51,9 +51,56 @@ rfl
 
 attribute [ematch] asimp_const aval
 
--- set_option trace.smt.ematch true
+-- attribute [ematch] nat.zero_add nat.add_zero nat.mul_one nat.one_mul nat.zero_mul nat.mul_zero
+--   nat.add_sub_add_left nat.add_sub_add_right min_eq_right min_eq_left
+--   nat.add_sub_cancel nat.add_sub_cancel_left
+
+set_option trace.smt.ematch true
+
+-- set_option pp.all true
 
 meta def not_done : tactic unit := fail_if_success done
+
+class semiring (α : Type) extends has_zero α, has_one α, has_add α, has_mul α.
+
+instance foo : semiring ℕ :=
+{ zero := 0,
+  one := 1,
+  add := (+),
+  mul := (*) }
+
+section
+variables {α : Type} [semiring α] (a : α)
+
+lemma zero_add : (0:α) + a = a := sorry
+lemma add_zero : a + 0 = a := sorry
+lemma zero_mul : (0:α) * a = 0 := sorry
+lemma mul_zero : a * 0 = 0 := sorry
+lemma one_mul : (1:α) * a = a := sorry
+lemma mul_one : a * 1 = a := sorry
+
+end
+
+attribute [ematch] zero_add add_zero mul_one zero_mul mul_zero
+  nat.add_sub_add_left nat.add_sub_add_right min_eq_right min_eq_left
+  nat.add_sub_cancel nat.add_sub_cancel_left
+
+lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
+begin [smt]
+  smt_tactic.get_lemmas >>= smt_tactic.trace,
+end
+
+
+-- lemma aval_asimp_const' (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
+-- begin [smt]
+--  induction a,
+--  destruct (asimp_const a_a_1),
+-- { destruct (asimp_const a_a),
+--   { ematch, ematch,
+--     smt_tactic.ematch >> smt_tactic.trace_state },
+--   all_goals {admit}},
+-- all_goals {admit}
+-- end
 
 lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
 begin [smt]
