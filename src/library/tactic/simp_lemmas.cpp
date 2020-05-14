@@ -1108,7 +1108,7 @@ struct simp_cache_attr_data : public attr_data {
     simp_cache_attr_data(list<pair<name, simp_lemma>> const & sls) : m_sls(sls) {}
 
     virtual unsigned hash() const override {
-        return 0; // TODO
+        return 0; // This is probably ok.
     }
 
     void write(serializer & s) const { write_list(s, m_sls); }
