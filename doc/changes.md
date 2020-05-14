@@ -2,7 +2,7 @@ v3.12.0c (14 May 2020)
 ----------------------
 
 Features:
-  - tactic combinators with informative results (#212)
+  - Tactic combinators with informative results (#212)
   - `has_singleton` is a new typeclass (#217)
   - Add instances for `has_repr name`, `has_repr case_tag`, and `has_to_format case_tag` (#230)
 
