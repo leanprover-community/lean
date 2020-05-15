@@ -195,6 +195,8 @@ format simp_lemma::pp(formatter const & fmt) const {
 }
 
 bool operator==(simp_lemma const & r1, simp_lemma const & r2) {
+    if (r1.get_id() != r2.get_id())
+        return false;
     if (r1.kind() != r2.kind() || r1.get_lhs() != r2.get_lhs() || r1.get_rhs() != r2.get_rhs())
         return false;
     if (r1.kind() == simp_lemma_kind::Congr &&
