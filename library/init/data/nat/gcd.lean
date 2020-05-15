@@ -9,7 +9,7 @@ prelude
 import init.data.nat.lemmas init.meta.well_founded_tactics
 
 open well_founded
-/-
+
 namespace nat
 
 /- gcd -/
@@ -54,4 +54,3 @@ def lcm (m n : ℕ) : ℕ := m * n / (gcd m n)
 @[reducible] def coprime (m n : ℕ) : Prop := gcd m n = 1
 
 end nat
--/

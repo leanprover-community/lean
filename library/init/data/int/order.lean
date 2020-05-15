@@ -8,8 +8,6 @@ The order relation on the integers.
 prelude
 import init.data.int.basic init.data.ordering.basic
 
--- local attribute [simp] sub_eq_add_neg
-
 namespace int
 
 private def nonneg (a : ℤ) : Prop := int.cases_on a (assume n, true) (assume n, false)
@@ -890,13 +888,6 @@ match a, eq_coe_of_zero_le H with ._, ⟨n, rfl⟩ := rfl end
 theorem of_nat_nat_abs_of_nonpos {a : ℤ} (H : a ≤ 0) : (nat_abs a : ℤ) = -a :=
 by rw [← nat_abs_neg, nat_abs_of_nonneg (int.neg_nonneg_of_nonpos H)]
 
--- theorem abs_eq_nat_abs : ∀ a : ℤ, abs a = nat_abs a
--- | (n : ℕ) := abs_of_nonneg $ coe_zero_le _
--- | -[1+ n] := abs_of_nonpos $ le_of_lt $ neg_succ_lt_zero _
-
--- theorem nat_abs_abs (a : ℤ) : nat_abs (abs a) = nat_abs a :=
--- by rw [abs_eq_nat_abs]; refl
-
 theorem lt_of_add_one_le {a b : ℤ} (H : a + 1 ≤ b) : a < b := H
 
 theorem add_one_le_of_lt {a b : ℤ} (H : a < b) : a + 1 ≤ b := H
@@ -946,10 +937,6 @@ theorem sign_eq_neg_one_iff_neg (a : ℤ) : sign a = -1 ↔ a < 0 :=
 
 theorem sign_eq_zero_iff_zero (a : ℤ) : sign a = 0 ↔ a = 0 :=
 ⟨eq_zero_of_sign_eq_zero, λ h, by rw [h, sign_zero]⟩
-
--- theorem sign_mul_abs (a : ℤ) : sign a * abs a = a :=
--- by rw [abs_eq_nat_abs, sign_mul_nat_abs]
-
 
 lemma int.eq_zero_or_eq_zero_of_mul_eq_zero
         {a b : ℤ} (h : a * b = 0) : a = 0 ∨ b = 0 :=

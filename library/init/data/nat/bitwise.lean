@@ -62,7 +62,6 @@ end
 by unfold bodd div2 bodd_div2; cases bodd_div2 n; cases fst; refl
 
 local attribute [simp] nat.add_comm nat.add_assoc nat.add_left_comm nat.mul_comm nat.mul_assoc
--- nat.mul_left_comm
 
 theorem bodd_add_div2 : ∀ n, cond (bodd n) 1 0 + 2 * div2 n = n
 | 0        := rfl

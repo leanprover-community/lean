@@ -6,7 +6,7 @@ Authors: Jeremy Avigad
 The integers, with addition, multiplication, and subtraction.
 -/
 prelude
-import init.data.nat.lemmas -- init.data.nat.gcd
+import init.data.nat.lemmas init.data.nat.gcd
 open nat
 
 /- the type, coercions, and notation -/
@@ -322,7 +322,7 @@ instance : has_mod ℤ := ⟨int.mod⟩
 
 /- gcd -/
 
--- def gcd (m n : ℤ) : ℕ := gcd (nat_abs m) (nat_abs n)
+def gcd (m n : ℤ) : ℕ := gcd (nat_abs m) (nat_abs n)
 
 /-
    int is a ring
@@ -454,13 +454,6 @@ protected lemma mul_assoc : ∀ a b c : ℤ, a * b * c = a * (b * c)
 | -[1+ m]    (of_nat n) -[1+ k]    := by simp [nat.mul_assoc]
 | -[1+ m]    -[1+ n]    (of_nat k) := by simp [nat.mul_assoc]
 | -[1+ m]    -[1+ n]   -[1+ k]     := by simp [nat.mul_assoc]
-
--- protected lemma mul_one : ∀ (a : ℤ), a * 1 = a
--- | (of_nat m) := show of_nat m * of_nat 1 = of_nat m, by simp
--- | -[1+ m]    := show -[1+ m] * of_nat 1 = -[1+ m], begin simp, reflexivity end
-
--- protected lemma one_mul (a : ℤ) : 1 * a = a :=
--- int.mul_comm a 1 ▸ int.mul_one a
 
 protected lemma mul_zero : ∀ (a : ℤ), a * 0 = 0
 | (of_nat m) := rfl
