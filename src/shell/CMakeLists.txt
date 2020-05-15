@@ -246,6 +246,17 @@ FOREACH(T ${LEANITTESTS})
 ENDFOREACH(T)
 endif()
 
+if("${MULTI_THREAD}" MATCHES "ON")
+# LEAN WIDGET TESTS
+file(GLOB LEANWIDGETTESTS "${LEAN_SOURCE_DIR}/../tests/lean/widget/*.input")
+FOREACH(T ${LEANWIDGETTESTS})
+  GET_FILENAME_COMPONENT(T_NAME ${T} NAME)
+  add_test(NAME "leanwidgettest_${T_NAME}"
+           WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../tests/lean/widget"
+           COMMAND bash "./test_single.sh" "${CMAKE_CURRENT_BINARY_DIR}/lean" ${T_NAME})
+ENDFOREACH(T)
+endif()
+
 # LEAN SLOW TESTS
 file(GLOB LEANSLOWTESTS "${LEAN_SOURCE_DIR}/../tests/lean/slow/*.lean")
 FOREACH(T ${LEANSLOWTESTS})

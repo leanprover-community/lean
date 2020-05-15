@@ -194,7 +194,7 @@ void report_info(environment const & env, options const & opts, io_state const &
         if (infom.get_file_name() == m_mod_info.m_id) {
             if (e.m_goal_pos) {
                 // in the case that e has a goal pos, report that.
-                // record["debug"]["msg"] = "from m_goal_pos";
+                // record["debug"]["msg"] = "from m_goal_pos"; // [todo] remove debug messages once I understand what this code is doing.
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
                             return is_vm_obj_format_info(d) || is_widget_info(d);
                         });

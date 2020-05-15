@@ -7,11 +7,3 @@ begin [widget_tactic]
   tactic.split,
   tactic.assumption, tactic.assumption,
 end
-
-example {P Q : Prop} : P → Q → P ∧ Q :=
-begin
-  tactic.intros,
-  tactic.split,
-  tactic.assumption,
-  tactic.assumption,
-end

@@ -209,6 +209,7 @@ static void display_help(std::ostream & out) {
     std::cout << "  --json             print JSON-formatted structured error messages\n";
     std::cout << "  --server           start lean in server mode\n";
     std::cout << "  --server=file      start lean in server mode, redirecting standard input from the specified file (for debugging)\n";
+    // std::cout << "  --no-widgets       turn off reporting on widgets\n";
 #endif
     std::cout << "  --profile          display elaboration/type checking time for each definition/theorem\n";
     DEBUG_CODE(
@@ -243,6 +244,7 @@ static struct option g_long_options[] = {
     {"json",         no_argument,       0, 'J'},
     {"path",         no_argument,       0, 'p'},
     {"server",       optional_argument, 0, 'S'},
+    {"no-widgets",   no_argument,       0, 'W'},
 #endif
     {"doc",          required_argument, 0, 'r'},
 #if defined(LEAN_MULTI_THREAD)
@@ -428,6 +430,7 @@ int main(int argc, char ** argv) {
     ::initializer init;
     bool make_mode          = false;
     bool use_old_oleans     = false;
+    bool report_widgets     = true;
     bool recursive          = false;
     unsigned trust_lvl      = LEAN_BELIEVER_TRUST_LEVEL+1;
     bool only_deps          = false;
@@ -478,6 +481,9 @@ int main(int argc, char ** argv) {
             break;
         case 'O':
             use_old_oleans = true;
+            break;
+        case 'W':
+            report_widgets = false;
             break;
         case 'R':
             recursive = true;
@@ -592,8 +598,7 @@ int main(int argc, char ** argv) {
             }
             std::cin.rdbuf(file_in->rdbuf());
         }
-
-        server(num_threads, path.get_path(), env, ios, use_old_oleans).run();
+        server(num_threads, path.get_path(), env, ios, use_old_oleans, report_widgets).run();
         return 0;
     }
 #endif

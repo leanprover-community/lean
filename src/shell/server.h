@@ -111,7 +111,8 @@ class server : public module_vfs {
 
 public:
     server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,
-        bool use_old_oleans = false);
+        bool use_old_oleans = false,
+        bool report_widgets = true);
     ~server();
 
     std::shared_ptr<module_info> load_module(module_id const & id, bool can_use_olean) override;
