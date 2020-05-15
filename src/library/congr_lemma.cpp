@@ -357,12 +357,13 @@ struct congr_lemma_manager {
         for (unsigned i = 0; i < pinfos.size(); i++) {
             for (unsigned j = i+1; j < pinfos.size(); j++) {
                 auto j_deps = pinfos[j].get_back_deps();
-                if (std::find(j_deps.begin(), j_deps.end(), i) != j_deps.end() &&
-                        kinds[j] == congr_arg_kind::Eq) {
-                    // We must fix i because there is a j that depends on i,
-                    // and j is not fixed nor a cast-fixed.
-                    kinds[i] = congr_arg_kind::Fixed;
-                    break;
+                if (std::find(j_deps.begin(), j_deps.end(), i) != j_deps.end()) {
+                    if (kinds[j] == congr_arg_kind::Eq || kinds[j] == congr_arg_kind::Fixed) {
+                        // We must fix i because there is a j that depends on i,
+                        // and j is not cast-fixed.
+                        kinds[i] = congr_arg_kind::Fixed;
+                        break;
+                    }
                 }
             }
         }
