@@ -779,10 +779,7 @@ vm_obj tactic_olean_doc_strings(vm_obj const & _s) {
         else
             decl_name = mk_vm_none();
         vm_obj lst = mk_vm_simple(0);
-        unsigned j = entries[i].m_docs.size();
-        while (j > 0) {
-            --j;
-            auto const& doc = entries[i].m_docs[j];
+        for (auto & doc : entries[i].m_docs) {
             vm_obj line = mk_vm_nat(doc.first.first);
             vm_obj column = mk_vm_nat(doc.first.second);
             vm_obj pos = mk_vm_constructor(0, line, column); // pos_info

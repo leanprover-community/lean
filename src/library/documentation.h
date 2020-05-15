@@ -14,7 +14,7 @@ Author: Leonardo de Moura
 namespace lean {
 struct mod_doc_entry {
     optional<std::string> m_mod_name;
-    std::vector<std::pair<pos_info, std::string>> m_docs;
+    list<std::pair<pos_info, std::string>> m_docs;
 };
 environment add_module_doc_string(environment const & env, std::string doc, pos_info pos);
 environment add_doc_string(environment const & env, name const & n, std::string);
