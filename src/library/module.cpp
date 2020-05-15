@@ -89,8 +89,7 @@ struct module_ext : public environment_extension {
     /** Top-level doc strings for modules which have them. Lean doesn't have a notion
      * of module different from that of a source file, so we use file names to index
      * the docstring map. */
-    // TODO(Vtec234): lean::rb_map misbehaves here for some reason
-    std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> m_module_docs;
+    rb_map<std::string, list<std::pair<pos_info, std::string>>, string_lt> m_module_docs;
     // Map from declaration name to olean file where it was defined
     name_map<std::string>     m_decl2olean;
     name_map<pos_info>        m_decl2pos_info;
@@ -542,7 +541,7 @@ environment add_doc_string(environment const & env, std::string const & doc, pos
     return add(env, std::make_shared<mod_doc_modification>(doc, pos));
 }
 
-std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> const & get_doc_strings(environment const & env) {
+rb_map<std::string, list<std::pair<pos_info, std::string>>, string_lt> const & get_doc_strings(environment const & env) {
     return get_extension(env).m_module_docs;
 }
 
@@ -745,7 +744,9 @@ void import_modification(modification const & m, std::string const & file_name, 
         env = add_decl_olean(env, im->m_decl.get_decl().m_name, file_name);
     } else if (auto mdm = dynamic_cast<mod_doc_modification const *>(&m)) {
         auto ext = get_extension(env);
-        ext.m_module_docs[file_name].emplace_back(mdm->m_pos, mdm->m_doc);
+        auto docs = ext.m_module_docs.find(file_name);
+        ext.m_module_docs[file_name] =
+            cons(std::make_pair(mdm->m_pos, mdm->m_doc), docs ? *docs : list<std::pair<pos_info, std::string>>());
         env = update(env, ext);
     }
 }
