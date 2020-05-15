@@ -47,9 +47,6 @@ assume h, nat.no_confusion h
 protected lemma zero_ne_one : 0 ≠ (1 : ℕ) :=
 assume h, nat.no_confusion h
 
--- instance : zero_ne_one_class ℕ :=
--- { zero := 0, one := 1, zero_ne_one := nat.zero_ne_one }
-
 lemma eq_zero_of_add_eq_zero_right : ∀ {n m : ℕ}, n + m = 0 → n = 0
 | 0     m := by simp [nat.zero_add]
 | (n+1) m := λ h,
@@ -887,25 +884,6 @@ protected theorem eq_or_lt_of_not_lt {a b : ℕ} (hnlt : ¬ a < b) : a = b ∨ b
 theorem lt_succ_of_lt {a b : nat} (h : a < b) : a < succ b := le_succ_of_le h
 
 def one_pos := nat.zero_lt_one
-
--- theorem mul_self_le_mul_self {n m : ℕ} (h : n ≤ m) : n * n ≤ m * m :=
--- mul_le_mul h h (zero_le _) (zero_le _)
-
--- theorem mul_self_lt_mul_self : Π {n m : ℕ}, n < m → n * n < m * m
--- | 0        m h := mul_pos h h
--- | (succ n) m h := mul_lt_mul h (le_of_lt h) (succ_pos _) (zero_le _)
-
--- theorem mul_self_le_mul_self_iff {n m : ℕ} : n ≤ m ↔ n * n ≤ m * m :=
--- ⟨mul_self_le_mul_self, λh, decidable.by_contradiction $
---   λhn, not_lt_of_ge h $ mul_self_lt_mul_self $ lt_of_not_ge hn⟩
-
--- theorem mul_self_lt_mul_self_iff {n m : ℕ} : n < m ↔ n * n < m * m :=
--- iff.trans (lt_iff_not_ge _ _) $ iff.trans (not_iff_not_of_iff mul_self_le_mul_self_iff) $
---   iff.symm (lt_iff_not_ge _ _)
-
--- theorem le_mul_self : Π (n : ℕ), n ≤ n * n
--- | 0     := le_refl _
--- | (n+1) := let t := mul_le_mul_left (n+1) (succ_pos n) in by simp at t; exact t
 
 /- subtraction -/
 
