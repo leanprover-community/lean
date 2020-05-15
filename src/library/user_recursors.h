@@ -12,10 +12,10 @@ class recursor_info {
     name                     m_recursor;
     name                     m_type_name;
     list<unsigned>           m_universe_pos; // position of the recursor universe level parameters.
-    bool                     m_dep_elim;
-    bool                     m_recursive;
-    unsigned                 m_num_args; // total number of arguments
-    unsigned                 m_major_pos;
+    bool                     m_dep_elim = false;
+    bool                     m_recursive = false;
+    unsigned                 m_num_args = 0; // total number of arguments
+    unsigned                 m_major_pos = 0;
     // if param is <none>, then it should be resolved by type class resolution
     list<optional<unsigned>> m_params_pos;  // position of the recursor parameters in the major premise
     list<unsigned>           m_indices_pos; // position of the recursor indices in the major premise

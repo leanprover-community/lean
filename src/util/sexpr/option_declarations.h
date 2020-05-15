@@ -18,7 +18,7 @@ namespace lean {
 */
 class option_declaration {
     name        m_name;
-    option_kind m_kind;
+    option_kind m_kind = StringOption;
     std::string m_default;
     std::string m_description;
 public:
