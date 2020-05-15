@@ -13,4 +13,4 @@ set_option trace.type_context.is_def_eq_detail true
 def bla : foo := { fn_ax := λ x, rfl }
 
 
-instance foo2 (α : Type) : group α := { mul_assoc := λ x y z, rfl }
+instance foo2 (α : Type) : preorder α := { le_trans := λ x y z, rfl }

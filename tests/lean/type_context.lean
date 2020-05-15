@@ -57,7 +57,7 @@ run_cmd do -- should fail with a 'deep recursion'
   trace m₂
 
 run_cmd do
-    x : pexpr ← resolve_name `eq_mul_inv_of_mul_eq,
+    x : pexpr ← resolve_name `int.eq_neg_of_eq_neg,
     x ← to_expr x,
     y ← infer_type x,
     (t,us,es) ← type_context.run $ type_context.to_tmp_mvars y,

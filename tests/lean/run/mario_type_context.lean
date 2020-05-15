@@ -2,6 +2,18 @@
 set_option profiler true
 open tactic
 
+constant semiring : Type → Type
+constant comm_semiring : Type → Type
+constant ring : Type → Type
+constant comm_ring : Type → Type
+
+attribute [class] semiring comm_semiring ring comm_ring
+
+constant comm_ring.to_comm_semiring {α : Type} [comm_ring α] : comm_semiring α
+constant comm_semiring.to_semiring {α : Type} [comm_semiring α] : semiring α
+
+attribute [instance] comm_ring.to_comm_semiring comm_semiring.to_semiring
+
 def bar (α) [semiring α] : α := sorry
 
 lemma foo (α) [comm_ring α]

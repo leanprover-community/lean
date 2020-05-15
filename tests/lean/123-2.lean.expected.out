@@ -1,13 +1,9 @@
-123-2.lean:48:15: error: type mismatch at field 'commutes''
+123-2.lean:54:15: error: type mismatch at field 'commutes''
   ?m_1
 has type
-  ∀ (r : R), (λ (b : B), ?m_1[b] b) (⇑(algebra_map' R B) r) = ⇑(algebra_map' R C) r
+  ∀ (r : R), (λ (b : B), ?m_1[b]) (⇑(algebra_map' R B) r) = ⇑(algebra_map' R C) r
 but is expected to have type
   ∀ (r : R),
-    {to_fun := λ (b : B), ?m_1[b] b,
-       map_one' := ?map_one',
-       map_mul' := ?map_mul',
-       map_zero' := ?map_zero',
-       map_add' := ?map_add'}.to_fun
+    {to_fun := λ (b : B), ?m_1[b], map_one' := ?m_2, map_mul' := ?m_3, map_zero' := ?m_4, map_add' := ?m_5}.to_fun
         (⇑(algebra_map' R B) r) =
       ⇑(algebra_map' R C) r

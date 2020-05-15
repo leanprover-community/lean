@@ -2,7 +2,7 @@ namespace test
 open tactic
 meta def my_tac : tactic unit := abstract (intros >> `[simp])
 
-local attribute [simp] add_assoc mul_assoc
+local attribute [simp] nat.add_assoc nat.mul_assoc
 
 structure monoid (α : Type) :=
 (op    : α → α → α)

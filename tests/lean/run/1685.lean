@@ -1,4 +1,4 @@
-local attribute [simp] add_comm add_left_comm
+local attribute [simp] nat.add_comm nat.add_left_comm
 /- This test assumes the total order on terms used by simp compares local constants
    using the order they appear in the local context. -/
 example (m : ℕ) : ∀ n k, m + n = k → n + m = k := by intros; simp; assumption

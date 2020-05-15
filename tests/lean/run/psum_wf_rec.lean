@@ -6,7 +6,7 @@ def sum_has_sizeof_2 {α β} [has_sizeof α] [has_sizeof β] : has_sizeof (psum 
 ⟨psum.alt.sizeof⟩
 
 local attribute [instance] sum_has_sizeof_2
-local attribute [simp] add_comm add_left_comm add_assoc mul_assoc mul_comm mul_left_comm
+local attribute [simp] nat.add_comm nat.add_left_comm nat.add_assoc nat.mul_assoc nat.mul_comm nat.one_mul
 
 mutual def f, g
 with f : ℕ → ℕ
@@ -18,7 +18,7 @@ with g : ℕ → ℕ
      We will be able to delete it as soon as we have decision procedures for arithmetic -/
   have 2 + n * 2 < 1 + 2 * (n + 1), from
     begin
-      rw [left_distrib], simp,
+      rw [nat.left_distrib], simp,
       well_founded_tactics.cancel_nat_add_lt,
       tactic.comp_val
     end,

@@ -1,17 +1,17 @@
-local attribute [simp] add_comm add_left_comm
+local attribute [simp] nat.add_comm nat.add_left_comm
 lemma nat.lt_add_of_lt {a b c : nat} : a < b → a < c + b :=
 begin
   intro h,
   have aux₁ := nat.le_add_right b c,
   have aux₂ := lt_of_lt_of_le h aux₁,
-  rwa [add_comm] at aux₂
+  rwa [nat.add_comm] at aux₂
 end
 
 lemma nat.lt_one_add_of_lt {a b : nat} : a < b → a < 1 + b :=
 begin
   intro h,
   have aux := lt.trans h (nat.lt_succ_self _),
-  rwa [<- nat.add_one, add_comm] at aux
+  rwa [<- nat.add_one, nat.add_comm] at aux
 end
 
 namespace list

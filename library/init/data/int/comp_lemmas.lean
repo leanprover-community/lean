@@ -14,12 +14,12 @@ namespace int
 /- 1. Lemmas for reducing the problem to the case where the numerals are positive -/
 
 protected lemma ne_neg_of_ne {a b : ℤ} : a ≠ b → -a ≠ -b :=
-λ h₁ h₂, absurd (neg_inj h₂) h₁
+λ h₁ h₂, absurd (int.neg_inj h₂) h₁
 
 protected lemma neg_ne_zero_of_ne {a : ℤ} : a ≠ 0 → -a ≠ 0 :=
 λ h₁ h₂,
-  have -a = -0, by rwa neg_zero,
-  have a = 0, from neg_inj this,
+  have -a = -0, by rwa int.neg_zero,
+  have a = 0, from int.neg_inj this,
   by contradiction
 
 protected lemma zero_ne_neg_of_ne {a : ℤ} (h : 0 ≠ a) : 0 ≠ -a :=
@@ -29,6 +29,8 @@ protected lemma neg_ne_of_pos {a b : ℤ} : a > 0 → b > 0 → -a ≠ b :=
 λ h₁ h₂ h,
 begin
   rw [← h] at h₂,
+  change 0 < a at h₁,
+  have := le_of_lt h₁,
   exact absurd (le_of_lt h₁) (not_le_of_gt (neg_of_neg_pos h₂))
 end
 
@@ -37,23 +39,26 @@ protected lemma ne_neg_of_pos {a b : ℤ} : a > 0 → b > 0 → a ≠ -b :=
 
 /- 2. Lemmas for proving that positive int numerals are nonneg and positive -/
 
+protected lemma int.zero_lt_one : (0:ℤ) < 1 :=
+dec_trivial
+
 protected lemma one_pos : (1:int) > 0 :=
-zero_lt_one
+int.zero_lt_one
 
 protected lemma bit0_pos {a : ℤ} : a > 0 → bit0 a > 0 :=
-λ h, add_pos h h
+λ h, int.add_pos h h
 
 protected lemma bit1_pos {a : ℤ} : a ≥ 0 → bit1 a > 0 :=
-λ h, lt_add_of_le_of_pos (add_nonneg h h) zero_lt_one
+λ h, int.lt_add_of_le_of_pos (int.add_nonneg h h) int.zero_lt_one
 
 protected lemma zero_nonneg : (0:int) ≥ 0 :=
 le_refl 0
 
 protected lemma one_nonneg : (1:int) ≥ 0 :=
-le_of_lt (zero_lt_one)
+le_of_lt (int.zero_lt_one)
 
 protected lemma bit0_nonneg {a : ℤ} : a ≥ 0 → bit0 a ≥ 0 :=
-λ h, add_nonneg h h
+λ h, int.add_nonneg h h
 
 protected lemma bit1_nonneg {a : ℤ} : a ≥ 0 → bit1 a ≥ 0 :=
 λ h, le_of_lt (int.bit1_pos h)
@@ -64,10 +69,11 @@ le_of_lt
 /- 3. nat_abs auxiliary lemmas -/
 
 lemma neg_succ_of_nat_lt_zero (n : ℕ) : neg_succ_of_nat n < 0 :=
-@lt.intro _ _ n (by simp [neg_succ_of_nat_coe, int.coe_nat_succ, int.coe_nat_add, int.coe_nat_one, add_comm, add_left_comm])
+@lt.intro _ _ n (by simp [neg_succ_of_nat_coe, int.coe_nat_succ, int.coe_nat_add, int.coe_nat_one,
+  int.add_comm, int.add_left_comm, int.neg_add, int.add_right_neg, int.zero_add])
 
 lemma of_nat_ge_zero (n : ℕ) : of_nat n ≥ 0 :=
-@le.intro _ _ n (by rw [zero_add, int.coe_nat_eq])
+@le.intro _ _ n (by rw [int.zero_add, int.coe_nat_eq])
 
 lemma of_nat_nat_abs_eq_of_nonneg : ∀ {a : ℤ}, a ≥ 0 → of_nat (nat_abs a) = a
 | (of_nat n)          h := rfl
@@ -112,7 +118,7 @@ begin rw [← h], apply int.nat_abs_bit0 end
 
 protected lemma nat_abs_bit1_nonneg {a : int} (h : a ≥ 0) : nat_abs (bit1 a) = bit1 (nat_abs a) :=
 show nat_abs (bit0 a + 1) = bit0 (nat_abs a) + nat_abs 1, from
-by rw [int.nat_abs_add_nonneg (int.bit0_nonneg h) (le_of_lt (zero_lt_one)), int.nat_abs_bit0]
+by rw [int.nat_abs_add_nonneg (int.bit0_nonneg h) (le_of_lt (int.zero_lt_one)), int.nat_abs_bit0]
 
 protected lemma nat_abs_bit1_nonneg_step {a : int} {n : nat} (h₁ : a ≥ 0) (h₂ : nat_abs a = n) : nat_abs (bit1 a) = bit1 n :=
 begin rw [← h₂], apply int.nat_abs_bit1_nonneg h₁ end

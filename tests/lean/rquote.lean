@@ -14,11 +14,11 @@ open foo boo
 
 #check ``g
 
-open nat
+open int
 
 #check ``has_add.add
 
-#check ``gcd
+#check ``nat_abs
 
 #check `f
 #check `foo.f

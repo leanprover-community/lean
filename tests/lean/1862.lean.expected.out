@@ -1,4 +1,4 @@
 R : Type,
-_inst_1 : ring R
+_inst_1 : test_neg_neg R
 ⊢ - -1 = 1
 - -1 : R

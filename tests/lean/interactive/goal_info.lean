@@ -9,7 +9,7 @@ begin
   intros n m,
   induction m with m' ih,
                       --^ "command": "info"
-    { change n + 0 = 0 + n, simp [zadd] },
+    { change n + 0 = 0 + n, simp [zadd, nat.add_zero, nat.zero_add] },
 --^ "command": "info"
   { change succ (n + m') = succ m' + n,
     rw [succ_add, ih]
@@ -21,7 +21,7 @@ example : ∀ n m : ℕ, n + m = m + n :=
 begin
   intros n m,
   induction m with m' ih,
-  {   change n + 0 = 0 + n, simp [zadd] },
+  {   change n + 0 = 0 + n, simp [zadd, nat.add_zero, nat.zero_add] },
    --^ "command": "info"
   { change succ (n + m') = succ m' + n,
     rw [succ_add, ih]
@@ -32,8 +32,8 @@ example : ∀ n m : ℕ, n + m = m + n :=
 begin
   intros n m,
   induction m with m' ih,
-  {   change n + 0 = 0 + n, simp [zadd] },
-                                      --^ "command": "info"
+  {   change n + 0 = 0 + n, simp [zadd, nat.add_zero, nat.zero_add] },
+                                                                  --^ "command": "info"
   { change succ (n + m') = succ m' + n,
     rw [succ_add, ih]
   }

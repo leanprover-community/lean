@@ -1,5 +1,7 @@
 open tactic
 
+local attribute [simp] nat.add_zero nat.zero_add
+
 lemma ex1 (a b c : nat) : a + 0 = 0 + a ∧ b = b :=
 begin
   -- We use `(` to go to regular tactic mode.

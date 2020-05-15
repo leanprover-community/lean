@@ -160,7 +160,7 @@ lemma succ_pred_bit1 : ∀ p : pos, succ (pred $ bit1 p) = bit1 p
 | (bit1 p) := rfl
 
 lemma sizeof_pred_bit0_lt : ∀ p : pos, sizeof' (pred (bit0 p)) < sizeof' (bit0 p)
-| one := nat.one_lt_bit0 (by dsimp [pos.sizeof]; apply one_ne_zero)
+| one := nat.one_lt_bit0 (by dsimp [pos.sizeof]; apply nat.one_ne_zero)
 | (bit0 p) :=
   nat.bit1_lt_bit0 $ sizeof_pred_bit0_lt p
 | (bit1 p) := nat.bit1_lt_bit0 $ nat.bit0_lt_bit1 $ le_refl _

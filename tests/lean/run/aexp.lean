@@ -13,14 +13,14 @@ inductive aexp
 instance : decidable_eq aexp :=
 by mk_dec_eq_instance
 
-@[reducible]
-def value := nat
+-- @[reducible]
+-- def value := nat
 
-def state := uname → value
+def state := uname → nat
 
 open aexp
 
-def aval : aexp → state → value
+def aval : aexp → state → nat
 | (val n)      s := n
 | (var x)      s := s x
 | (plus a₁ a₂) s := aval a₁ s + aval a₂ s
@@ -29,7 +29,7 @@ def aval : aexp → state → value
 example : aval (plus (val 3) (var "x")) (λ x, 0) = 3 :=
 rfl
 
-def updt (s : state) (x : uname) (v : value) : state :=
+def updt (s : state) (x : uname) (v : nat) : state :=
 λ y, if x = y then v else s y
 
 def asimp_const : aexp → aexp
@@ -51,10 +51,7 @@ rfl
 
 attribute [ematch] asimp_const aval
 
--- set_option trace.smt.ematch true
-
-meta def not_done : tactic unit := fail_if_success done
-
+set_option trace.smt.ematch true
 lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
 begin [smt]
  induction a,

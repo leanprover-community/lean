@@ -89,21 +89,18 @@ expr mk_heq(type_context_old & ctx, expr const & lhs, expr const & rhs);
 /** \brief Similar a reflexivity proof for the given relation */
 expr mk_refl(type_context_old & ctx, name const & relname, expr const & a);
 expr mk_eq_refl(type_context_old & ctx, expr const & a);
-expr mk_iff_refl(type_context_old & ctx, expr const & a);
 expr mk_heq_refl(type_context_old & ctx, expr const & a);
 
 /** \brief Similar a symmetry proof for the given relation */
 expr mk_symm(type_context_old & ctx, name const & relname, expr const & H);
 expr mk_eq_symm(type_context_old & ctx, expr const & H);
 expr mk_eq_symm(type_context_old & ctx, expr const & a, expr const & b, expr const & H);
-expr mk_iff_symm(type_context_old & ctx, expr const & H);
 expr mk_heq_symm(type_context_old & ctx, expr const & H);
 
 /** \brief Similar a transitivity proof for the given relation */
 expr mk_trans(type_context_old & ctx, name const & relname, expr const & H1, expr const & H2);
 expr mk_eq_trans(type_context_old & ctx, expr const & H1, expr const & H2);
 expr mk_eq_trans(type_context_old & ctx, expr const & a, expr const & b, expr const & c, expr const & H1, expr const & H2);
-expr mk_iff_trans(type_context_old & ctx, expr const & H1, expr const & H2);
 expr mk_heq_trans(type_context_old & ctx, expr const & H1, expr const & H2);
 
 /** \brief Create a (non-dependent) eq.rec application.
@@ -137,16 +134,6 @@ expr mk_funext(type_context_old & ctx, expr const & lam_pf);
     build a proof for (R a b) */
 expr lift_from_eq(type_context_old & ctx, name const & R, expr const & H);
 
-/** \brief not p -> (p <-> false) */
-expr mk_iff_false_intro(type_context_old & ctx, expr const & H);
-/** \brief p -> (p <-> true) */
-expr mk_iff_true_intro(type_context_old & ctx, expr const & H);
-/** \brief (p <-> false) -> not p */
-expr mk_not_of_iff_false(type_context_old & ctx, expr const & H);
-/** \brief (p <-> true) -> p */
-expr mk_of_iff_true(type_context_old & ctx, expr const & H);
-/** \brief (true <-> false) -> false */
-expr mk_false_of_true_iff_false(type_context_old & ctx, expr const & H);
 /** \brief (true = false) -> false */
 expr mk_false_of_true_eq_false(type_context_old & ctx, expr const & H);
 
@@ -160,19 +147,8 @@ expr mk_neq_of_not_iff(type_context_old & ctx, expr const & H);
 expr mk_of_eq_true(type_context_old & ctx, expr const & H);
 expr mk_not_of_eq_false(type_context_old & ctx, expr const & H);
 
-expr mk_not(type_context_old & ctx, expr const & H);
-
 /** p -> not p -> b */
 expr mk_absurd(type_context_old & ctx, expr const & Hp, expr const & Hnp, expr const & b);
-
-expr mk_partial_add(type_context_old & ctx, expr const & A);
-expr mk_partial_mul(type_context_old & ctx, expr const & A);
-expr mk_zero(type_context_old & ctx, expr const & A);
-expr mk_one(type_context_old & ctx, expr const & A);
-expr mk_partial_left_distrib(type_context_old & ctx, expr const & A);
-expr mk_partial_right_distrib(type_context_old & ctx, expr const & A);
-
-expr mk_ss_elim(type_context_old & ctx, expr const & A, expr const & ss_inst, expr const & old_e, expr const & new_e);
 
 /** \brief False elimination */
 expr mk_false_rec(type_context_old & ctx, expr const & c, expr const & H);

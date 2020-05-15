@@ -12,7 +12,7 @@ namespace array
 
 def slice (a : array n α) (k l : nat) (h₁ : k ≤ l) (h₂ : l ≤ n) : array (l - k) α :=
 ⟨ λ ⟨ i, hi ⟩, a.read ⟨ i + k,
-  calc i + k < (l - k) + k : add_lt_add_right hi _
+  calc i + k < (l - k) + k : nat.add_lt_add_right hi _
          ... = l : nat.sub_add_cancel h₁
          ... ≤ n : h₂⟩ ⟩
 

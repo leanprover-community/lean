@@ -1,6 +1,8 @@
 def c : ℕ := default _
 def d : ℕ := default _
 
+local attribute [simp] nat.add_zero
+
 class foo (α : Type)
 -- type class resolution for [foo α] will always time out
 instance foo.foo {α} [foo α] : foo α := ‹foo α›

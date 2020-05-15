@@ -2,6 +2,9 @@ universe variables u v u1 u2 v1 v2
 
 set_option pp.universes true
 
+class semigroup (α : Type u) extends has_mul α :=
+(mul_assoc : ∀ a b c : α, a * b * c = a * (b * c))
+
 open smt_tactic
 meta def blast : tactic unit := using_smt $ intros >> add_lemmas_from_facts >> iterate_at_most 3 ematch
 notation `♮` := by blast
@@ -26,7 +29,7 @@ attribute [simp] semigroup_morphism.multiplicative
   multiplicative := begin intros, simp [coe_fn] end
 }
 
-local attribute [simp] mul_comm mul_assoc mul_left_comm
+local attribute [simp] semigroup.mul_assoc
 
 @[reducible] definition semigroup_product { α β : Type u } ( s : semigroup α ) ( t: semigroup β ) : semigroup (α × β) := {
   mul := λ p q, (p^.fst * q^.fst, p^.snd * q^.snd),

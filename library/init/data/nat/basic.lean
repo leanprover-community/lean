@@ -41,6 +41,10 @@ instance : has_sub ℕ :=
 instance : has_mul ℕ :=
 ⟨nat.mul⟩
 
+-- defeq to the instance provided by comm_semiring
+instance : has_dvd ℕ :=
+has_dvd.mk (λ a b, ∃ c, b = a * c)
+
 instance : decidable_eq ℕ
 | zero     zero     := is_true rfl
 | (succ x) zero     := is_false (λ h, nat.no_confusion h)
