@@ -10,8 +10,6 @@ To make a widget, you need to make a custom executor object and then instead of 
 
 Additionally, you will need a special build of the vscode extension [todo] to use widgets in vscode.
 
-The html is sent as a json object and rendered using React, so I don't think you can make a script injection attack.
-
 ## How it works:
 
 The design is inspired by React, although the output is always an entire piece of html rather than a diff.
@@ -36,11 +34,13 @@ If `b` is `some x`,  the parent component's `update` will also be called with `x
 Finally, the entire component is re-rendered to produce a new piece of html to send to the client for display.
 On this rerendering, the new html and the old html are compared through a process called __reconciliation__.
 Reconciliation will make sure that the states are carried over correctly and will also not rerender subcomponents if they haven't changed their props or state.
+The reconciliation engine uses the `props_eq` predicate passed to the component constructor to determine whether the props have changed and hence whether the component should be re-rendered.
 
 ## Keys
 
 If you have some list of components and the list changes according to some state, it is important to add keys to the components so
 that if two components change order in the list their states are preserved.
+If you don't provide keys or there are duplicate keys then you may get some strange behaviour in both the Lean widget engine and react.
 
 ## Further work:
 

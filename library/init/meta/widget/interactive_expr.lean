@@ -141,40 +141,53 @@ meta def html.of_name {α : Type} : name → html α
 
 open tactic
 
-meta def tactic_render : tactic (html empty) := do
+meta def show_type_component : tc expr empty :=
+tc.stateless (λ x, do
+  y ← infer_type x,
+  y_comp ← interactive_expression.mk interactive_expression.type_tooltip $ y,
+  pure y_comp
+)
+
+meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tactic (html γ) :=
+do
   gs ← get_goals,
-  hs : list (html empty) ← gs.mmap (λ g, do
+  hs : list (html γ) ← gs.mmap (λ g, do
     ts ← read,
     gn ← pp g,
     set_goals [g],
     lcs ← local_context,
-    lchs : list (html empty) ← lcs.mmap (λ lc, do
+    lchs : list (html γ) ← lcs.mmap (λ lc, do
       pn ← pure $ expr.local_pp_name lc,
-      y ← infer_type lc,
-      y_comp ← interactive_expression.mk interactive_expression.type_tooltip $ y,
+      lh : html γ ← local_c lc,
       pure
         $ h "tr" [key $ to_string $ expr.local_uniq_name lc] [
             h "td" [] [html.of_name pn],
             h "td" [] [html.of_string " : "],
-            h "td" [] [y_comp]
+            h "td" [] [lh]
         ]
     ),
-    t ← target,
-    t_comp ← interactive_expression.mk interactive_expression.type_tooltip t,
+    t_comp ← target_c g,
+    (expr.mvar u_n pp_n y) ← pure g,
     pure $ h "table" [key $ expr.hash g, className "font-code"] [
       h "tbody" [] $ lchs ++ [
-          h "tr" [] [
+          h "hr" [] [],
+          h "tr" [key u_n] [
             h "td" [] [] ,
             h "td" [] [html.of_string " ⊢ "],
             h "td" [] [t_comp]
        ]]
     ]
   ),
+  set_goals gs,
   pure $ h "ul" [className "list pl0"]
        $ list.mapi (λ x i,
          let border_cn := if i + 1 = hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
          h "li" [className $ "lh-copy " ++ border_cn] [x])
        $ hs
+
+
+meta def tactic_render : tactic (html empty) :=
+tactic_view_component show_type_component show_type_component
 
 meta def mk_tactic_widget {α β σ : Type}
   (init : σ)

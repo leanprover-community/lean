@@ -31,8 +31,7 @@ open interaction_monad
 open interaction_monad.result
 
 /-- Make a tactic component from some init, update, views which are expecting a tactic.
-Note that the resulting tactic state of the view is thrown away but tactic_state is preserved locally on updates.
-
+The tactic_state never mutates.
 -/
 meta def mk_simple
   [decidable_eq π]
@@ -46,22 +45,26 @@ meta def mk_simple
   α
   β
   (interaction_monad.result tactic_state σ)
-  (λ ⟨ts,p⟩ last, match last with (some x) := x | _ := init p ts end)
+  (λ ⟨ts,p⟩ last,
+    match last with
+    | (some x) := x
+    | none := init p ts
+    end)
   (λ ⟨ts,p⟩ s b,
     match s with
-    | (success s ts) :=
+    | (success s _) :=
       match update p s b ts with
-      | (success ⟨s,a⟩ ts) := prod.mk (success s ts) (a)
-      | (exception m p s) := prod.mk (exception m p s) none
+      | (success ⟨s,a⟩ _) := prod.mk (success s ts) (a)
+      | (exception m p ts') := prod.mk (exception m p ts') none
       end
     | x := ⟨x,none⟩
     end
   )
   (λ ⟨ts,p⟩ s,
     match s with
-    | (success s ts) :=
+    | (success s _) :=
       match view p s ts with
-      | (success h ts) := h
+      | (success h _) := h
       | (exception msg pos s) := ["rendering tactic failed "]
       end
     | (exception msg pos s) := ["state of tactic component has failed!"]
