@@ -350,15 +350,23 @@ struct parse_tactic_fn {
         return r;
     }
 
-    expr parse_andthen(expr left) {
+    expr parse_andthen(expr left, bool save_info) {
         auto start_pos = m_p.pos();
+        optional<pos_info> pos;
         expr r = left;
-        while (m_p.curr_is_token(get_semicolon_tk())) {
-            m_p.next();
-            expr curr = parse_elem(false);
-            if (m_p.curr_is_token(get_orelse_tk()))
-                curr = parse_orelse(curr);
-            r = andthen(r, curr, start_pos);
+        try {
+            while (m_p.curr_is_token(get_semicolon_tk())) {
+                m_p.next();
+                pos = m_p.pos();
+                expr curr = parse_elem(save_info);
+                if (m_p.curr_is_token(get_orelse_tk()))
+                    curr = parse_orelse(curr);
+                r = andthen(r, curr, start_pos);
+            }
+        } catch (break_at_pos_exception & ex) {
+            if (save_info && pos)
+                ex.report_goal_pos(*pos);
+            throw;
         }
         return r;
     }
@@ -366,7 +374,7 @@ struct parse_tactic_fn {
     expr operator()(bool save_info = true) {
         expr r = parse_elem(save_info);
         if (m_p.curr_is_token(get_semicolon_tk()))
-            return parse_andthen(r);
+            return parse_andthen(r, save_info);
         else if (m_p.curr_is_token(get_orelse_tk()))
             return parse_orelse(r);
         else
