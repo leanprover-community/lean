@@ -85,6 +85,7 @@ run_cmd verify $ ∀ x < 10, ∀ y < 10, is_ok $ nat.mul x y
 run_cmd verify $ ∀ x < 50, ∀ y < 50, is_ok $ nat.sub x y
 run_cmd verify $ ∀ x < 50, ∀ y < 50, is_ok $ nat.div x y
 run_cmd verify $ ∀ x < 100, ∀ y < 100, is_ok $ nat.mod x y
+run_cmd verify $ ∀ x < 100, ∀ y < 100, is_ok $ nat.gcd x y
 run_cmd verify $ ∀ x < 50, ∀ y < 50, is_ok $ nat.decidable_eq x y
 run_cmd verify $ ∀ x < 50, ∀ y < 50, is_ok $ nat.decidable_le x y
 run_cmd verify $ ∀ x < 50, ∀ y < 50, is_ok $ nat.decidable_lt x y
@@ -112,6 +113,7 @@ run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.mul x y
 run_cmd verify $ ∀ x ∈ ints, is_ok $ int.neg x
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.quot x y
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.rem x y
+run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.gcd x y
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.decidable_eq x y
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.decidable_le x y
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.decidable_lt x y
