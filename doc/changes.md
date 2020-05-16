@@ -1,3 +1,20 @@
+v3.13.0c (16 May 2020)
+----------------------
+
+Features:
+ - use persistent data structures, to improve performance
+   of (module) docstrings (#241)
+ - cache constructed `simp_lemma` objects (#234)
+ - support `local attribute [-instance]` (#240)
+ - show goal after `;` (#239)
+ - `==`: compare id (#238)
+ - mark deps of fixed as fixed (#237)
+
+
+Changes:
+ - Most of `library/init/algebra/*` has been deleted,
+   as part of moving the algebraic hierarchy to mathlib (#229)
+
 v3.12.0c (14 May 2020)
 ----------------------
 
