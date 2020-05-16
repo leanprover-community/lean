@@ -231,7 +231,7 @@ by rw [int.add_assoc, int.add_right_neg, int.add_zero]
 protected lemma neg_add_cancel_right (a b : ℤ) : a + -b + b = a :=
 by rw [int.add_assoc, int.add_left_neg, int.add_zero]
 
-lemma int.sub_self (a : ℤ) : a - a = 0 :=
+lemma sub_self (a : ℤ) : a - a = 0 :=
 by rw [int.sub_eq_add_neg, int.add_right_neg]
 
 lemma sub_eq_zero_of_eq {a b : ℤ} (h : a = b) : a - b = 0 :=
@@ -938,7 +938,7 @@ theorem sign_eq_neg_one_iff_neg (a : ℤ) : sign a = -1 ↔ a < 0 :=
 theorem sign_eq_zero_iff_zero (a : ℤ) : sign a = 0 ↔ a = 0 :=
 ⟨eq_zero_of_sign_eq_zero, λ h, by rw [h, sign_zero]⟩
 
-lemma int.eq_zero_or_eq_zero_of_mul_eq_zero
+lemma eq_zero_or_eq_zero_of_mul_eq_zero
         {a b : ℤ} (h : a * b = 0) : a = 0 ∨ b = 0 :=
 match lt_trichotomy 0 a with
 | or.inl hlt₁          :=
