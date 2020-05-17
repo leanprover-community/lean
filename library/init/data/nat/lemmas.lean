@@ -1143,7 +1143,7 @@ begin
     { apply (div_lt_iff_lt_mul _ _ npos).2, rwa nat.mul_comm } }
 end
 
-lemma mul_pos {a b : ℕ} (ha : a > 0) (hb : b > 0) : a * b > 0 :=
+protected lemma mul_pos {a b : ℕ} (ha : a > 0) (hb : b > 0) : a * b > 0 :=
 have h : 0 * b < a * b, from nat.mul_lt_mul_of_pos_right ha hb,
 by rwa nat.zero_mul at h
 
@@ -1152,7 +1152,7 @@ begin
   cases eq_zero_or_pos k with k0 kpos, {rw [k0, nat.mul_zero, nat.div_zero, nat.div_zero]},
   cases eq_zero_or_pos n with n0 npos, {rw [n0, nat.zero_mul, nat.div_zero, nat.zero_div]},
   apply le_antisymm,
-  { apply (le_div_iff_mul_le _ _ (mul_pos npos kpos)).2,
+  { apply (le_div_iff_mul_le _ _ (nat.mul_pos npos kpos)).2,
     rw [nat.mul_comm n k, ← nat.mul_assoc],
     apply (le_div_iff_mul_le _ _ npos).1,
     apply (le_div_iff_mul_le _ _ kpos).1,
@@ -1160,7 +1160,7 @@ begin
   { apply (le_div_iff_mul_le _ _ kpos).2,
     apply (le_div_iff_mul_le _ _ npos).2,
     rw [nat.mul_assoc, nat.mul_comm n k],
-    apply (le_div_iff_mul_le _ _ (mul_pos kpos npos)).1,
+    apply (le_div_iff_mul_le _ _ (nat.mul_pos kpos npos)).1,
     refl }
 end
 
@@ -1275,7 +1275,7 @@ calc
      ... < c * d : nat.mul_lt_mul_of_pos_left h2 h4
 
 -- TODO: there are four variations, depending on which variables we assume to be nonneg
-lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) (nn_b : 0 ≤ b) (nn_c : 0 ≤ c) : a * b ≤ c * d :=
+protected lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) (nn_b : 0 ≤ b) (nn_c : 0 ≤ c) : a * b ≤ c * d :=
 calc
   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac nn_b
     ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
@@ -1286,13 +1286,13 @@ calc
 
 theorem pow_le_pow_of_le_left {x y : ℕ} (H : x ≤ y) : ∀ i : ℕ, x^i ≤ y^i
 | 0 := le_refl _
-| (succ i) := mul_le_mul (pow_le_pow_of_le_left i) H (zero_le _) (zero_le _)
+| (succ i) := nat.mul_le_mul (pow_le_pow_of_le_left i) H (zero_le _) (zero_le _)
 
 theorem pow_le_pow_of_le_right {x : ℕ} (H : x > 0) {i : ℕ} : ∀ {j}, i ≤ j → x^i ≤ x^j
 | 0        h := by rw eq_zero_of_le_zero h; apply le_refl
 | (succ j) h := (lt_or_eq_of_le h).elim
   (λhl, by rw [pow_succ, ← nat.mul_one (x^i)]; exact
-    mul_le_mul (pow_le_pow_of_le_right $ le_of_lt_succ hl) H (zero_le _) (zero_le _))
+    nat.mul_le_mul (pow_le_pow_of_le_right $ le_of_lt_succ hl) H (zero_le _) (zero_le _))
   (λe, by rw e; refl)
 
 theorem pos_pow_of_pos {b : ℕ} (n : ℕ) (h : 0 < b) : 0 < b^n :=
