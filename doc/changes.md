@@ -1,3 +1,9 @@
+v3.13.1c (17 May 2020)
+----------------------
+
+Fixes:
+ - Protect and rename some `nat` and `int` lemmas that are superseded in mathlib (#229)
+
 v3.13.0c (16 May 2020)
 ----------------------
 
@@ -87,7 +93,7 @@ Bug fixes:
 Changes:
   - The performance of `array.map` has been greatly improved (#186)
   - A frequently-violated assertion was removed from the elaborator (#194)
-    
+
 v3.8.0c (9 April 2020)
 ----------------------
 
@@ -142,7 +148,7 @@ Changes:
   - Type class resolution solves instance arguments from right-to-left (#139)
   - Type class resolution skips assigned metavariables (#135)
   - Signature of `has_attribute` and `copy_attribute` has changed (#66)
-  
+
 v3.6.1c (2 Mar 2020)
 --------------------
 
