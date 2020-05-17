@@ -31,7 +31,7 @@ begin
   rw [← h] at h₂,
   change 0 < a at h₁,
   have := le_of_lt h₁,
-  exact absurd (le_of_lt h₁) (not_le_of_gt (neg_of_neg_pos h₂))
+  exact absurd (le_of_lt h₁) (not_le_of_gt (int.neg_of_neg_pos h₂))
 end
 
 protected lemma ne_neg_of_pos {a b : ℤ} : a > 0 → b > 0 → a ≠ -b :=
