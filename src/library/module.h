@@ -155,7 +155,7 @@ environment add(environment const & env, certified_declaration const & d);
 environment add_doc_string(environment const & env, std::string const & doc, pos_info pos);
 
 /** \brief Returns the map of module-level docs indexed by source file name. */
-rb_map<std::string, list<std::pair<pos_info, std::string>>, string_lt> const & get_doc_strings(environment const & env);
+rb_map<std::string, list<std::pair<pos_info, std::string>>, string_cmp> const & get_doc_strings(environment const & env);
 
 /** \brief Return true iff \c n is a definition added to the current module using #module::add */
 bool is_definition(environment const & env, name const & n);
