@@ -89,7 +89,7 @@ struct module_ext : public environment_extension {
     /** Top-level doc strings for modules which have them. Lean doesn't have a notion
      * of module different from that of a source file, so we use file names to index
      * the docstring map. */
-    rb_map<std::string, list<std::pair<pos_info, std::string>>, string_lt> m_module_docs;
+    rb_map<std::string, list<std::pair<pos_info, std::string>>, string_cmp> m_module_docs;
     // Map from declaration name to olean file where it was defined
     name_map<std::string>     m_decl2olean;
     name_map<pos_info>        m_decl2pos_info;
@@ -541,7 +541,7 @@ environment add_doc_string(environment const & env, std::string const & doc, pos
     return add(env, std::make_shared<mod_doc_modification>(doc, pos));
 }
 
-rb_map<std::string, list<std::pair<pos_info, std::string>>, string_lt> const & get_doc_strings(environment const & env) {
+rb_map<std::string, list<std::pair<pos_info, std::string>>, string_cmp> const & get_doc_strings(environment const & env) {
     return get_extension(env).m_module_docs;
 }
 

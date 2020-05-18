@@ -33,9 +33,9 @@ std::string quote_string_literal(std::string const & s);
 format pp_string_literal(std::string const & s);
 format pp_char_literal(unsigned c);
 
-struct string_lt {
-    bool operator()(std::string const & a, std::string const & b) const {
-        return a < b;
+struct string_cmp {
+    int operator()(std::string const & a, std::string const & b) const {
+        return a.compare(b);
     }
 };
 
