@@ -167,6 +167,17 @@ meta constant structure_fields : environment → name → option (list name)
 meta constant get_class_attribute_symbols : environment → name → name_set
 /-- The fingerprint of the environment is a hash formed from all of the declarations in the environment. -/
 meta constant fingerprint : environment → nat
+
+/-- Gets the equation lemmas for the declaration `n`. -/
+meta constant get_eqn_lemmas_for (env : environment) (n : name) : list name
+/-- Gets the equation lemmas for the declaration `n`, including lemmas for match statements, etc. -/
+meta constant get_ext_eqn_lemmas_for (env : environment) (n : name) : list name
+/--
+Adds the equation lemma `n`.
+It is added for the declaration `t.pi_codomain.get_app_fn.const_name` where `t` is the type of the equation lemma.
+-/
+meta constant add_eqn_lemma (env : environment) (n : name) : environment
+
 open expr
 
 meta constant unfold_untrusted_macros : environment → expr → expr
