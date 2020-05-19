@@ -564,7 +564,7 @@ optional<expr> elaborator::mk_Prop_to_bool_coercion(expr const & e, expr const &
 optional<expr> elaborator::mk_coercion_core(expr const & e, expr const & e_type, expr const & type, expr const & ref) {
     if (e_type == mk_Prop() && m_ctx.is_def_eq(type, mk_bool())) {
         return mk_Prop_to_bool_coercion(e, ref);
-    } else if (!has_expr_metavar(e_type) && !has_expr_metavar(type)) {
+    } else {
         expr has_coe_t;
         try {
             has_coe_t = mk_app(m_ctx, get_has_coe_t_name(), e_type, type);
@@ -594,8 +594,6 @@ optional<expr> elaborator::mk_coercion_core(expr const & e, expr const & e_type,
         expr coe_to_lift = mk_app(mk_constant(get_coe_to_lift_name(), {u_1, u_2}), e_type, type, *inst);
         expr coe         = mk_app(mk_constant(get_coe_name(), {u_1, u_2}), e_type, type, coe_to_lift, e);
         return some_expr(coe);
-    } else {
-        return none_expr();
     }
 }
 
@@ -688,25 +686,18 @@ optional<expr> elaborator::mk_coercion(expr const & e, expr e_type, expr type, e
     if (auto r = try_monad_coercion(e, e_type, type, ref)) {
         return r;
     }
-    if (!has_expr_metavar(e_type)) {
-        auto whnf_type = whnf(type);
-        if (is_pi(whnf_type)) {
-            if (auto r = mk_coercion_to_fn(e, e_type, ref)) {
-                return r;
-            }
-        }
-        if (is_sort(whnf_type)) {
-            if (auto r = mk_coercion_to_sort(e, e_type, ref)) {
-                return r;
-            }
-        }
-        if (!has_expr_metavar(type)) {
-            return mk_coercion_core(e, e_type, type, ref);
+    auto whnf_type = whnf(type);
+    if (is_pi(whnf_type)) {
+        if (auto r = mk_coercion_to_fn(e, e_type, ref)) {
+            return r;
         }
     }
-    trace_coercion_failure(e_type, type, ref,
-                            "was not considered because types contain metavariables");
-    return none_expr();
+    if (is_sort(whnf_type)) {
+        if (auto r = mk_coercion_to_sort(e, e_type, ref)) {
+            return r;
+        }
+    }
+    return mk_coercion_core(e, e_type, type, ref);
 }
 
 bool elaborator::is_def_eq(expr const & e1, expr const & e2) {
