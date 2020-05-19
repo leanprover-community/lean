@@ -39,22 +39,22 @@ void vdom_element::reconcile(vdom const & old_vdom) {
 }
 json vdom_element::to_json(list<unsigned> const & route) {
     json entry;
-    entry["tag"] = m_tag;
-    entry["attributes"] = m_attrs;
+    entry["t"] = m_tag;
+    entry["a"] = m_attrs;
     json jr = json::array();
     for (auto const & i : route) {
         jr.push_back(i);
     }
     for (auto const & x : m_events) {
-        entry["events"][x.first]["route"] = jr;
-        entry["events"][x.first]["handler"] = json(x.second);
+        entry["e"][x.first]["r"] = jr;
+        entry["e"][x.first]["h"] = json(x.second);
     }
-    entry["children"] = json::array();
+    entry["c"] = json::array();
     for (vdom & v : m_children) {
-        entry["children"].push_back(v.to_json(route));
+        entry["c"].push_back(v.to_json(route));
     }
     if (m_tooltip) {
-        entry["tooltip"] = (*m_tooltip).to_json(route);
+        entry["tt"] = (*m_tooltip).to_json(route);
     }
     return entry;
 }
@@ -139,10 +139,12 @@ json component_instance::to_json(list<unsigned> const & route) {
         }
         render();
     }
-    json result = json::array();
+    json children = json::array();
     for (vdom const & x : m_render) {
-        result.push_back(x.to_json(cons(m_id, route)));
+        children.push_back(x.to_json(cons(m_id, route)));
     }
+    json result;
+    result["c"] = children;
     return result;
 }
 

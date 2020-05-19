@@ -111,10 +111,10 @@ void widget_info::update(io_state_stream const & ios, json const & message, json
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
-    unsigned handler_idx = message["handler"];
-    json j = message["route"]; // an array with the root index at the _back_.
+    unsigned handler_idx = message["handler"]["h"];
+    json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
     list<unsigned> route;      // now root index is at the _front_.
-    for (json::iterator it = j.begin(); it != j.end(); ++it) {
+    for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
       route = cons(unsigned(*it), route);
     }
     route = tail(route); // [hack] disregard the top component id because that is the root component
