@@ -39,7 +39,35 @@ static environment update(environment const & env, eqn_lemmas_ext const & ext) {
     return env.update(g_ext->m_ext_id, std::make_shared<eqn_lemmas_ext>(ext));
 }
 
-environment add_eqn_lemma_core(environment const & env, name const & eqn_lemma) {
+struct eqn_lemmas_modification : public modification {
+    LEAN_MODIFICATION("EqnL")
+
+    name m_fn_name;
+    simp_lemma m_sl;
+
+    eqn_lemmas_modification() {}
+    eqn_lemmas_modification(name const & fn_name, simp_lemma & sl) :
+        m_fn_name(fn_name), m_sl(sl) {}
+
+    void perform(environment & env) const override {
+        eqn_lemmas_ext ext = get_extension(env);
+        auto l = ext.m_lemmas.find(m_fn_name);
+        ext.m_lemmas.insert(m_fn_name, l ? cons(m_sl, *l) : to_list(m_sl));
+        env = update(env, ext);
+    }
+
+    void serialize(serializer & s) const override {
+        s << m_fn_name << m_sl;
+    }
+
+    static std::shared_ptr<modification const> deserialize(deserializer & d) {
+        auto m = std::make_shared<eqn_lemmas_modification>();
+        d >> m->m_fn_name >> m->m_sl;
+        return m;
+    }
+};
+
+environment add_eqn_lemma(environment const & env, name const & eqn_lemma) {
     type_context_old ctx(env, transparency_mode::None);
     simp_lemmas lemmas = add(ctx, simp_lemmas(), eqn_lemma, false, LEAN_DEFAULT_PRIORITY);
     optional<simp_lemma> new_lemma;
@@ -57,37 +85,7 @@ environment add_eqn_lemma_core(environment const & env, name const & eqn_lemma) 
     if (!is_constant(fn))
         throw exception("invalid equality lemma, invalid lhs");
     name const & fn_name = const_name(fn);
-    eqn_lemmas_ext ext = get_extension(env);
-    if (list<simp_lemma> const * l = ext.m_lemmas.find(fn_name))
-        ext.m_lemmas.insert(fn_name, cons(*new_lemma, *l));
-    else
-        ext.m_lemmas.insert(fn_name, to_list(*new_lemma));
-    return update(env, ext);
-}
-
-struct eqn_lemmas_modification : public modification {
-    LEAN_MODIFICATION("EqnL")
-
-    name m_lemma;
-
-    eqn_lemmas_modification() {}
-    eqn_lemmas_modification(name const & lemma) : m_lemma(lemma) {}
-
-    void perform(environment & env) const override {
-        env = add_eqn_lemma_core(env, m_lemma);
-    }
-
-    void serialize(serializer & s) const override {
-        s << m_lemma;
-    }
-
-    static std::shared_ptr<modification const> deserialize(deserializer & d) {
-        return std::make_shared<eqn_lemmas_modification>(read_name(d));
-    }
-};
-
-environment add_eqn_lemma(environment const & env, name const & eqn_lemma) {
-    return module::add_and_perform(env, std::make_shared<eqn_lemmas_modification>(eqn_lemma));
+    return module::add_and_perform(env, std::make_shared<eqn_lemmas_modification>(fn_name, *new_lemma));
 }
 
 void get_eqn_lemmas_for(environment const & env, name const & cname, bool refl_only, buffer<simp_lemma> & result) {

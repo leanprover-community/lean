@@ -72,6 +72,9 @@ public:
 bool operator==(simp_lemma const & r1, simp_lemma const & r2);
 inline bool operator!=(simp_lemma const & r1, simp_lemma const & r2) { return !operator==(r1, r2); }
 
+serializer & operator<<(serializer & s, simp_lemma const & sl);
+deserializer & operator>>(deserializer & d, simp_lemma & sl);
+
 struct simp_lemma_prio_fn { unsigned operator()(simp_lemma const & s) const { return s.get_priority(); } };
 
 typedef head_map_prio<simp_lemma, simp_lemma_prio_fn>  simp_lemma_set;
