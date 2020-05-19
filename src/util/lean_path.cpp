@@ -17,7 +17,8 @@ Author: Leonardo de Moura, Gabriel Ebner
 
 namespace lean {
 lean_file_not_found_exception::lean_file_not_found_exception(std::string const & fname):
-    exception(sstream() << "file '" << fname << "' not found in the LEAN_PATH"),
+    exception(sstream() << "file '" << fname << "' not found in the search path\n"
+        << "Use 'lean --path' to see where lean is looking, or https://leanproject-community.github.io/file-not-found for more"),
     m_fname(fname) {}
 
 static char const * g_default_file_name = LEAN_DEFAULT_MODULE_FILE_NAME;
