@@ -3872,20 +3872,14 @@ struct instance_synthesizer {
                 cache_result(m_ctx.infer(m_main_mvar), r);
                 return none_expr();
             }
-            if (!has_expr_metavar(*r)) {
-                if (has_idx_metavar(*r)) {
-                    /* r has universe metavariables.
-                       Try to instantiate them. */
-                    r = m_ctx.instantiate_mvars(*r);
+            *r = m_ctx.instantiate_mvars(*r);
+            if (!has_idx_metavar(*r)) {
+                expr type = m_ctx.infer(m_main_mvar);
+                if (!has_idx_metavar(type)) {
+                    /* We only cache the result if it does not contain universe tmp metavars. */
+                    cache_result(type, some_expr(m_ctx.instantiate_mvars(*r)));
                 }
-                if (!has_idx_metavar(*r)) {
-                    expr type = m_ctx.infer(m_main_mvar);
-                    if (!has_idx_metavar(type)) {
-                        /* We only cache the result if it does not contain universe tmp metavars. */
-                        cache_result(type, some_expr(m_ctx.instantiate_mvars(*r)));
-                    }
-                    return r;
-                }
+                return r;
             }
             lean_trace("class_instances",
                        scope_trace_env scope(m_ctx.env(), m_ctx);
