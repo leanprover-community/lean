@@ -1,4 +1,5 @@
-missing_import.lean:1:0: error: file 'does/not/exist' not found in the LEAN_PATH
+missing_import.lean:1:0: error: file 'does/not/exist' not found in the search path
+Use 'lean --path' to see where lean is looking, or https://leanprover-community.github.io/file-not-found.html for more
 missing_import.lean:1:0: error: invalid import: does.not.exist
 could not resolve import: does.not.exist
 def buffer : Type u → Type u :=
