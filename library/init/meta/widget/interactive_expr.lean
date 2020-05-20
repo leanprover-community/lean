@@ -170,8 +170,7 @@ do
     (expr.mvar u_n pp_n y) ← pure g,
     pure $ h "table" [key $ expr.hash g, className "font-code"] [
       h "tbody" [] $ lchs ++ [
-          h "hr" [] [],
-          h "tr" [key u_n] [
+          h "tr" [key u_n, className "bt"] [
             h "td" [] [] ,
             h "td" [] [html.of_string " ⊢ "],
             h "td" [] [t_comp]

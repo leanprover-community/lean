@@ -35,6 +35,7 @@ component.stateless (λ n, match n with | 0 := ["0"] | (n+1) := [n, " ", html.of
 
 meta def save_info (p : pos) : widget_tactic unit := do
   comp ← get,
+  -- tactic.trace p,
   tactic.save_widget p comp,
   pure ()
 
