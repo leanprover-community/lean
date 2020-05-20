@@ -1,0 +1,5 @@
+eqn_lemma.lean:5:0: warning: declaration 'foo.faux_eqn' uses sorry
+[foo.equations._eqn_2, foo.equations._eqn_1]
+[foo.equations._eqn_2, foo.equations._eqn_1, foo._match_1.equations._eqn_2, foo._match_1.equations._eqn_1]
+[foo.faux_eqn, foo.equations._eqn_2, foo.equations._eqn_1]
+[foo.faux_eqn, foo.equations._eqn_2, foo.equations._eqn_1, foo._match_1.equations._eqn_2, foo._match_1.equations._eqn_1]
