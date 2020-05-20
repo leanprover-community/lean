@@ -821,6 +821,9 @@ void vm_instr::release_memory() {
     case opcode::LocalInfo:
         delete m_local_info;
         break;
+    case opcode::String:
+        delete m_string;
+        break;
     default:
         break;
     }

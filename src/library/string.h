@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: Leonardo de Moura
 */
+#pragma once
 #include <string>
 #include "kernel/environment.h"
 
@@ -31,6 +32,12 @@ bool is_char_value(abstract_type_context & ctx, expr const & e);
 std::string quote_string_literal(std::string const & s);
 format pp_string_literal(std::string const & s);
 format pp_char_literal(unsigned c);
+
+struct string_cmp {
+    int operator()(std::string const & a, std::string const & b) const {
+        return a.compare(b);
+    }
+};
 
 void initialize_string();
 void finalize_string();

@@ -5,15 +5,11 @@ has type
   ∀ (x : ℕ), ?m_2[x] = ?m_2[x]
 but is expected to have type
   ∀ (a : ℕ), ⁇ a = a
-1952.lean:16:38: error: invalid structure value { ... }, field 'mul' was not provided
-1952.lean:16:38: error: invalid structure value { ... }, field 'one' was not provided
-1952.lean:16:38: error: invalid structure value { ... }, field 'one_mul' was not provided
-1952.lean:16:38: error: invalid structure value { ... }, field 'mul_one' was not provided
-1952.lean:16:38: error: invalid structure value { ... }, field 'inv' was not provided
-1952.lean:16:38: error: invalid structure value { ... }, field 'mul_left_inv' was not provided
-1952.lean:16:53: error: type mismatch at field 'mul_assoc'
+1952.lean:16:41: error: invalid structure value { ... }, field 'le' was not provided
+1952.lean:16:41: error: invalid structure value { ... }, field 'le_refl' was not provided
+1952.lean:16:55: error: type mismatch at field 'le_trans'
   λ (x y z : α), rfl
 has type
   ∀ (x y z : α), ?m_2[x, y, z] = ?m_2[x, y, z]
 but is expected to have type
-  ∀ (a b c : α), a * b * c = a * (b * c)
+  ∀ (a b c : α), a ≤ b → b ≤ c → a ≤ c

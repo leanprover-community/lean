@@ -1,3 +1,5 @@
+local attribute [simp] nat.zero_add
+
 namespace Ex1
 
 variables

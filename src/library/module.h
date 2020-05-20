@@ -16,6 +16,8 @@ Author: Leonardo de Moura
 #include "kernel/inductive/inductive.h"
 #include "library/io_state.h"
 #include "util/task.h"
+#include "util/rb_map.h"
+#include "library/string.h"
 
 namespace lean {
 class corrupted_file_exception : public exception {
@@ -153,7 +155,7 @@ environment add(environment const & env, certified_declaration const & d);
 environment add_doc_string(environment const & env, std::string const & doc, pos_info pos);
 
 /** \brief Returns the map of module-level docs indexed by source file name. */
-std::unordered_map<std::string, std::vector<std::pair<pos_info, std::string>>> const & get_doc_strings(environment const & env);
+rb_map<std::string, list<std::pair<pos_info, std::string>>, string_cmp> const & get_doc_strings(environment const & env);
 
 /** \brief Return true iff \c n is a definition added to the current module using #module::add */
 bool is_definition(environment const & env, name const & n);

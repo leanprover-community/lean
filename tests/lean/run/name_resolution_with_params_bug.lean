@@ -3,7 +3,7 @@ section
   parameters x y : nat
   def z := x + y
 
-  lemma h0 : z = y + x := add_comm _ _
+  lemma h0 : z = y + x := nat.add_comm _ _
 
   open tactic
 

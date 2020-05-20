@@ -4,6 +4,10 @@ protected def rel : ℤ × ℤ → ℤ × ℤ → Prop
 private def mul' : ℤ × ℤ → ℤ × ℤ → ℤ × ℤ
 | ⟨n₁, d₁⟩ ⟨n₂, d₂⟩ := ⟨n₁ * n₂, d₁ * d₂⟩
 
+instance a : is_associative ℤ (*) := ⟨int.mul_assoc⟩
+
+instance c : is_commutative ℤ (*) := ⟨int.mul_comm⟩
+
 example : ∀(a b c d : ℤ × ℤ), rel a c → rel b d → rel (mul' a b) (mul' c d) :=
 λ⟨n₁, d₁⟩ ⟨n₂, d₂⟩ ⟨n₃, d₃⟩ ⟨n₄, d₄⟩,
   assume (h₁ : n₁ * d₃ = n₃ * d₁) (h₂ : n₂ * d₄ = n₄ * d₂),

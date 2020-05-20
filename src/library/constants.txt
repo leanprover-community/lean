@@ -1,10 +1,6 @@
 absurd
 acc.cases_on
 acc.rec
-add_comm_group
-add_comm_semigroup
-add_group
-add_monoid
 and
 and.cases_on
 and.elim_left
@@ -37,7 +33,6 @@ congr_arg
 congr_fun
 decidable
 decidable.to_bool
-distrib
 dite
 empty
 eq
@@ -62,7 +57,6 @@ false
 false.rec
 false_of_true_eq_false
 false_of_true_iff_false
-field
 fin.mk
 fin.ne_of_vne
 forall_congr
@@ -164,15 +158,11 @@ is_commutative.comm
 is_valid_char_range_1
 is_valid_char_range_2
 ite
-le_refl
 lean.parser
 lean.parser.pexpr
 lean.parser.reflectable.expr
 lean.parser.tk
 left_comm
-left_distrib
-linear_ordered_ring
-linear_ordered_semiring
 list
 list.cons
 list.nil
@@ -187,10 +177,6 @@ monad_io_net_system_impl
 monad_io_process_impl
 monad_io_random_impl
 monad_io_terminal_impl
-monoid
-mul_one
-mul_zero
-mul_zero_class
 name.anonymous
 name.mk_numeral
 name.mk_string
@@ -262,10 +248,7 @@ reflected
 reflected.subst
 repr
 rfl
-right_distrib
-ring
 scope_trace
-semiring
 set_of
 sizeof
 string
@@ -307,6 +290,3 @@ well_founded_tactics
 well_founded_tactics.dec_tac
 well_founded_tactics.default
 well_founded_tactics.rel_tac
-zero_le_one
-zero_lt_one
-zero_mul

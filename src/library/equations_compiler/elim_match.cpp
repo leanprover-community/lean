@@ -923,7 +923,7 @@ struct elim_match_fn {
                     unsigned idx       = length(eqn.m_hs) + 1;
                     for (unsigned i = 0; i < values.size(); i++) {
                         expr eq        = mk_eq(ctx, p, values[i]);
-                        expr ne        = mk_not(ctx, eq);
+                        expr ne        = mk_not(eq);
                         expr H         = ctx.push_local(name("_h").append_after(idx), ne);
                         idx++;
                         new_eqn.m_hs   = cons(H, new_eqn.m_hs);

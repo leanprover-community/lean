@@ -2,7 +2,7 @@ example (a b : nat) : a + b = b + a :=
 begin
   dsimp [has_add.add],
   guard_target nat.add a b = nat.add b a,
-  apply add_comm
+  apply nat.add_comm
 end
 
 example (f g : nat → nat) : (f ∘ g) = (λ x, f (g x)) :=

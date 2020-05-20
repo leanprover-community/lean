@@ -1,7 +1,7 @@
 def foo (a b : nat) : Prop :=
 a = 0 ∧ b = 0
 
-attribute [simp] foo
+attribute [simp] foo nat.zero_add
 
 example (p : nat → Prop) (a b : nat) : foo a b → p (a + b) → p 0 :=
 begin

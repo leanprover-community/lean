@@ -11,9 +11,9 @@ type_context.lean:35:0: error: deep recursion was detected at 'expression replac
 tt
 type_context.lean:42:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
 type_context.lean:50:0: error: deep recursion was detected at 'expression replacer' (potential solution: increase stack space in your system)
-?x_2 * ?x_3 = ?x_4 → ?x_2 = ?x_4 * ?x_3⁻¹
-[?7.0]
-[?x_0, ?x_1, ?x_2, ?x_3, ?x_4]
+?x_0 = -?x_1 → ?x_1 = -?x_0
+[]
+[?x_0, ?x_1]
 ℕ
 theorem my_intro_test : ∀ (x : ℕ), x = x :=
 λ (x : ℕ), eq.refl x

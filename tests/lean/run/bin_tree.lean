@@ -1,5 +1,5 @@
 namespace Ex
-local attribute [simp] add_comm add_left_comm
+local attribute [simp] nat.add_comm nat.add_left_comm
 def pairs_with_sum' : Π (m n) {d}, m + n = d → list {p : ℕ × ℕ // p.1 + p.2 = d}
 | 0     n d h := [⟨(0, n), h⟩]
 | (m+1) n d h := ⟨(m+1, n), h⟩ :: pairs_with_sum' m (n+1) (by simp at h; simp [h])

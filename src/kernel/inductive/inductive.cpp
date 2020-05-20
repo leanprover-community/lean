@@ -99,9 +99,9 @@ struct inductive_env_ext : public environment_extension {
     struct elim_info {
         name              m_inductive_name; // name of the inductive datatype associated with eliminator
         level_param_names m_level_names; // level parameter names used in computational rule
-        unsigned          m_num_params;  // number of global parameters A
-        unsigned          m_num_ACe;     // sum of number of global parameters A, type former C, and minor preimises e.
-        unsigned          m_num_indices; // number of inductive datatype indices
+        unsigned          m_num_params = 0;  // number of global parameters A
+        unsigned          m_num_ACe = 0;     // sum of number of global parameters A, type former C, and minor preimises e.
+        unsigned          m_num_indices = 0; // number of inductive datatype indices
         /** \brief We support K-like reduction when the inductive datatype is in Type.{0} (aka Prop), proof irrelevance
             is enabled, it has only one introduction rule, the introduction rule has "0 arguments".
             Example: equality defined as
@@ -111,9 +111,9 @@ struct inductive_env_ext : public environment_extension {
 
             satisfies these requirements when proof irrelevance is enabled.
             Another example is heterogeneous equality. */
-        bool              m_K_target;
+        bool              m_K_target = false;
         /** \brief m_dep_elim == true, if dependent elimination is used for this eliminator */
-        bool              m_dep_elim;
+        bool              m_dep_elim = false;
         elim_info() {}
         elim_info(name const & id_name, level_param_names const & ls, unsigned num_ps, unsigned num_ACe, unsigned num_indices,
                   bool is_K_target, bool dep_elim):
@@ -123,7 +123,7 @@ struct inductive_env_ext : public environment_extension {
 
     struct comp_rule {
         name              m_elim_name;     // name of the corresponding eliminator
-        unsigned          m_num_bu;        // sum of number of arguments u and v in the corresponding introduction rule.
+        unsigned          m_num_bu = 0;    // sum of number of arguments u and v in the corresponding introduction rule.
         expr              m_comp_rhs;      // computational rule RHS: Fun (A, C, e, b, u), (e_k_i b u v)
         expr              m_comp_rhs_body; // body of m_comp_rhs:  (e_k_i b u v)
         comp_rule() {}

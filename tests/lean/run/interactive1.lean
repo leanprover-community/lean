@@ -11,7 +11,7 @@ rfl
 example (a b c : nat) : b = 0 → c = 1 → a + b + f c = g (f a) :=
 begin
   intros h1 h2,
-  simp [h1, h2, g_def, nat.add_comm 1 a]
+  simp [h1, h2, g_def, nat.add_comm 1 a, nat.add_zero]
 end
 
 example (b c : nat) : b = 0 → c = b + 1 → c = 1 :=

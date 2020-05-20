@@ -17,7 +17,7 @@ Author: Leonardo de Moura
 namespace lean {
 struct documentation_ext : public environment_extension {
     /** Doc strings for the current module being processed. It does not include imported doc strings. */
-    std::vector<std::pair<pos_info, std::string>> m_module_docs;
+    list<std::pair<pos_info, std::string>> m_module_docs;
     /** Doc strings for declarations (including imported ones). We store doc_strings for declarations in the .olean files. */
     name_map<std::string> m_doc_string_map;
 };
@@ -172,7 +172,7 @@ static std::string process_doc(std::string s) {
 environment add_module_doc_string(environment const & env, std::string doc, pos_info pos) {
     doc = process_doc(doc);
     auto ext = get_extension(env);
-    ext.m_module_docs.emplace_back(pos, doc);
+    ext.m_module_docs.emplace_front(pos, doc);
     auto new_env = update(env, ext);
     return module::add_doc_string(new_env, doc, pos);
 }
@@ -198,10 +198,10 @@ optional<std::string> get_doc_string(environment const & env, name const & n) {
 
 void get_module_doc_strings(environment const & env, buffer<mod_doc_entry> & result) {
     auto ext = get_extension(env);
-    auto const & mod_docs = module::get_doc_strings(env);
-    for (auto const & pr : mod_docs) {
-        result.push_back({ optional<std::string>{ pr.first }, pr.second });
-    }
+    module::get_doc_strings(env).for_each(
+        [&] (std::string const & mod_name, list<std::pair<pos_info, std::string>> const & docs) {
+            result.push_back({ some(mod_name), docs });
+        });
     result.push_back({ {}, ext.m_module_docs });
 }
 

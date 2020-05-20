@@ -1,5 +1,11 @@
 open function
 
+class semiring (R : Type*) extends has_mul R, has_add R, has_one R, has_zero R.
+
+class comm_semiring (R : Type*) extends semiring R.
+
+class comm_ring (R : Type*) extends comm_semiring R.
+
 class has_scalar' (R : Type*) (A : Type*) := (smul : R → A → A)
 
 infixr ` • `:73 := has_scalar'.smul

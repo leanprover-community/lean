@@ -23,7 +23,7 @@ Author: Leonardo de Moura
 #include "library/trace.h"
 
 namespace lean {
-enum class class_entry_kind { Class, Instance, Tracker };
+enum class class_entry_kind { Class, Instance, Tracker, RemoveInstance };
 struct class_entry {
     class_entry_kind m_kind;
     name             m_class;
@@ -128,6 +128,13 @@ struct class_state {
         }
     }
 
+    void remove_instance(name const & c, name const & i) {
+        if (auto it = m_instances.find(c)) {
+            auto lst = filter(*it, [&](name const & i1) { return i1 != i; });
+            m_instances.insert(c, lst);
+        }
+    }
+
     void track_symbols(name const & c, name const & attr_name) {
         if (auto s = m_class_track_attrs.find(c)) {
             m_class_track_attrs.insert(c, cons(attr_name, *s));
@@ -146,6 +153,9 @@ struct class_config {
         switch (e.m_kind) {
         case class_entry_kind::Class:
             s.add_class(env, e.m_class);
+            break;
+        case class_entry_kind::RemoveInstance:
+            s.remove_instance(e.m_class, e.m_instance);
             break;
         case class_entry_kind::Instance:
             s.add_instance(env, e.m_class, e.m_instance, e.m_priority);
@@ -174,6 +184,9 @@ struct class_config {
         case class_entry_kind::Tracker:
             s << e.m_class << e.m_track_attr;
             break;
+        case class_entry_kind::RemoveInstance:
+            s << e.m_class << e.m_instance;
+            break;
         }
     }
 
@@ -191,6 +204,9 @@ struct class_config {
         case class_entry_kind::Tracker:
             d >> e.m_class >> e.m_track_attr;
             break;
+        case class_entry_kind::RemoveInstance:
+            d >> e.m_class >> e.m_instance;
+            break;
         }
         return e;
     }
@@ -203,6 +219,8 @@ struct class_config {
             return some(hash(hash(e.m_class.hash(), e.m_instance.hash()), e.m_priority));
         case class_entry_kind::Tracker:
             return some(hash(e.m_class.hash(), e.m_track_attr.hash()));
+        case class_entry_kind::RemoveInstance:
+            return some(hash(e.m_class.hash(), e.m_instance.hash()));
         }
         lean_unreachable();
     }
@@ -251,7 +269,7 @@ bool has_class_out_params(environment const & env, name const & c) {
     return s.m_has_out_params.contains(c);
 }
 
-environment add_instance_core(environment const & env, name const & n, unsigned priority, bool persistent) {
+environment add_instance_core(environment const & env, name const & n, unsigned priority, bool persistent, bool disable) {
     declaration d = env.get(n);
     expr type = d.get_type();
     type_context_old ctx(env, transparency_mode::All);
@@ -268,8 +286,10 @@ environment add_instance_core(environment const & env, name const & n, unsigned 
     }
     name c = get_class_name(env, get_app_fn(type));
     check_is_class(env, c);
-    environment new_env = class_ext::add_entry(env, get_dummy_ios(), class_entry(class_entry_kind::Instance, c, n, priority),
-                                               persistent);
+    environment new_env = class_ext::add_entry(env, get_dummy_ios(),
+        class_entry(disable ? class_entry_kind::RemoveInstance : class_entry_kind::Instance,
+            c, n, priority),
+        persistent);
     return new_env;
 }
 
@@ -391,7 +411,10 @@ void initialize_class() {
     register_system_attribute(basic_attribute(*g_instance_attr_name, "type class instance",
                                               [](environment const & env, io_state const &, name const & d,
                                                  unsigned prio, bool persistent) {
-                                                  return add_instance_core(env, d, prio, persistent);
+                                                  return add_instance_core(env, d, prio, persistent, false);
+                                              },
+                                              [](environment const & env, io_state const &, name const & d, bool persistent) {
+                                                  return add_instance_core(env, d, 0, persistent, true);
                                               }));
 
     g_anonymous_inst_name_prefix = new name("_inst");

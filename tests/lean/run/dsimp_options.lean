@@ -76,5 +76,5 @@ end
 example (a b : nat) : a + b = b + a :=
 begin
   fail_if_success{dsimp}, -- will not unfold has_add.add applications
-  apply add_comm
+  apply nat.add_comm
 end

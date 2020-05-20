@@ -1,3 +1,40 @@
+v3.14.0c (20 May 2020)
+----------------------
+
+Features:
+ - Coercions also trigger if the types have metavariables (#251)
+ - Better error message on missing imports (#253)
+ - Add `add_eqn_lemma` function (#254)
+
+v3.13.2c (18 May 2020)
+----------------------
+
+Fixes:
+ - Fix `olean_doc_strings` (#249)
+
+v3.13.1c (17 May 2020)
+----------------------
+
+Fixes:
+ - Protect and rename some `nat` and `int` lemmas that are superseded in mathlib (#229)
+
+v3.13.0c (16 May 2020)
+----------------------
+
+Features:
+ - use persistent data structures, to improve performance
+   of (module) docstrings (#241)
+ - cache constructed `simp_lemma` objects (#234)
+ - support `local attribute [-instance]` (#240)
+ - show goal after `;` (#239)
+ - `==`: compare id (#238)
+ - mark deps of fixed as fixed (#237)
+
+
+Changes:
+ - Most of `library/init/algebra/*` has been deleted,
+   as part of moving the algebraic hierarchy to mathlib (#229)
+
 v3.12.0c (14 May 2020)
 ----------------------
 
@@ -70,7 +107,7 @@ Bug fixes:
 Changes:
   - The performance of `array.map` has been greatly improved (#186)
   - A frequently-violated assertion was removed from the elaborator (#194)
-    
+
 v3.8.0c (9 April 2020)
 ----------------------
 
@@ -125,7 +162,7 @@ Changes:
   - Type class resolution solves instance arguments from right-to-left (#139)
   - Type class resolution skips assigned metavariables (#135)
   - Signature of `has_attribute` and `copy_attribute` has changed (#66)
-  
+
 v3.6.1c (2 Mar 2020)
 --------------------
 

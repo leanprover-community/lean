@@ -21,9 +21,9 @@ namespace lean {
 */
 struct projection_info {
     name     m_constructor;   // mk in the rule above
-    unsigned m_nparams;       // number of parameters of the inductive datatype
-    unsigned m_i;             // i in the rule above
-    bool     m_inst_implicit; // true if it is the projection of a "class"
+    unsigned m_nparams = 0;   // number of parameters of the inductive datatype
+    unsigned m_i = 0;         // i in the rule above
+    bool     m_inst_implicit = false; // true if it is the projection of a "class"
 
     projection_info() {}
     projection_info(name const & c, unsigned nparams, unsigned i, bool inst_implicit):

@@ -1,3 +1,5 @@
+local attribute [simp] nat.zero_add
+
 example (n : ℕ) : let m := 0 + n in m = n :=
 begin
 intro,

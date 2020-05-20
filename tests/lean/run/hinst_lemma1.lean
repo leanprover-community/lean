@@ -13,7 +13,7 @@ do h ← hinst_lemma.mk_from_decl n,
 
 example : true :=
 by do
-  pp_lemma `add_assoc,
+  pp_lemma `nat.add_assoc,
   pp_lemma `foo,
   pp_lemma `boo,
   constructor

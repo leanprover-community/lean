@@ -1,1 +1,1 @@
-def X (R : Type) [H : comm_ring R] := H.0
+def X (R : Type) [H : has_zero R] := H.0

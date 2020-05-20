@@ -42,14 +42,14 @@ theorem head_cons (a : α) (s : stream α) : head (a :: s) = a := rfl
 theorem tail_cons (a : α) (s : stream α) : tail (a :: s) = s := rfl
 
 theorem tail_drop (n : nat) (s : stream α) : tail (drop n s) = drop n (tail s) :=
-funext (λ i, begin unfold tail drop, simp [add_comm, add_left_comm] end)
+funext (λ i, begin unfold tail drop, simp [nat.add_comm, nat.add_left_comm] end)
 
 theorem nth_drop (n m : nat) (s : stream α) : nth n (drop m s) = nth (n+m) s := rfl
 
 theorem tail_eq_drop (s : stream α) : tail s = drop 1 s := rfl
 
 theorem drop_drop (n m : nat) (s : stream α) : drop n (drop m s) = drop (n+m) s :=
-funext (λ i, begin unfold drop, rw add_assoc end)
+funext (λ i, begin unfold drop, rw nat.add_assoc end)
 
 theorem nth_succ (n : nat) (s : stream α) : nth (succ n) s = nth n (tail s) := rfl
 
