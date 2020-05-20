@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/module.h"
 #include "library/vm/vm_name.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_environment.h"
 #include "library/equations_compiler/util.h"
 #include "library/tactic/eqn_lemmas.h"
 #include "library/tactic/tactic_state.h"
@@ -124,14 +125,20 @@ void get_ext_eqn_lemmas_for(environment const & env, name const & cname, buffer<
     }
 }
 
-vm_obj tactic_get_eqn_lemmas_for(vm_obj const & all, vm_obj const & n, vm_obj const & s) {
+vm_obj environment_get_eqn_lemmas_for(vm_obj const & env, vm_obj const & n) {
     buffer<name> result;
-    if (to_bool(all)) {
-        get_ext_eqn_lemmas_for(tactic::to_state(s).env(), to_name(n), result);
-    } else {
-        get_eqn_lemmas_for(tactic::to_state(s).env(), to_name(n), result);
-    }
-    return tactic::mk_success(to_obj(result), tactic::to_state(s));
+    get_eqn_lemmas_for(to_env(env), to_name(n), result);
+    return to_obj(result);
+}
+
+vm_obj environment_get_ext_eqn_lemmas_for(vm_obj const & env, vm_obj const & n) {
+    buffer<name> result;
+    get_ext_eqn_lemmas_for(to_env(env), to_name(n), result);
+    return to_obj(result);
+}
+
+vm_obj environment_add_eqn_lemma(vm_obj const & env, vm_obj const & n) {
+    return to_obj(add_eqn_lemma(to_env(env), to_name(n)));
 }
 
 bool has_eqn_lemmas(environment const & env, name const & cname) {
@@ -180,7 +187,9 @@ void initialize_eqn_lemmas() {
     g_ext            = new eqn_lemmas_ext_reg();
     eqn_lemmas_modification::init();
     mark_has_simple_eqn_lemma_modification::init();
-    DECLARE_VM_BUILTIN(name({"tactic", "get_eqn_lemmas_for"}), tactic_get_eqn_lemmas_for);
+    DECLARE_VM_BUILTIN(name({"environment", "get_eqn_lemmas_for"}),    environment_get_eqn_lemmas_for);
+    DECLARE_VM_BUILTIN(name({"environment", "get_ext_eqn_lemmas_for"}), environment_get_ext_eqn_lemmas_for);
+    DECLARE_VM_BUILTIN(name({"environment", "add_eqn_lemma"}),         environment_add_eqn_lemma);
 }
 
 void finalize_eqn_lemmas() {

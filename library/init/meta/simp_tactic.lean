@@ -118,7 +118,9 @@ do num_reverted : ℕ ← revert h,
 
 /-- `get_eqn_lemmas_for deps d` returns the automatically generated equational lemmas for definition d.
    If deps is tt, then lemmas for automatically generated auxiliary declarations used to define d are also included. -/
-meta constant get_eqn_lemmas_for : bool → name → tactic (list name)
+meta def get_eqn_lemmas_for (deps : bool) (d : name) : tactic (list name) := do
+env ← get_env,
+pure $ if deps then env.get_ext_eqn_lemmas_for d else env.get_eqn_lemmas_for d
 
 structure dsimp_config :=
 (md                        := reducible) -- reduction mode: how aggressively constants are replaced with their definitions.

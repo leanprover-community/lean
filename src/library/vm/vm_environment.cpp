@@ -33,7 +33,6 @@ Author: Leonardo de Moura
 #include "library/vm/vm_rb_map.h"
 #include "frontends/lean/structure_cmd.h"
 #include "frontends/lean/definition_cmds.h"
-#include "library/tactic/eqn_lemmas.h"
 
 namespace lean {
 struct vm_environment : public vm_external {
@@ -323,22 +322,6 @@ vm_obj environment_fingerprint(vm_obj const & env) {
     return mk_vm_nat(mpz(get_fingerprint(to_env(env))));
 }
 
-vm_obj environment_get_eqn_lemmas_for(vm_obj const & env, vm_obj const & n) {
-    buffer<name> result;
-    get_eqn_lemmas_for(to_env(env), to_name(n), result);
-    return to_obj(result);
-}
-
-vm_obj environment_get_ext_eqn_lemmas_for(vm_obj const & env, vm_obj const & n) {
-    buffer<name> result;
-    get_ext_eqn_lemmas_for(to_env(env), to_name(n), result);
-    return to_obj(result);
-}
-
-vm_obj environment_add_eqn_lemma(vm_obj const & env, vm_obj const & n) {
-    return to_obj(add_eqn_lemma(to_env(env), to_name(n)));
-}
-
 void initialize_vm_environment() {
     DECLARE_VM_BUILTIN(name({"environment", "mk_std"}),                environment_mk_std);
     DECLARE_VM_BUILTIN(name({"environment", "trust_lvl"}),             environment_trust_lvl);
@@ -374,9 +357,6 @@ void initialize_vm_environment() {
     DECLARE_VM_BUILTIN(name({"environment", "structure_fields"}),      environment_structure_fields);
     DECLARE_VM_BUILTIN(name({"environment", "get_class_attribute_symbols"}), environment_get_class_attribute_symbols);
     DECLARE_VM_BUILTIN(name({"environment", "fingerprint"}),           environment_fingerprint);
-    DECLARE_VM_BUILTIN(name({"environment", "get_eqn_lemmas_for"}),    environment_get_eqn_lemmas_for);
-    DECLARE_VM_BUILTIN(name({"environment", "get_ext_eqn_lemmas_for"}), environment_get_ext_eqn_lemmas_for);
-    DECLARE_VM_BUILTIN(name({"environment", "add_eqn_lemma"}),         environment_add_eqn_lemma);
 }
 
 void finalize_vm_environment() {
