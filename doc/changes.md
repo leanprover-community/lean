@@ -1,3 +1,11 @@
+v3.14.0c (20 May 2020)
+----------------------
+
+Features:
+ - Coercions also trigger if the types have metavariables (#251)
+ - Better error message on missing imports (#253)
+ - Add `add_eqn_lemma` function (#254)
+
 v3.13.2c (18 May 2020)
 ----------------------
 
