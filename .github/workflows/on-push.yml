@@ -95,14 +95,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
-      - uses: numworks/setup-msys2@v1
+      - uses: eine/setup-msys2@v0
         with:
           update: true
-      - name: Install dependencies
-        run: |
-          choco upgrade git -y --no-progress
-          msys2do pacman -S --noconfirm base-devel --needed
-          msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
+          install: 'base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git'
       - name: Configure
         run: |
           msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMINGW_LOCAL_DIR=D:/a/_temp/msys/msys64/mingw64/bin -G Unix\ Makefiles
