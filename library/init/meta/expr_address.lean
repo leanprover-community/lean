@@ -27,6 +27,8 @@ def repr: coord → string
 | coord.elet_var_type := "elet_var_type" | coord.elet_assignment := "elet_assignment" | coord.elet_body := "elet_body"
 
 instance : has_repr coord := ⟨repr⟩
+instance : has_to_string coord := ⟨repr⟩
+meta instance : has_to_format coord := ⟨format.of_string ∘ repr⟩
 
 -- [note] we can't use derive because we need to use this before `interactive`.
 meta constant has_decidable_eq : decidable_eq coord
@@ -62,6 +64,7 @@ to_string ∘ list.map coord.repr
 
 instance has_repr : has_repr address := ⟨address.to_string⟩
 instance has_to_string : has_to_string address := ⟨address.to_string⟩
+meta instance has_to_format : has_to_format address := ⟨list.to_format⟩
 
 instance has_append : has_append address := ⟨list.append⟩
 
@@ -74,8 +77,6 @@ meta def as_below : address → address → option address
 
 meta def is_below : address → address → bool
 | a₁ a₂ := option.is_some $ as_below a₁ a₂
-
-infixr  ` ≺ `:50 := is_below
 
 meta def follow : address → expr → option expr
 | [] e := e
