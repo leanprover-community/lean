@@ -14,8 +14,10 @@ GTAGS
 src/emacs/dependencies
 compile_commands.json
 *.idea
+tasks.json
 settings.json
 .gdb_history
+.vscode
 /*.nix
 /library/init/version.lean
 CMakeSettings.json
