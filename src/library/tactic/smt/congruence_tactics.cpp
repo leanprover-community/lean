@@ -30,6 +30,7 @@ struct vm_cc_state : public vm_external {
     }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_cc_state(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_cc_state))) vm_cc_state(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_cc_state(vm_obj const & o) {

@@ -12,6 +12,7 @@ struct vm_local_context : public vm_external {
     virtual void dealloc() override { this->~vm_local_context(); get_vm_allocator().deallocate(sizeof(vm_local_context), this);}
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_local_context(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_local_context))) vm_local_context(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 vm_obj to_obj(local_context const & lc) {
     return mk_vm_external(new(get_vm_allocator().allocate(sizeof(vm_local_context))) vm_local_context(lc));

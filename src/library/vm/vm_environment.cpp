@@ -42,6 +42,7 @@ struct vm_environment : public vm_external {
     virtual void dealloc() override { this->~vm_environment(); get_vm_allocator().deallocate(sizeof(vm_environment), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_environment(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_environment))) vm_environment(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_env(vm_obj const & o) {

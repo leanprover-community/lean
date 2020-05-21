@@ -83,6 +83,7 @@ struct vm_decl_attributes : public vm_external {
     virtual void dealloc() override { this->~vm_decl_attributes(); get_vm_allocator().deallocate(sizeof(vm_decl_attributes), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_decl_attributes(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_decl_attributes))) vm_decl_attributes(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 static decl_attributes const & to_decl_attributes(vm_obj const & o) {

@@ -122,6 +122,7 @@ struct vm_handle : public vm_external {
     virtual void dealloc() override { this->~vm_handle(); get_vm_allocator().deallocate(sizeof(vm_handle), this); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new vm_handle(m_handle); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { lean_unreachable(); }
+    virtual unsigned int hash() { return 0; }
 };
 
 static handle_ref const & to_handle(vm_obj const & o) {
@@ -140,6 +141,7 @@ struct vm_socket : public vm_external {
     virtual void dealloc() override { this->~vm_socket(); get_vm_allocator().deallocate(sizeof(vm_socket), this); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new vm_socket(m_fd); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { lean_unreachable(); }
+    virtual unsigned int hash() { return 0; }
 };
 
 static SOCKET socket_to_fd(vm_obj const &o) {
@@ -159,6 +161,7 @@ struct vm_child : public vm_external {
     virtual void dealloc() override { this->~vm_child(); get_vm_allocator().deallocate(sizeof(vm_child), this); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new vm_child(m_child); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { lean_unreachable(); }
+    virtual unsigned int hash() { return 0; }
 };
 
 std::shared_ptr<child> const & to_child(vm_obj const & o) {

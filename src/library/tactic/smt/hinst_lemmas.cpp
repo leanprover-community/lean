@@ -691,6 +691,7 @@ struct vm_hinst_lemma : public vm_external {
     virtual void dealloc() override { this->~vm_hinst_lemma(); get_vm_allocator().deallocate(sizeof(vm_hinst_lemma), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_hinst_lemma(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_hinst_lemma))) vm_hinst_lemma(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 hinst_lemma const & to_hinst_lemma(vm_obj const & o) {
@@ -736,6 +737,7 @@ struct vm_hinst_lemmas : public vm_external {
     virtual void dealloc() override { this->~vm_hinst_lemmas(); get_vm_allocator().deallocate(sizeof(vm_hinst_lemmas), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_hinst_lemmas(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_hinst_lemmas))) vm_hinst_lemmas(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 hinst_lemmas const & to_hinst_lemmas(vm_obj const & o) {

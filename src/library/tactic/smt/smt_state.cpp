@@ -126,6 +126,7 @@ struct vm_smt_goal : public vm_external {
     }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_smt_goal(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_smt_goal))) vm_smt_goal(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_smt_goal(vm_obj const & o) {

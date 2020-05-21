@@ -334,7 +334,6 @@ unsigned hash(vm_obj const & o) {
     } else if (is_external(o)) {
         unsigned int oh = to_external(o)->hash();
         return oh;
-        // return oh == 0 ? hash(h, hash_ptr(o.raw())) : oh;
     } else if (is_native_closure(o)) {
         auto nc = to_native_closure(o);
         h = hash_ptr(nc->get_fn());

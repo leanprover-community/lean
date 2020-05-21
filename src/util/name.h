@@ -223,7 +223,7 @@ public:
     struct ptr_eq { bool operator()(name const & n1, name const & n2) const { return n1.m_ptr == n2.m_ptr; } };
 };
 
-unsigned hash(name const & n);
+inline unsigned hash(name const & n) { return n.hash(); };
 name string_to_name(std::string const & str);
 
 struct name_hash { unsigned operator()(name const & n) const { return n.hash(); } };
