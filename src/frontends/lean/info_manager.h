@@ -73,9 +73,15 @@ class widget_info : public info_data_cell {
 public:
     widget_info(environment const & env, vdom const & vd): m_env(env), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
-    /** Given a message of the form `{handler : number, args}`, runs the event handler and updates the state.
+    /** Given a message of the form
+     * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
+     * runs the event handler and updates the state.
      * The record is updated to have `{status : "success", widget : {html : _}}` on success.
-     * [todo] behaviour upon errors?
+     * If the widget update event yields an action then the record will be of type `{status: "edit", action: string, widget:_}`
+     * If the handler given does not correspond to a component on the widget, then the record is set to `{status: "invalid_handler"}`.
+     * It will throw is the json message has the wrong format.
+     * [hack] although `update` is labelled with `const`, the members do mutate.
+     * However removing the const causes errors that I (e.w.ayers) couldn't find a simple fix for.
      */
     void update(io_state_stream const & ios, json const & message, json & record) const;
     json to_json() const;

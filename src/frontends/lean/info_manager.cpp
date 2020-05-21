@@ -137,7 +137,7 @@ void widget_info::update(io_state_stream const & ios, json const & message, json
             record["status"] = "edit";
             record["action"] = to_string(*result);
         } else {
-            record["status"] = "success"; // [todo] there is already a status indicator on the object above "record".
+            record["status"] = "success";
         }
     } catch (const invalid_handler & e) {
         record["status"] = "invalid_handler";

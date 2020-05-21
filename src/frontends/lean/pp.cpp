@@ -596,7 +596,7 @@ static bool is_coercion(expr const & e) {
 static bool is_coercion_fn(expr const & e) {
     return is_app_of(e, get_coe_fn_name()) && get_app_num_args(e) >= 3;
 }
-// [todo] refactor to pp_hide(i);
+
 template<class T>
 auto pretty_fn<T>::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide) -> result {
     lean_assert(is_coercion(e));
@@ -609,6 +609,7 @@ auto pretty_fn<T>::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hid
         expr new_e = mk_app(args.size() - 3, args.data() + 3);
         // new_e = f x y z
         // [todo] pp_child needs to know that `f` now has a different address.
+        // Currently this will calculate the wrong address and cause bugs.
         return pp_child(new_e, bp, ignore_hide);
     }
 }
@@ -977,7 +978,8 @@ auto pretty_fn<T>::pp_app(expr const & e) -> result {
     return result(max_bp()-1, group(compose(fn_fmt, nest(m_indent, compose(line(), res_arg.fmt())))));
 }
 template<class T>
-T pretty_fn<T>::pp_binder(expr const & local) { // [note] address is already set here
+T pretty_fn<T>::pp_binder(expr const & local) {
+    // [note] address is already set here
     T r;
     auto bi = local_info(local);
     if (bi != binder_info()) {
@@ -1016,7 +1018,7 @@ T pretty_fn<T>::pp_binders(buffer<subexpr> const & locals) {
     buffer<name> names;
     expr local = locals[0].first;
     address la = locals[0].second;
-    // [note] la points to the binder var type that made the local in the first place.
+    // [note] la points to the binder var type that made the local.
     expr   type      = mlocal_type(local);
     binder_info bi   = local_info(local);
     names.push_back(mlocal_pp_name(local));
@@ -1141,7 +1143,6 @@ auto pretty_fn<T>::pp_explicit(expr const & e) -> result {
 }
 template<class T>
 auto pretty_fn<T>::pp_delayed_abstraction(expr const & e) -> result {
-    // [todo] how to express the address of this?
     address_give_up_scope s(*this);
     if (m_use_holes) {
         return T(pp_hole());
@@ -1165,7 +1166,7 @@ auto pretty_fn<T>::pp_delayed_abstraction(expr const & e) -> result {
 template<class T>
 auto pretty_fn<T>::pp_equation(expr const & e) -> T {
     lean_assert(is_equation(e));
-    // [todo] address scoping
+    // [todo] adding expression address information not implemented
     address_give_up_scope s(*this);
     T r = T("|");
     buffer<expr> args;
@@ -1178,7 +1179,7 @@ auto pretty_fn<T>::pp_equation(expr const & e) -> T {
 }
 template<class T>
 auto pretty_fn<T>::pp_equations(expr const & e) -> optional<result> {
-    // [todo] address scoping
+    // [todo] adding expression address information for equations not implemented
     address_give_up_scope s(*this);
     buffer<expr> eqns;
     unsigned num_fns = equations_num_fns(e);
@@ -1243,7 +1244,7 @@ template<class T>
 auto pretty_fn<T>::pp_macro_default(expr const & e) -> result {
     // TODO(Leo): have macro annotations
     // fix macro<->pp interface
-    // [todo] scoping address
+    // [note] address information not supported for macros.
     address_give_up_scope s(*this);
     if (is_prenum(e)) {
         return T(prenum_value(e).to_string());
@@ -1256,7 +1257,7 @@ auto pretty_fn<T>::pp_macro_default(expr const & e) -> result {
 }
 template<class T>
 auto pretty_fn<T>::pp_macro(expr const & e) -> result {
-    // [todo] scoping address
+    // [note] address information not supported for macros.
     address_give_up_scope s(*this);
     if (is_explicit(e)) {
         return pp_explicit(e);

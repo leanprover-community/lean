@@ -117,15 +117,16 @@ void update_widget(environment const & env, options const & opts, io_state const
     json record;
     for (info_manager const & infom : info_managers) {
         if (infom.get_file_name() == m_mod_info.m_id) {
-            json r1; // [todo] tidy these debug messages
-            json r2;
+            json r1;
             if (e.m_goal_pos && infom.update_widget(env, opts, ios, *e.m_goal_pos, r1, message)) {
                 record = r1;
                 record["debug"]["msg"] = "from m_goal_pos";
                 record["debug"]["line"] = e.m_goal_pos->first;
                 record["debug"]["column"] = e.m_goal_pos->second;
                 break;
-            } else if (infom.update_widget(env, opts, ios, e.m_token_info.m_pos, r2, message)) {
+            }
+            json r2;
+            if (infom.update_widget(env, opts, ios, e.m_token_info.m_pos, r2, message)) {
                 record = r2;
                 record["debug"]["msg"] = "from e.m_token_info.m_pos";
                 record["debug"]["line"] = e.m_token_info.m_pos.first;
@@ -194,7 +195,6 @@ void report_info(environment const & env, options const & opts, io_state const &
         if (infom.get_file_name() == m_mod_info.m_id) {
             if (e.m_goal_pos) {
                 // in the case that e has a goal pos, report that.
-                // record["debug"]["msg"] = "from m_goal_pos"; // [todo] remove debug messages once I understand what this code is doing.
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
                             return is_vm_obj_format_info(d) || is_widget_info(d);
                         });
@@ -208,10 +208,8 @@ void report_info(environment const & env, options const & opts, io_state const &
                     infom.get_info_record(env, opts, ios, field_pos, record);
                     has_token_info = true;
                 }
-                //  record["debug"]["msg"] = "from field_pos";
             }
             if (!has_token_info) {
-                // record["debug"]["msg"] = "from e.m_token_info.m_pos";
                 infom.get_info_record(env, opts, ios, e.m_token_info.m_pos, record);
             }
         }

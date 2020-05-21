@@ -22,8 +22,10 @@ Author: Leonardo de Moura
 
 namespace lean {
 class notation_entry;
-/** A subexpr is an expression `e` and an address of some larger expression saying where `e` is */
+/** A subexpr is an expression `e` and an address of some larger expression saying where `e` is in it. */
 typedef pair<expr, address> subexpr;
+/** A function for pretty printing expressions. The template variable `T` is the output type.
+ * Prior to adding widgets, `T` was `format`. */
 template<typename T>
 class pretty_fn {
 public:
@@ -139,7 +141,6 @@ private:
 
     result pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide = false);
-    // result pp_child_core(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_child(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false);
     result pp_subtype(expr const & e);
@@ -170,21 +171,25 @@ private:
     result pp_prod(expr const & e);
     void   set_options_core(options const & o);
     expr   infer_type(expr const & e);
-    // result pp_at(expr const & e, address local_address, bool ignore_hide = false);
 
     /* How pp works with addresses.
-       At certain points in the expression, called 'boundaries' we call `of_rec` with the current `m_address`, at which point the m_address is reset to empty.
-       At the moment I add a boundary for each call to `pp`, `pp_child`, and `pp_child_notation`.
+       At certain points in the expression, called 'boundaries' we call `of_rec`
+       with the current `m_address`, at which point the m_address is reset to empty.
+       At the moment there is a boundary for each call to `pp`, `pp_child`, and `pp_child_notation`.
 
        At any point in the pp procedure, can push an `address_scope` which appends to m_address.
-       The idea is that you eventually build up an object where if you concatenate all of the addresses at the boundary, you should get the
+       The idea is that you eventually build up an object where if you concatenate all
+       of the addresses at the boundary, you should get the
        address of that subexpression in the root expression.
-       If computing the address becomes too thorny, as occurs when we pp a macro, then a `give_up_scope` is used to stop appending boundaries, because we can no longer compute the address of the subexpressions.
+       If computing the address becomes too thorny, as occurs when we pp a macro, then a `give_up_scope`
+       is used to stop appending boundaries, because we can no longer compute the address of the subexpressions.
+       However the expression will still be pretty printed, it just won't have the boundary information.
      */
 protected:
     address    m_address;
     bool       m_address_give_up;
 
+    /** Use this to append a partial expression address to `m_address`.  */
     struct address_scope {
         pretty_fn & m_pfn;
         address m_old;
@@ -200,6 +205,7 @@ protected:
             }
         }
     };
+    /** Use this to declare that expression addresses should not be computed for this or subterms. */
     struct address_give_up_scope : public flet<bool> {
         address_give_up_scope(pretty_fn & pfn) : flet<bool>(pfn.m_address_give_up, true) {}
     };
@@ -215,16 +221,8 @@ protected:
             m_pfn.m_address = m_adr;
         }
     };
-    // address get_adr() {
-    //     if (m_address.size() == 0) { return address();
-    //     } else { return m_address.back(); }
-    // }
-    // virtual T fmt(format const & fmt) = 0;
     virtual T of_rec(address const & a, expr const & e, T const & result) = 0;
     result of_rec(address const & a, expr const & e, result const & result);
-    // virtual T group(T const & t) = 0;
-    // virtual T nest(unsigned i, T const & t) = 0;
-    // // also T has to implement `+` but I think you just get a compiler error for that.
 public:
     pretty_fn(environment const & env, options const & o, abstract_type_context & ctx);
     result pp_core(expr const & e, bool ignore_hide = false);
@@ -236,7 +234,7 @@ public:
     std::pair<bool, token_table const *> needs_space_sep(token_table const * t, std::string const &s1, std::string const &s2) const;
 };
 
-/** Same as pretty_fn but with hooks determined by VM */
+/** This pretty_fn gives the same behaviour of the original pretty_fn prior to address boundaries being implemented.  */
 class plain_pretty_fn : public pretty_fn<format> {
     format of_rec(address const &, expr const &, format const & result) { return result; }
 public:
@@ -249,56 +247,4 @@ formatter_factory mk_pretty_formatter_factory();
 void initialize_pp();
 void finalize_pp();
 
-
-
-// class magic {
-// public:
-//     magic(format const & f);
-//     explicit magic(sexpr const & v);
-//     explicit magic(std::string const & v);
-//     explicit magic(int v);
-//     explicit magic(name const & v);
-//     friend magic operator+(magic const & f1, magic const & f2);
-//     magic & operator+=(magic const & f) {
-//         *this = *this + f;
-//         return *this;
-//     }
-// };
-
-
-// // magic const & line();
-// // magic const & space();
-// // magic const & lp();
-// // magic const & rp();
-// // magic const & lsb();
-// // magic const & rsb();
-// // magic const & lcurly();
-// // magic const & rcurly();
-// // magic const & comma();
-// // magic const & colon();
-// // magic const & dot();
-// class magic_pp : public pretty_fn<magic> {
-//     magic of_rec(expr const & e, magic const & result) { return result; }
-// public:
-//     magic_pp(environment const & e, options const & o, abstract_type_context & ctx) : pretty_fn<magic>(e, o, ctx) {}
-// };
-
-
 }
-
-/*
-Problem, I can't just replace fmt with T because it is not just a list but a sexpr
-with depth and so on.
-
-
-Ideas:
-1. add sexpr_atom_ext, will require modifying some of the code in format.cpp
-2. rewrite pp to use a more generic form of format. Very hard, will require
-   modifying and debugging >2000 lines of code.
-3. get pp to generate a _source map_ sending expression addresses to format source locations.
-   this is also hard because format is actually a tree of information.
-4. add a 'tag' property to the format containing some random information.
-5. write my own version of pp in Lean.
-
-
- */

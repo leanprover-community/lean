@@ -184,9 +184,9 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & olds) {
     std::vector<vdom> old_elements = olds;
     for (unsigned i = 0; i < new_elements.size(); i++) {
-        // [note] you get wierd behaviour if multiple things have the same key or if only some elements have keys
+        // [note] you get weird behaviour if multiple things have the same key or if only some elements have keys
         // but this is also true in React so I am not too worried about it as long as it doesn't crash.
-        // [note] could probably avoid a few vdom copies but w/e
+        // [todo] add a warning if keys are duplicated or only present on some objects.
         auto k = new_elements[i].key();
         if (k) {
             for (unsigned j = 0; j < old_elements.size(); j++) {

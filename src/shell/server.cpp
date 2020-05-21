@@ -649,9 +649,9 @@ json server::widget_event(std::shared_ptr<module_info const> const & mod_info, p
 task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
     cancel(m_bg_task_ctok);
     m_bg_task_ctok = mk_cancellation_token();
-    // [todo] I need to think about how multithreading works. Should all events happen synchronously?
+    // [todo] Need some help on how multithreading works. Should all events happen synchronously?
     // what happens if it is processing an event and then a second event occurs? There needs to be an event queue.
-    /* This is actually really complicated */
+    // there should at least be a thread lock on modifying a vdom object.
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
 

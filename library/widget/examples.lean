@@ -60,13 +60,6 @@ component.mk_simple (bool ⊕ α) bool
         with_attrs ((attr.tooltip $ html.map_action sum.inr $ tooltip props) :: atrs) elt
     ])
 
-
-/- [note] there is a vm compiler bug that sometimes emerges when I include these coercions. -/
--- meta instance ignore_action {π α : Type} : has_coe (component π α) (component π empty) :=
--- ⟨component.filter_map_action (λ a, none)⟩
--- meta instance component_of_no_action {π α : Type}: has_coe (component unit α) (component π α) :=
--- ⟨λ c, component.map_action (λ (o : empty), empty.rec (λ _, α) o) $ component.map_props (λ p, ()) $ c⟩
-
 meta def dotted_border_list {α β : Type} (get_key : β → string) (view : β → html α ) : list β → html α | l :=
 h "div" [className "pa3 pa5-ns"] [
   h "ol" [className "list pl0 measure center"] $

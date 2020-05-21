@@ -8,7 +8,7 @@ import init.function init.data.option.basic init.util
 The process is still less than streamlined.
 To make a widget, you need to make a custom executor object and then instead of calling `save_info_thunk` you call `save_widget`.
 
-Additionally, you will need a special build of the vscode extension [todo] to use widgets in vscode.
+Additionally, you will need a compatible build of the vscode extension or web app to use widgets in vscode.
 
 ## How it works:
 
