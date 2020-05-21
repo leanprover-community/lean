@@ -410,7 +410,7 @@ struct add_inductive_fn {
                 // the sort is ok IF
                 //   1- its level is <= inductive datatype level, OR
                 //   2- inductive datatype is at level 0
-                if (!(is_geq(m_it_level, sort_level(s)) || is_zero(m_it_level)))
+                if (!(is_geq(m_it_level, sort_level(s)) || is_zero(m_it_level)) && m_is_trusted)
                     throw kernel_exception(m_env, sstream() << "universe level of type_of(arg #" << (i + 1) << ") "
                                            << "of '" << n << "' is too big for the corresponding inductive datatype");
                 if (m_is_trusted)
