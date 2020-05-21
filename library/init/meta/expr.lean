@@ -185,7 +185,12 @@ meta constant expr.instantiate_nth_var : nat → expr → expr → expr
 meta constant expr.instantiate_var         : expr → expr → expr
 /-- ``instantiate_vars `(#0 #1 #2) [x,y,z] = `(%%x %%y %%z)`` -/
 meta constant expr.instantiate_vars        : expr → list expr → expr
-
+/-- Same as `instantiate_vars` except lifts and shifts the vars by the given amount.
+``instantiate_vars_core `(#0 #1 #2 #3) 0 [x,y] = `(x y #0 #1)``
+``instantiate_vars_core `(#0 #1 #2 #3) 1 [x,y] = `(#0 x y #1)``
+``instantiate_vars_core `(#0 #1 #2 #3) 2 [x,y] = `(#0 #1 x y)``
+-/
+meta constant expr.instantiate_vars_core        : expr → nat → list expr → expr
 /-- Perform beta-reduction if the left expression is a lambda, or construct an application otherwise.
 That is: ``expr.subst `(λ x, %%Y) Z = Y[x/Z]``, and
 ``expr.subst X Z = X.app Z`` otherwise -/
