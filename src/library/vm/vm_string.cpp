@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #include <string>
 #include "util/interrupt.h"
 #include "util/utf8.h"
+#include "util/hash.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_option.h"
@@ -20,6 +21,7 @@ struct vm_string : public vm_external {
     virtual void dealloc() override { this->~vm_string(); get_vm_allocator().deallocate(sizeof(vm_string), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_string(m_value, m_length); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_string))) vm_string(m_value, m_length); }
+    virtual unsigned int hash() override { return lean::hash_data(m_value); }
 };
 
 bool is_string(vm_obj const & o) {
