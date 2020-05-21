@@ -33,8 +33,6 @@ definition p3 : point3d := { p1 with z := 10 }
 
 #check (⟨10, rfl⟩ : Σ' x : nat, x = x)
 
-#check ((| 10, rfl |) : Σ' x : nat, x = x)
-
 #check ({ fst := 10, snd := rfl } : Σ' x : nat, x = x)
 
 definition f (a : nat) : Σ' x : nat, x = x :=

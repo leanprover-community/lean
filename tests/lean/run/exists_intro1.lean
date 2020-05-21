@@ -25,9 +25,6 @@ lemma ex6 : ∃ x : nat, x = x :=
 lemma ex7 : ∃ x y z : nat, x = y + z :=
 ⟨1, 1, 0, rfl⟩
 
-lemma ex8 : ∃ x y z : nat, x = y + z :=
-(| 1, 1, 0, rfl |)
-
 example : ∃ x : nat, x = x :=
 ⟨0, rfl⟩
 
