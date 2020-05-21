@@ -217,6 +217,10 @@ vm_obj expr_has_decidable_eq(vm_obj const & o1, vm_obj const & o2) {
     return mk_vm_bool(is_bi_equal(to_expr(o1), to_expr(o2)));
 }
 
+vm_obj expr_coord_has_decidable_eq(vm_obj const & o1, vm_obj const & o2) {
+    return mk_vm_bool(cidx(o1) == cidx(o2));
+}
+
 vm_obj expr_alpha_eqv(vm_obj const & o1, vm_obj const & o2) {
     return mk_vm_bool(to_expr(o1) == to_expr(o2));
 }
@@ -512,6 +516,7 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "macro"}),            expr_macro_intro);
     DECLARE_VM_BUILTIN(name({"expr", "macro_def_name"}),   expr_macro_def_name);
     DECLARE_VM_BUILTIN(name({"expr", "has_decidable_eq"}), expr_has_decidable_eq);
+    DECLARE_VM_BUILTIN(name({"expr", "coord", "has_decidable_eq"}), expr_coord_has_decidable_eq);
     DECLARE_VM_BUILTIN(name({"expr", "alpha_eqv"}),        expr_alpha_eqv);
     DECLARE_VM_BUILTIN(name({"expr", "to_string"}),        expr_to_string);
     DECLARE_VM_BUILTIN(name({"expr", "lt"}),               expr_lt);
