@@ -351,7 +351,8 @@ class inductive_cmd_fn {
             expr arg_ty = binding_domain(ty);
             type_checker ctx(m_env);
             level arg_level = get_level(ctx, arg_ty);
-            if (!(is_geq(constant_resultant_level, arg_level) || is_zero(constant_resultant_level))) {
+            bool is_trusted = !m_meta_info.m_modifiers.m_is_meta;
+            if (!(is_geq(constant_resultant_level, arg_level) || is_zero(constant_resultant_level)) && is_trusted) {
                 throw exception(sstream() << "universe level of type_of(arg #" << ir_arg << ") "
                                 << "of '" << mlocal_name(ir) << "' is too big for the corresponding inductive datatype");
             }
