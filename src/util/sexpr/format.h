@@ -231,6 +231,7 @@ format group(format const & f);
 format above(format const & f1, format const & f2);
 format bracket(std::string const & l, format const & x, std::string const & r);
 format paren(format const & x);
+format wrap(format const & f1, format const & f2);
 
 // is_iterator
 template<typename T, typename = void>
