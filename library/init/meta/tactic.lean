@@ -727,6 +727,10 @@ meta constant get_tag (g : expr) : tactic tag
     reset. Note that, the cache is still used when executing a single tactic that
     may generate many type class resolution problems (e.g., `simp`). -/
 meta constant unfreeze_local_instances : tactic unit
+/--
+Freeze the current set of local instances.
+-/
+meta constant freeze_local_instances : tactic unit
 /- Return the list of frozen local instances. Return `none` if local instances were not frozen. -/
 meta constant frozen_local_instances : tactic (option (list expr))
 
