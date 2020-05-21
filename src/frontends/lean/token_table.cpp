@@ -115,7 +115,7 @@ void init_token_table(token_table & t) {
 
     pair<char const *, char const *> aliases[] =
         {{"λ", "fun"}, {"forall", "Pi"},
-         {"∀", "Pi"}, {"Π", "Pi"}, {"(|", "⟨"}, {"|)", "⟩"}, {nullptr, nullptr}};
+         {"∀", "Pi"}, {"Π", "Pi"}, {nullptr, nullptr}};
 
     pair<char const *, char const *> cmd_aliases[] =
         {{"lemma", "theorem"}, {"def", "definition"},
