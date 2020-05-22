@@ -319,6 +319,7 @@ void vm_obj_cell::dealloc() {
 }
 
 unsigned hash(vm_obj const & o) {
+    check_system("hash(vm_obj)");
     unsigned int h = 555; // just a seed for the hash
     h = hash(h, (unsigned int)(kind(o)));
     if (is_simple(o)) {
