@@ -45,7 +45,7 @@ struct vm_array_ts_copy : public vm_external {
     virtual vm_external * clone(vm_clone_fn const &) override;
     virtual unsigned int hash() override {
         unsigned int h = 118118;
-        for(vm_obj const & o : m_entries) {
+        for (vm_obj const & o : m_entries) {
             h = lean::hash(h, lean::hash(o));
         }
         return h;
