@@ -5,7 +5,9 @@ import init.data.option.basic
 
 namespace expr
 
-/-- An enum representing a recursive argument in an `expr` constructor (except the types of variables). -/
+/-- An enum representing a recursive argument in an `expr` constructor.
+Types of local and meta variables are not included because they are not consistently set and
+depend on context. -/
 inductive coord : Type
 | app_fn        | app_arg
 | lam_var_type  | lam_body
@@ -14,6 +16,7 @@ inductive coord : Type
 
 namespace coord
 
+/-- Convert the coord enum to its index number. -/
 def code: coord → ℕ
 | coord.app_fn        := 0 | coord.app_arg         := 1
 | coord.lam_var_type  := 2 | coord.lam_body        := 3
@@ -30,28 +33,29 @@ instance : has_repr coord := ⟨repr⟩
 instance : has_to_string coord := ⟨repr⟩
 meta instance : has_to_format coord := ⟨format.of_string ∘ repr⟩
 
--- [note] we can't use derive because we need to use this before `interactive`.
 meta constant has_decidable_eq : decidable_eq coord
 attribute [instance] expr.coord.has_decidable_eq
 
 instance has_lt : has_lt coord := ⟨λ x y, x.code < y.code⟩
 
+/-- Use this to pick the subexpression of a given expression that cooresponds
+to the given coordinate. -/
 meta def follow : coord → expr → option expr
-| (coord.app_fn)          (expr.app f a)         := some f
-| (coord.app_arg)         (expr.app f a)         := some a
-| (coord.lam_var_type)    (expr.lam  n bi y   b) := some y
-| (coord.lam_body)        (expr.lam  n bi y   b) := some b
-| (coord.pi_var_type)     (expr.pi   n bi y   b) := some y
-| (coord.pi_body)         (expr.pi   n bi y   b) := some b
-| (coord.elet_var_type)   (expr.elet n    y a b) := some y
-| (coord.elet_assignment) (expr.elet n    y a b) := some a
-| (coord.elet_body)       (expr.elet n    y a b) := some b
+| (coord.app_fn)          (expr.app f _)         := some f
+| (coord.app_arg)         (expr.app _ a)         := some a
+| (coord.lam_var_type)    (expr.lam  n bi y   _) := some y
+| (coord.lam_body)        (expr.lam  n bi _   b) := some b
+| (coord.pi_var_type)     (expr.pi   n bi y   _) := some y
+| (coord.pi_body)         (expr.pi   n bi _   b) := some b
+| (coord.elet_var_type)   (expr.elet n    y _ _) := some y
+| (coord.elet_assignment) (expr.elet n    _ a _) := some a
+| (coord.elet_body)       (expr.elet n    _ _ b) := some b
 | _                       _                      := none
 
 end coord
 
 /-- An address is a list of coordinates used to reference subterms of an expression.
-The topmost coordinate in the list corresponds to the start of the expression. -/
+The topmost coordinate in the list corresponds to the root of the expression. -/
 def address : Type := list coord
 
 namespace address
@@ -78,8 +82,9 @@ meta def as_below : address → address → option address
 meta def is_below : address → address → bool
 | a₁ a₂ := option.is_some $ as_below a₁ a₂
 
+/-- `follow a e` finds the subexpression of `e` at the given address `a`. -/
 meta def follow : address → expr → option expr
-| [] e := e
+| []     e := e
 | (h::t) e := coord.follow h e >>= follow t
 
 end address
