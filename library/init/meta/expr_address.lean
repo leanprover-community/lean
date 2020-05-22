@@ -1,7 +1,14 @@
+/-
+Copyright (c) 2020 E.W.Ayers. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+
+Author: E.W.Ayers
+-/
 prelude
 import init.meta.expr
 import init.data.list.basic
 import init.data.option.basic
+import init.util
 
 namespace expr
 
@@ -23,18 +30,18 @@ def code: coord → ℕ
 | coord.pi_var_type   := 4 | coord.pi_body         := 5
 | coord.elet_var_type := 6 | coord.elet_assignment := 7 | coord.elet_body := 8
 
-def repr: coord → string
+protected def repr: coord → string
 | coord.app_fn        := "app_fn"        | coord.app_arg  := "app_arg"
 | coord.lam_var_type  := "lam_var_type"  | coord.lam_body := "lam_body"
 | coord.pi_var_type   := "pi_var_type"   | coord.pi_body := "pi_body"
 | coord.elet_var_type := "elet_var_type" | coord.elet_assignment := "elet_assignment" | coord.elet_body := "elet_body"
 
-instance : has_repr coord := ⟨repr⟩
-instance : has_to_string coord := ⟨repr⟩
-meta instance : has_to_format coord := ⟨format.of_string ∘ repr⟩
+instance : has_repr coord := ⟨coord.repr⟩
+instance : has_to_string coord := ⟨coord.repr⟩
+meta instance : has_to_format coord := ⟨format.of_string ∘ coord.repr⟩
 
-meta constant has_decidable_eq : decidable_eq coord
-attribute [instance] expr.coord.has_decidable_eq
+meta instance has_dec_eq : decidable_eq coord :=
+unchecked_cast (infer_instance : decidable_eq ℕ)
 
 instance has_lt : has_lt coord := ⟨λ x y, x.code < y.code⟩
 
@@ -55,13 +62,13 @@ meta def follow : coord → expr → option expr
 end coord
 
 /-- An address is a list of coordinates used to reference subterms of an expression.
-The topmost coordinate in the list corresponds to the root of the expression. -/
+The first coordinate in the list corresponds to the root of the expression. -/
 def address : Type := list coord
 
 namespace address
 
-meta def has_dec_eq : decidable_eq address :=
-@list.has_dec_eq _ expr.coord.has_decidable_eq
+meta instance has_dec_eq : decidable_eq address :=
+(infer_instance : decidable_eq (list expr.coord))
 
 protected def to_string : address → string :=
 to_string ∘ list.map coord.repr
@@ -70,14 +77,14 @@ instance has_repr : has_repr address := ⟨address.to_string⟩
 instance has_to_string : has_to_string address := ⟨address.to_string⟩
 meta instance has_to_format : has_to_format address := ⟨list.to_format⟩
 
-instance has_append : has_append address := ⟨list.append⟩
+instance : has_append address := ⟨list.append⟩
 
 /-- `as_below x y` is some z when it finds `∃ z, x = y ++ z` -/
 meta def as_below : address → address → option address
-|a [] := some a -- [] ++ a = a
-|[] _ := none   -- (h::t) ++ _ ≠ []
+| a [] := some a -- [] ++ a = a
+| [] _ := none   -- (h::t) ++ _ ≠ []
 -- if t₂ ++ z = t₁ then (h₁ :: t₁) ++ z = (h₁ :: t₂)
-|(h₁ :: t₁) (h₂ :: t₂) := if h₁ = h₂ then as_below t₁ t₂ else none
+| (h₁ :: t₁) (h₂ :: t₂) := if h₁ = h₂ then as_below t₁ t₂ else none
 
 meta def is_below : address → address → bool
 | a₁ a₂ := option.is_some $ as_below a₁ a₂

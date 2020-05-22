@@ -13,12 +13,12 @@ Author: E.W.Ayers
 
 namespace lean {
 enum class expr_coord {
-app_fn, app_arg,
-lam_var_type, lam_body,
-pi_var_type, pi_body,
-elet_var_type , elet_assignment, elet_body,
-mvar_type,
-local_const_type,
+    app_fn, app_arg,
+    lam_var_type, lam_body,
+    pi_var_type, pi_body,
+    elet_var_type , elet_assignment, elet_body,
+    mvar_type,
+    local_const_type,
 };
 
 typedef list<expr_coord> address;
