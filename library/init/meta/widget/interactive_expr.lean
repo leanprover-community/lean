@@ -185,7 +185,7 @@ do
   ),
   set_goals gs,
   pure $ h "ul" [className "list pl0"]
-       $ list.mapi (λ i x,
+       $ list.map_with_index (λ i x,
          let border_cn := if i + 1 = hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
          h "li" [className $ "lh-copy " ++ border_cn] [x])
        $ hs

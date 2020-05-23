@@ -294,8 +294,6 @@ static unsigned num_digits(unsigned k) {
     return r;
 }
 
-unsigned hash(name const & n) { return n.hash(); }
-
 size_t name::size_core(bool unicode) const {
     if (m_ptr == nullptr) {
         return strlen(anonymous_str);

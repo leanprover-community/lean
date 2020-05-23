@@ -29,6 +29,7 @@ struct interaction_monad {
            cloned between threads. */
         virtual vm_external * ts_clone(vm_clone_fn const &) override;
         virtual vm_external * clone(vm_clone_fn const &) override;
+        virtual unsigned int hash() { return 0; }
     };
 
     typedef std::tuple<format, optional<pos_info>, State> im_exception_info;

@@ -16,7 +16,6 @@ vm_obj to_obj(address c) {
     return to_obj(b);
 }
 
-
 namespace expr_address {
 
 expr_coord to_coord(vm_obj const & c) {
@@ -62,7 +61,7 @@ address pi_body(unsigned n) {
 address binding_type(expr const & e) {
     lean_assert(is_binding(e));
     if (is_pi(e)) {
-      return address(expr_coord::pi_var_type);
+        return address(expr_coord::pi_var_type);
     } else {
         return address(expr_coord::lam_var_type);
     }
@@ -70,7 +69,7 @@ address binding_type(expr const & e) {
 address binding_body(expr const & e) {
     lean_assert(is_binding(e));
     if (is_pi(e)) {
-      return address(expr_coord::pi_body);
+        return address(expr_coord::pi_body);
     } else {
         return address(expr_coord::lam_body);
     }

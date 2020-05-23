@@ -9,5 +9,5 @@ example : v2 = 10 := rfl
 
 definition v3 : nat :=
 match p1 with
-(| a, b |) := a
+⟨a, b⟩ := a
 end

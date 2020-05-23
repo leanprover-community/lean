@@ -1,0 +1,1 @@
+meta_ind_univ.lean:2:0: error: universe level of type_of(arg #1) of 'foo.mk' is too big for the corresponding inductive datatype

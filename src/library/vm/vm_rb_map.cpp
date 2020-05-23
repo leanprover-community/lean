@@ -32,6 +32,7 @@ struct vm_rb_map : public vm_external {
     virtual void dealloc() override { this->~vm_rb_map(); get_vm_allocator().deallocate(sizeof(vm_rb_map), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override;
     virtual vm_external * clone(vm_clone_fn const &) override { lean_unreachable(); }
+    virtual unsigned int hash() { return 0; }
 };
 
 /* Auxiliary object used by vm_rb_map::ts_clone.
@@ -55,6 +56,7 @@ struct vm_rb_map_ts_copy : public vm_external {
     virtual void dealloc() override { lean_unreachable(); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { lean_unreachable(); }
     virtual vm_external * clone(vm_clone_fn const &) override;
+    virtual unsigned int hash() { return 0; }
 };
 
 vm_external * vm_rb_map::ts_clone(vm_clone_fn const & fn) {
@@ -144,6 +146,7 @@ struct vm_name_set : public vm_external {
     virtual void dealloc() override { this->~vm_name_set(); get_vm_allocator().deallocate(sizeof(vm_name_set), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_name_set(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_name_set))) vm_name_set(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_name_set(vm_obj const & o) {

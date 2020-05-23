@@ -76,7 +76,7 @@ inductive todo_list_action (α : Type)
 | delete : nat → todo_list_action
 
 meta def todo_list (α : Type) [inhabited α] [decidable_eq α] [has_show_html α] [has_to_editor α] (initial : list α) : component unit empty :=
-  let starts : list (ℕ × α) := initial.mapi prod.mk in
+  let starts : list (ℕ × α) := initial.map_with_index prod.mk in
   component.mk_simple (todo_list_action α) (nat × list (nat × α))
   ⟨starts.length, starts⟩
   (λ ⟨⟩ ⟨i,items⟩ b,

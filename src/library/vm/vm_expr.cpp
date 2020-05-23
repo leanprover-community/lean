@@ -47,6 +47,7 @@ struct vm_macro_definition : public vm_external {
     }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_macro_definition(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_macro_definition))) vm_macro_definition(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 macro_definition const & to_macro_definition(vm_obj const & o) {

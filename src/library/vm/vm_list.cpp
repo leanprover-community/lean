@@ -19,10 +19,8 @@ namespace lean {
 
 template<typename T> unsigned hash(list<T> const & l) {
     unsigned int r = 023445;
-    list<T> const * it = &l;
-    while (*it) {
-        r = lean::hash(r, lean::hash(head(*it)));
-        it = &tail(*it);
+    for (T const & x : l) {
+        r = lean::hash(r, lean::hash(x));
     }
     return r;
 }

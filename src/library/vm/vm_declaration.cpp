@@ -45,6 +45,7 @@ struct vm_declaration : public vm_external {
     virtual void dealloc() override { this->~vm_declaration(); get_vm_allocator().deallocate(sizeof(vm_declaration), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_declaration(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_declaration))) vm_declaration(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_declaration(vm_obj const & o) {

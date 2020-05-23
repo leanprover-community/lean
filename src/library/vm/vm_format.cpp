@@ -145,7 +145,9 @@ struct vm_format_thunk : public vm_external {
     virtual void dealloc() override { this->~vm_format_thunk(); get_vm_allocator().deallocate(sizeof(vm_format_thunk), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_format_thunk(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_format_thunk))) vm_format_thunk(m_val); }
+    virtual unsigned hash() { return 0; }
 };
+
 
 std::function<format()> const & to_format_thunk(vm_obj const & o) {
     lean_vm_check(dynamic_cast<vm_format_thunk*>(to_external(o)));

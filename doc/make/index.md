@@ -94,7 +94,6 @@ Further Tips For Developers
 In the below tips you can replace `make` with `ninja` as needed.
 
 * To save some time when compiling: use `make bin_lean` to only compile the things needed to run lean (no tests are built).
-* Use the flag `-jn` where `n` is replaced with a number on `ctest` and `make` to run as `n` parallel processes. Eg `make -j8`.
 * Use `ctest` to run Lean's test suite. Use the flag `--output-on-failure` to output the diff of expected and produced results. Use the flag `--rerun-failed` to only run the tests that failed previously.
 * Once you have run `ctest`, you can go in `build/Debug/Testing/Temporary` and open `LastTest.log` to see a detailed report of the tests including why the style check failed.
 * Run the style check on a single file using `python src/cmake/Modules/cpplint.py my_source_file.cpp`

@@ -3,7 +3,7 @@ Widget
 
 #### Lean API
 - Add `expr.coord` and `expr.address` for reasoning about positions in expressions.
-- Add `list.mapi : (nat → α → β) → list α → list β`
+- Add `list.map_with_index : (nat → α → β) → list α → list β`
 - Add `expr.instantiate_vars_core : expr → nat → list expr → expr`
 - Split `tactic.lean` in to `tactic.lean` and `tactic_interactive.lean`.
   This is because the tactic view widget `interactive_expr.lean` needs to use some of the definitions in `tactic.lean` but

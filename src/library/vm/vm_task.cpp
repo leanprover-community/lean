@@ -31,6 +31,7 @@ struct vm_task : public vm_external {
     virtual vm_external * clone(vm_clone_fn const &) override {
         lean_unreachable();
     }
+    virtual unsigned int hash() { return 0; }
 };
 
 bool is_task(vm_obj const & o) {

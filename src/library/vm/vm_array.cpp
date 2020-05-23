@@ -43,6 +43,13 @@ struct vm_array_ts_copy : public vm_external {
     virtual void dealloc() override { lean_unreachable(); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { lean_unreachable(); }
     virtual vm_external * clone(vm_clone_fn const &) override;
+    virtual unsigned int hash() override {
+        unsigned int h = 118118;
+        for (vm_obj const & o : m_entries) {
+            h = lean::hash(h, lean::hash(o));
+        }
+        return h;
+    }
 };
 
 vm_external * vm_array::ts_clone(vm_clone_fn const & fn) {
