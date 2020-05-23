@@ -27,6 +27,7 @@ struct vm_type_context_old : public vm_external {
     virtual void dealloc() override { this->~vm_type_context_old(); get_vm_allocator().deallocate(sizeof(vm_type_context_old), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_type_context_old(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_type_context_old))) vm_type_context_old(m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 type_context_old & to_type_context_old(vm_obj const & o) {
     return static_cast<vm_type_context_old*>(to_external(o))->m_val;

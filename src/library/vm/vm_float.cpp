@@ -23,6 +23,7 @@ struct vm_float : public vm_external {
     virtual vm_external * clone(vm_clone_fn const &) override {
         return new (get_vm_allocator().allocate(sizeof(vm_float))) vm_float(m_val);
     }
+    virtual unsigned int hash() override { return std::hash<float>{}(m_val); }
 };
 
 static vm_obj mk_vm_float(float d) {

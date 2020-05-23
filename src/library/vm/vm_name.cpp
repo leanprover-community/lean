@@ -21,6 +21,7 @@ struct vm_name : public vm_external {
     virtual void dealloc() override { this->~vm_name(); get_vm_allocator().deallocate(sizeof(vm_name), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_name(m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_name))) vm_name(m_val); }
+    virtual unsigned int hash() override { return m_val.hash(); }
 };
 
 bool is_name(vm_obj const & o) {

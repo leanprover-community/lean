@@ -18,6 +18,7 @@ struct vm_throwable : public vm_external {
     virtual void dealloc() override { this->~vm_throwable(); get_vm_allocator().deallocate(sizeof(vm_throwable), this); }
     virtual vm_external * ts_clone(vm_clone_fn const &) override { return new vm_throwable(*m_val); }
     virtual vm_external * clone(vm_clone_fn const &) override { return new (get_vm_allocator().allocate(sizeof(vm_throwable))) vm_throwable(*m_val); }
+    virtual unsigned int hash() { return 0; }
 };
 
 throwable * to_throwable(vm_obj const & o) {

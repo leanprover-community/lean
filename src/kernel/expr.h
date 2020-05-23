@@ -630,6 +630,7 @@ expr const & get_app_fn(expr const & e);
 unsigned get_app_num_args(expr const & e);
 // =======================================
 
+inline unsigned hash(expr const & e) { return e.hash(); }
 // =======================================
 // Auxiliary functionals
 /** \brief Functional object for hashing kernel expressions. */

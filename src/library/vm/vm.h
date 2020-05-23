@@ -59,6 +59,11 @@ public:
 #define lean_vm_check(cond) { if (LEAN_UNLIKELY(!(cond))) vm_check_failed(#cond); }
 #endif
 
+/** Hashes a VM object. If it's a `vm_external`, then
+ * use `vm_external::hash()`.
+ * [warning] `hash()` is not implemented for all of the inheritors of `vm_external`
+ * and by default returns zero. */
+unsigned hash(vm_obj const & o);
 void display(std::ostream & out, vm_obj const & o);
 
 /** \brief VM object */
@@ -152,6 +157,8 @@ public:
     virtual ~vm_external() {}
     virtual vm_external * ts_clone(vm_clone_fn const &) = 0;
     virtual vm_external * clone(vm_clone_fn const &) = 0;
+    /** A hash function for externals so that equality of vm objects can be checked. */
+    virtual unsigned int hash() = 0;
 };
 
 /* Thread safe vm_obj, it can be used to move vm_obj's between threads.
@@ -1034,6 +1041,7 @@ environment vm_monitor_register(environment const & env, name const & d);
         virtual vm_external * clone(vm_clone_fn const &) override { \
             return new (get_vm_allocator().allocate(sizeof(vm_##name))) vm_##name(m_val); \
         } \
+        virtual unsigned int hash() { return 0; } \
     }; \
     vm_obj to_obj(cls const & val) { \
         return mk_vm_external(new (get_vm_allocator().allocate(sizeof(vm_##name))) vm_##name(val)); \
