@@ -53,7 +53,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/parser_config.h"
 #include "frontends/lean/scanner.h"
 #include "frontends/lean/tokens.h"
-#include "library/vm/vm_pp.h"
+#include "library/vm/vm_eformat.h"
 #include "library/trace.h"
 
 namespace lean {
@@ -631,19 +631,19 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> re
     if (is_app(e)) {
         if (auto r = pp_local_ref(e)){
             address_reset_scope ars(*this);
-            return of_rec(ars.m_adr, e, add_paren_if_needed(*r, bp));
+            return tag(ars.m_adr, e, add_paren_if_needed(*r, bp));
         }
         if (m_numerals) {
             if (auto n = to_num(e)) {
-                return of_rec(m_address, e, pp_num(*n, bp));
+                return tag(m_address, e, pp_num(*n, bp));
             }
         }
         if (m_strings) {
             if (auto r = to_string(e)) {
-                return of_rec(m_address, e, T(pp_string_literal(*r)));
+                return tag(m_address, e, T(pp_string_literal(*r)));
             }
             if (auto r = to_char(m_ctx, e)) {
-                return of_rec(m_address, e, T(pp_char_literal(*r)));
+                return tag(m_address, e, T(pp_char_literal(*r)));
             }
         }
         expr const & f = app_fn(e);
@@ -1485,9 +1485,9 @@ static unsigned get_some_precedence(token_table const & t, name const & tk) {
 }
 
 template<class T>
-auto pretty_fn<T>::of_rec(address const & a, expr const & e, result const & r) -> result {
+auto pretty_fn<T>::tag(address const & a, expr const & e, result const & r) -> result {
     T t = r.fmt();
-    t = of_rec(a, e, t);
+    t = tag(a, e, t);
     return r.with(t);
 }
 
@@ -1497,12 +1497,12 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp)
         if (m_numerals) {
             if (auto n = to_num(e)){
                 address_reset_scope ars(*this);
-                return of_rec(ars.m_adr, e, pp_num(*n, lbp));
+                return tag(ars.m_adr, e, pp_num(*n, lbp));
             }
         }
         if (m_strings) {
-            if (auto r = to_string(e))      return of_rec(m_address, e, T(pp_string_literal(*r)));
-            if (auto r = to_char(m_ctx, e)) return of_rec(m_address, e, T(pp_char_literal(*r)));
+            if (auto r = to_string(e))      return tag(m_address, e, T(pp_string_literal(*r)));
+            if (auto r = to_char(m_ctx, e)) return tag(m_address, e, T(pp_char_literal(*r)));
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
@@ -1917,7 +1917,7 @@ T pretty_fn<T>::pp_binder_at(expr const & local, address local_address) {
 template<class T>
 auto pretty_fn<T>::pp(expr const & e, bool ignore_hide) -> result {
     address_reset_scope ars(*this);
-    result r = of_rec(ars.m_adr, e, pp_core(e, ignore_hide));
+    result r = tag(ars.m_adr, e, pp_core(e, ignore_hide));
     return r;
 }
 template<class T>
@@ -1994,7 +1994,7 @@ pretty_fn<T>::pretty_fn(environment const & env, options const & o, abstract_typ
     m_next_meta_idx = 1;
     m_address_give_up = false;
 }
-template lean::pretty_fn<lean::magic>::pretty_fn(lean::environment const&, lean::options const&, lean::abstract_type_context&);
+template lean::pretty_fn<lean::eformat>::pretty_fn(lean::environment const&, lean::options const&, lean::abstract_type_context&);
 
 // Custom beta reduction procedure for the pretty printer.
 // We don't want to reduce application in show annotations.
@@ -2087,7 +2087,7 @@ T pretty_fn<T>::operator()(expr const & e) {
 
     return r.fmt();
 }
-template magic lean::pretty_fn<lean::magic>::operator()(lean::expr const&);
+template eformat lean::pretty_fn<lean::eformat>::operator()(lean::expr const&);
 
 
 formatter_factory mk_pretty_formatter_factory() {

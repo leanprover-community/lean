@@ -2,7 +2,7 @@
 /- This contains an experimental attempt to get pretty printing to keep expression information so that the user can hover over subterms of an expression in a widget and get information about that subterm.
 For example  -/
 prelude
-import init.meta.widget.magic_pp
+import init.meta.widget.tagged_format
 import init.meta.widget.tactic_component
 import init.meta.tactic
 import init.meta.expr_address
@@ -11,39 +11,40 @@ meta def subexpr := (expr × expr.address)
 
 namespace widget
 
-open magic
+open tagged_format
 open html attr
 
 def format.color.to_string : format.color → string
 | format.color.red := "red" | format.color.green := "green" | format.color.orange := "orange" | format.color.blue := "blue" | format.color.pink := "pink" | format.color.cyan := "cyan" | format.color.grey := "grey"
 
-/-- magic but without any of the formatting stuff like highlighting, groups etc. -/
-meta inductive sm : Type
-| tag_expr : expr.address → expr → sm → sm
-| compose : sm →  sm →  sm
-| of_string : string →  sm
-
-meta def to_simple : magic → sm
-| (magic.tag_expr ea e m) := sm.tag_expr ea e $ to_simple m
-| (magic.group m) := to_simple m
-| (magic.nest i m) := to_simple m
-| (magic.highlight i m) := to_simple m
-| (magic.format f) := sm.of_string $ format.to_string f
-| (magic.compose x y) := sm.compose (to_simple x) (to_simple y)
-
-meta def sm.flatten : sm → sm
-| (sm.tag_expr e ea m) := (sm.tag_expr e ea $ sm.flatten m)
-| (sm.compose x y) :=
-  match (sm.flatten x), (sm.flatten y) with
-  | (sm.of_string sx), (sm.of_string sy) := sm.of_string (sx ++ sy)
-  | (sm.of_string sx), (sm.compose (sm.of_string sy) z) := sm.compose (sm.of_string (sx ++ sy)) z
-  | (sm.compose x (sm.of_string sy)), (sm.of_string sz) := sm.compose x (sm.of_string (sy ++ sz))
-  | (sm.compose x (sm.of_string sy1)), (sm.compose (sm.of_string sy2) z) := sm.compose x (sm.compose (sm.of_string (sy1 ++ sy2)) z)
-  | x, y := sm.compose x y
-  end
-| (sm.of_string s) := sm.of_string s
 
 namespace interactive_expression
+
+/-- eformat but without any of the formatting stuff like highlighting, groups etc. -/
+meta inductive sf : Type
+| tag_expr : expr.address → expr → sf → sf
+| compose : sf →  sf →  sf
+| of_string : string →  sf
+
+private meta def to_simple : eformat → sf
+| (tag ⟨ea,e⟩ m) := sf.tag_expr ea e $ to_simple m
+| (group m) := to_simple m
+| (nest i m) := to_simple m
+| (highlight i m) := to_simple m
+| (format f) := sf.of_string $ format.to_string f
+| (compose x y) := sf.compose (to_simple x) (to_simple y)
+
+private meta def sf.flatten : sf → sf
+| (sf.tag_expr e ea m) := (sf.tag_expr e ea $ sf.flatten m)
+| (sf.compose x y) :=
+  match (sf.flatten x), (sf.flatten y) with
+  | (sf.of_string sx), (sf.of_string sy) := sf.of_string (sx ++ sy)
+  | (sf.of_string sx), (sf.compose (sf.of_string sy) z) := sf.compose (sf.of_string (sx ++ sy)) z
+  | (sf.compose x (sf.of_string sy)), (sf.of_string sz) := sf.compose x (sf.of_string (sy ++ sz))
+  | (sf.compose x (sf.of_string sy1)), (sf.compose (sf.of_string sy2) z) := sf.compose x (sf.compose (sf.of_string (sy1 ++ sy2)) z)
+  | x, y := sf.compose x y
+  end
+| (sf.of_string s) := sf.of_string s
 
 meta inductive action (γ : Type)
 | on_mouse_enter : subexpr → action
@@ -53,8 +54,8 @@ meta inductive action (γ : Type)
 | on_close_tooltip : action
 
 meta def view {γ} (tooltip_component : tc subexpr (action γ)) (click_address : option expr.address) (select_address : option expr.address) :
-  subexpr → sm → tactic (list (html (action γ)))
-| ⟨ce, current_address⟩ (sm.tag_expr ea e m) := do
+  subexpr → sf → tactic (list (html (action γ)))
+| ⟨ce, current_address⟩ (sf.tag_expr ea e m) := do
   let new_address := current_address ++ ea,
   let select_attrs : list (attr (action γ)) := if some new_address = select_address then [className "highlight"] else [],
   click_attrs  : list (attr (action γ)) ←
@@ -65,8 +66,8 @@ meta def view {γ} (tooltip_component : tc subexpr (action γ)) (click_address :
   let as := [className "expr-boundary", key (ea)] ++ select_attrs ++ click_attrs,
   inner ← view (e,new_address) m,
   pure [h "span" as inner]
-| ca (sm.compose x y) := pure (++) <*> view ca x <*> view ca y
-| ca (sm.of_string s) := pure
+| ca (sf.compose x y) := pure (++) <*> view ca x <*> view ca y
+| ca (sf.of_string s) := pure
   [h "span" [
     on_mouse_enter (λ _, action.on_mouse_enter ca),
     on_click (λ _, action.on_click ca),
@@ -94,8 +95,8 @@ tc.mk_simple
   )
   (λ e ⟨ca, sa⟩, do
     ts ← tactic.read,
-    let m : sm  := sm.flatten $ to_simple $ tactic_state.pp_magic ts e,
-    let m : sm  := sm.tag_expr [] e m, -- [hack] in pp.cpp I forgot to add an expr-boundary for the root expression.
+    let m : sf  := sf.flatten $ to_simple $ tactic_state.pp_tagged ts e,
+    let m : sf  := sf.tag_expr [] e m, -- [hack] in pp.cpp I forgot to add an expr-boundary for the root expression.
     v ← view tooltip_comp (prod.snd <$> ca) (prod.snd <$> sa) ⟨e, []⟩ m,
     pure $
     [ h "span" [

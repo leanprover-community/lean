@@ -221,8 +221,8 @@ protected:
             m_pfn.m_address = m_adr;
         }
     };
-    virtual T of_rec(address const & a, expr const & e, T const & result) = 0;
-    result of_rec(address const & a, expr const & e, result const & result);
+    virtual T tag(address const & a, expr const & e, T const & result) = 0;
+    result tag(address const & a, expr const & e, result const & result);
 public:
     pretty_fn(environment const & env, options const & o, abstract_type_context & ctx);
     result pp_core(expr const & e, bool ignore_hide = false);
@@ -236,7 +236,7 @@ public:
 
 /** This pretty_fn gives the same behaviour of the original pretty_fn prior to address boundaries being implemented.  */
 class plain_pretty_fn : public pretty_fn<format> {
-    format of_rec(address const &, expr const &, format const & result) { return result; }
+    format tag(address const &, expr const &, format const & result) { return result; }
 public:
     plain_pretty_fn(environment const & e, options const & o, abstract_type_context & ctx) : pretty_fn<format>(e, o, ctx) {
         m_address_give_up = true;

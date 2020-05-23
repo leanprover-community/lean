@@ -13,9 +13,10 @@ Widget
 - Add `tactic.save_widget: pos → widget.component tactic_state string → tactic unit`. Examples of widgets can be found in `library/widget/examples.lean`.
   Widgets are registered in exactly the same way as `save_info_thunk` saves text.
 - Use the `#html` command to view `html empty` or `component tactic_state string` widgets.
-- Add a 'magic' pretty printing system `tactic_state.pp_magic : tactic_state → expr → magic`.
-  `magic : Type` performs the same role as `format` except that there is a special constructor
-  `tag_expr : expr.address → expr → magic → magic` that contains information about
+- Add a 'magic' pretty printing system `tactic_state.pp_tagged : tactic_state → expr → eformat`.
+  `eformat := tagged_format (expr.address × expr)`.
+  `tagged_format α : Type` performs the same role as `format` except that there is a special constructor
+  `tag : α → tagged_format → tagged_format` that contains information about
   which subexpression caused this string to be rendered.
   This is used to implement a widget which allows the user to hover over a pretty printed string
   and view information about the subexpressions that build up the original expression.
@@ -33,8 +34,8 @@ Widget
 - Overhaul pretty printer so that it can
   provide information about expression addresses.
   This required making it templated to output `T` instead of `format`.
-  Currently `T` may be instantiated with `lean::format` or `lean::magic`.
-  See src/library/vm/vm_pp and
+  Currently `T` may be instantiated with `lean::format` or `lean::eformat`.
+  See src/library/vm/vm_eformat and
 - Info manager now supports widgets.
 - Server `info` response may now include a `"widget"` field on the returned `"record"` json.
 - Server has a new command `widget_event` to enable interactive widgets
