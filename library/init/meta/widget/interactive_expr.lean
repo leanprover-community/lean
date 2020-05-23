@@ -1,4 +1,9 @@
-/- Author: E.W.Ayers -/
+/-
+Copyright (c) E.W.Ayers. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+
+Author: E.W.Ayers
+-/
 /- This contains an experimental attempt to get pretty printing to keep expression information so that the user can hover over subterms of an expression in a widget and get information about that subterm.
 For example  -/
 prelude

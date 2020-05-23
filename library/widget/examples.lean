@@ -1,6 +1,9 @@
-/- Author: E.W.Ayers
-Some components for testing and as examples.
- -/
+/-
+Copyright (c) E.W.Ayers. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+
+Author: E.W.Ayers
+-/
 namespace widget
 
 meta class has_show_html (π : Type) :=
