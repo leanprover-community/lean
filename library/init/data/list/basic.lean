@@ -116,6 +116,15 @@ def reverse : list α → list α :=
 | _       []      := []
 | (x::xs) (y::ys) := f x y :: map₂ xs ys
 
+def map_with_index_core (f : ℕ → α → β) : ℕ → list α → list β
+| k []      := []
+| k (a::as) := f k a::(map_with_index_core (k+1) as)
+
+/-- Given a function `f : ℕ → α → β` and `as : list α`, `as = [a₀, a₁, ...]`, returns the list
+`[f 0 a₀, f 1 a₁, ...]`. -/
+def map_with_index (f : ℕ → α → β) (as : list α) : list β :=
+map_with_index_core f 0 as
+
 def join : list (list α) → list α
 | []        := []
 | (l :: ls) := l ++ join ls
