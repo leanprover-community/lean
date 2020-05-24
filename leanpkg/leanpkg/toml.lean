@@ -34,7 +34,7 @@ private def escape (s : string) : string :=
 s.fold "" (λ s c, s ++ escapec c)
 
 /- TODO(Leo): has_to_string -/
-private mutual def repr_core, repr_pairs
+private meta mutual def repr_core, repr_pairs
 with repr_core : value → string
 | (value.str s)    := "\"" ++ escape s ++ "\""
 | (value.nat n)    := repr n
@@ -46,7 +46,7 @@ with repr_pairs : list (string × value) → string
 | [(k, v)]         := k ++ " = " ++ repr_core v
 | ((k, v)::kvs)    := k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
 
-protected def repr : ∀ (v : value), string
+protected meta def repr : ∀ (v : value), string
 | (table cs) := join "\n" $ do (h, c) ← cs,
   match c with
   | table ds :=
@@ -58,7 +58,7 @@ protected def repr : ∀ (v : value), string
 | v := repr_core v
 
 /- TODO(Leo): has_to_string -/
-instance : has_repr value :=
+meta instance : has_repr value :=
 ⟨value.repr⟩
 
 def lookup : value → string → option value

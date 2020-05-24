@@ -73,9 +73,10 @@ Generate random values until we exceed the target magnitude.
 `gen_lo` and `gen_mag` are the generator lower bound and magnitude.
 The parameter `r` is the "remaining" magnitude.
 -/
-private def rand_nat_aux {gen : Type u} [random_gen gen] (gen_lo gen_mag : nat) (h : gen_mag > 0) : nat → nat → gen → nat × gen
-| 0        v g := (v, g)
-| r'@(r+1) v g :=
+private def rand_nat_aux {gen : Type u} [random_gen gen] (gen_lo gen_mag : nat) (h : gen_mag > 0) :
+  nat → nat → gen → nat × gen
+| 0        := prod.mk
+| r'@(r+1) := λ v g,
   let (x, g') := random_gen.next g,
       v'      := v*gen_mag + (x - gen_lo)
   in have r' / gen_mag - 1 < r',
@@ -83,7 +84,8 @@ private def rand_nat_aux {gen : Type u} [random_gen gen] (gen_lo gen_mag : nat) 
        by_cases h : (r + 1) / gen_mag = 0,
        { rw [h], simp, apply nat.zero_lt_succ },
        { have : (r + 1) / gen_mag > 0, from nat.pos_of_ne_zero h,
-         have h₁ : (r + 1) / gen_mag - 1 < (r + 1) / gen_mag, { apply nat.sub_lt, assumption, tactic.comp_val },
+         have h₁ : (r + 1) / gen_mag - 1 < (r + 1) / gen_mag,
+          { apply nat.sub_lt, assumption, tactic.comp_val },
          have h₂ : (r + 1) / gen_mag ≤ r + 1, { apply nat.div_le_self },
          exact lt_of_lt_of_le h₁ h₂ }
      end,
