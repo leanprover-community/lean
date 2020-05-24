@@ -41,17 +41,52 @@ with repr_core : value → string
 | (value.bool tt)  := "true"
 | (value.bool ff)  := "false"
 | (value.table cs) :=
--- have sizeof (psum.inr cs) < sizeof (psum.inl (table cs)), from sorry,
   have sizeof (@psum.inr value (list (string × value)) cs) < sizeof
     (@psum.inl value (list (string × value)) (table cs)) :=
   begin
-    sorry
+    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof,
+    apply nat.add_lt_add_left,
+    rw [nat.add_comm],
+    exact nat.lt_succ_self _,
   end,
   "{" ++ repr_pairs cs ++ "}"
 with repr_pairs : list (string × value) → string
 | []               := ""
-| [(k, v)]         := k ++ " = " ++ repr_core v
-| ((k, v)::kvs)    := k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
+| [(k, v)]         :=
+  have sizeof (@psum.inl value (list (string × value)) v) < sizeof
+    (@psum.inr value (list (string × value)) [(k, v)]) :=
+  begin
+    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
+    apply nat.add_lt_add_left,
+    apply nat.lt_succ_of_lt,
+    rw [nat.add_comm],
+    apply nat.lt_succ_of_lt,
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  k ++ " = " ++ repr_core v
+| ((k, v)::kvs)    :=
+  have sizeof (@psum.inl value (list (string × value)) v) < sizeof
+    (@psum.inr value (list (string × value)) ((k, v):: kvs)) :=
+  begin
+    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
+    apply nat.add_lt_add_left,
+    rw [←nat.add_assoc, nat.add_comm, ←nat.add_assoc],
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm, nat.add_assoc, nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  have sizeof (@psum.inr value (list (string × value)) kvs) < sizeof
+    (@psum.inr value (list (string × value)) ((k, v):: kvs)) :=
+  begin
+    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
+    apply nat.add_lt_add_left,
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
 
 protected def repr : ∀ (v : value), string
 | (table cs) := join "\n" $ do (h, c) ← cs,
