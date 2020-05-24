@@ -32,21 +32,28 @@ private def escapec : char → string
 
 private def escape (s : string) : string :=
 s.fold "" (λ s c, s ++ escapec c)
-
+set_option pp.implicit false
 /- TODO(Leo): has_to_string -/
-private meta mutual def repr_core, repr_pairs
+private mutual def repr_core, repr_pairs
 with repr_core : value → string
 | (value.str s)    := "\"" ++ escape s ++ "\""
 | (value.nat n)    := repr n
 | (value.bool tt)  := "true"
 | (value.bool ff)  := "false"
-| (value.table cs) := "{" ++ repr_pairs cs ++ "}"
+| (value.table cs) :=
+-- have sizeof (psum.inr cs) < sizeof (psum.inl (table cs)), from sorry,
+  have sizeof (@psum.inr value (list (string × value)) cs) < sizeof
+    (@psum.inl value (list (string × value)) (table cs)) :=
+  begin
+    sorry
+  end,
+  "{" ++ repr_pairs cs ++ "}"
 with repr_pairs : list (string × value) → string
 | []               := ""
 | [(k, v)]         := k ++ " = " ++ repr_core v
 | ((k, v)::kvs)    := k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
 
-protected meta def repr : ∀ (v : value), string
+protected def repr : ∀ (v : value), string
 | (table cs) := join "\n" $ do (h, c) ← cs,
   match c with
   | table ds :=
@@ -58,7 +65,7 @@ protected meta def repr : ∀ (v : value), string
 | v := repr_core v
 
 /- TODO(Leo): has_to_string -/
-meta instance : has_repr value :=
+instance : has_repr value :=
 ⟨value.repr⟩
 
 def lookup : value → string → option value
