@@ -280,7 +280,7 @@ meta instance {α} (a : α) : has_to_format (reflected a) :=
 namespace expr
 open decidable
 
-meta def expr.lt_prop (a b : expr) : Prop :=
+meta def lt_prop (a b : expr) : Prop :=
 expr.lt a b = tt
 
 meta instance : decidable_rel expr.lt_prop :=
