@@ -381,10 +381,13 @@ void server_dump_log_tree() {
 void server_print_roi() {
     auto roi = g_server->get_roi();
     std::cerr << "mode: " << roi.m_check_mode << std::endl;
-    for (auto & f : *roi.m_open_files) {
-        std::cerr << f.first << std::endl;
-        for (auto & lr : f.second) {
-            std::cerr << " " << lr.m_begin_line << "-" << lr.m_end_line << std::endl;
+    if (roi.m_open_files) {
+        for (auto & f : *roi.m_open_files) {
+            std::cerr << f.first << " : ";
+            for (auto & lr : f.second) {
+                std::cerr << lr.m_begin_line << "-" << lr.m_end_line << " ; ";
+            }
+            std::cerr << std::endl;
         }
     }
 }
@@ -496,11 +499,20 @@ server::cmd_res server::handle_sync(server::cmd_req const & req) {
 
     bool needs_invalidation = true;
 
+    if (!m_open_files.count(new_file_name)) {
+        // We just opened a new file. If it has a version on-disk which is the same,
+        // don't invalidate it.
+        try {
+            bool is_same_as_on_disk = equal_upto_cr(m_fs_vfs.load_module(new_file_name, false)->m_contents, new_content);
+            if (is_same_as_on_disk) {
+                needs_invalidation = false;
+            }
+        } catch(...) {}
+    }
     auto & ef = m_open_files[new_file_name];
     if (ef.m_src_hash != new_hash) {
         ef.m_content = new_content;
         ef.m_src_hash = new_hash;
-        needs_invalidation = true;
     } else {
         needs_invalidation = false;
     }
