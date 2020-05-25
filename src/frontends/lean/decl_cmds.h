@@ -23,7 +23,7 @@ bool parse_univ_params(parser & p, buffer<name> & ps);
 void update_univ_parameters(buffer<name> & ls_buffer, name_set const & found_ls, parser const & p);
 
 /** \brief Parse a local attribute command */
-environment local_attribute_cmd(parser & p);
+environment local_attribute_cmd(parser & p, cmd_meta const & meta);
 void register_decl_cmds(cmd_table & r);
 
 void initialize_decl_cmds();

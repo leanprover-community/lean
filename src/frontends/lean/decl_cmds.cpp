@@ -530,13 +530,13 @@ static environment modifiers_cmd(parser & p, cmd_meta const & _meta) {
     return p.env();
 }
 
-static environment attribute_cmd_core(parser & p, bool persistent) {
+static environment attribute_cmd_core(parser & p, bool persistent, cmd_meta const & meta) {
     buffer<name> ds;
     decl_attributes attributes(persistent);
     attributes.parse(p);
     // 'attribute [attr] definition ...'
     if (p.curr_is_command()) {
-        return modifiers_cmd(p, {attributes, {}, {}});
+        return modifiers_cmd(p, {attributes, meta.m_modifiers, meta.m_doc_string});
     }
     do {
         auto pos = p.pos();
@@ -553,12 +553,12 @@ static environment attribute_cmd_core(parser & p, bool persistent) {
     return env;
 }
 
-static environment attribute_cmd(parser & p) {
-    return attribute_cmd_core(p, true);
+static environment attribute_cmd(parser & p, cmd_meta const & meta) {
+    return attribute_cmd_core(p, true, meta);
 }
 
-environment local_attribute_cmd(parser & p) {
-    return attribute_cmd_core(p, false);
+environment local_attribute_cmd(parser & p, cmd_meta const & meta) {
+    return attribute_cmd_core(p, false, meta);
 }
 
 static environment compact_attribute_cmd(parser & p, cmd_meta const & meta) {
