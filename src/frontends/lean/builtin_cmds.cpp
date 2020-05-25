@@ -346,10 +346,10 @@ environment open_export_cmd(parser & p, bool open) {
 static environment open_cmd(parser & p) { return open_export_cmd(p, true); }
 static environment export_cmd(parser & p) { return open_export_cmd(p, false); }
 
-static environment local_cmd(parser & p) {
+static environment local_cmd(parser & p, cmd_meta const & meta) {
     if (p.curr_is_token_or_id(get_attribute_tk())) {
         p.next();
-        return local_attribute_cmd(p);
+        return local_attribute_cmd(p, meta);
     } else {
         return local_notation_cmd(p);
     }
