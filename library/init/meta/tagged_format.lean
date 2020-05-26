@@ -9,8 +9,10 @@ import init.meta.tactic
 import init.meta.expr_address
 import init.control
 
+universe u
+
 /-- An alternative to format that keeps structural information stored as a tag. -/
-meta inductive tagged_format (α : Type)
+meta inductive tagged_format (α : Type u)
 | tag       : α → tagged_format → tagged_format
 | compose   : tagged_format → tagged_format → tagged_format
 | group     : tagged_format → tagged_format
@@ -20,7 +22,7 @@ meta inductive tagged_format (α : Type)
 
 namespace tagged_format
 
-variables {α β : Type}
+variables {α β : Type u}
 
 protected meta def map (f : α → β) : tagged_format α → tagged_format β
 | (compose x y)   := compose (map x) (map y)
