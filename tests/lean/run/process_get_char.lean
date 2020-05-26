@@ -1,6 +1,6 @@
 import system.io
 
-def data := "01β3456789012345678901234567890"
+def data := "0123456789012345678901234567890"
 
 meta def main := do
 child ← io.proc.spawn {
