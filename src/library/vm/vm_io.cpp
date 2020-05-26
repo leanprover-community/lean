@@ -353,29 +353,43 @@ static vm_obj monad_io_net_system_impl () {
 static vm_obj fs_read(vm_obj const & h, vm_obj const & n, vm_obj const &) {
     handle_ref const & href = to_handle(h);
     if (href->is_closed()) return mk_handle_has_been_closed_error();
-    buffer<char> tmp;
     unsigned num = force_to_unsigned(n); /* TODO(Leo): handle size_t */
-    size_t bytes = num * (href->m_binary ? 1 : 4);
-    tmp.resize(bytes, 0);
-    size_t sz = fread(tmp.data(), 1, bytes, href->m_file);
-    if (ferror(href->m_file)) {
-        clearerr(href->m_file);
-        return mk_io_failure("read failed");
-    }
     parray<vm_obj> r;
     if (href->m_binary) {
+        buffer<char> tmp;
+        size_t bytes = num;
+        tmp.resize(bytes, 0);
+        size_t sz = fread(tmp.data(), 1, bytes, href->m_file);
+        if (ferror(href->m_file)) {
+            clearerr(href->m_file);
+            return mk_io_failure("read failed");
+        }
         for (size_t i = 0; i < sz; i++) {
             r.push_back(mk_vm_simple(static_cast<unsigned char>(tmp[i])));
         }
     } else {
-        size_t i = 0;
-        for (size_t chars = 0; chars < num && i < sz; chars++) {
-            r.push_back(mk_vm_simple(next_utf8_buff(tmp.data(), sz, i)));
-        }
+        for (size_t chars = 0; chars < num; chars++) {
+            int first = fgetc(href->m_file);
+            if (first == EOF) break;
+            if (ferror(href->m_file)) {
+                clearerr(href->m_file);
+                return mk_io_failure("read failed");
+            }
 
-        size_t extra = static_cast<size_t>(sz - i);
-        if (extra > 0) {
-            fseek(href->m_file, -extra, SEEK_CUR);
+            unsigned utf8_size = get_utf8_size(first);
+            if (utf8_size > 1) {
+                char cs[8];
+                lean_assert(utf8_size < sizeof(cs));
+                cs[0] = first;
+                if (fread(cs + 1, 1, utf8_size - 1, href->m_file) != utf8_size - 1 || ferror(href->m_file)) {
+                    clearerr(href->m_file);
+                    return mk_io_failure("read failed");
+                }
+                size_t i = 0;
+                r.push_back(mk_vm_simple(next_utf8_buff(cs, utf8_size, i)));
+            } else {
+                r.push_back(mk_vm_simple(first));
+            }
         }
     }
     return mk_io_result(mk_buffer(r));

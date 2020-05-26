@@ -56,6 +56,7 @@ private:
     unsigned          m_depth{0};
 
     bool              m_uses_infom;
+    bool              m_term_goals = true;
     bool              m_coercions;
 
     struct snapshot {

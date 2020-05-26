@@ -7,7 +7,7 @@ Author: E.W.Ayers
 prelude
 import init.meta.tactic
 import init.meta.expr_address
-import init.control.id
+import init.control
 
 universe u
 

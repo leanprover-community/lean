@@ -81,6 +81,31 @@ widget_info const * is_widget_info(info_data const & d) {
 }
 
 
+class term_goal_data : public info_data_cell {
+    pos_info m_pos;
+    tactic_state m_state;
+
+public:
+    term_goal_data(tactic_state const & s, pos_info const & pos) : m_pos(pos), m_state(s) {}
+
+    virtual void instantiate_mvars(metavar_context const & mctx0) override {
+        if (auto goal = m_state.get_main_goal_decl()) {
+            auto mctx = mctx0;
+            expr new_goal = mctx.mk_metavar_decl(goal->get_context(), goal->get_type());
+            m_state = set_mctx_goals(m_state, mctx, list<expr>(new_goal));
+        }
+    }
+
+#ifdef LEAN_JSON
+    virtual void report(io_state_stream const &, json & record) const override {
+        record["state"] = (sstream() << m_state.pp()).str();
+    }
+#endif
+
+    tactic_state const & get_tactic_state() const { return m_state; }
+    pos_info const & get_pos() const { return m_pos; }
+};
+
 #ifdef LEAN_JSON
 void vm_obj_format_info::report(io_state_stream const & ios, json & record) const {
     if (!m_cache) {
@@ -160,6 +185,9 @@ info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj c
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
     return info_data(new hole_info_data(s, hole_args, begin, end));
 }
+info_data mk_term_goal(pos_info const & pos, tactic_state const & s) {
+    return info_data(new term_goal_data(s, pos));
+}
 
 void info_manager::add_info(pos_info pos, info_data data) {
 #ifdef LEAN_NO_INFO
@@ -236,11 +264,11 @@ void info_manager::add_vm_obj_format_info(pos_info pos, environment const & env,
     add_info(pos, mk_vm_obj_format_info(env, thunk));
 }
 
-void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj const & widget) {
+void info_manager::add_term_goal(pos_info const & pos, tactic_state const & s) {
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_info(tactic::to_state(props).env(), props, widget));
+    add_info(pos, mk_term_goal(pos, s));
 }
 
 #ifdef LEAN_JSON

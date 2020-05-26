@@ -2024,7 +2024,7 @@ static expr ground_uvars(expr const & e) {
 
 expr elaborator::visit_by(expr const & e, optional<expr> const & expected_type) {
     lean_assert(is_by(e));
-    expr tac = strict_visit(get_by_arg(e), none_expr());
+    expr tac = (flet<bool>(m_term_goals, false), strict_visit(get_by_arg(e), none_expr()));
     tac = ground_uvars(tac);
     expr const & ref = e;
     expr mvar        = mk_metavar(expected_type, ref);
@@ -3555,7 +3555,7 @@ expr elaborator::visit(expr const & e, optional<expr> const & expected_type) {
     flet<unsigned> inc_depth(m_depth, m_depth+1);
     trace_elab_detail(tout() << "[" << m_depth << "] visiting\n" << e << "\n";
                       if (expected_type) tout() << "expected type:\n" << instantiate_mvars(*expected_type) << "\n";);
-    return recover_expr_from_exception(expected_type, e, [&] () -> expr {
+    auto result = recover_expr_from_exception(expected_type, e, [&] () -> expr {
         if (is_placeholder(e)) {
             return visit_placeholder(e, expected_type);
         } else if (is_have_expr(e)) {
@@ -3594,6 +3594,19 @@ expr elaborator::visit(expr const & e, optional<expr> const & expected_type) {
             lean_unreachable(); // LCOV_EXCL_LINE
         }
     });
+    if (m_uses_infom && m_term_goals) {
+        try {
+            if (auto pip = get_pos_info_provider()) {
+                if (auto pos = pip->get_pos_info(e)) {
+                    auto type = expected_type ? *expected_type : infer_type(result);
+                    type = m_ctx.instantiate_mvars(type);
+                    auto s = ::lean::mk_tactic_state_for(m_env, m_opts, m_decl_name, m_ctx.mctx(), m_ctx.lctx(), type);
+                    m_info.add_term_goal(*pos, s);
+                }
+            }
+        } catch (exception &) {}
+    }
+    return result;
 }
 
 expr elaborator::get_default_numeral_type() {

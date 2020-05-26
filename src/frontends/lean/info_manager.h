@@ -136,6 +136,7 @@ public:
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
     void add_widget_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
+    void add_term_goal(pos_info const & pos, tactic_state const & s);
 
     line_info_data_set get_line_info_set(unsigned l) const;
     rb_map<unsigned, line_info_data_set, unsigned_cmp> const & get_line_info_sets() const { return m_line_data; }
