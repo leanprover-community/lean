@@ -1230,6 +1230,11 @@ struct vm_decls : public environment_extension {
                 } else { return optional<expr>(); } });
     }
 
+    optional<vm_decl> get_decl_no_override(name const & n) {
+        vm_decl const * d = m_decls.find(get_vm_index(n));
+        return !d ? optional<vm_decl>() : some<vm_decl>(*d);
+    }
+
     void add_override(name const & n, name const & n_override) {
         auto idx = get_vm_index(n);
         auto idx_override = get_vm_index(n_override);
@@ -1298,40 +1303,7 @@ struct vm_type_checker {
     }
 };
 
-environment add_override(environment const & env, name const & n, name const & n_ovr, optional<name> const & ns) {
-    auto ext = get_extension(env);
-    vm_type_checker checker(env, ext);
-    auto t = env.get(n).get_type();
-    checker(n, n_ovr);
-    ext.add_override(n, n_ovr);
-    optional<inductive::inductive_decl> decl = inductive::is_inductive_decl(env, n);
-    if (is_type(t)) {
-        if (!decl && !env.get(n).is_constant_assumption()) {
-            throw exception(sstream() << "overridden type '" << n << "' is neither an inductive type nor a constant.");
-        }
-        if (decl) {
-            if (!ns) {
-                throw exception(sstream() << "overridden inductive type '" << n <<
-                                "' must specify a namespace which contains overrides for its recursor and constructors.");
-            }
-            for (auto intro : decl->m_intro_rules) {
-                name n = mlocal_pp_name(intro);
-                name n_ovr(*ns + n.drop_prefix());
-                checker(n, n_ovr);
-                ext.add_override(n, n_ovr);
-            }
-            name rec = inductive::get_elim_name(n);
-            name rec_ovr(*ns, "rec");
-            checker(rec, rec_ovr);
-            ext.add_override(rec, rec_ovr);
-            name destr = inductive::get_cases_on_name(n);
-            name destr_ovr(*ns, "cases_on");
-            checker(destr, destr_ovr);
-            ext.add_override(destr, destr_ovr);
-        }
-    }
-    return update(env, ext);
-}
+
 
 static environment add_native(environment const & env, name const & n, unsigned arity, vm_cfunction fn) {
     auto ext = get_extension(env);
@@ -1525,6 +1497,44 @@ environment add_vm_code(environment const & env, name const & fn, unsigned arity
                         bool enable_overrides) {
     environment new_env = reserve_vm_index(env, fn, arity);
     return update_vm_code(new_env, fn, code_sz, code, args_info, pos, enable_overrides);
+}
+
+environment add_override(environment const & env, name const & n, name const & n_ovr, optional<name> const & ns) {
+    auto ext = get_extension(env);
+    vm_type_checker checker(env, ext);
+    auto t = env.get(n).get_type();
+    checker(n, n_ovr);
+    ext.add_override(n, n_ovr);
+    optional<inductive::inductive_decl> decl = inductive::is_inductive_decl(env, n);
+    if (is_type(t)) {
+        if (!decl && !env.get(n).is_constant_assumption()) {
+            throw exception(sstream() << "overridden type '" << n << "' is neither an inductive type nor a constant.");
+        }
+        if (decl) {
+            if (!ns) {
+                throw exception(sstream() << "overridden inductive type '" << n <<
+                                "' must specify a namespace which contains overrides for its recursor and constructors.");
+            }
+            for (auto intro : decl->m_intro_rules) {
+                name n = mlocal_pp_name(intro);
+                name n_ovr(*ns + n.drop_prefix());
+                checker(n, n_ovr);
+                ext.add_override(n, n_ovr);
+            }
+            name rec = inductive::get_elim_name(n);
+            name rec_ovr(*ns, "rec");
+            checker(rec, rec_ovr);
+            ext.add_override(rec, rec_ovr);
+            name destr = inductive::get_cases_on_name(n);
+            name destr_ovr(*ns, "cases_on");
+            checker(destr, destr_ovr);
+            ext.add_override(destr, destr_ovr);
+        }
+    }
+    environment new_env = update(env, ext);
+    optional<vm_decl> d = ext.get_decl_no_override(n);
+    if (!d) {return new_env; }
+    return module::add_and_perform(new_env, std::make_shared<vm_code_modification>(*d));
 }
 
 optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl,
