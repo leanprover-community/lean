@@ -62,20 +62,6 @@ public:
     pos_info const & get_end_pos() const { return m_end_pos; }
 };
 
-class term_goal_data : public info_data_cell {
-    pos_info m_pos;
-    tactic_state m_state;
-
-public:
-    term_goal_data(tactic_state const & s, pos_info const & pos) : m_pos(pos), m_state(s) {}
-
-#ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) const override;
-#endif
-    tactic_state const & get_tactic_state() const { return m_state; }
-    pos_info const & get_pos() const { return m_pos; }
-};
-
 class info_data {
 private:
     info_data_cell * m_ptr;

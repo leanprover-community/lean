@@ -17,3 +17,10 @@ example (p q r : Prop) : p → (p ∧ q → r) → q → r :=
 example (p q : Prop) : (p → p → q) → p → q :=
 λ hppq, by intro hp; apply hppq hp; assumption
                         --^ "command":"info"
+
+example (p : Prop) : p → p := λ h, h
+                              --^ "command": "info"
+
+example (p q : Prop) : p → q → true ∧ p ∧ q :=
+by intros; refine (and.intro true.intro (and.intro _ _) : _); assumption
+                                        --^ "command": "info"

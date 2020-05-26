@@ -64,12 +64,6 @@ void hole_info_data::report(io_state_stream const & ios, json & record) const {
 }
 #endif
 
-#ifdef LEAN_JSON
-void term_goal_data::report(io_state_stream const & ios, json & record) const {
-    record["state"] = (sstream() << m_state.pp()).str();
-}
-#endif
-
 hole_info_data const * is_hole_info_data(info_data const & d) {
     return dynamic_cast<hole_info_data const *>(d.raw());
 }
@@ -78,6 +72,31 @@ hole_info_data const & to_hole_info_data(info_data const & d) {
     lean_assert(is_hole_info_data(d));
     return *static_cast<hole_info_data const *>(d.raw());
 }
+
+class term_goal_data : public info_data_cell {
+    pos_info m_pos;
+    tactic_state m_state;
+
+public:
+    term_goal_data(tactic_state const & s, pos_info const & pos) : m_pos(pos), m_state(s) {}
+
+    virtual void instantiate_mvars(metavar_context const & mctx0) override {
+        if (auto goal = m_state.get_main_goal_decl()) {
+            auto mctx = mctx0;
+            expr new_goal = mctx.mk_metavar_decl(goal->get_context(), goal->get_type());
+            m_state = set_mctx_goals(m_state, mctx, list<expr>(new_goal));
+        }
+    }
+
+#ifdef LEAN_JSON
+    virtual void report(io_state_stream const &, json & record) const override {
+        record["state"] = (sstream() << m_state.pp()).str();
+    }
+#endif
+
+    tactic_state const & get_tactic_state() const { return m_state; }
+    pos_info const & get_pos() const { return m_pos; }
+};
 
 #ifdef LEAN_JSON
 void vm_obj_format_info::report(io_state_stream const & ios, json & record) const {
