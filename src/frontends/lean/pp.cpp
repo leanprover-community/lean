@@ -609,7 +609,8 @@ auto pretty_fn<T>::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hid
         expr new_e = mk_app(args.size() - 3, args.data() + 3);
         // new_e = f x y z
         // [todo] pp_child needs to know that `f` now has a different address.
-        // Currently this will calculate the wrong address and cause bugs.
+        // Currently this will calculate the wrong address and cause bugs so we should give up for now.
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
@@ -623,6 +624,7 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     } else {
         expr new_e = mk_app(args.size() - 2, args.data() + 2);
         // [todo] pp_child needs to know that `f` now has a different address. (see above)
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
