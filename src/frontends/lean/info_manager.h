@@ -62,6 +62,20 @@ public:
     pos_info const & get_end_pos() const { return m_end_pos; }
 };
 
+class term_goal_data : public info_data_cell {
+    pos_info m_pos;
+    tactic_state m_state;
+
+public:
+    term_goal_data(tactic_state const & s, pos_info const & pos) : m_pos(pos), m_state(s) {}
+
+#ifdef LEAN_JSON
+    virtual void report(io_state_stream const & ios, json & record) const override;
+#endif
+    tactic_state const & get_tactic_state() const { return m_state; }
+    pos_info const & get_pos() const { return m_pos; }
+};
+
 class info_data {
 private:
     info_data_cell * m_ptr;
@@ -108,6 +122,7 @@ public:
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
+    void add_term_goal(pos_info const & pos, tactic_state const & s);
 
     line_info_data_set get_line_info_set(unsigned l) const;
     rb_map<unsigned, line_info_data_set, unsigned_cmp> const & get_line_info_sets() const { return m_line_data; }
