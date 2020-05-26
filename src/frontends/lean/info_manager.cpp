@@ -64,6 +64,12 @@ void hole_info_data::report(io_state_stream const & ios, json & record) const {
 }
 #endif
 
+#ifdef LEAN_JSON
+void term_goal_data::report(io_state_stream const & ios, json & record) const {
+    record["state"] = (sstream() << m_state.pp()).str();
+}
+#endif
+
 hole_info_data const * is_hole_info_data(info_data const & d) {
     return dynamic_cast<hole_info_data const *>(d.raw());
 }
@@ -92,6 +98,9 @@ info_data mk_identifier_info(name const & full_id) { return info_data(new identi
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) { return info_data(new vm_obj_format_info(env, thunk)); }
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
     return info_data(new hole_info_data(s, hole_args, begin, end));
+}
+info_data mk_term_goal(pos_info const & pos, tactic_state const & s) {
+    return info_data(new term_goal_data(s, pos));
 }
 
 void info_manager::add_info(pos_info pos, info_data data) {
@@ -167,6 +176,13 @@ void info_manager::add_vm_obj_format_info(pos_info pos, environment const & env,
     return;
 #endif
     add_info(pos, mk_vm_obj_format_info(env, thunk));
+}
+
+void info_manager::add_term_goal(pos_info const & pos, tactic_state const & s) {
+#ifdef LEAN_NO_INFO
+    return;
+#endif
+    add_info(pos, mk_term_goal(pos, s));
 }
 
 #ifdef LEAN_JSON
