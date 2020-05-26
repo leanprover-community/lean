@@ -1003,9 +1003,9 @@ T pretty_fn<T>::pp_binder_block(buffer<name> const & names, expr const & type, b
         r += T(open_binder_string(bi, m_unicode));
     for (name const & n : names) {
         r += escape(n);
+        r += space();
     }
     if (m_binder_types) {
-        r += space();
         r += compose(colon(), nest(m_indent, compose(line(), pp_child(type, 0).fmt())));
     }
     if (m_binder_types || bi != binder_info())
