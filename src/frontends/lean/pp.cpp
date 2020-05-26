@@ -609,7 +609,8 @@ auto pretty_fn<T>::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hid
         expr new_e = mk_app(args.size() - 3, args.data() + 3);
         // new_e = f x y z
         // [todo] pp_child needs to know that `f` now has a different address.
-        // Currently this will calculate the wrong address and cause bugs.
+        // Currently this will calculate the wrong address and cause bugs so we should give up for now.
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
@@ -623,6 +624,7 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     } else {
         expr new_e = mk_app(args.size() - 2, args.data() + 2);
         // [todo] pp_child needs to know that `f` now has a different address. (see above)
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
@@ -1003,9 +1005,9 @@ T pretty_fn<T>::pp_binder_block(buffer<name> const & names, expr const & type, b
         r += T(open_binder_string(bi, m_unicode));
     for (name const & n : names) {
         r += escape(n);
+        r += space();
     }
     if (m_binder_types) {
-        r += space();
         r += compose(colon(), nest(m_indent, compose(line(), pp_child(type, 0).fmt())));
     }
     if (m_binder_types || bi != binder_info())
@@ -2097,7 +2099,7 @@ formatter_factory mk_pretty_formatter_factory() {
         return formatter(o, [=](expr const & e, options const & new_o) {
                 fn_ptr->set_options(new_o);
                 auto res = (*fn_ptr)(e);
-    // insert spaces so that lexing the result round-trips
+                // insert spaces so that lexing the result round-trips
                 std::function<bool(sexpr const &, sexpr const &)> sep; // NOLINT
                 token_table const * last = nullptr;
                 sep = [&](sexpr const & s1, sexpr const & s2) {

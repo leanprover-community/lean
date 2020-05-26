@@ -46,11 +46,6 @@ eformat highlight(eformat const & f, format::format_color const c = format::RED)
 
 eformat bracket(std::string const & l, eformat const & x, std::string const & r);
 eformat paren(eformat const & x);
-// eformat above(eformat const & f1, eformat const & f2);
-// eformat wrap(eformat const & f1, eformat const & f2);
-// eformat highlight_keyword(eformat const & f);
-// eformat highlight_builtin(eformat const & f);
-// eformat highlight_command(eformat const & f);
 
 class eformat_pretty_fn : public pretty_fn<eformat> {
     eformat tag(address const & a, expr const & e, eformat const & result) {

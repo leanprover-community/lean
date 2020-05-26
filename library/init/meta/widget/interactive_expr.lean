@@ -4,10 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-/- This contains an experimental attempt to get pretty printing to keep expression information so that the user can hover over subterms of an expression in a widget and get information about that subterm.
-For example  -/
 prelude
-import init.meta.widget.tagged_format
+import init.meta.tagged_format
 import init.meta.widget.tactic_component
 import init.meta.tactic
 import init.meta.expr_address
@@ -36,7 +34,7 @@ private meta def to_simple : eformat → sf
 | (group m) := to_simple m
 | (nest i m) := to_simple m
 | (highlight i m) := to_simple m
-| (format f) := sf.of_string $ format.to_string f
+| (of_format f) := sf.of_string $ format.to_string f
 | (compose x y) := sf.compose (to_simple x) (to_simple y)
 
 private meta def sf.flatten : sf → sf

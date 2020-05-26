@@ -43,7 +43,7 @@ eformat highlight(eformat const & f, format::format_color const c) {
     return eformat(mk_vm_constructor(4, mk_vm_simple(unsigned(c)), f.m_o));
 }
 
-// [fixme] these are copied from format.cpp
+// [NOTE] these are copied from format.cpp
 eformat bracket(std::string const & l, eformat const & x, std::string const & r) {
     return group(nest(l.size(), eformat(l) + x + eformat(r)));
 }
