@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
+import widget.tactic_component
 namespace widget
 
 meta class has_show_html (π : Type) :=

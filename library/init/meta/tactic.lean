@@ -83,6 +83,47 @@ meta def {u₁ u₂} tactic.down {α : Type u₂} (t : tactic (ulift.{u₁} α))
 | exception t ref s       := exception t ref s
 end
 
+namespace interactive
+
+/-- Typeclass for custom interaction monads, which provides
+    the information required to convert an interactive-mode
+    construction to a `tactic` which can actually be executed.
+
+    Given a `[monad m]`, `execute_with` explains how to turn a `begin ... end`
+    block, or a `by ...` statement into a `tactic α` which can actually be
+    executed. The `inhabited` first argument facilitates the passing of an
+    optional configuration parameter `config`, using the syntax:
+    ```
+    begin [custom_monad] with config,
+        ...
+    end
+    ```
+-/
+meta class executor (m : Type → Type u) [monad m] :=
+(config_type : Type)
+[inhabited : inhabited config_type]
+(execute_with : config_type → m unit → tactic unit)
+
+attribute [inline] executor.execute_with
+
+@[inline]
+meta def executor.execute_explicit (m : Type → Type u)
+   [monad m] [e : executor m] : m unit → tactic unit :=
+executor.execute_with e.inhabited.default
+
+@[inline]
+meta def executor.execute_with_explicit (m : Type → Type u)
+   [monad m] [executor m] : executor.config_type m → m unit → tactic unit :=
+executor.execute_with
+
+/-- Default `executor` instance for `tactic`s themselves -/
+meta instance : executor tactic :=
+{ config_type := unit,
+  inhabited := ⟨()⟩,
+  execute_with := λ _, id }
+
+end interactive
+
 namespace tactic
 
 open interaction_monad.result
@@ -632,7 +673,6 @@ meta constant decl_name : tactic name
 
 /-- `save_type_info e ref` save (typeof e) at position associated with ref -/
 meta constant save_type_info {elab : bool} : expr → expr elab → tactic unit
-/-- Saves a message for rendering in the interactive window. Note that this only works if called within `tactic.save_info`. -/
 meta constant save_info_thunk : pos → (unit → format) → tactic unit
 /-- Return list of currently open namespaces -/
 meta constant open_namespaces : tactic (list name)
@@ -914,6 +954,12 @@ do { ctx ← local_context,
      H   ← find_same_type t ctx,
      exact H }
 <|> fail "assumption tactic failed"
+
+meta def save_info (p : pos) : tactic unit :=
+do s ← read,
+   tactic.save_info_thunk p (λ _, tactic_state.to_format s)
+
+notation `‹` p `›` := (by assumption : p)
 
 /-- Swap first two goals, do nothing if tactic state does not have at least two goals. -/
 meta def swap : tactic unit :=
@@ -1326,6 +1372,8 @@ meta def get_arity (fn : expr) : tactic nat :=
 infer_type fn >>= get_pi_arity
 
 meta def triv : tactic unit := mk_const `trivial >>= exact
+
+notation `dec_trivial` := of_as_true (by tactic.triv)
 
 meta def by_contradiction (H : option name := none) : tactic expr :=
 do tgt : expr ← target,

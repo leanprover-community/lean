@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-prelude
 import init.function init.data.option.basic init.util
 
 /- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
@@ -159,7 +158,7 @@ meta instance list_coe : has_coe (html α) (list (html α)) := ⟨λ x, [x]⟩
 
 end html
 
-meta def as_element : html α → option (string × list (attr α) × list (html α))
+meta def as_element : html α → option (strng × list (attr α) × list (html α))
 | (html.element t a c) := some ⟨t,a,c⟩
 | _ := none
 
@@ -209,5 +208,7 @@ meta def with_cn : string → html α → html α
 meta def with_key {β} [has_to_string β] : β → html α → html α
 | s h := with_attr (key s) h
 
-
 end widget
+
+/-- Same as `tactic.save_info_thunk` except saves a widget to be displayed by a compatible infoviewer. -/
+meta constant tactic.save_widget : pos → widget.component tactic_state string → tactic unit

@@ -5,15 +5,12 @@ Widget
 - Add `expr.coord` and `expr.address` for reasoning about positions in expressions.
 - Add `list.map_with_index : (nat → α → β) → list α → list β`
 - Add `expr.instantiate_vars_core : expr → nat → list expr → expr`
-- Split `tactic.lean` in to `tactic.lean` and `tactic_interactive.lean`.
-  This is because the tactic view widget `interactive_expr.lean` needs to use some of the definitions in `tactic.lean` but
-  needs to be declared before `tactic.save_info`.
 - Add widgets. This is an HTML-based UI framework for generating html within lean to enable interactive UI
   in the infoview in vscode and on the web.
 - Add `tactic.save_widget: pos → widget.component tactic_state string → tactic unit`. Examples of widgets can be found in `library/widget/examples.lean`.
   Widgets are registered in exactly the same way as `save_info_thunk` saves text.
 - Use the `#html` command to view `html empty` or `component tactic_state string` widgets.
-- Add a 'magic' pretty printing system `tactic_state.pp_tagged : tactic_state → expr → eformat`.
+- Add a 'structured format' pretty printing system `tactic_state.pp_tagged : tactic_state → expr → eformat`.
   `eformat := tagged_format (expr.address × expr)`.
   `tagged_format α : Type` performs the same role as `format` except that there is a special constructor
   `tag : α → tagged_format → tagged_format` that contains information about

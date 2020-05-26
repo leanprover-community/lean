@@ -4,11 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-prelude
-import init.meta.tagged_format
-import init.meta.widget.tactic_component
-import init.meta.tactic
-import init.meta.expr_address
+import .basic .tactic_component
 
 meta def subexpr := (expr × expr.address)
 
