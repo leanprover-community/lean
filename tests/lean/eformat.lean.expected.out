@@ -15,3 +15,8 @@ Type
   [([lam_body, lam_body], α ≠ β): [([app_fn, app_arg], α): α] ≠ [([app_arg], β): β]]])
  [([app_arg], Prop): Prop]]
  [([app_arg], Prop): Prop]
+[([app_fn], set): set] [([app_arg], ℕ): ℕ]
+[([app_fn, app_arg], S): S] =
+ [([app_arg], {3, 2, 1}): {[([app_arg, app_fn], 3): 3],
+   [([app_arg, app_fn, app_arg], 2): 2],
+   [([app_arg, app_arg, app_arg], 1): 1]}]
