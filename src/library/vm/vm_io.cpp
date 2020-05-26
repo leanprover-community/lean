@@ -369,7 +369,8 @@ static vm_obj fs_read(vm_obj const & h, vm_obj const & n, vm_obj const &) {
         }
     } else {
         for (size_t chars = 0; chars < num; chars++) {
-            unsigned char first = fgetc(href->m_file);
+            int first = fgetc(href->m_file);
+            if (first == EOF) break;
             if (ferror(href->m_file)) {
                 clearerr(href->m_file);
                 return mk_io_failure("read failed");
