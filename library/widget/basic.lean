@@ -158,7 +158,7 @@ meta instance list_coe : has_coe (html α) (list (html α)) := ⟨λ x, [x]⟩
 
 end html
 
-meta def as_element : html α → option (strng × list (attr α) × list (html α))
+meta def as_element : html α → option (string × list (attr α) × list (html α))
 | (html.element t a c) := some ⟨t,a,c⟩
 | _ := none
 
