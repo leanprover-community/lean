@@ -32,7 +32,7 @@ private def escapec : char → string
 
 private def escape (s : string) : string :=
 s.fold "" (λ s c, s ++ escapec c)
-set_option pp.implicit false
+
 /- TODO(Leo): has_to_string -/
 private mutual def repr_core, repr_pairs
 with repr_core : value → string
@@ -59,8 +59,7 @@ with repr_pairs : list (string × value) → string
     unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
     apply nat.add_lt_add_left,
     apply nat.lt_succ_of_lt,
-    rw [nat.add_comm],
-    apply nat.lt_succ_of_lt,
+    rw [← nat.add_assoc],
     apply nat.lt_add_of_pos_left,
     rw [nat.add_comm],
     exact nat.succ_pos _,
@@ -72,7 +71,7 @@ with repr_pairs : list (string × value) → string
   begin
     unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
     apply nat.add_lt_add_left,
-    rw [←nat.add_assoc, nat.add_comm, ←nat.add_assoc],
+    rw [← nat.add_assoc, nat.add_comm, ← nat.add_assoc],
     apply nat.lt_add_of_pos_left,
     rw [nat.add_comm, nat.add_assoc, nat.add_comm],
     exact nat.succ_pos _,
