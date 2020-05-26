@@ -924,18 +924,19 @@ bool pretty_fn<T>::is_field_notation_candidate(expr const & e) {
     if (m_generalized_field_notation) {
         if (!closed(e) || m_preterm) return false;
 
-        auto arg_ty_fn = get_app_fn(infer_type(app_arg(e)));
-        if (!is_constant(arg_ty_fn)) return false;
-        if (S != const_name(arg_ty_fn)) return false;
-        if (is_implicit(app_fn(e))) return false;
+        if (!is_app_of(infer_type(app_arg(e)), S)) return false;
 
-        // check whether all previous arguments are implicit
-        for (auto partial_app = app_fn(e); is_app(partial_app); partial_app = app_fn(partial_app)) {
-            if (!is_implicit(app_fn(partial_app))) {
-                // previous explicit argument
-                return false;
-            }
+        auto fn_type = infer_type(f);
+        auto num_args = get_app_num_args(e);
+        for (unsigned i = 0; i + 1 < num_args; i++) {
+            if (!is_pi(fn_type)) return false;
+            if (is_explicit(binding_info(fn_type))) return false;
+            fn_type = binding_body(fn_type);
         }
+
+        if (!is_pi(fn_type)) return false;
+        if (!is_explicit(binding_info(fn_type))) return false;
+        if (!is_app_of(binding_domain(fn_type), S)) return false;
 
         return true;
     }

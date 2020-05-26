@@ -864,7 +864,7 @@ nat.lt_irrefl n (nat.lt_of_le_of_lt h₁ h₂)
 theorem lt_le_antisymm {n m : ℕ} (h₁ : n < m) (h₂ : m ≤ n) : false :=
 le_lt_antisymm h₂ h₁
 
-protected theorem nat.lt_asymm {n m : ℕ} (h₁ : n < m) : ¬ m < n :=
+protected theorem lt_asymm {n m : ℕ} (h₁ : n < m) : ¬ m < n :=
 le_lt_antisymm (nat.le_of_lt h₁)
 
 protected def lt_ge_by_cases {a b : ℕ} {C : Sort u} (h₁ : a < b → C) (h₂ : a ≥ b → C) : C :=

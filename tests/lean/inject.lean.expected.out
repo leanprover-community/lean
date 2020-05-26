@@ -1,25 +1,18 @@
 lift.equations._eqn_1 : ∀ {m k : ℕ} (f : fi m → fi k) (v : fi (m + 0)), @lift m k f 0 v = f v
 lift.equations._eqn_2 : ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ), @lift m k f n.succ (@f0 (m + n)) = @f0 (k + n)
 lift.equations._eqn_3 :
-  ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ) (i : fi (m + n)),
-    @lift m k f n.succ (@fs (m + n) i) = @fs (k + n) (@lift m k f n i)
-to_nat.equations._eqn_1 : ∀ (n : ℕ), @to_nat n.succ (@f0 n) = 0
-to_nat.equations._eqn_2 : ∀ (n : ℕ) (i : fi n), @to_nat n.succ (@fs n i) = (@to_nat n i).succ
-inject.equations._eqn_1 : ∀ (n : ℕ) (i : fi n), @inject n.succ (@fs n i) (@f0 (@to_nat n i)) = @f0 n
-inject.equations._eqn_2 :
-  ∀ (n : ℕ) (i : fi n) (j : fi (@to_nat n i)),
-    @inject n.succ (@fs n i) (@fs (@to_nat n i) j) = @fs n (@inject n i j)
-inject'.equations._eqn_1 : ∀ (n : ℕ) (i : fi n), @inject' n.succ (@fs n i) (@f0 (@to_nat n i)) = @f0 n
-inject'.equations._eqn_2 :
-  ∀ (n : ℕ) (i : fi n) (j : fi (@to_nat n i)),
-    @inject' n.succ (@fs n i) (@fs (@to_nat n i) j) = @fs n (@inject' n i j)
+  ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ) (i : fi (m + n)), @lift m k f n.succ i.fs = (@lift m k f n i).fs
+to_nat.equations._eqn_1 : ∀ (n : ℕ), (@f0 n).to_nat = 0
+to_nat.equations._eqn_2 : ∀ (n : ℕ) (i : fi n), i.fs.to_nat = i.to_nat.succ
+inject.equations._eqn_1 : ∀ (n : ℕ) (i : fi n), @inject n.succ i.fs (@f0 i.to_nat) = @f0 n
+inject.equations._eqn_2 : ∀ (n : ℕ) (i : fi n) (j : fi i.to_nat), @inject n.succ i.fs j.fs = (@inject n i j).fs
+inject'.equations._eqn_1 : ∀ (n : ℕ) (i : fi n), @inject' n.succ i.fs (@f0 i.to_nat) = @f0 n
+inject'.equations._eqn_2 : ∀ (n : ℕ) (i : fi n) (j : fi i.to_nat), @inject' n.succ i.fs j.fs = (@inject' n i j).fs
 raise.equations._eqn_1 : ∀ {m : ℕ} (i : fi m), @raise m 0 i = i
-raise.equations._eqn_2 : ∀ {m : ℕ} (n : ℕ) (i : fi m), @raise m n.succ i = @fs (m + n) (@raise m n i)
-deg.equations._eqn_1 : ∀ (n : ℕ) (j : fi n.succ), @deg n.succ (@f0 n.succ) j = @fs n.succ j
-deg.equations._eqn_2 : ∀ (n : ℕ) (i : fi n.succ), @deg n.succ (@fs n.succ i) (@f0 n) = @f0 n.succ
-deg.equations._eqn_3 :
-  ∀ (n : ℕ) (i : fi n.succ) (j : fi n), @deg n.succ (@fs n.succ i) (@fs n j) = @fs n.succ (@deg n i j)
-deg'.equations._eqn_1 : ∀ (n : ℕ) (j : fi n.succ), @deg' n.succ (@f0 n.succ) j = @fs n.succ j
-deg'.equations._eqn_2 : ∀ (n : ℕ) (i : fi n.succ), @deg' n.succ (@fs n.succ i) (@f0 n) = @f0 n.succ
-deg'.equations._eqn_3 :
-  ∀ (n : ℕ) (i : fi n.succ) (j : fi n), @deg' n.succ (@fs n.succ i) (@fs n j) = @fs n.succ (@deg' n i j)
+raise.equations._eqn_2 : ∀ {m : ℕ} (n : ℕ) (i : fi m), @raise m n.succ i = (@raise m n i).fs
+deg.equations._eqn_1 : ∀ (n : ℕ) (j : fi n.succ), (@f0 n.succ).deg j = j.fs
+deg.equations._eqn_2 : ∀ (n : ℕ) (i : fi n.succ), i.fs.deg (@f0 n) = @f0 n.succ
+deg.equations._eqn_3 : ∀ (n : ℕ) (i : fi n.succ) (j : fi n), i.fs.deg j.fs = (i.deg j).fs
+deg'.equations._eqn_1 : ∀ (n : ℕ) (j : fi n.succ), (@f0 n.succ).deg' j = j.fs
+deg'.equations._eqn_2 : ∀ (n : ℕ) (i : fi n.succ), i.fs.deg' (@f0 n) = @f0 n.succ
+deg'.equations._eqn_3 : ∀ (n : ℕ) (i : fi n.succ) (j : fi n), i.fs.deg' j.fs = (i.deg' j).fs
