@@ -2103,9 +2103,9 @@ formatter_factory mk_pretty_formatter_factory() {
                 std::function<bool(sexpr const &, sexpr const &)> sep; // NOLINT
                 token_table const * last = nullptr;
                 sep = [&](sexpr const & s1, sexpr const & s2) {
-                    bool b;
-                    mk_pair(b, last) = fn_ptr->needs_space_sep(last, sexpr_to_string(s1), sexpr_to_string(s2));
-                    return b;
+                    auto p = fn_ptr->needs_space_sep(last, sexpr_to_string(s1), sexpr_to_string(s2));
+                    last = p.second;
+                    return p.first;
                 };
                 return res.separate_tokens(sep);
             });
