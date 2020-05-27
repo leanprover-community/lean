@@ -1756,4 +1756,7 @@ do t ← target,
    locked_pr ← mk_id_eq t new_target pr,
    mk_eq_mpr locked_pr ht >>= exact
 
+meta def eval_pexpr (α) [reflected α] (e : pexpr) : tactic α :=
+to_expr ``(%%e : %%(reflect α)) ff ff >>= eval_expr α
+
 end tactic
