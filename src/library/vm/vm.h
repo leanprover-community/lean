@@ -559,7 +559,8 @@ struct vm_decl_cell {
     optional<pos_info>    m_pos;
     optional<std::string> m_olean;
     /** If this declaration has been overridden using `@[vm_override]`, then this has the index of the override decalaration. */
-    optional<unsigned>    m_overridden;
+    optional<unsigned>    m_overridden_idx;
+
     union {
         struct {
             unsigned   m_code_size;
@@ -572,7 +573,7 @@ struct vm_decl_cell {
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfunction fn);
     vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                  list<vm_local_info> const & args_info, optional<pos_info> const & pos,
-                 optional<unsigned> const & overridden,
+                 optional<unsigned> const & overridden_idx,
                  optional<std::string> const & olean);
     ~vm_decl_cell();
     void dealloc();
@@ -590,9 +591,9 @@ public:
         vm_decl(new vm_decl_cell(n, idx, arity, fn)) {}
     vm_decl(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
             list<vm_local_info> const & args_info, optional<pos_info> const & pos,
-            optional<unsigned> const & overridden = optional<unsigned>(),
+            optional<unsigned> const & overridden_idx = optional<unsigned>(),
             optional<std::string> const & olean = optional<std::string>()):
-        vm_decl(new vm_decl_cell(n, idx, arity, code_sz, code, args_info, pos, overridden, olean)) {}
+        vm_decl(new vm_decl_cell(n, idx, arity, code_sz, code, args_info, pos, overridden_idx, olean)) {}
     vm_decl(vm_decl const & s):m_ptr(s.m_ptr) { if (m_ptr) m_ptr->inc_ref(); }
     vm_decl(vm_decl && s):m_ptr(s.m_ptr) { s.m_ptr = nullptr; }
     ~vm_decl() { if (m_ptr) m_ptr->dec_ref(); }
@@ -620,7 +621,8 @@ public:
     vm_cfunction get_cfn() const { lean_assert(is_cfun()); return m_ptr->m_cfn; }
     list<vm_local_info> const & get_args_info() const { lean_assert(is_bytecode()); return m_ptr->m_args_info; }
     optional<pos_info> const & get_pos_info() const { lean_assert(is_bytecode()); return m_ptr->m_pos; }
-    optional<unsigned> const & get_overridden() const { lean_assert(m_ptr); return m_ptr->m_overridden; }
+    optional<unsigned> const & get_overridden_idx() const { lean_assert(m_ptr); return m_ptr->m_overridden_idx; }
+    bool is_overridden() const {lean_assert(m_ptr); return m_ptr->m_overridden_idx.has_value(); }
     optional<std::string> const & get_olean() const { lean_assert(is_bytecode()); return m_ptr->m_olean; }
 };
 
