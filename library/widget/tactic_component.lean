@@ -6,12 +6,6 @@ Author: E.W.Ayers
 -/
 import widget.basic
 
-meta def tactic.run_simple {α} : tactic_state → tactic α → option α
-| ts t := match t ts with
-          | (interaction_monad.result.success a ts') := some a
-          | (interaction_monad.result.exception _ _ _) := none
-          end
-
 namespace widget
 
 /-- A component that implicitly depends on tactic_state. For efficiency we always assume that the tactic_state is unchanged between component renderings. -/
