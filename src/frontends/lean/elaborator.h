@@ -6,6 +6,7 @@ Author: Leonardo de Moura
 */
 #pragma once
 #include <vector>
+#include <string>
 #include "kernel/pos_info_provider.h"
 #include "library/local_context.h"
 #include "library/type_context.h"
