@@ -271,6 +271,14 @@ void info_manager::add_term_goal(pos_info const & pos, tactic_state const & s) {
     add_info(pos, mk_term_goal(pos, s));
 }
 
+void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj const & widget) {
+#ifdef LEAN_NO_INFO
+    return;
+#endif
+    add_info(pos, mk_widget_info(tactic::to_state(props).env(), props, widget));
+}
+
+
 #ifdef LEAN_JSON
 void info_manager::get_info_record(environment const & env, options const & o, io_state const & ios, pos_info pos,
                                    json & record, std::function<bool (info_data const &)> pred) const {
