@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-import .basic
+import widget.basic
 
 meta def tactic.run_simple {α} : tactic_state → tactic α → option α
 | ts t := match t ts with

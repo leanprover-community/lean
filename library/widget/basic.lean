@@ -47,18 +47,6 @@ If you have some list of components and the list changes according to some state
 that if two components change order in the list their states are preserved.
 If you don't provide keys or there are duplicate keys then you may get some strange behaviour in both the Lean widget engine and react.
 
-## Further work:
-
-Some things that would be interesting to implement and which may improve performance.
-
-- instead of sending a whole html-tree each time, generate a patch that react can use to update
-- how should style sheets work? right now you need to just use the styles provided by the client or use inline styles.
-- timers, right now the round trip from client to server is too
-- a top level action that allows the user to
-- if `decidable_eq Props`, then reconciliation can compare the old and new props and check whether the given subcomponent needs to be re-rendered, possibly increasing efficiency.
-- a parser from jsx-like expressions?!
-- currently component and html both have to be implemented natively for universe issues, it would be really cool if they could be non-meta and expressed as lean inductive datatypes.
-
 -/
 
 namespace widget
@@ -71,16 +59,16 @@ inductive mouse_event_kind
 meta mutual inductive component, html, attr
 
 with component : Type → Type → Type
-|mk {Props : Type}
-    {Action : Type}
-    (InnerAction : Type)
-    (State : Type)
-    (init : Props → option State → State)
-    (update : Props → State → InnerAction → State × option Action)
-    (view : Props → State → list (html InnerAction))
-    /- If this returns true, then the component will not call 'view' again. -/
-    (props_eq : Props → Props → bool)
-    : component Props Action
+| mk {Props : Type}
+     {Action : Type}
+     (InnerAction : Type)
+     (State : Type)
+     (init : Props → option State → State)
+     (update : Props → State → InnerAction → State × option Action)
+     (view : Props → State → list (html InnerAction))
+     /- If this returns true, then the component will not call 'view' again. -/
+     (props_eq : Props → Props → bool)
+     : component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α

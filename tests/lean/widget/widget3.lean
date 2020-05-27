@@ -1,5 +1,6 @@
 import widget
 open widget
+
 meta def asdf_c (message : list string) : component nat empty :=
 widget.component.mk
   unit
@@ -18,13 +19,4 @@ widget.component.mk
   (λ p s, [to_string s, button "+" (), html.of_component s (asdf_c [" *** "])])
   (λ x y, ff)
 
-
-
-example {P Q : Prop} : P → Q → P ∧ Q :=
-begin[widget_tactic]
-  put (qwerty_c),
-  tactic.intros,
-  tactic.split,
-  tactic.assumption,
-  tactic.assumption,
-end
+#html qwerty_c
