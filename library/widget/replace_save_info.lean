@@ -5,10 +5,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: E.W.Ayers
 -/
 import widget.interactive_expr
-open tactic
 
 meta def tactic.save_info_with_widgets (p : pos) : tactic unit :=
-do s ← read,
+do s ← tactic.read,
    tactic.save_info_thunk p (λ _, tactic_state.to_format s),
    tactic.save_widget p widget.tactic_state_widget
 
