@@ -96,13 +96,7 @@ class component_instance : public vdom_cell {
     bool props_are_equal(vm_obj const & p_old, vm_obj const & p_new);
 public:
     void render();
-    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>()) : m_component(c), m_props(props), m_route(route) {
-      static unsigned count = 0; // [fixme] need to worry about thread safety here. use a global pointer or something.
-      m_id = count++;
-      m_has_rendered = false;
-      m_reconcile_count = 0;
-      m_component_hash = hash(c);
-    }
+    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
     json to_json(list<unsigned> const & route) override;
     void reconcile(vdom const & old);
     optional<vm_obj> handle_action(vm_obj const & a);

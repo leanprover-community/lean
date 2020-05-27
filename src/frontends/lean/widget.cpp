@@ -7,6 +7,7 @@ Author: E.W.Ayers
 #include <map>
 #include <vector>
 #include <string>
+#include <atomic>
 #include "library/vm/vm.h"
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
@@ -18,6 +19,9 @@ Author: E.W.Ayers
 #include "util/pair.h"
 
 namespace lean {
+
+std::atomic_uint g_fresh_handler_id;
+std::atomic_uint g_fresh_component_instance_id;
 
 optional<std::string> vdom_element::key() {
     if (m_attrs.find("key") != m_attrs.end()) {
@@ -59,11 +63,17 @@ json vdom_element::to_json(list<unsigned> const & route) {
     return entry;
 }
 
+component_instance::component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : m_component(c), m_props(props), m_route(route) {
+    m_id = g_fresh_component_instance_id.fetch_add(1);
+    m_has_rendered = false;
+    m_reconcile_count = 0;
+    m_component_hash = hash(c);
+}
+
 vm_obj component_instance::init(vm_obj const & p, optional<vm_obj> const & s) {
     vm_obj os = s ? mk_vm_some(*s) : mk_vm_none();
     return invoke(cfield(m_component.to_vm_obj(), 0), p, os);
 }
-
 
 pair<vm_obj, optional<vm_obj>> component_instance::update(vm_obj const & p, vm_obj const & s, vm_obj const & a) {
     vm_obj sa = invoke(cfield(m_component.to_vm_obj(), 1), p, s, a);
@@ -79,7 +89,6 @@ vm_obj component_instance::view(vm_obj const & p, vm_obj const & s) {
 bool component_instance::props_are_equal(vm_obj const & p_old, vm_obj const & p_new) {
     return to_bool(invoke(cfield(m_component.to_vm_obj(), 3), p_old, p_new));
 }
-
 
 void component_instance::render() {
     std::vector<component_instance *> children;
@@ -206,9 +215,9 @@ void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> cons
     }
 }
 
+
 void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers) {
-    static unsigned handler_count = 0; // [fixme] threading issues here;
-    unsigned handler_id = handler_count++;
+    unsigned handler_id = g_fresh_handler_id.fetch_add(1);
     events[name] = handler_id;
     handlers[handler_id] = handler;
 }
