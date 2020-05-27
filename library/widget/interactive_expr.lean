@@ -13,10 +13,6 @@ namespace widget
 open tagged_format
 open html attr
 
-def format.color.to_string : format.color → string
-| format.color.red := "red" | format.color.green := "green" | format.color.orange := "orange" | format.color.blue := "blue" | format.color.pink := "pink" | format.color.cyan := "cyan" | format.color.grey := "grey"
-
-
 namespace interactive_expression
 
 /-- eformat but without any of the formatting stuff like highlighting, groups etc. -/
