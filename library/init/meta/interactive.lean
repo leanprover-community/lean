@@ -244,10 +244,13 @@ meta def refine (q : parse texpr) : tactic unit :=
 tactic.refine q
 
 /--
-This tactic looks in the local context for a hypothesis whose type is equal to the goal target. If it finds one, it uses it to prove the goal, and otherwise it fails.
+This tactic looks in the local context for a hypothesis whose type is equal to the goal target.
+If it finds one, it uses it to prove the goal, and otherwise it fails.
+`assumption?` will print the name of the goal that it found.
 -/
-meta def assumption : tactic unit :=
-tactic.assumption
+
+meta def assumption (trace_result : parse $ optional (tk "?")) :=
+tactic.assumption trace_result.is_some
 
 /-- Try to apply `assumption` to all goals. -/
 meta def assumption' : tactic unit :=
