@@ -14,4 +14,3 @@ do s ← read,
 
 attribute [vm_override tactic.save_info_with_widgets] tactic.save_info
 
-run_cmd skip
