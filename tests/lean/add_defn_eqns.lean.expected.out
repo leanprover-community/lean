@@ -47,7 +47,7 @@ plus'._sunfold : ℕ → ℕ → ℕ → ℕ
 plus'.equations._eqn_1 : ∀ (a b : ℕ), plus' a b 0 = b
 plus'.equations._eqn_2 : ∀ (a b x : ℕ), plus' a b x.succ = plus' a b x
 def foo_append._main : Π {α : Type u}, list α → list α → list α :=
-λ {α : Type u} (xs«_» : list α),
+λ {α : Type u} (xs «_» : list α),
   «_».brec_on
     (λ («_» : list α) (_F : list.below α «_»),
        (λ («_» : list α) (_F : list.below α «_»),
