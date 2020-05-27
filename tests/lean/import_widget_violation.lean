@@ -1,5 +1,8 @@
 import widget
 
+/- The issue this is checking is whether vm_overrides are preserved in oleans.
+It will segfault if not. -/
+
 #check tactic.save_info_with_widgets
 
 run_cmd tactic.save_info_with_widgets ⟨1,2⟩ *> tactic.trace "hello"
