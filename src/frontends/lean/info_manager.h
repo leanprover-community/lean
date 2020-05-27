@@ -80,10 +80,8 @@ public:
      * If the widget update event yields an action then the record will be of type `{status: "edit", action: string, widget:_}`
      * If the handler given does not correspond to a component on the widget, then the record is set to `{status: "invalid_handler"}`.
      * It will throw is the json message has the wrong format.
-     * [hack] although `update` is labelled with `const`, the members do mutate.
-     * However removing the const causes errors that I (e.w.ayers) couldn't find a simple fix for.
      */
-    void update(io_state_stream const & ios, json const & message, json & record) const;
+    void update(io_state_stream const & ios, json const & message, json & record);
     json to_json() const;
 };
 

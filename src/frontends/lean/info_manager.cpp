@@ -132,7 +132,7 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     record["widget"]["html"] = to_json();
 }
 
-void widget_info::update(io_state_stream const & ios, json const & message, json & record) const {
+void widget_info::update(io_state_stream const & ios, json const & message, json & record) {
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
