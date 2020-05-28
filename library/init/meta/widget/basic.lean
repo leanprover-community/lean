@@ -10,7 +10,7 @@ import init.data.option.basic
 import init.util
 import init.meta.tactic
 
-/- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
+/-! A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
 ## Using widgets.
 
@@ -43,6 +43,8 @@ If `b` is `some x`,  the parent component's `update` will also be called with `x
 Finally, the entire component is re-rendered to produce a new piece of html to send to the client for display.
 On this rerendering, the new html and the old html are compared through a process called __reconciliation__.
 Reconciliation will make sure that the states are carried over correctly and will also not rerender subcomponents if they haven't changed their props or state.
+To compute whether two components are the same, the system will perform a hash on their VM objects.
+Not all VM objects can be hashed, so it's important to make sure that any items that you expect to change over the lifetime of the component are fed through the 'Props' argument.
 The reconciliation engine uses the `props_eq` predicate passed to the component constructor to determine whether the props have changed and hence whether the component should be re-rendered.
 
 ## Keys
@@ -50,6 +52,61 @@ The reconciliation engine uses the `props_eq` predicate passed to the component 
 If you have some list of components and the list changes according to some state, it is important to add keys to the components so
 that if two components change order in the list their states are preserved.
 If you don't provide keys or there are duplicate keys then you may get some strange behaviour in both the Lean widget engine and react.
+
+## HTML
+
+The result of a render is a representation of an HTML tree, which is composed of elements.
+Use the helper function `h` to build new pieces of `html`. So for example:
+
+```lean
+h "ul" [] [
+     h "li" [] ["this is list item 1"],
+     h "li" [style [("color", "blue")]] ["this is list item 2"],
+     h "hr" [] [],
+     h "li" [] [
+          h "span" [] ["there is a button here"],
+          h "button" [on_click (λ _, 3)] ["click me!"]
+     ]
+]
+```
+
+Has the type `html nat`.
+The `nat` type is called the 'action' and whenever the user interacts with the UI, the html will emit an object of type `nat`.
+The above example is compiled to the following piece of html:
+
+```html
+<ul>
+  <li>this is list item 1</li>
+  <li style="{ color: blue; }">this is list item 2</li>
+  <hr/>
+  <li>
+     <span>There is a button here</span>
+     <button onClick="[handler]">click me!</button>
+  </li>
+</ul>
+```
+
+It is possible to use incorrect tags and attributes, there is (currently) no type checking that the result is a valid piece of html.
+So for example, the widget system will error if you add a `text_change_event` attribute to anything other than an element tagged with `input`.
+
+## Styles with Tachyons
+
+The widget system assumes that a stylesheet called 'tachyons' is present.
+You can find documentation for this stylesheet at [Tachyons.io](http://tachyons.io/).
+Tachyons was chosen because it is very terse and allows arbitrary styling without using inline styles and without needing to dynamically load a stylesheet.
+
+## Further work (up for grabs!)
+
+- Add type checking for html.
+- Better error handling when the html tree is malformed.
+- Better error handling when keys are malformed.
+- Add a 'task_component' which lets long-running operations (eg running `simp`) not block the UI update.
+- Timers, animation (ambitious).
+- More event handlers
+- Drag and drop support.
+- The current perf bottleneck is sending the full UI across to the server for every update.
+  Instead, it should be possible to send a smaller [JSON Patch](http://jsonpatch.com).
+  Which is already supported by `json.hpp` and javascript ecosystem.
 
 -/
 
