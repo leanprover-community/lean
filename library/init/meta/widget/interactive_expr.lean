@@ -59,7 +59,10 @@ meta def view {γ} (tooltip_component : tc subexpr (action γ)) (click_address :
   click_attrs  : list (attr (action γ)) ←
     if some new_address = click_address then do
       content ← tc.to_html tooltip_component (e, new_address),
-      pure [tooltip $ content]
+      pure [tooltip $ h "div" [] [
+          h "button" [cn "fr pointer ba br3", on_click (λ _, action.on_close_tooltip)] ["x"],
+          content
+      ]]
     else pure [],
   let as := [className "expr-boundary", key (ea)] ++ select_attrs ++ click_attrs,
   inner ← view (e,new_address) m,
@@ -124,11 +127,7 @@ tc.stateless (λ ⟨e,ea⟩, do
         h "div" [] [
           h "div" [] [y_comp],
           h "hr" [] [],
-          implicit_args,
-          h "hr" [] [],
-          h "div" [className "gray"] [
-            ea.to_string
-          ]
+          implicit_args
         ]
       ]
   )
