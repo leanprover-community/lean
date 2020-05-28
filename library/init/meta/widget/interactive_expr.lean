@@ -8,6 +8,7 @@ prelude
 import init.meta.widget.basic
 import init.meta.widget.tactic_component
 import init.meta.tagged_format
+import init.data.punit
 
 meta def subexpr := (expr × expr.address)
 
@@ -144,71 +145,50 @@ tc.stateless (λ x, do
   pure y_comp
 )
 
-meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tactic (html γ) :=
-do
-  gs ← get_goals,
-  hs : list (html γ) ← gs.mmap (λ g, do
-    ts ← read,
-    gn ← pp g,
-    set_goals [g],
-    lcs ← local_context,
-    lchs : list (html γ) ← lcs.mmap (λ lc, do
-      pn ← pure $ expr.local_pp_name lc,
-      lh : html γ ← local_c lc,
-      pure
-        $ h "tr" [key $ to_string $ expr.local_uniq_name lc] [
-            h "td" [cn "goal-hyp b"] [html.of_name pn],
-            h "td" [] [html.of_string " : "],
-            h "td" [] [lh]
-        ]
+meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
+tc.stateless $ λ _, do
+    gs ← get_goals,
+    hs : list (html γ) ← gs.mmap (λ g, do
+      ts ← read,
+      gn ← pp g,
+      set_goals [g],
+      lcs ← local_context,
+      lchs : list (html γ) ← lcs.mmap (λ lc, do
+        pn ← pure $ expr.local_pp_name lc,
+        lh : html γ ← local_c lc,
+        pure
+          $ h "tr" [key $ to_string $ expr.local_uniq_name lc] [
+              h "td" [cn "goal-hyp b"] [html.of_name pn],
+              h "td" [] [html.of_string " : "],
+              h "td" [] [lh]
+          ]
+      ),
+      t_comp ← target_c g,
+      (expr.mvar u_n pp_n y) ← pure g,
+      pure $ h "table" [key $ expr.hash g, className "font-code"] [
+        h "tbody" [] $ lchs ++ [
+            h "tr" [key u_n, className "bt"] [
+              h "td" [] [] ,
+              h "td" [cn "goal-vdash b"] [html.of_string " ⊢ "],
+              h "td" [] [t_comp]
+        ]]
+      ]
     ),
-    t_comp ← target_c g,
-    (expr.mvar u_n pp_n y) ← pure g,
-    pure $ h "table" [key $ expr.hash g, className "font-code"] [
-      h "tbody" [] $ lchs ++ [
-          h "tr" [key u_n, className "bt"] [
-            h "td" [] [] ,
-            h "td" [cn "goal-vdash b"] [html.of_string " ⊢ "],
-            h "td" [] [t_comp]
-       ]]
-    ]
-  ),
-  set_goals gs,
-  goal_message : string ← pure $ if gs.length = 0 then "goals accomplished" else if gs.length = 1 then "1 goal" else (to_string gs.length) ++ " goals",
-  goal_message : html γ ← pure $ h "strong" [cn "goal-goals"] [goal_message],
-  pure $ h "ul" [className "list pl0"]
-       $ list.map_with_index (λ i x,
-         let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-         h "li" [className $ "lh-copy mv3 " ++ border_cn] [x])
-       $ (goal_message :: hs)
+    set_goals gs,
+    goal_message : string ← pure $ if gs.length = 0 then "goals accomplished" else if gs.length = 1 then "1 goal" else (to_string gs.length) ++ " goals",
+    goal_message : html γ ← pure $ h "strong" [cn "goal-goals"] [goal_message],
+    pure $ [h "ul" [className "list pl0"]
+        $ list.map_with_index (λ i x,
+          let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
+          h "li" [className $ "lh-copy mv3 " ++ border_cn] [x])
+        $ (goal_message :: hs)]
 
 
-meta def tactic_render : tactic (html empty) :=
-tactic_view_component show_type_component show_type_component
-
-meta def mk_tactic_widget {α β σ : Type}
-  (init : σ)
-  (update : σ → β → tactic (σ × α))
-  (view : σ → tactic (html β))
-  (error : option format → σ → σ) : component tactic_state α :=
-component.mk β (σ × tactic_state)
-  (λ ts_new prev, match prev with | (some ⟨s,ts_old⟩) := ⟨s, ts_new⟩ | (none) := ⟨init, ts_new⟩ end)
-  (λ _ ⟨s,ts⟩ b,
-      match update s b ts with
-      | (interaction_monad.result.success ⟨s,a⟩ ts) := ⟨⟨s,ts⟩, some a⟩
-      | (interaction_monad.result.exception msg pos _) := ⟨⟨s,ts⟩, none⟩
-      end
-  )
-  (λ _ ⟨s,ts⟩,
-      match view s ts with
-      | (interaction_monad.result.success x ts) := x
-      | (interaction_monad.result.exception msg pos ts) := [html.of_string "view errored"]
-      end
-  )
-  (λ x y, ff)
+meta def tactic_render : tc unit string :=
+component.ignore_action $ tactic_view_component show_type_component show_type_component
 
 meta def tactic_state_widget : component tactic_state string :=
-mk_tactic_widget () (λ _ _, failure) (λ _, tactic_render) (λ _ x, x)
+tc.to_component tactic_render
 
 end widget
 
