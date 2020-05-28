@@ -1081,12 +1081,12 @@ vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfun
 
 vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                            list<vm_local_info> const & args_info, optional<pos_info> const & pos,
-                           optional<unsigned> const & overridden,
+                           optional<unsigned> const & overridden_idx,
                            optional<std::string> const & olean):
        m_rc(0), m_kind(vm_decl_kind::Bytecode), m_name(n), m_idx(idx), m_arity(arity),
        m_args_info(args_info), m_pos(pos),
        m_olean(olean),
-       m_overridden(overridden),
+       m_overridden_idx(overridden_idx),
        m_code_size(code_sz) {
     m_code = new vm_instr[code_sz];
     for (unsigned i = 0; i < code_sz; i++)
@@ -1415,7 +1415,8 @@ struct vm_code_modification : public modification {
 
     void serialize(serializer & s) const override {
         unsigned code_sz = m_decl.get_code_size();
-        s << m_decl.get_name() << m_decl.get_arity() << code_sz << m_decl.get_pos_info() << m_decl.get_overridden();
+        optional<name> overridden_name = m_decl.is_overridden() ? optional<name>(get_vm_name(*m_decl.get_overridden_idx())) : optional<name>();
+        s << m_decl.get_name() << m_decl.get_arity() << code_sz << m_decl.get_pos_info() << overridden_name;
         write_list(s, m_decl.get_args_info());
         auto c = m_decl.get_code();
         for (unsigned i = 0; i < code_sz; i++)
@@ -1423,15 +1424,16 @@ struct vm_code_modification : public modification {
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
-        name fn; unsigned arity; unsigned code_sz; optional<pos_info> pos; optional<unsigned> overridden;
-        d >> fn >> arity >> code_sz >> pos >> overridden;
+        name fn; unsigned arity; unsigned code_sz; optional<pos_info> pos; optional<name> overridden_name;
+        d >> fn >> arity >> code_sz >> pos >> overridden_name;
+        optional<unsigned int> overridden_idx = overridden_name.has_value() ? optional<unsigned>(get_vm_index(*overridden_name)) : optional<unsigned>();
         auto args_info = read_list<vm_local_info>(d);
         buffer<vm_instr> code;
         for (unsigned i = 0; i < code_sz; i++)
             code.emplace_back(read_vm_instr(d));
         optional<std::string> file_name; // TODO(gabriel)
         return std::make_shared<vm_code_modification>(
-                vm_decl(fn, get_vm_index(fn), arity, code_sz, code.data(), args_info, pos, overridden, file_name));
+                vm_decl(fn, get_vm_index(fn), arity, code_sz, code.data(), args_info, pos, overridden_idx, file_name));
     }
 };
 
@@ -1540,17 +1542,13 @@ environment add_override(environment const & env, name const & n, name const & n
 optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl,
                                        bool enable_overrides) {
     vm_decls const & ext = get_extension(env);
-    if (!enable_overrides)
+    if (!enable_overrides || !decl.is_overridden())
         return optional<vm_decl>();
     auto d = decl;
-    if (auto idx = d.get_overridden()) {
+    while (auto idx = d.get_overridden_idx()) {
         d = *ext.m_decls.find(*idx);
-        while (auto idx = d.get_overridden()) {
-            d = *ext.m_decls.find(*idx);
-        }
-        return optional<vm_decl>(d);
     }
-    return optional<vm_decl>();
+    return optional<vm_decl>(d);
 }
 
 optional<vm_decl> get_vm_decl_no_override(environment const & env, name const & decl_name) {
@@ -1642,12 +1640,10 @@ vm_decl const & vm_state::get_decl_no_override(unsigned idx) const {
 
 vm_decl const & vm_state::get_decl(unsigned idx) const {
     vm_decl const & d = get_decl_no_override(idx);
-    optional<unsigned> o = d.get_overridden();
-    if (o && get_options().get_bool(*g_vm_override_enabled, true)) {
-        return get_decl(o.value());
-    } else {
-        return d;
-    }
+    if (!d.is_overridden() || !get_options().get_bool(*g_vm_override_enabled, true)) { return d; }
+    optional<unsigned> o_idx = d.get_overridden_idx();
+    lean_assert(o_idx);
+    return get_decl(o_idx.value());
 }
 
 vm_cases_function const & vm_state::get_builtin_cases(unsigned idx) const {
