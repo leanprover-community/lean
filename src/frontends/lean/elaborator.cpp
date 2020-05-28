@@ -2988,12 +2988,14 @@ class visit_structure_instance_fn {
                     });
                 } else if (auto p = is_subobject_field(m_env, nested_S_name, S_fname)) {
                     /* subobject field */
+                    auto old_field_mvars_size = m_field_mvars.size();
                     auto num_used = m_fnames_used.size();
                     auto old_missing_fields = m_missing_fields;
                     auto nested = create_field_mvars(*p);
                     if (m_fnames_used.size() == num_used && field_from_source(S_fname)) {
                         // If the subobject doesn't contain any explicitly passed fields, we prefer to use
                         // its value directly from a source so that the two are definitionally equal
+                        m_field_mvars.resize(old_field_mvars_size);
                     } else if (!is_explicit(binding_info(c_type)) && m_fnames_used.size() == num_used &&
                             old_missing_fields.size() < m_missing_fields.size()) {
                         // If the subobject is a superclass, doesn't contain any explicitly passed fields,
@@ -3002,6 +3004,7 @@ class visit_structure_instance_fn {
                             return m_elab.mk_instance(d, m_ref);
                         });
                         m_missing_fields = old_missing_fields;
+                        m_field_mvars.resize(old_field_mvars_size);
                     } else {
                         // We assign the subtree to the mvar eagerly so that the mvars representing the nested
                         // structure parameters are assigned, which are not inlcuded in the m_mvar2field dependency
