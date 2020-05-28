@@ -1,0 +1,3 @@
+{"seq_num": 0, "command": "sync", "file_name": "widget3.lean"}
+{"seq_num": 46, "command": "info", "file_name": "widget3.lean", "line": 22, "column": 2}
+{"seq_num": 47, "command" : "widget_event", "handler" : {"h":0, "r" : [15]}, "file_name": "widget3.lean", "line": 22, "column": 2, "args" : { "type" : "unit", "value" : {}}}

@@ -295,7 +295,8 @@ public:
 };
 
 server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios,
-        bool use_old_oleans) :
+        bool use_old_oleans,
+        bool report_widgets) :
         m_path(path), m_initial_env(initial_env), m_ios(ios) {
     m_ios.set_regular_channel(std::make_shared<stderr_channel>());
     m_ios.set_diagnostic_channel(std::make_shared<stderr_channel>());
@@ -322,6 +323,7 @@ server::server(unsigned num_threads, search_path const & path, environment const
     set_task_queue(m_tq.get());
     m_mod_mgr.reset(new module_mgr(this, m_lt.get_root(), m_path, m_initial_env, m_ios));
     m_mod_mgr->set_use_old_oleans(use_old_oleans);
+    m_mod_mgr->set_report_widgets(report_widgets);
     set_global_module_mgr(*m_mod_mgr);
     m_mod_mgr->set_server_mode(true);
     m_mod_mgr->set_save_olean(false);
@@ -459,6 +461,8 @@ void server::handle_request(server::cmd_req const & req) {
         this_thread::sleep_for(small_delay);
     } else if (command == "sync_output") {
         taskq().wait_for_finish(this->m_lt.get_root().wait_for_finish());
+    } else if (command == "widget_event") {
+        handle_async_response(req, handle_widget_event(req));
     } else {
         send_msg(cmd_res(req.m_seq_num, std::string("unknown command")));
     }
@@ -623,6 +627,40 @@ json server::info(std::shared_ptr<module_info const> const & mod_info, pos_info 
     } catch (throwable & ex) {}
 
     return j;
+}
+
+json server::widget_event(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos, json const & message) {
+    json j;
+    try {
+        parse_breaking_at_pos(mod_info->m_id, mod_info, pos);
+    } catch (break_at_pos_exception & e) {
+        auto opts = m_ios.get_options();
+        auto env = m_initial_env;
+        if (auto snap = get_closest_snapshot(mod_info, e.m_token_info.m_pos)) {
+            env = snap->m_snapshot_at_end->m_env;
+            opts = snap->m_snapshot_at_end->m_options;
+        }
+        update_widget(env, opts, m_ios, m_path, *mod_info, get_info_managers(m_lt), pos, e, j, message);
+    } catch (throwable & ex) {}
+
+    return j;
+}
+
+task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
+    cancel(m_bg_task_ctok);
+    m_bg_task_ctok = mk_cancellation_token();
+    // [todo] Need some help on how multithreading works. Should all events happen synchronously?
+    // what happens if it is processing an event and then a second event occurs? There needs to be an event queue.
+    // there should at least be a thread lock on modifying a vdom object.
+    std::string fn = req.m_payload.at("file_name");
+    pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+
+    auto mod_info = m_mod_mgr->get_module(fn);
+
+    return task_builder<cmd_res>([=] {
+        return cmd_res(req.m_seq_num, widget_event(mod_info, pos, req.m_payload));
+    }).wrap(library_scopes(log_tree::node()))
+      .set_cancellation_token(m_bg_task_ctok).build();
 }
 
 task<server::cmd_res> server::handle_info(server::cmd_req const & req) {

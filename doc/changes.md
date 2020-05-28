@@ -1,3 +1,46 @@
+Widget
+------
+
+#### Lean API
+- Add `expr.coord` and `expr.address` for reasoning about positions in expressions.
+- Add `list.map_with_index : (nat → α → β) → list α → list β`
+- Add `expr.instantiate_vars_core : expr → nat → list expr → expr`
+- Add widgets. This is an HTML-based UI framework for generating html within lean to enable interactive UI
+  in the infoview in vscode and on the web.
+- Add `tactic.save_widget: pos → widget.component tactic_state string → tactic unit`. Examples of widgets can be found in `library/widget/examples.lean`.
+  Widgets are registered in exactly the same way as `save_info_thunk` saves text.
+- Use the `#html` command to view `html empty` or `component tactic_state string` widgets.
+- Add a 'structured format' pretty printing system `tactic_state.pp_tagged : tactic_state → expr → eformat`.
+  `eformat := tagged_format (expr.address × expr)`.
+  `tagged_format α : Type` performs the same role as `format` except that there is a special constructor
+  `tag : α → tagged_format → tagged_format` that contains information about
+  which subexpression caused this string to be rendered.
+  This is used to implement a widget which allows the user to hover over a pretty printed string
+  and view information about the subexpressions that build up the original expression.
+  For example, this lets you view types of pretty printed expressions and view implicit arguments.
+- Add numerous docstrings
+
+#### Kernel changes
+- Kernel no longer checks universe levels when declaring untrusted inductive definitions.
+  See src/kernel/inductive/inductive.cpp:413
+- Add `unsigned hash(expr const & e) {return e.hash()}` so that expressions can be hashed in templated methods.
+- Expose `expr instantiate(expr const & e, unsigned s, unsigned n, expr const * subst);` in src/kernel/instantiate.h
+
+#### Frontend/library changes
+
+- Overhaul pretty printer so that it can
+  provide information about expression addresses.
+  This required making it templated to output `T` instead of `format`.
+  Currently `T` may be instantiated with `lean::format` or `lean::eformat`.
+  See src/library/vm/vm_eformat and
+- Info manager now supports widgets.
+- Server `info` response may now include a `"widget"` field on the returned `"record"` json.
+- Server has a new command `widget_event` to enable interactive widgets
+- The main code for widgets can be found in `src/frontends/widget.(h|cpp)`.
+- VM objects can now be hashed, with the exception of some `vm_external`s which hash to zero.
+  This is needed to verify the identity of components in the widget reconciliation engine.
+- server has an option `-no-widgets` or `-W` for turning off widget reporting. This is used in the interactive tests.
+
 v3.14.0c (20 May 2020)
 ----------------------
 
