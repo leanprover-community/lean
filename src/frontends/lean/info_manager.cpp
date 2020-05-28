@@ -127,6 +127,8 @@ json widget_info::to_json() const {
 
 void widget_info::report(io_state_stream const & ios, json & record) const {
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
+    mutex * mp = const_cast<mutex *>(&m_mutex);
+    lock_guard<mutex> _(*mp);
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
     record["widget"]["html"] = to_json();
@@ -134,6 +136,7 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
 
 void widget_info::update(io_state_stream const & ios, json const & message, json & record) {
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
+    lock_guard<mutex> _(m_mutex);
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
     unsigned handler_idx = message["handler"]["h"];
