@@ -21,15 +21,3 @@ def example_2 : S2 :=
   -- Now the goal contains a `{ carrier := ... }.carrier`,
   -- but even when we `dsimp` this, the `∈` is not disturbed.
   a2 := by { dsimp, trace_state, sorry } }
-
-
-set_option old_structure_cmd true
-class semigroup (α : Type*) extends has_mul α :=
-(mul_assoc : ∀ x y z : α, x * y * z = x * (y * z))
-
-set_option pp.all true
-#print semigroup
-
-example : semigroup ℕ :=
-{ mul := (*),
-  mul_assoc := _ }
