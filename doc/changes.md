@@ -1,10 +1,31 @@
-Widget
-------
+3.15.0c (28 May 2020)
+---------------------
+
+Features:
+  - Support for structured formatting using `eformat` (#276)
+  - Show goals for subterms (#275, #277)
+  - Freeze instances in the simplifier (#273)
+  - Support local attribute with docstring (#271)
+  - VM objects may be hashed (#262)
+  - `expr.coord` and `expr.address` (#260)
+  - Add `list.map_with_index` to core library (#259)
+  - Add `expr.instantiate_vars_core` (#261)
+  - Don't check levels on meta inductives (#263)
+
+Bug fixes:
+  - Preserve VM code indexes across instances (#283)
+  - Fixes a VM environment cache not updating (#280)
+  - Do not use fseek in io.fs.read (#278)
+  - Dot-notation pretty-printing (#269)
+
+Changes:
+  - Elaborate structure instances left-to-right (#282)
+  - Remove duplicated namespaces (#267)
+  - Remove `(|` and `|)` aliases (#265)
+
+### Special feature: widgets
 
 #### Lean API
-- Add `expr.coord` and `expr.address` for reasoning about positions in expressions.
-- Add `list.map_with_index : (nat → α → β) → list α → list β`
-- Add `expr.instantiate_vars_core : expr → nat → list expr → expr`
 - Add widgets. This is an HTML-based UI framework for generating html within lean to enable interactive UI
   in the infoview in vscode and on the web.
 - Add `tactic.save_widget: pos → widget.component tactic_state string → tactic unit`. Examples of widgets can be found in `library/widget/examples.lean`.
@@ -20,19 +41,13 @@ Widget
   For example, this lets you view types of pretty printed expressions and view implicit arguments.
 - Add numerous docstrings
 
-#### Kernel changes
-- Kernel no longer checks universe levels when declaring untrusted inductive definitions.
-  See src/kernel/inductive/inductive.cpp:413
-- Add `unsigned hash(expr const & e) {return e.hash()}` so that expressions can be hashed in templated methods.
-- Expose `expr instantiate(expr const & e, unsigned s, unsigned n, expr const * subst);` in src/kernel/instantiate.h
-
 #### Frontend/library changes
 
 - Overhaul pretty printer so that it can
   provide information about expression addresses.
   This required making it templated to output `T` instead of `format`.
   Currently `T` may be instantiated with `lean::format` or `lean::eformat`.
-  See src/library/vm/vm_eformat and
+  See `src/library/vm/vm_eformat` and
 - Info manager now supports widgets.
 - Server `info` response may now include a `"widget"` field on the returned `"record"` json.
 - Server has a new command `widget_event` to enable interactive widgets
