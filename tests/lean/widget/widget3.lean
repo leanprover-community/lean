@@ -1,4 +1,4 @@
-import widget
+
 open widget
 
 meta def asdf_c (message : list string) : component nat empty :=

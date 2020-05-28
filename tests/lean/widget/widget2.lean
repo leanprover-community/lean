@@ -1,4 +1,4 @@
-import widget
+
 open widget
 
 /-- A simple counter that can be incremented or decremented with some buttons. -/

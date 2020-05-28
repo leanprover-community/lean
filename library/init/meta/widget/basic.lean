@@ -4,7 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-import init.function init.data.option.basic init.util
+prelude
+import init.function
+import init.data.option.basic
+import init.util
+import init.meta.tactic
 
 /- A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 

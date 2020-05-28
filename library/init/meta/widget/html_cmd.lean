@@ -4,7 +4,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-import widget.basic
+prelude
+import init.meta.widget.basic
+import init.meta.lean.parser
+import init.meta.interactive_base
+import init.data.punit
 open lean
 open lean.parser
 open interactive

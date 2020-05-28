@@ -1,4 +1,4 @@
-import widget
+
 open widget
 
 inductive todo_list_action (α : Type)

@@ -4,7 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: E.W.Ayers
 -/
-import widget.tactic_component
+prelude
+import init.meta.widget.tactic_component
+import init.meta.interactive init.meta.derive
+import init.data.punit
 namespace widget
 
 meta class has_show_html (π : Type) :=
