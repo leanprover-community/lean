@@ -2856,6 +2856,9 @@ class visit_structure_instance_fn {
     // elaborated sources
     buffer<source> m_sources;
 
+    // Metavariables created for fields.
+    buffer<expr> m_field_mvars;
+
     /* Because field default values may introduce arbitrary dependencies on other field values (not only within a structure,
      * but even between a structure and its parent structures, in either direction), we cannot elaborate fields in a static
      * order. Instead, we register a metavar and an elaboration function for each field (create_field_mvars).
@@ -2895,16 +2898,11 @@ class visit_structure_instance_fn {
             } else {
                 name full_S_fname = m_S_name + S_fname;
                 expr pre_fval = mk_field_default_value(m_env, full_S_fname, [&](name const & fname) {
-                    // just insert mvars for now, we will check for any uninstantiated ones in `reduce_and_check_deps` below
+                    // just insert mvars for now, FIXME(gabriel) this used to be checked in `reduce_and_check_deps` below
                     return m_field2mvar[fname];
                 });
                 expr fval = m_elab.visit(pre_fval, some_expr(d));
-                /* Delta- and beta-reduce `_default` definition. This can remove dependencies when defaulting
-                 * a field of a parent structure.
-                 * For example, monad defaults applicative.seq in terms of map and bind. However, since map is part
-                 * of the subobject to_applicative as well, we get the recursive constraint
-                 * `?seq =?= monad.seq._default {to_functor := {map := ?map, ...}, seq := ?seq, ...} ?bind ...`
-                 * Reducing monad.seq._default allows `reduce_and_check_deps` below to remove the ?seq dependency. */
+                /* Delta- and beta-reduce `_default` definition. */
                 buffer<expr> args;
                 expr fn = get_app_args(fval, args);
                 if (is_constant(fn)) {
@@ -2920,7 +2918,13 @@ class visit_structure_instance_fn {
                     fval = mk_app(default_val, args);
                     fval = head_beta_reduce(fval);
                 }
-                reduce_and_check_deps(fval, full_S_fname);
+                /* For example, monad defaults applicative.seq in terms of map and bind. However, since map is part
+                 * of the subobject to_applicative as well, we get the recursive constraint
+                 * `?seq =?= monad.seq._default {to_functor := {map := ?map, ...}, seq := ?seq, ...} ?bind ...`
+                 * We need to remove this occurrence to please the occurs check when assigning the metavariable.
+                 */
+                if (m_use_subobjects)
+                    fval = reduce_projections_visitor(m_ctx)(fval);
                 return fval;
             }
         });
@@ -2959,6 +2963,7 @@ class visit_structure_instance_fn {
             } else {
                 /* struct field */
                 c_arg = m_elab.mk_metavar(S_fname.append_before("?"), d, m_ref);
+                m_field_mvars.push_back(c_arg);
 
                 /* Try to find field value, in the following order:
                  * 1) explicit value from m_fvalues
@@ -2973,16 +2978,24 @@ class visit_structure_instance_fn {
                     m_fnames_used.insert(S_fname);
                     expr const & p = m_fvalues[it - m_fnames.begin()];
                     m_field2elab.insert(S_fname, [=](expr const & d) {
-                        return m_elab.visit(p, some_expr(consume_auto_opt_param(d)));
+                        auto d2 = consume_auto_opt_param(d);
+                        auto e = m_elab.visit(p, some_expr(d2));
+                        if (auto e2 = m_elab.ensure_has_type(e, m_elab.infer_type(e), d2, p)) {
+                            return *e2;
+                        } else {
+                            return e;
+                        }
                     });
                 } else if (auto p = is_subobject_field(m_env, nested_S_name, S_fname)) {
                     /* subobject field */
+                    auto old_field_mvars_size = m_field_mvars.size();
                     auto num_used = m_fnames_used.size();
                     auto old_missing_fields = m_missing_fields;
                     auto nested = create_field_mvars(*p);
                     if (m_fnames_used.size() == num_used && field_from_source(S_fname)) {
                         // If the subobject doesn't contain any explicitly passed fields, we prefer to use
                         // its value directly from a source so that the two are definitionally equal
+                        m_field_mvars.resize(old_field_mvars_size);
                     } else if (!is_explicit(binding_info(c_type)) && m_fnames_used.size() == num_used &&
                             old_missing_fields.size() < m_missing_fields.size()) {
                         // If the subobject is a superclass, doesn't contain any explicitly passed fields,
@@ -2991,6 +3004,7 @@ class visit_structure_instance_fn {
                             return m_elab.mk_instance(d, m_ref);
                         });
                         m_missing_fields = old_missing_fields;
+                        m_field_mvars.resize(old_field_mvars_size);
                     } else {
                         // We assign the subtree to the mvar eagerly so that the mvars representing the nested
                         // structure parameters are assigned, which are not inlcuded in the m_mvar2field dependency
@@ -3042,40 +3056,6 @@ class visit_structure_instance_fn {
         return mk_pair(mk_app(c, c_args), c_type);
     }
 
-    /** Check `e` for dependencies on fields that have not been inserted yet.
-     * Also reduce projections containing mvars, which may remove dependencies.
-     * Example: `functor.map (functor.mk ?p1 ?m1 ?m2...) => ?m1`
-     */
-    void reduce_and_check_deps(expr & e, name const & full_S_fname) {
-        if (m_use_subobjects)
-            e = reduce_projections_visitor(m_ctx)(e);
-        name_set deps;
-        e = m_elab.instantiate_mvars(e);
-        for_each(e, [&](expr const & e, unsigned) {
-            name const *n;
-            if (is_metavar(e) && (n = m_mvar2field.find(mlocal_name(e))) && !m_ctx.is_assigned(e))
-                deps.insert(*n);
-            return has_expr_metavar(e);
-        });
-        if (!deps.empty()) {
-            throw field_not_ready_to_synthesize_exception([=]() {
-                format error = format("Failed to insert value for '") + format(full_S_fname) +
-                               format("', it depends on field(s) '");
-                bool first = true;
-                deps.for_each([&](name const & dep) {
-                    if (!first) error += format("', '");
-                    error += format(dep);
-                    first = false;
-                });
-                error += format("', but the value for these fields is not available.") + line() +
-                         format("Unfolded type/default value:") + line() +
-                         pp_until_meta_visible(m_elab.mk_fmt_ctx(), e) + line() +
-                         line();
-                return error;
-            });
-        }
-    }
-
     void elaborate_sources() {
         for (expr src : m_info.m_sources) {
             lean_assert(!m_elab.m_in_pattern);
@@ -3116,61 +3096,24 @@ class visit_structure_instance_fn {
         }
     }
 
-    /** Repeatedly try to elaborate fields whose dependencies have been elaborated.
-      * If we have not made any progress in a round, do a last one collecting any errors. */
-    void insert_field_values(expr const & e) {
-        bool done = false;
-        bool last_progress = true;
-
-        while (!done) {
-            done = true;
-            bool progress = false;
-            format error;
-            // Try to resolve helper metavars reachable from e. Note that `m_mvar2field` etc. may contain
-            // metavars unreachable from e because of backtracking.
-            expr e2 = m_elab.instantiate_mvars(e);
-            for_each(e2, [&](expr const & e, unsigned) {
-                if (is_metavar(e) && m_mvar2field.contains(mlocal_name(e))) {
-                    name S_fname = m_mvar2field[mlocal_name(e)];
-                    name full_S_fname = m_S_name + S_fname;
-                    expr expected_type = m_elab.infer_type(e);
-                    expr reduced_expected_type = m_elab.instantiate_mvars(expected_type);
-                    expr val;
-
-                    try {
-                        reduce_and_check_deps(reduced_expected_type, full_S_fname);
-                        /* note: we pass the reduced, mvar-free expected type. Otherwise auto params may fail with
-                         * "result contains meta-variables". */
-                        val = (*m_field2elab.find(S_fname))(reduced_expected_type);
-                    } catch (field_not_ready_to_synthesize_exception const & e) {
-                        done = false;
-                        if (!last_progress)
-                            error += e.m_fmt();
-                        return true;
-                    }
-
-                    expr val_type = m_elab.infer_type(val);
-                    if (auto val2 = m_elab.ensure_has_type(val, val_type, expected_type, m_ref)) {
-                        /* Make sure mvar is assigned, even if val2 is a meta var as well.
-                         * This is important for termination and the `instantiate_mvars` call in `operator()`.
-                         * Note that `ensure_has_type` has already unified their types, so this should not result
-                         * in any missed unifications.
-                         */
-                        m_ctx.match(e, *val2);
-                        trace_elab_detail(tout() << "inserted field '" << S_fname << "' with value '" << *val2 << "'"
-                                                 << "\n";)
-                        progress = true;
-                    } else {
-                        format msg = format("type mismatch at field '") + format(S_fname) + format("'");
-                        msg += m_elab.pp_type_mismatch(val, val_type, expected_type);
-                        throw elaborator_exception(val, msg);
-                    }
-                }
-                return has_metavar(e);
-            });
-            if (!last_progress && !progress)
-                throw elaborator_exception(m_ref, error);
-            last_progress = progress;
+    void insert_field_values() {
+        for (expr e : m_field_mvars) {
+            if (!m_mvar2field.contains(mlocal_name(e))) continue;
+            name S_fname = m_mvar2field[mlocal_name(e)];
+            name full_S_fname = m_S_name + S_fname;
+            e = m_elab.instantiate_mvars(e);
+            if (!is_metavar(e)) continue;
+            expr expected_type = m_elab.infer_type(e);
+            expr val = (*m_field2elab.find(S_fname))(expected_type);
+            expr val_type = m_elab.infer_type(val);
+            if (m_ctx.match(e, val)) {
+                trace_elab_detail(tout() << "inserted field '" << S_fname << "' with value '" << val << "'"
+                                         << "\n";)
+            } else {
+                format msg = format("type mismatch at field '") + format(S_fname) + format("'");
+                msg += m_elab.pp_type_mismatch(val, val_type, expected_type);
+                m_elab.report_or_throw(elaborator_exception(val, msg));
+            }
         }
     }
 public:
@@ -3212,7 +3155,7 @@ public:
         /* Make sure to unify first to propagate the expected type, we'll report any errors later on. */
         bool type_def_eq = !m_expected_type || m_elab.is_def_eq(*m_expected_type, c_type);
 
-        insert_field_values(e2);
+        insert_field_values();
 
         /* Check expected type */
         if (!type_def_eq) {
@@ -3799,14 +3742,13 @@ void elaborator::synthesize() {
     process_holes();
 }
 
-void elaborator::report_error(tactic_state const & s, char const * state_header,
-                              char const * msg, expr const & ref) {
+void elaborator::report_error(tactic_state const & s, std::string const & msg, expr const & ref) {
     auto tc = std::make_shared<type_context_old>(m_env, m_opts, m_ctx.mctx(), m_ctx.lctx());
     auto pip = get_pos_info_provider();
     if (!pip) return;
     message_builder out(tc, m_env, get_global_ios(), pip->get_file_name(),
                         pip->get_pos_info_or_some(ref), ERROR);
-    out << msg << "\n" << state_header << "\n" << mk_pair(s.pp(), m_opts);
+    out << msg << "\n" << mk_pair(s.pp(), m_opts);
     out.report();
     m_has_errors = true;
 }
@@ -3819,9 +3761,18 @@ void elaborator::ensure_no_unassigned_metavars(expr & e) {
             if (is_metavar_decl_ref(e) && !m_ctx.is_assigned(e)) {
                 tactic_state s = mk_tactic_state_for(e);
                 if (m_recover_from_errors) {
-                    auto ty = m_ctx.mctx().get_metavar_decl(e).get_type();
-                    if (!has_synth_sorry(ty))
-                        report_error(s, "context:", "don't know how to synthesize placeholder", e);
+                    auto decl = m_ctx.mctx().get_metavar_decl(e);
+                    auto ty = decl.get_type();
+                    if (!has_synth_sorry(ty)) {
+                        sstream msg;
+                        msg << "don't know how to synthesize placeholder";
+                        if (auto pp_name = decl.get_pp_name()) {
+                            msg << " (" << *pp_name << ")";
+                        }
+                        msg << "\n";
+                        msg << "context:";
+                        report_error(s, msg.str(), e);
+                    }
                     m_ctx.assign(e, copy_tag(e, mk_sorry(ty)));
                     ensure_no_unassigned_metavars(ty);
 

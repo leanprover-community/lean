@@ -1,5 +1,5 @@
 inaccessible.lean:14:10: error: invalid application, function expected
-inaccessible.lean:14:13: error: don't know how to synthesize placeholder
+inaccessible.lean:14:13: error: don't know how to synthesize placeholder (a)
 context:
 A : Type u,
 B : Type v,
@@ -8,7 +8,7 @@ inv_3 : Π (b : B), imf f b → A
 ⊢ A
 inaccessible.lean:13:11: error: equation compiler failed (use 'set_option trace.eqn_compiler.elim_match true' for additional details)
 inaccessible.lean:17:12: error: invalid inaccessible annotation, it cannot be used around functions in applications
-inaccessible.lean:17:16: error: don't know how to synthesize placeholder
+inaccessible.lean:17:16: error: don't know how to synthesize placeholder (a)
 context:
 A : Type u,
 B : Type v,
