@@ -20,6 +20,8 @@ meta constant mk_local (pretty_name : name) (type : expr) (bi : binder_info) : l
 meta constant get_local_decl : name → local_context → option local_decl
 meta constant get_local : name → local_context → option expr
 meta constant is_subset : local_context → local_context → bool
+meta constant has_decidable_eq : decidable_eq local_context
+attribute [instance] has_decidable_eq
 meta constant fold {α : Type} (f : α → expr → α): α → local_context → α
 meta def to_list : local_context → list expr := list.reverse ∘ fold (λ acc e, e :: acc) []
 meta def to_format : local_context → format := to_fmt ∘ to_list
