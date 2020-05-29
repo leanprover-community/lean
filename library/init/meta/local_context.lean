@@ -13,6 +13,8 @@ meta structure local_decl :=
     to declare which locals the metavariable is allowed to depend on. -/
 meta constant local_context : Type
 namespace local_context
+/-- The empty local context. -/
+meta constant empty : local_context
 /-- Add a new local constant to the lc. The new local has an unused unique_name. Fails when the type depends on local constants that are not present in the context.-/
 meta constant mk_local (pretty_name : name) (type : expr) (bi : binder_info) : local_context → option (expr × local_context)
 meta constant get_local_decl : name → local_context → option local_decl
