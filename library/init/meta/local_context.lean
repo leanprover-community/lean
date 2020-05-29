@@ -26,4 +26,8 @@ meta constant fold {α : Type} (f : α → expr → α): α → local_context �
 meta def to_list : local_context → list expr := list.reverse ∘ fold (λ acc e, e :: acc) []
 meta def to_format : local_context → format := to_fmt ∘ to_list
 meta instance lc_has_to_format : has_to_format local_context := ⟨to_format⟩
+meta instance lc_has_le : has_le local_context := ⟨λ a b, local_context.is_subset a b⟩
+meta instance lc_dec_le : decidable_rel ((≤) : local_context → local_context → Prop) := infer_instance
+meta instance lc_has_emptyc : has_emptyc local_context := ⟨empty⟩
+meta instance lc_inhabited : inhabited local_context := ⟨empty⟩
 end local_context
