@@ -455,7 +455,7 @@ function(add_exec_test name tgt)
     endif()
 endfunction()
 
-if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main)
+if(NOT BUILD_TESTING OR (EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main))
 # skip building standalone test binaries
 else()
 add_subdirectory(tests/util)
@@ -484,7 +484,7 @@ endif()
 
 endif()
 
-if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
+if(NOT BUILD_TESTING OR (EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main))
 # skip building tests for main files
 else()
 # Include style check
