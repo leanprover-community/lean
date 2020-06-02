@@ -40,9 +40,9 @@ Author: Leonardo de Moura
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
-    #include <Winsock2.h>
+    #include <winsock2.h>
     #include <windows.h>
-    #include <Fileapi.h>
+    #include <fileapi.h>
     #define UNIX_PATH_MAX 108
 
     typedef struct sockaddr_un {
