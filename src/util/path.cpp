@@ -13,6 +13,7 @@ Author: Leonardo de Moura, Gabriel Ebner
 #include <cstdlib>
 #include <fstream>
 #include <vector>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "util/exception.h"
@@ -74,7 +75,6 @@ std::string get_exe_location() {
 bool is_path_sep(char c) { return c == g_path_sep; }
 #else
 // Linux version
-#include <unistd.h>
 #include <string.h>
 #include <limits.h> // NOLINT
 #include <stdio.h>
@@ -117,6 +117,14 @@ std::string normalize_path(std::string f) {
     for (auto & c : f) {
         if (c == g_bad_sep)
             c = g_sep;
+    }
+    return f;
+}
+
+std::string to_unix_path(std::string f) {
+    for (auto & c : f) {
+        if (c == '\\')
+            c = '/';
     }
     return f;
 }
@@ -224,13 +232,13 @@ std::vector<std::string> read_dir(std::string const &dirname) {
     return files;
 }
 
-std::string lrealpath(std::string const & fname) {
+optional<std::string> try_realpath(std::string const & fname) {
 // return if in browser or WebWorker context
 #if defined(LEAN_EMSCRIPTEN)
     if (EM_ASM_INT({
         return (typeof window === 'object') || (typeof importScripts === 'function');
     })) {
-        return fname;
+        return optional<std::string>(fname);
     }
 #endif
 #if defined(LEAN_WINDOWS) && !defined(LEAN_CYGWIN)
@@ -238,19 +246,36 @@ std::string lrealpath(std::string const & fname) {
     char buffer[BufferSize];
     DWORD retval = GetFullPathName(fname.c_str(), BufferSize, buffer, nullptr);
     if (retval == 0 || retval > BufferSize) {
-        return fname;
+        return optional<std::string>();
     } else {
-        return std::string(buffer);
+        return optional<std::string>(std::string(buffer));
     }
 #else
     char * tmp = realpath(fname.c_str(), nullptr);
     if (tmp) {
         std::string r(tmp);
         ::free(tmp);
-        return r;
+        return optional<std::string>(r);
     } else {
-        throw file_not_found_exception(fname);
+        return optional<std::string>();
     }
 #endif
+}
+
+std::string lrealpath(std::string const & fname) {
+    if (auto r = try_realpath(fname))
+        return *r;
+    else
+        throw file_not_found_exception(fname);
+}
+
+std::string lgetcwd() {
+    if (char * cd = getcwd(nullptr, 0)) {
+        std::string res(cd);
+        free(cd);
+        return res;
+    } else {
+        throw exception(strerror(errno));
+    }
 }
 }

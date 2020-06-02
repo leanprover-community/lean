@@ -28,6 +28,8 @@ bool is_path_sep(char c);
 
 std::string normalize_path(std::string f);
 
+std::string to_unix_path(std::string f);
+
 /** \brief Find all files with the given extension recursively. */
 void find_files(std::string const & base, char const * ext, std::vector<std::string> & files);
 bool has_file_ext(std::string const & fname, char const * ext);
@@ -44,4 +46,7 @@ std::vector<std::string> read_dir(std::string const & dirname);
 bool file_exists(std::string const & fname);
 
 std::string lrealpath(std::string const & fname);
+optional<std::string> try_realpath(std::string const & fname);
+
+std::string lgetcwd();
 }

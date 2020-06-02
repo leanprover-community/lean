@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/pp_options.h"
 #include "library/trace.h"
 #include "library/util.h"
+#include "library/io_env.h"
 #include "library/cache_helper.h"
 #include "library/module.h"
 #include "library/check.h"
@@ -840,14 +841,17 @@ vm_obj tactic_add_aux_decl(vm_obj const & n, vm_obj const & type, vm_obj const &
     }
 }
 
-vm_obj tactic_unsafe_run_io(vm_obj const &, vm_obj const & a, vm_obj const & s) {
+vm_obj tactic_unsafe_run_io(vm_obj const &, vm_obj const & a, vm_obj const & _s) {
+    tactic_state s = tactic::to_state(_s);
+    auto env = s.env();
+    set_local_cwd(get_cwd(env));
     vm_obj r = invoke(a, mk_vm_unit());
     if (optional<vm_obj> a = is_io_result(r)) {
-        return tactic::mk_success(*a, tactic::to_state(s));
+        return tactic::mk_success(*a, set_env(s, set_cwd(env, get_local_cwd())));
     } else {
         optional<vm_obj> e = is_io_error(r);
         lean_assert(e);
-        return tactic::mk_exception(io_error_to_string(*e), tactic::to_state(s));
+        return tactic::mk_exception(io_error_to_string(*e), s);
     }
 }
 
