@@ -242,3 +242,6 @@ run_cmd do
         ),
         in_tmp_mode >>= guardb ∘ bnot
     )
+
+#eval to_bool $ local_context.empty = local_context.empty
+

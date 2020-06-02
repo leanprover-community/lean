@@ -246,6 +246,9 @@ meta constant expr.get_depth : expr → ℕ
     If `m` is not a metavariable then this is equivalent to `abstract_locals`.
  -/
 meta constant expr.mk_delayed_abstraction : expr → list name → expr
+/-- If the given expression is a delayed abstraction macro, return `some ls`
+where `ls` is a list of unique names of locals that will be abstracted. -/
+meta constant expr.get_delayed_abstraction_locals : expr → option (list name)
 
 /-- (reflected a) is a special opaque container for a closed `expr` representing `a`.
     It can only be obtained via type class inference, which will use the representation
