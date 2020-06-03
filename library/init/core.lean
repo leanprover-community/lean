@@ -151,6 +151,8 @@ which gives you a new hypothesis `h : P` and the goal `⊢ false`.
 
 A hypothesis `h : ¬ P` can be used in term mode as a function,
 so if `w : P` then `h w : false`.
+
+Related tactic: `contrapose`.
 -/
 def not (a : Prop) := a → false
 prefix `¬` := not
