@@ -12,6 +12,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_task.h"
 #include "util/list.h"
 #include "frontends/lean/widget.h"
 #include "frontends/lean/json.h"
@@ -103,9 +104,11 @@ void stateful::render() {
 }
 
 void delayed::render() {
-    vm_obj child_comp = child_component();
-    vm_obj props = mk_vm_pair(m_props, m_task.done ? mk_vm_some(m_task.result) : mk_vm_none());
-    component_instance * new_child = vdom(new_component_instance(child_comp, props, child_route()));
+    vm_obj child_comp = cfield(m_component.to_vm_obj(),1);
+    lean_assert(m_task);
+    optional<ts_vm_obj> result = peek(*m_task);
+    vm_obj props = mk_vm_pair(m_props.to_vm_obj(), result ? mk_vm_some(result->to_vm_obj()) : mk_vm_none());
+    component_instance * new_child = new_component_instance(child_comp, props, child_route());
     std::vector<vdom> elements = {vdom(new_child)};
     std::vector<vdom> old_elements = m_render;
     reconcile_children(elements, old_elements);
@@ -128,7 +131,6 @@ void component_instance::reconcile(vdom const & old) {
         vm_obj p_old = ci_old->m_props.to_vm_obj();
         if (p_new == p_old || props_are_equal(p_old, p_new)) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
-            m_handlers = ci_old->m_handlers;
             m_children = ci_old->m_children;
             m_render   = ci_old->m_render;
             m_id       = ci_old->m_id;
@@ -150,6 +152,7 @@ void component_instance::reconcile(vdom const & old) {
 }
 
 void stateful::initialize() {
+    if (m_state) {return; }
     m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()))
 }
 
@@ -165,32 +168,43 @@ void stateful::carry(component_instance * old) {
     stateful * ci_old = dynamic_cast<stateful *>(old);
     lean_assert(ci_old);
     m_state    = ci_old->m_state;
+    m_handlers = ci_old->m_handlers;
 }
 
 void delayed::initialize() {
-    vm_obj tb = cfield(m_component,0);
-    vm_obj vt = invoke(tb, m_props.to_vm_obj());
-    lean_assert(is_vm_external(vt));
-    task<vm_obj> t = dynamic_cast(vm_task *)(vt.raw());
-    m_task = some(t);
+    if (m_task) {return; }
+    vm_obj vt = invoke(cfield(m_component.to_vm_obj(),0), m_props.to_vm_obj());
+    task<ts_vm_obj> t = to_task(vt);
+    m_task = optional<task<ts_vm_obj>>(t);
+    taskq().submit(t);
     unsigned handler_id = g_fresh_handler_id.fetch_add(1);
-    vm_obj handler = _;
-    m_handlers[handler_id] = handler;
-    // [todo] put t in some kind of task-queue.
-    // [todo] add an event listener for when the task completes -- that is, make a new event handler etc.
+    m_handler = handler_id;
+    auto route = cons(m_id, m_route);
+    pending_tasks().push_back(task_builder<list<unsigned>>([route] {
+        return route;
+    }).depends_on(t).build());
 }
 
 void delayed::carry(component_instance * old) {
-    delayed * ci_old = _;
+    delayed * ci_old = dynamic_cast<delayed *>(old);
     lean_assert(ci_old);
     m_task = ci_old->m_task;
 }
 
 void delayed::props_changed(component_instance * old) {
-    delayed * ci_old = _;
+    delayed * ci_old = dynamic_cast<delayed *>(old);
     // cancel the old task, hopefully any task queue stuff will get removed eventually.
-    ci_old->m_task->cancel();
+    if (ci_old->m_task) {
+        task<ts_vm_obj> t = *(ci_old->m_task);
+        taskq().fail_and_dispose(t);
+    }
     initialize();
+}
+
+delayed::~delayed() {
+    if (m_task) {
+        taskq().fail_and_dispose(*m_task); //hopefully this doesn't error if it's already disposed.
+    }
 }
 
 void delayed::reconcile(vdom const & old) {
@@ -199,18 +213,15 @@ void delayed::reconcile(vdom const & old) {
     if (ci_old && ci_old->m_component_hash == m_component_hash) {
         vm_obj p_new = m_props.to_vm_obj();
         vm_obj p_old = ci_old->m_props.to_vm_obj()
-
     } else {
         // old component is different.
         render();
     }
 }
 
-json stateful::to_json(list<unsigned> const & route) {
+json component_instance::to_json(list<unsigned> const & route) {
     if (!m_has_rendered) {
-        if (!m_state) {
-            m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()));
-        }
+        initialize();
         render();
     }
     json children = json::array();
@@ -411,5 +422,18 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
 void initialize_widget() {}
 
 void finalize_widget() {}
+
+
+static pending_tasks * g_pending_tasks = nullptr;
+void set_pending_tasks(pending_tasks * q) {
+    if (g_pending_tasks) throw exception("cannot set task queue twice");
+    g_pending_tasks = q;
+}
+void unset_pending_tasks() {
+    g_pending_tasks = nullptr;
+}
+pending_tasks & get_pending_tasks() {
+    return *g_pending_tasks;
+}
 
 }

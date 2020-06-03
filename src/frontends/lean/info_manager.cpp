@@ -22,6 +22,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/json.h"
 #include "frontends/lean/info_manager.h"
 #include "frontends/lean/interactive.h"
+#include "util/task_builder.h"
 
 namespace lean {
 class type_info_data : public info_data_cell {
@@ -131,7 +132,27 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     lock_guard<mutex> _(*mp);
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
+    pending_tasks pts;
+    set_pending_tasks(&pts);
     record["widget"]["html"] = to_json();
+    unset_pending_tasks();
+    any(pts, [] (list<unsigned> route) => {
+        // perform the update. notify the server somehow, probably through the log tree.
+    })
+    // [todo] for each task in pts notify the logtree that the state changed whenever one of the tasks completes.
+
+    // sketch: I would rather this does something like 'task.first_to_complete(gs)`
+    for (auto pt:pts) {
+        gtask g = pt.first;
+        auto route = pt.second.first;
+        auto handler_id = pt.second.second;
+        taskq().submit(task_builder([g, route, handler_id] {
+            auto r = g.get();
+            auto res = c->handle_event(route, handler_id, mk_vm_unit());
+            lean_assert(!res);
+            return unit{};
+        }).depends_on(g).build());
+    }
 }
 
 void widget_info::update(io_state_stream const & ios, json const & message, json & record) {
@@ -147,7 +168,7 @@ void widget_info::update(io_state_stream const & ios, json const & message, json
     }
     route = tail(route); // disregard the top component id because that is the root component
     json j_args = message["args"];
-    stateful * c = const_cast<stateful *>(dynamic_cast<stateful *>(m_vdom.raw()));
+    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
     vm_obj vm_args;
     std::string arg_type = j_args["type"];
     if (arg_type == "unit") {
@@ -181,7 +202,7 @@ info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
 }
 
 info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj const & widget) {
-    vdom c = vdom(new stateful(widget, props));
+    vdom c = vdom(new_component_instance(widget, props));
     return info_data(new widget_info(env, c));
 }
 

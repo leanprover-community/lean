@@ -71,6 +71,8 @@ class widget_info : public info_data_cell {
     environment  m_env;
     vdom         m_vdom;
     mutex        m_mutex;
+    /** Event */
+    event<unit>   m_update_task;
 public:
     widget_info(environment const & env, vdom const & vd): m_env(env), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;

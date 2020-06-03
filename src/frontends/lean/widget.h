@@ -80,9 +80,9 @@ class component_instance : public vdom_cell {
   bool m_has_rendered = false;
   unsigned m_reconcile_count = 0;
   std::vector<vdom> m_render;
-  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
   optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
   virtual ~component_instance() = 0;
+  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
 protected:
   std::vector<component_instance *> m_children;
   list<unsigned> child_route() {return cons(m_id, m_route); }
@@ -95,6 +95,8 @@ protected:
   /** convert a handler_id and args to an outer_action */
   virtual optional<vm_obj> handle_event_core(unsigned handler_id, vm_obj const & event_args) = 0;
 }
+
+component_instance * new_component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
 
 class stateful : public component_instance {
     optional<ts_vm_obj> m_state;
@@ -112,44 +114,17 @@ public:
 };
 
 class delayed : public component_instance {
-  ts_vm_obj const m_component; // = component.delayed task_builder comp props_eq
-  unsigned int m_component_hash;
-  optional<task<vm_obj>> m_task;
-  vm_obj child_component() { return cfield(m_component, 1);}
+  optional<task<ts_vm_obj>> m_task;
+  unsigned m_handler;
 public:
   delayed(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : component_instance(c,props,route) {};
-  void render() {
-    /*
-
-      m_task = some(m_component.task_builder(props));
-      m_new_child = mk_component(m_component.comp, (props, none));
-
-
-     */
-  }
+  void render();
   json to_json(list<unsigned> const & route) override;
   optional<vm_obj> handle_action(vm_obj const & a) override;
-  void reconcile(vdom const & old) {
-    /* If its a delayed_instance, then check the component hashes and props hashes.
-      old_inst : delayed_instance = old->***;
-      if (component hashes equal) {
-
-      } else {
-        render();
-        // the in-flight tasks on old are cancelled when it is deconstructed.
-      }
-     */
-  };
-  ~delayed_instance() {
-    /* delete in-flight task */
-    if (m_task) {
-      m_task->cancel();
-    }
-  }
-
-
+  void reconcile(vdom const & old);
+  void initialize() override;
+  ~delayed_instance();
 };
-
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
  *  new_children is mutated so that they point to vdom components that were successfully reconciled with the old version.
@@ -176,5 +151,10 @@ public:
     virtual throwable * clone() const { return new invalid_handler(); }
     virtual void rethrow() const { throw *this; }
 };
+
+typedef std::vector<task<list<unsigned>>> pending_tasks;
+void set_pending_tasks(pending_tasks * q);
+void unset_pending_tasks();
+pending_tasks & get_pending_tasks();
 
 }
