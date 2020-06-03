@@ -27,16 +27,7 @@ Author: Leonardo de Moura
 #else
     #include <unistd.h>
 #endif
-#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
-    #include <sys/socket.h>
-    #include <sys/un.h>
-    #define SOCKET int
-    #define SOCKIO_BYTES ssize_t
-    #define INVALID_SOCKET (-1)
-    #define SOCKET_ERROR (-1)
-    #define SOCKET_GET_ERROR() strerror(errno)
-    #define closesocket(fd) close(fd)
-#else
+#ifdef _WIN32
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
@@ -52,6 +43,15 @@ Author: Leonardo de Moura
 
     #define SOCKIO_BYTES int
     #define SOCKET_GET_ERROR() WSAGetLastError()
+#else
+    #include <sys/socket.h>
+    #include <sys/un.h>
+    #define SOCKET int
+    #define SOCKIO_BYTES ssize_t
+    #define INVALID_SOCKET (-1)
+    #define SOCKET_ERROR (-1)
+    #define SOCKET_GET_ERROR() strerror(errno)
+    #define closesocket(fd) close(fd)
 #endif
 #ifdef __linux__
     #include <linux/limits.h>
@@ -500,10 +500,10 @@ static vm_obj fs_rename(vm_obj const & p1, vm_obj const & p2, vm_obj const &) {
 }
 
 int mkdir_single(const char *path) {
-#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
-    return mkdir(path, 0777);
-#else
+#ifdef _WIN32
     return !CreateDirectoryA(path, NULL);
+#else
+    return mkdir(path, 0777);
 #endif
 }
 
@@ -556,10 +556,10 @@ static vm_obj fs_mkdir(vm_obj const & _path, vm_obj const & rec, vm_obj const &)
 
 static vm_obj fs_rmdir(vm_obj const & path, vm_obj const &) {
     bool res;
-#if defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN)
-    res = !rmdir(to_string(path).c_str());
-#else
+#ifdef _WIN32
     res = RemoveDirectoryA(to_string(path).c_str());
+#else
+    res = !rmdir(to_string(path).c_str());
 #endif
     return mk_io_result(mk_vm_bool(res));
 }
@@ -935,7 +935,7 @@ vm_obj monad_io_random_impl() {
 }
 
 void initialize_vm_io() {
-#if !(defined(__linux__) || defined(__APPLE__) || defined(LEAN_EMSCRIPTEN))
+#ifdef _WIN32
     WSADATA wsaData;
     int err = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (err != 0) {
