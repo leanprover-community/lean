@@ -183,7 +183,7 @@ init_quotient
 /--
 Heterogeneous equality.
 
-It's purpose is to write down equalities between terms whose types are not definitionally equal.
+Its purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
 
 If you have a goal `⊢ x == y`, 
