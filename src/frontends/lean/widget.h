@@ -72,36 +72,84 @@ struct vdom_string : public vdom_cell {
 };
 
 class component_instance : public vdom_cell {
-    ts_vm_obj const m_component;
-    unsigned int m_component_hash;
+  ts_vm_obj const m_component;
+  ts_vm_obj const m_props;
+  unsigned int m_component_hash;
+  unsigned m_id;
+  list<unsigned> m_route;
+  bool m_has_rendered = false;
+  unsigned m_reconcile_count = 0;
+  std::vector<vdom> m_render;
+  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+  virtual ~component_instance() = 0;
+protected:
+  std::vector<component_instance *> m_children;
+  list<unsigned> child_route() {return cons(m_id, m_route); }
+  virtual void initialize() = 0;
+  virtual void props_changed(component_instance & previous) = 0;
+  virtual void carry(component_instance & previous) = 0;
+  virtual bool props_are_equal(vm_obj const & p_old, vm_obj const & p_new) = 0;
+  /** convert an inner action to an outer action */
+  virtual optional<vm_obj> handle_action(vm_obj const & a) = 0;
+  /** convert a handler_id and args to an outer_action */
+  virtual optional<vm_obj> handle_event_core(unsigned handler_id, vm_obj const & event_args) = 0;
+}
 
-    ts_vm_obj m_props;
+class stateful : public component_instance {
     optional<ts_vm_obj> m_state;
-
-    std::vector<vdom> m_render;
-    // [note] these component instances are owned by one of the vdoms in `m_render`.
-    // Should never point to something not owned by m_render.
-    std::vector<component_instance *> m_children;
     std::map<unsigned, ts_vm_obj> m_handlers;
-
-    unsigned m_id;
-    list<unsigned> m_route;
-
-    bool m_has_rendered;
-    unsigned m_reconcile_count;
-
     vm_obj init(vm_obj const & p, optional<vm_obj> const & s);
     pair<vm_obj, optional<vm_obj>> update(vm_obj const & p, vm_obj const & s, vm_obj const & a);
     vm_obj view(vm_obj const & p, vm_obj const & s);
-    bool props_are_equal(vm_obj const & p_old, vm_obj const & p_new);
+
 public:
     void render();
-    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+    stateful(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : component_instance(c,props,route) {};
     json to_json(list<unsigned> const & route) override;
     void reconcile(vdom const & old);
-    optional<vm_obj> handle_action(vm_obj const & a);
-    optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+    optional<vm_obj> handle_action(vm_obj const & a) override;
 };
+
+class delayed : public component_instance {
+  ts_vm_obj const m_component; // = component.delayed task_builder comp props_eq
+  unsigned int m_component_hash;
+  optional<task<vm_obj>> m_task;
+  vm_obj child_component() { return cfield(m_component, 1);}
+public:
+  delayed(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : component_instance(c,props,route) {};
+  void render() {
+    /*
+
+      m_task = some(m_component.task_builder(props));
+      m_new_child = mk_component(m_component.comp, (props, none));
+
+
+     */
+  }
+  json to_json(list<unsigned> const & route) override;
+  optional<vm_obj> handle_action(vm_obj const & a) override;
+  void reconcile(vdom const & old) {
+    /* If its a delayed_instance, then check the component hashes and props hashes.
+      old_inst : delayed_instance = old->***;
+      if (component hashes equal) {
+
+      } else {
+        render();
+        // the in-flight tasks on old are cancelled when it is deconstructed.
+      }
+     */
+  };
+  ~delayed_instance() {
+    /* delete in-flight task */
+    if (m_task) {
+      m_task->cancel();
+    }
+  }
+
+
+};
+
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
  *  new_children is mutated so that they point to vdom components that were successfully reconciled with the old version.
@@ -109,9 +157,9 @@ public:
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & old_elements);
 
 // void render_attr(vm_obj const & attr, json & attributes, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers);
-vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
-vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
-std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
+vdom render_element(vm_obj const & elt, std::vector<stateful*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
+vdom render_html(vm_obj const & html, std::vector<stateful*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
+std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<stateful*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
 
 void initialize_widget();
 void finalize_widget();

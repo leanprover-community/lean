@@ -130,6 +130,11 @@ with component : Type → Type → Type
      /- If this returns true, then the component will not call 'view' again. -/
      (props_eq : Props → Props → bool)
      : component Props Action
+| delayed {Props Result Action : Type}
+          (task_builder : Props → task Result)
+          (comp : component (Props × option Result) Action)
+          (props_eq: Props → Props → bool)
+          : component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
