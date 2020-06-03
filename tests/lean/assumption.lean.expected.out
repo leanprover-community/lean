@@ -1,3 +1,3 @@
-{"msgs":[{"caption":"trace output","file_name":"assumption.lean","pos_col":2,"pos_line":3,"severity":"information","text":"Try this: h1\n"}],"response":"all_messages"}
-{"msgs":[{"caption":"trace output","file_name":"assumption.lean","pos_col":2,"pos_line":3,"severity":"information","text":""Try this: @h1\n"},"response":"all_messages"]
-{"message":"file invalidated","response":"ok","seq_num":0}
+-{"msgs":[{"caption":"trace output","file_name":"assumption.lean","pos_col":2,"pos_line":3,"severity":"information","text":"Try this: h1\n"}],"response":"all_messages"}
+-{"msgs":[{"caption":"trace output","file_name":"assumption.lean","pos_col":2,"pos_line":3,"severity":"information","text":""Try this: @h1\n"},"response":"all_messages"]
+-{"message":"file invalidated","response":"ok","seq_num":0}
