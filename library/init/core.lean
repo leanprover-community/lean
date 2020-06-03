@@ -178,10 +178,18 @@ quot.lift f _ (quot.mk a) ~~> f a
 -/
 init_quotient
 
-/-- Heterogeneous equality.
+/--
+Heterogeneous equality.
+
 It's purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
- -/
+
+If you have a goal `⊢ x == y`, 
+your first instinct should be to ask (either yourself, or on zulip)
+if something has gone wrong already.
+If you really do need to follow this route, 
+you may find the lemmas `eq_rec_heq` and `eq_mpr_heq` useful.
+-/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
 | refl [] : heq a
 
