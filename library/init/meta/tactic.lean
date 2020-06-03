@@ -960,9 +960,9 @@ do { ctx ← local_context,
      H   ← find_same_type t ctx,
      when trace_result $
        do { pp_H ← pp H,
-       H_type ← tactic.infer_type H,
-       let H_format := if is_implicit H_type then ↑"@" ++ pp_H else pp_H,
-       trace ( ("Try this: exact " : format) ++ H_format) },
+         H_type ← tactic.infer_type H,
+         let H_format := if is_implicit H_type then ↑"@" ++ pp_H else pp_H,
+         trace ( ("Try this: exact " : format) ++ H_format) },
      exact H }
 <|> fail "assumption tactic failed"
 
