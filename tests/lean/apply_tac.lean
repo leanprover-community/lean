@@ -51,7 +51,7 @@ rfl
 
 open tactic
 
-lemma foo {a b c : nat} (h₁ : a = b) (h₂ : b = c . assumption) : a = c :=
+lemma foo {a b c : nat} (h₁ : a = b) (h₂ : b = c . assumption'') : a = c :=
 eq.trans h₁ h₂
 
 example (a b c : nat) (h₁ : a = b) (h₂ : b = c) : a = c :=
@@ -59,7 +59,7 @@ begin
   apply @foo a b c h₁ -- uses auto_param for solving goal
 end
 
-lemma my_div_self (a : nat) (h : a ≠ 0 . assumption) : a / a = 1 :=
+lemma my_div_self (a : nat) (h : a ≠ 0 . assumption'') : a / a = 1 :=
 sorry
 
 example (a : nat) (h : a ≠ 0) : a / a = 1 :=

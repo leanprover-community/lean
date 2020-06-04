@@ -243,18 +243,24 @@ Note that some holes may be implicit. The type of each hole must either be synth
 meta def refine (q : parse texpr) : tactic unit :=
 tactic.refine q
 
+precedence `?`:max
 /--
 This tactic looks in the local context for a hypothesis whose type is equal to the goal target.
 If it finds one, it uses it to prove the goal, and otherwise it fails.
 `assumption?` will print the name of the goal that it found.
 -/
-
 meta def assumption (trace_result : parse $ optional (tk "?")) :=
 tactic.assumption trace_result.is_some
+
 
 /-- Try to apply `assumption` to all goals. -/
 meta def assumption' : tactic unit :=
 tactic.any_goals' tactic.assumption
+
+
+/-- Try to apply `assumption` to all goals. -/
+meta def assumption'' : tactic unit :=
+tactic.assumption
 
 private meta def change_core (e : expr) : option expr → tactic unit
 | none     := tactic.change e
