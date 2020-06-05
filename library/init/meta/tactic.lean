@@ -1759,7 +1759,7 @@ do t ← target,
 meta def eval_pexpr (α) [reflected α] (e : pexpr) : tactic α :=
 to_expr ``(%%e : %%(reflect α)) ff ff >>= eval_expr α
 
-meta def tactic.run_simple {α} : tactic_state → tactic α → option α
+meta def run_simple {α} : tactic_state → tactic α → option α
 | ts t := match t ts with
           | (interaction_monad.result.success a ts') := some a
           | (interaction_monad.result.exception _ _ _) := none
