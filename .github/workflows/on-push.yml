@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
-      - uses: eine/setup-msys2@v0
+      - uses: eine/setup-msys2@v1
         with:
           update: true
           install: 'base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git'
