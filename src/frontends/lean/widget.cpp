@@ -21,6 +21,28 @@ Author: E.W.Ayers
 
 namespace lean {
 
+enum component_idx {
+    pure = 0,
+    filter_map_action = 1,
+    map_props = 2,
+    with_should_update = 3,
+    with_state = 4,
+    with_task = 5,
+    with_mouse_capture = 6
+};
+enum html_idx {
+    element = 7,
+    of_string = 8,
+    of_component = 9
+};
+enum attr_idx {
+    val = 10,
+    mouse_event = 11,
+    style = 12,
+    tooltip = 13,
+    text_change_event = 14
+};
+
 std::atomic_uint g_fresh_handler_id;
 std::atomic_uint g_fresh_component_instance_id;
 
@@ -64,55 +86,175 @@ json vdom_element::to_json(list<unsigned> const & route) {
     return entry;
 }
 
-component_instance::component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route):
-  m_component(c), m_props(props), m_route(route) {
-      m_id = g_fresh_component_instance_id.fetch_add(1);
-      m_reconcile_count = 0;
-      m_component_hash = hash(c);
+struct filter_map_action_hook : public component_hook {
+    ts_vm_obj const m_map;
+    ts_vm_obj m_props;
+    virtual void initialize(vm_obj const & props) override {
+        m_props = props;
+    }
+    virtual bool reconcile(vm_obj const & props, component_hook const & prev) override {
+        m_props = props;
+        return true;
+    }
+    virtual optional<vm_obj> action(vm_obj const & action) override {
+        lean_assert(m_props);
+        vm_obj o = invoke(m_map.to_vm_obj(), m_props.to_vm_obj(), action);
+        return get_optional(o);
+    }
+    filter_map_action_hook(ts_vm_obj const map): m_map(map) {}
+};
+
+struct map_props_hook: public component_hook {
+    ts_vm_obj const m_map;
+    virtual vm_obj get_props(vm_obj const & props) override {
+        return invoke(m_map.to_vm_obj(), props);
+    }
+    map_props_hook(ts_vm_obj const map): m_map(map) {}
+};
+
+struct with_should_update_hook : public component_hook {
+    ts_vm_obj const m_su;
+    ts_vm_obj m_props;
+    virtual void initialize(vm_obj const & props) override {
+        m_props = props;
+    }
+    virtual bool reconcile(vm_obj const & new_props, component_hook const & previous) override {
+        with_should_update_hook const * prev = dynamic_cast<with_should_update_hook const *>(&previous);
+        if (!prev) {return true;}
+        vm_obj prev_props = (prev->m_props).to_vm_obj();
+        if (!prev_props) {return true;}
+        m_props = new_props;
+        return to_bool(invoke(m_su.to_vm_obj(), prev_props, new_props));
+    }
+    with_should_update_hook(ts_vm_obj const su): m_su(su) {}
+};
+
+struct stateful_hook : public component_hook {
+    ts_vm_obj const m_init;
+    ts_vm_obj const m_update;
+    ts_vm_obj m_props;
+    optional<ts_vm_obj> m_state;
+    void initialize(vm_obj const & props) override {
+        vm_obj s = m_state ? mk_vm_none() : mk_vm_some((*m_state).to_vm_obj());
+        vm_obj r = invoke(m_init.to_vm_obj(), props, s);
+        m_state = r;
+        m_props = props;
+    }
+    bool reconcile(vm_obj const & props, component_hook const & previous) override {
+        stateful_hook const * prev = dynamic_cast<stateful_hook const *>(&previous);
+        // assume the props have changed
+        if (prev) {
+            m_state = prev->m_state;
+            initialize(props);
+        }
+        initialize(props);
+        return true;
+    }
+    vm_obj get_props(vm_obj const & props) override {
+        if (!m_state) {initialize(props);}
+        return mk_vm_pair((*m_state).to_vm_obj(), props);
+    }
+    optional<vm_obj> action(vm_obj const & action) override {
+        lean_assert(m_state);
+        lean_assert(m_props);
+        vm_obj r = invoke(m_update.to_vm_obj(), m_props.to_vm_obj(), (*m_state).to_vm_obj(), action);
+        m_state = cfield(r,0);
+        return get_optional(cfield(r,1));
+    }
+    stateful_hook(vm_obj const & init, vm_obj const & update) : m_init(init), m_update(update) {}
+};
+
+struct with_mouse_capture_hook : public component_hook {
+    vm_obj get_props(vm_obj const & props) override {
+        return mk_vm_pair(mk_vm_simple(0), props);
+    }
+    with_mouse_capture_hook() {}
+};
+struct with_task_hook : public component_hook {
+    ts_vm_obj const m_tb;
+    task<ts_vm_obj> m_task;
+    virtual bool reconcile(vm_obj const & props, component_hook const & old) override {
+        // assume that the props have changed. so we have to just recompute.
+        // with_task_hook const * t_old = dynamic_cast<with_task_hook const *>(&old);
+        initialize(props);
+        return true;
+    }
+    virtual void initialize(vm_obj const & props) override {
+        if (m_task) {return; }
+        vm_obj vt = invoke(m_tb.to_vm_obj(), props);
+        m_task = to_task(vt);
+        taskq().submit(m_task);
+        // [todo]: set up a handler for when the task completes.
+        // unsigned handler_id = g_fresh_handler_id.fetch_add(1);
+        // m_handler = handler_id;
+        // auto route = cons(m_id, m_route);
+        // pending_tasks().push_back(task_builder<list<unsigned>>([route] {
+        //     return route;
+        // }).depends_on(t).build());
+    }
+    vm_obj get_props(vm_obj const & props) override {
+        optional<ts_vm_obj> result = peek(m_task);
+        return mk_vm_pair(result ? mk_vm_some((*result).to_vm_obj()) : mk_vm_none(), props);
+    }
+    with_task_hook(vm_obj const & tb): m_tb(tb) {}
+    ~with_task_hook() {
+        if (m_task) {
+            taskq().fail_and_dispose(m_task); //hopefully this doesn't error if it's already disposed.
+        }
+    }
+};
+
+component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
+  m_props(props), m_route(route) {
+    m_id = g_fresh_component_instance_id.fetch_add(1);
+    m_reconcile_count = 0;
+    m_component_hash = hash(component);
+    vm_obj c = component;
+    while (cidx(c) != component_idx::pure) {
+        switch (cidx(c)) {
+            case component_idx::pure: break;
+            case component_idx::filter_map_action:
+                m_hooks.push_back(filter_map_action_hook(cfield(c, 0)));
+                c = cfield(c,1);
+                break;
+            case component_idx::map_props:
+                m_hooks.push_back(map_props_hook(cfield(c,0)));
+                c = cfield(c,1);
+                break;
+            case component_idx::with_should_update:
+                m_hooks.push_back(with_should_update_hook(cfield(c,0)));
+                c = cfield(c,1);
+                break;
+            case component_idx::with_state:
+                m_hooks.push_back(stateful_hook(cfield(c,0), cfield(c,1)));
+                c = cfield(c,2);
+                break;
+            case component_idx::with_task:
+                m_hooks.push_back(with_task_hook(cfield(c,0)));
+                c = cfield(c,1);
+                break;
+            case component_idx::with_mouse_capture:
+                m_hooks.push_back(with_mouse_capture_hook());
+                c = cfield(c,0);
+                break;
+            default:
+                lean_unreachable();
+                break;
+        }
+    }
+    m_view = cfield(c,0);
 }
 
-vm_obj stateful::init(vm_obj const & p, optional<vm_obj> const & s) {
-    vm_obj os = s ? mk_vm_some(*s) : mk_vm_none();
-    return invoke(cfield(m_component.to_vm_obj(), 0), p, os);
-}
-
-pair<vm_obj, optional<vm_obj>> stateful::update(vm_obj const & p, vm_obj const & s, vm_obj const & a) {
-    vm_obj sa = invoke(cfield(m_component.to_vm_obj(), 1), p, s, a);
-    vm_obj oa = cfield(sa, 1);
-    optional<vm_obj> o = is_none(oa) ? optional<vm_obj>() : optional<vm_obj>(get_some_value(oa));
-    return mk_pair(cfield(sa, 0), o);
-}
-
-vm_obj stateful::view(vm_obj const & p, vm_obj const & s) {
-    return invoke(cfield(m_component.to_vm_obj(), 2), p, s);
-}
-
-bool stateful::props_are_equal(vm_obj const & p_old, vm_obj const & p_new) {
-    return to_bool(invoke(cfield(m_component.to_vm_obj(), 3), p_old, p_new));
-}
-
-void stateful::render() {
+void component_instance::render() {
+    lean_assert(m_inner_props);
     std::vector<component_instance *> children;
     std::map<unsigned, ts_vm_obj> handlers;
-    std::vector<vdom> elements = render_html_list(view(m_props.to_vm_obj(), (*m_state).to_vm_obj()), children, handlers, cons(m_id, m_route));
+    vm_obj view = invoke(m_view.to_vm_obj(), m_inner_props.to_vm_obj());
+    std::vector<vdom> elements = render_html_list(view, children, handlers, cons(m_id, m_route));
     std::vector<vdom> old_elements = m_render;
     reconcile_children(elements, old_elements);
     m_handlers = handlers;
     m_children = children;
-    m_render = elements;
-    m_has_rendered = true;
-}
-
-void delayed::render() {
-    vm_obj child_comp = cfield(m_component.to_vm_obj(),1);
-    lean_assert(m_task);
-    optional<ts_vm_obj> result = peek(*m_task);
-    vm_obj props = mk_vm_pair(m_props.to_vm_obj(), result ? mk_vm_some(result->to_vm_obj()) : mk_vm_none());
-    component_instance * new_child = new_component_instance(child_comp, props, child_route());
-    std::vector<vdom> elements = {vdom(new_child)};
-    std::vector<vdom> old_elements = m_render;
-    reconcile_children(elements, old_elements);
-    m_children = {new_child};
     m_render = elements;
     m_has_rendered = true;
 }
@@ -129,19 +271,31 @@ void component_instance::reconcile(vdom const & old) {
         // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
         vm_obj p_new = m_props.to_vm_obj();
         vm_obj p_old = ci_old->m_props.to_vm_obj();
-        if (p_new == p_old || props_are_equal(p_old, p_new)) {
+        lean_assert(m_hooks.length == ci_old->m_hooks.size());
+        bool should_update = p_new != p_old;
+        for (unsigned i = 0; i < m_hooks.size(); i++) {
+            if (should_update) {
+                should_update &= m_hooks[i].reconcile(p_new, ci_old->m_hooks[i]);
+            }
+            if (!should_update) {
+                m_hooks[i] = ci_old->m_hooks[i];
+            } else {
+                p_new = m_hooks[i].get_props(p_new);
+            }
+        }
+
+        if (!should_update) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
+            m_inner_props = ci_old->m_inner_props;
             m_children = ci_old->m_children;
             m_render   = ci_old->m_render;
             m_id       = ci_old->m_id;
             m_has_rendered = true;
             m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
-            carry(ci_old);
         } else {
             // the props have changed, so we need to rerender this component.
-            // we use `init` to recompute the state.
-            props_changed(ci_old);
+            m_inner_props = p_new;
             render();
         }
     } else {
@@ -151,72 +305,13 @@ void component_instance::reconcile(vdom const & old) {
     }
 }
 
-void stateful::initialize() {
-    if (m_state) {return; }
-    m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()))
-}
-
-void stateful::props_changed(component_instance * old) {
-    stateful * ci_old = dynamic_cast<stateful *>(old);
-    lean_assert(ci_old);
-    optional<vm_obj> old_state = some((*(ci_old->m_state)).to_vm_obj());
-    ts_vm_obj new_state = init(m_props.to_vm_obj(), old_state);
-    m_state = optional<ts_vm_obj>(new_state);
-}
-
-void stateful::carry(component_instance * old) {
-    stateful * ci_old = dynamic_cast<stateful *>(old);
-    lean_assert(ci_old);
-    m_state    = ci_old->m_state;
-    m_handlers = ci_old->m_handlers;
-}
-
-void delayed::initialize() {
-    if (m_task) {return; }
-    vm_obj vt = invoke(cfield(m_component.to_vm_obj(),0), m_props.to_vm_obj());
-    task<ts_vm_obj> t = to_task(vt);
-    m_task = optional<task<ts_vm_obj>>(t);
-    taskq().submit(t);
-    unsigned handler_id = g_fresh_handler_id.fetch_add(1);
-    m_handler = handler_id;
-    auto route = cons(m_id, m_route);
-    pending_tasks().push_back(task_builder<list<unsigned>>([route] {
-        return route;
-    }).depends_on(t).build());
-}
-
-void delayed::carry(component_instance * old) {
-    delayed * ci_old = dynamic_cast<delayed *>(old);
-    lean_assert(ci_old);
-    m_task = ci_old->m_task;
-}
-
-void delayed::props_changed(component_instance * old) {
-    delayed * ci_old = dynamic_cast<delayed *>(old);
-    // cancel the old task, hopefully any task queue stuff will get removed eventually.
-    if (ci_old->m_task) {
-        task<ts_vm_obj> t = *(ci_old->m_task);
-        taskq().fail_and_dispose(t);
+void component_instance::initialize() {
+    vm_obj p = m_props.to_vm_obj();
+    for (auto h : m_hooks) {
+        h.initialize(p);
+        p = h.get_props(p);
     }
-    initialize();
-}
-
-delayed::~delayed() {
-    if (m_task) {
-        taskq().fail_and_dispose(*m_task); //hopefully this doesn't error if it's already disposed.
-    }
-}
-
-void delayed::reconcile(vdom const & old) {
-    lean_assert(!m_has_rendered);
-    delayed * ci_old = dynamic_cast<delayed *>(old.raw());
-    if (ci_old && ci_old->m_component_hash == m_component_hash) {
-        vm_obj p_new = m_props.to_vm_obj();
-        vm_obj p_old = ci_old->m_props.to_vm_obj()
-    } else {
-        // old component is different.
-        render();
-    }
+    m_inner_props = p;
 }
 
 json component_instance::to_json(list<unsigned> const & route) {
@@ -233,40 +328,20 @@ json component_instance::to_json(list<unsigned> const & route) {
     return result;
 }
 
-optional<vm_obj> stateful::handle_action(vm_obj const & a) {
-    auto p = update(m_props.to_vm_obj(), (*m_state).to_vm_obj(), a);
-    m_state = p.first;
-    render();
-    return p.second;
-}
-
-optional<vm_obj> delayed::handle_action(vm_obj const & a) {
-    // note no need to rerender because nothing changed.
-    return some<vm_obj>(a);
-}
-
-optional<vm_obj> stateful::handle_event_core(unsigned handler_id, vm_obj const & event_args) {
-        if (m_handlers.find(handler_id) == m_handlers.end()) {
-            // component may have rerendered, but handler_id refers to event handler on older component.
-            throw invalid_handler();
+optional<vm_obj> component_instance::handle_action(vm_obj const & action) {
+        optional<vm_obj> result = optional<vm_obj>(action);
+        for (unsigned i = m_hooks.size() - 1; i >= 0; i--) {
+            if (!result) {break;}
+            result = m_hooks[i].action(*result);
         }
-        ts_vm_obj handler = m_handlers[handler_id];
-        // [todo] to prevent a VM error in the case of bad client code, we should check that the 'type' of the event_args here is the same as what the handler expects.
-        // the event record from the client should have a `type` member which can be checked. So each of `m_handlers` should also include a string 'type' to check against.
-        auto action = invoke(handler.to_vm_obj(), event_args);
-        return handle_action(action);
-}
-
-optional<vm_obj> delayed::handle_event_core(unsigned handler_id, vm_obj const &) {
-    // this should be triggered when the task completes.
-    // perform a valid handler sanity check on handler_id.
-    render();
-    return optional<vm_obj>();
+        return result;
 }
 
 optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args) {
     if (empty(route)) {
-        return handle_event_core(handler_id, event_args);
+        vm_obj handler = m_handlers[handler_id].to_vm_obj();
+        vm_obj action = (invoke(handler, event_args));
+        handle_action(action);
     }
     for (auto const & c : m_children) {
         if (c->m_id == head(route)) {
@@ -326,7 +401,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
         vm_obj attr = head(v_attrs);
         v_attrs = tail(v_attrs);
         switch (cidx(attr)) {
-            case 5: { // val {\a} : string -> string -> attr
+            case attr_idx::val: { // val {\a} : string -> string -> attr
                 std::string key = to_string(cfield(attr, 0));
                 std::string value = to_string(cfield(attr, 1));
                 // [note] className fields should be merged.
@@ -339,7 +414,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     attributes[key] = value;
                 }
                 break;
-            } case 6: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
+            } case attr_idx::mouse_event: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
                 int mouse_event_kind = cidx(cfield(attr, 0));
                 vm_obj handler = cfield(attr, 1);
                 switch (mouse_event_kind) {
@@ -349,7 +424,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     default: lean_unreachable();
                 }
                 break;
-            } case 7: { // style {a} : list (string × string) → html.attr
+            } case attr_idx::style: { // style {a} : list (string × string) → html.attr
                 auto l = cfield(attr, 0);
                 while (!is_simple(l)) {
                     auto h = head(l);
@@ -359,12 +434,12 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     l = tail(l);
                 }
                 break;
-            } case 8: { // tooltip {a} :  html Action → html.attr
+            } case attr_idx::tooltip: { // tooltip {a} :  html Action → html.attr
                 auto content = cfield(attr, 0);
                 vdom tooltip_child = render_html(content, components, handlers, route);
                 tooltip = optional<vdom>(tooltip_child);
                 break;
-            } case 9: { // text_change_event {a} : (string -> Action) -> html.attr
+            } case attr_idx::text_change_event: { // text_change_event {a} : (string -> Action) -> html.attr
                 auto handler = cfield(attr, 0);
                 render_event("onChange", handler, events, handlers);
                 break;
@@ -378,28 +453,17 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
     return vdom(new vdom_element(tag, attributes, events, children, tooltip));
 }
 
-component_instance * new_component_instance(vm_obj const & comp, vm_obj const & props, list<unsigned> const & route) {
-    switch(cidx(comp)) {
-        case 0: // stateful
-            return new stateful(comp, props, route);
-        case 1: // delayed
-            return new delayed(comp, props, route);
-        default:
-            lean_unreachable();
-    }
-}
-
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
-        case 2: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
+        case html_idx::element: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
             vdom elt = render_element(html, components, handlers, route);
             return elt;
-        } case 3: { // | of_string    {α : Type} : string → html α
+        } case html_idx::of_string: { // | of_string    {α : Type} : string → html α
             return vdom(new vdom_string(to_string(cfield(html, 0))));
-        } case 4: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
+        } case html_idx::of_component: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
             vm_obj props = cfield(html, 0);
             vm_obj comp  = cfield(html, 1);
-            component_instance * c = new_component_instance(comp, props, route);
+            component_instance * c = new component_instance(comp, props, route);
             components.push_back(c);
             return vdom(c);
         } default: {

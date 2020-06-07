@@ -202,7 +202,7 @@ info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
 }
 
 info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj const & widget) {
-    vdom c = vdom(new_component_instance(widget, props));
+    vdom c = vdom(new component_instance(widget, props));
     return info_data(new widget_info(env, c));
 }
 

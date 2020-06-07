@@ -117,24 +117,44 @@ inductive mouse_event_kind
 | on_mouse_enter
 | on_mouse_leave
 
+inductive mouse_capture_state
+| outside
+| inside_immediate
+| inside_child
+
 meta mutual inductive component, html, attr
 
 with component : Type → Type → Type
-| mk {Props : Type}
-     {Action : Type}
-     (InnerAction : Type)
-     (State : Type)
+| pure
+     {Props Action : Type}
+     (view : Props → list (html Action))
+     : component Props Action
+| filter_map_action
+     {Props InnerAction OuterAction}
+     (action_map : Props → InnerAction → option OuterAction)
+     : component Props InnerAction → component Props OuterAction
+| map_props
+     {Props1 Props2 Action}
+     (map : Props2 → Props1)
+     : component Props1 Action → component Props2 Action
+| with_should_update
+     {Props Action : Type}
+     (should_update : Π (old new : Props), bool)
+     : component Props Action → component Props Action
+| with_state
+     {Props Action : Type}
+     (InnerAction State : Type)
      (init : Props → option State → State)
      (update : Props → State → InnerAction → State × option Action)
-     (view : Props → State → list (html InnerAction))
-     /- If this returns true, then the component will not call 'view' again. -/
-     (props_eq : Props → Props → bool)
+     : component (State × Props) Action → component Props Action
+| with_task
+     {Props Result Action : Type}
+     (task_builder : Props → task Result)
+     (comp : component ((option Result) × Props) Action)
      : component Props Action
-| delayed {Props Result Action : Type}
-          (task_builder : Props → task Result)
-          (comp : component (Props × option Result) Action)
-          (props_eq: Props → Props → bool)
-          : component Props Action
+| with_mouse_capture
+     {Props Action : Type}
+     : component (mouse_capture_state × Props) Action → component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
@@ -152,34 +172,21 @@ variables {α β : Type} {π : Type}
 
 namespace component
 
-meta def filter_map_action (f : α → option β) : component π α → component π β
-| (component.mk γ σ init update view props_are_eq) := component.mk γ σ init (λ p s b, let ⟨s,a⟩ := update p s b in ⟨s, a >>= f⟩) view props_are_eq
-
 meta def map_action (f : α → β) : component π α → component π β
-| c := filter_map_action (pure ∘ f) c
-
-variables {ρ : Type}
-meta def map_props (f : ρ → π) : component π α → component ρ α
-| (component.mk γ σ init update view props_are_eq) := component.mk γ σ (init ∘ f) (update ∘ f) (view ∘ f) (props_are_eq on f)
-
-meta def with_props_eq (e : π → π → bool) : component π α → component π α
-| (component.mk γ σ init update view props_are_eq) := component.mk γ σ init update view e
-
-meta def stateless [decidable_eq π] (view : π → list (html α)) : component π α :=
-component.mk α unit (λ p _, ()) (λ p s b, ((), some b)) (λ p s, view p) (λ x y, x = y)
+| c := filter_map_action (λ p a, some $ f a) c
 
 /-- Returns a component that will never trigger an action. -/
 meta def ignore_action : component π α → component π β
-| c := component.filter_map_action (λ a, none) c
+| c := component.filter_map_action (λ p a, none) c
 
 meta def ignore_props : component unit α → component π α
 | c := component.map_props (λ p, ()) c
 
 meta instance : has_coe (component π empty) (component π α)
-:= ⟨component.filter_map_action (λ x, none)⟩
+:= ⟨component.filter_map_action (λ p x, none)⟩
 
-meta def mk_simple [decidable_eq π] (β σ : Type) (init : σ) (update : π → σ → β → σ × option α) (view : π → σ → list (html β)) : component π α :=
-component.mk β σ (λ x o, init <| o) update view (λ x y, x = y)
+-- meta def mk_simple [decidable_eq π] (β σ : Type) (init : σ) (update : π → σ → β → σ × option α) (view : π → σ → list (html β)) : component π α :=
+-- component.mk β σ (λ x o, init <| o) update view (λ x y, x = y)
 
 end component
 
