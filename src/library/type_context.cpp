@@ -3600,7 +3600,7 @@ struct instance_synthesizer {
             expr const & mvar = e.m_mvar;
             expr mvar_type    = m_ctx.infer(mvar);
             while (true) {
-                expr new_mvar_type = m_ctx.relaxed_whnf(mvar_type);
+                expr new_mvar_type = m_ctx.whnf(mvar_type);
                 if (!is_pi(new_mvar_type))
                     break;
                 mvar_type   = new_mvar_type;
@@ -3611,7 +3611,7 @@ struct instance_synthesizer {
             expr r     = inst;
             buffer<expr> new_inst_mvars;
             while (true) {
-                expr new_type = m_ctx.relaxed_whnf(type);
+                expr new_type = m_ctx.whnf(type);
                 if (!is_pi(new_type))
                     break;
                 type          = new_type;
@@ -3743,7 +3743,7 @@ struct instance_synthesizer {
         expr const & mvar = e.m_mvar;
         expr mvar_type    = m_ctx.infer(mvar);
         while (true) {
-            expr new_mvar_type = m_ctx.relaxed_whnf(mvar_type);
+            expr new_mvar_type = m_ctx.whnf(mvar_type);
             if (!is_pi(new_mvar_type))
                 break;
             mvar_type   = new_mvar_type;
@@ -4013,6 +4013,7 @@ For all these reasons, we have discarded this alternative design.
 expr type_context_old::preprocess_class(expr const & type,
                                     buffer<level_pair> & u_replacements,
                                     buffer<expr_pair> &  e_replacements) {
+    relaxed_scope scope(*this, transparency_mode::Instances);
     if (!has_metavar(type)) {
         expr const & C = get_app_fn(type);
         if (is_constant(C) && !has_class_out_params(env(), const_name(C)))
@@ -4021,7 +4022,7 @@ expr type_context_old::preprocess_class(expr const & type,
     type_context_old::tmp_locals locals(*this);
     expr it = type;
     while (true) {
-        expr new_it = relaxed_whnf(it);
+        expr new_it = whnf(it);
         if (!is_pi(new_it))
             break;
         expr local  = locals.push_local_from_binding(new_it);
@@ -4046,7 +4047,7 @@ expr type_context_old::preprocess_class(expr const & type,
         C = update_constant(C, to_list(C_levels));
     expr it2 = infer(C);
     for (expr & C_arg : C_args) {
-        it2  = relaxed_whnf(it2);
+        it2  = whnf(it2);
         if (!is_pi(it2))
             return type; /* failed */
         expr const & d = binding_domain(it2);
