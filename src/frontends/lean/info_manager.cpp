@@ -314,13 +314,15 @@ bool info_manager::update_widget(pos_info pos, json & record, json const & messa
         record["message"] = "could not find a widget at the given position";
         return false;
     }
+    // get last widget_info (only the last widget is shown if there is more than one at a position)
+    widget_info * w = nullptr;
     for (auto & d : *ds) {
-        const widget_info* cw = is_widget_info(d);
-        widget_info * w = const_cast<widget_info*>(cw);
-        if (w) {
-            w->update(message, record);
-            return true;
-        }
+        if (auto cw = is_widget_info(d))
+            w = const_cast<widget_info *>(cw);
+    }
+    if (w) {
+        w->update(message, record);
+        return true;
     }
     return false;
 }
