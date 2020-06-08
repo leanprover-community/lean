@@ -68,10 +68,12 @@ public:
 };
 
 class widget_info : public info_data_cell {
+protected:
     environment  m_env;
     pos_info     m_pos;
     vdom         m_vdom;
     mutex        m_mutex;
+    widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
 public:
     widget_info(environment const & env, pos_info const & pos, vdom const & vd): m_env(env), m_pos(pos), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
