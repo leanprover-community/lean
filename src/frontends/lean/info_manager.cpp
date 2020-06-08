@@ -132,12 +132,14 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     vm_state S(m_env, ios.get_options());
     scope_vm_state scope(S);
     record["widget"]["html"] = to_json();
+    record["widget"]["line"] = m_pos.first;
+    record["widget"]["column"] = m_pos.second;
 }
 
-void widget_info::update(io_state_stream const & ios, json const & message, json & record) {
+void widget_info::update(json const & message, json & record) {
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     lock_guard<mutex> _(m_mutex);
-    vm_state S(m_env, ios.get_options());
+    vm_state S(m_env, options());
     scope_vm_state scope(S);
     unsigned handler_idx = message["handler"]["h"];
     json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
@@ -161,6 +163,8 @@ void widget_info::update(io_state_stream const & ios, json const & message, json
     try {
         optional<vm_obj> result = c->handle_event(route, handler_idx, vm_args);
         record["widget"]["html"] = to_json();
+        record["widget"]["line"] = m_pos.first;
+        record["widget"]["column"] = m_pos.second;
         if (result) {
             record["status"] = "edit";
             record["action"] = to_string(*result);
@@ -180,9 +184,9 @@ info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
 }
 
-info_data mk_widget_info(environment const & env, vm_obj const & props, vm_obj const & widget) {
+info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
     vdom c = vdom(new component_instance(widget, props));
-    return info_data(new widget_info(env, c));
+    return info_data(new widget_info(env, pos, c));
 }
 
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
@@ -278,7 +282,7 @@ void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj co
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_info(tactic::to_state(props).env(), props, widget));
+    add_info(pos, mk_widget_info(tactic::to_state(props).env(), pos, props, widget));
 }
 
 
@@ -303,22 +307,22 @@ optional<list<info_data>> info_manager::get_info(pos_info pos) const{
     return result;
 }
 
-bool info_manager::update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const {
-    type_context_old tc(env, o);
-    io_state_stream out = regular(env, ios, tc).update_options(o);
+bool info_manager::update_widget(pos_info pos, json & record, json const & message) const {
     auto ds = get_info(pos);
     if (!ds) {
         record["status"] = "error";
         record["message"] = "could not find a widget at the given position";
         return false;
-     }
+    }
+    // get last widget_info (only the last widget is shown if there is more than one at a position)
+    widget_info * w = nullptr;
     for (auto & d : *ds) {
-        const widget_info* cw = is_widget_info(d);
-        widget_info * w = const_cast<widget_info*>(cw);
-        if (w) {
-            w->update(out, message, record);
-            return true;
-        }
+        if (auto cw = is_widget_info(d))
+            w = const_cast<widget_info *>(cw);
+    }
+    if (w) {
+        w->update(message, record);
+        return true;
     }
     return false;
 }

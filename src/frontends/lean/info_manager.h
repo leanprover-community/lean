@@ -69,10 +69,11 @@ public:
 
 class widget_info : public info_data_cell {
     environment  m_env;
+    pos_info     m_pos;
     vdom         m_vdom;
     mutex        m_mutex;
 public:
-    widget_info(environment const & env, vdom const & vd): m_env(env), m_vdom(vd) {}
+    widget_info(environment const & env, pos_info const & pos, vdom const & vd): m_env(env), m_pos(pos), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
     /** Given a message of the form
      * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
@@ -82,7 +83,7 @@ public:
      * If the handler given does not correspond to a component on the widget, then the record is set to `{status: "invalid_handler"}`.
      * It will throw is the json message has the wrong format.
      */
-    void update(io_state_stream const & ios, json const & message, json & record);
+    void update(json const & message, json & record);
     json to_json() const;
 };
 
@@ -151,7 +152,7 @@ public:
     /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
      *  Returns true when the widget was successfully updated.
      */
-    bool update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const;
+    bool update_widget(pos_info pos, json & record, json const & message) const;
 };
 
 info_manager * get_global_info_manager();
