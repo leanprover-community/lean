@@ -21,6 +21,12 @@ Author: E.W.Ayers
 
 namespace lean {
 
+enum mouse_capture_state {
+    outside = 0,
+    inside_immediate = 1,
+    inside_child = 2
+};
+
 enum component_idx {
     pure = 0,
     filter_map_action = 1,
@@ -64,16 +70,22 @@ void vdom_element::reconcile(vdom const & old_vdom) {
         }
     }
 }
-json vdom_element::to_json(list<unsigned> const & route) {
-    json entry;
-    entry["t"] = m_tag;
-    entry["a"] = m_attrs;
+
+json route_to_json(list<unsigned> const & route) {
     json jr = json::array();
     for (auto const & i : route) {
         jr.push_back(i);
     }
+    return jr;
+}
+
+json vdom_element::to_json(list<unsigned> const & route) {
+    json entry;
+    entry["t"] = m_tag;
+    entry["a"] = m_attrs;
+
     for (auto const & x : m_events) {
-        entry["e"][x.first]["r"] = jr;
+        entry["e"][x.first]["r"] = route_to_json(route);
         entry["e"][x.first]["h"] = json(x.second);
     }
     entry["c"] = json::array();
@@ -165,8 +177,14 @@ struct stateful_hook : public component_hook {
 };
 
 struct with_mouse_capture_hook : public component_hook {
+    mouse_capture_state m_s;
     vm_obj get_props(vm_obj const & props) override {
         return mk_vm_pair(mk_vm_simple(0), props);
+    }
+    bool set_state(mouse_capture_state s) {
+        if (m_s == s) {return false;}
+        m_s = s;
+        return true;
     }
     with_mouse_capture_hook() {}
 };
@@ -314,6 +332,7 @@ void component_instance::initialize() {
     m_inner_props = p;
 }
 
+
 json component_instance::to_json(list<unsigned> const & route) {
     if (!m_has_rendered) {
         initialize();
@@ -325,6 +344,14 @@ json component_instance::to_json(list<unsigned> const & route) {
     }
     json result;
     result["c"] = children;
+    for (auto h : m_hooks) {
+        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
+        if (mh) {
+            result["mouse_capture"]["r"] = route_to_json(route);
+            break;
+        }
+    }
+    result["id"] = m_id;
     return result;
 }
 
@@ -341,7 +368,7 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
     if (empty(route)) {
         vm_obj handler = m_handlers[handler_id].to_vm_obj();
         vm_obj action = (invoke(handler, event_args));
-        handle_action(action);
+        return handle_action(action);
     }
     for (auto const & c : m_children) {
         if (c->m_id == head(route)) {
@@ -355,6 +382,64 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
     }
     // given component no longer exists. This happens if the ui is updated but there are events from an old vdom
     throw invalid_handler();
+}
+
+void component_instance::handle_task_completed(list<unsigned> const & route) {
+    if (empty(route)) {
+        initialize();
+        render();
+        return;
+    } else {
+        for (auto const & c : m_children) {
+            if (c->m_id == head(route)) {
+                return c->handle_task_completed(tail(route));
+            }
+        }
+    }
+}
+
+void component_instance::update_capture_state(unsigned ms) {
+    bool should_update = false;
+    for (auto h : m_hooks) {
+        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
+        if (mh) {
+            should_update |= mh->set_state(mouse_capture_state(ms));
+        }
+    }
+    if (should_update) {
+        initialize();
+        render();
+    }
+}
+
+void component_instance::handle_mouse_gain_capture(list<unsigned> const & route) {
+    if (empty(route)) {
+        // go through the hooks and find
+        update_capture_state(mouse_capture_state::inside_immediate);
+        return;
+    } else {
+        update_capture_state(mouse_capture_state::inside_child);
+        for (auto const & c : m_children) {
+            if (c->m_id == head(route)) {
+                c->handle_mouse_gain_capture(tail(route));
+                return;
+            }
+        }
+    }
+}
+void component_instance::handle_mouse_lose_capture(list<unsigned> const & route) {
+    update_capture_state(mouse_capture_state::outside);
+    if (empty(route)) {
+        return;
+    } else {
+        for (auto const & c : m_children) {
+            if (c->m_id == head(route)) {
+                c->handle_mouse_lose_capture(tail(route));
+                return;
+            } else {
+            }
+        }
+    }
 }
 
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & olds) {
@@ -499,5 +584,7 @@ void unset_pending_tasks() {
 pending_tasks & get_pending_tasks() {
     return *g_pending_tasks;
 }
+
+
 
 }

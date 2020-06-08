@@ -104,8 +104,13 @@ class component_instance : public vdom_cell {
   void render();
   void reconcile(vdom const & old);
   void initialize();
+  void update_capture_state(unsigned cs);
 public:
   json component_instance::to_json(list<unsigned> const & route) override;
+  void handle_task_completed(list<unsigned> const & route);
+  void handle_mouse_gain_capture(list<unsigned> const & route);
+  void handle_mouse_lose_capture(list<unsigned> const & route);
+
   optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
   component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
 };
@@ -140,5 +145,8 @@ typedef std::vector<task<list<unsigned>>> pending_tasks;
 void set_pending_tasks(pending_tasks * q);
 void unset_pending_tasks();
 pending_tasks & get_pending_tasks();
+
+
+
 
 }

@@ -67,26 +67,7 @@ public:
     pos_info const & get_end_pos() const { return m_end_pos; }
 };
 
-class widget_info : public info_data_cell {
-    environment  m_env;
-    vdom         m_vdom;
-    mutex        m_mutex;
-    /** Event */
-    event<unit>   m_update_task;
-public:
-    widget_info(environment const & env, vdom const & vd): m_env(env), m_vdom(vd) {}
-    virtual void report(io_state_stream const & ios, json & record) const override;
-    /** Given a message of the form
-     * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
-     * runs the event handler and updates the state.
-     * The record is updated to have `{status : "success", widget : {html : _}}` on success.
-     * If the widget update event yields an action then the record will be of type `{status: "edit", action: string, widget:_}`
-     * If the handler given does not correspond to a component on the widget, then the record is set to `{status: "invalid_handler"}`.
-     * It will throw is the json message has the wrong format.
-     */
-    void update(io_state_stream const & ios, json const & message, json & record);
-    json to_json() const;
-};
+
 
 class info_data {
 private:
@@ -113,7 +94,6 @@ public:
 hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
 vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
-widget_info const * is_widget_info(info_data const & d);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
