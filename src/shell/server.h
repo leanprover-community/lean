@@ -107,7 +107,6 @@ class server : public module_vfs {
     json autocomplete(std::shared_ptr<module_info const> const & mod_info, bool skip_completions, pos_info const & pos);
     json hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action, pos_info const & pos);
     json info(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos);
-    json widget_event(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos, json const & message);
 
 public:
     server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,

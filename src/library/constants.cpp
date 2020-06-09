@@ -61,7 +61,6 @@ name const * g_expr_subst = nullptr;
 name const * g_false = nullptr;
 name const * g_false_rec = nullptr;
 name const * g_false_of_true_eq_false = nullptr;
-name const * g_false_of_true_iff_false = nullptr;
 name const * g_fin_mk = nullptr;
 name const * g_fin_ne_of_vne = nullptr;
 name const * g_forall_congr = nullptr;
@@ -75,19 +74,9 @@ name const * g_has_andthen_andthen = nullptr;
 name const * g_has_bind_and_then = nullptr;
 name const * g_has_bind_seq = nullptr;
 name const * g_has_coe_t = nullptr;
-name const * g_has_div = nullptr;
 name const * g_has_div_div = nullptr;
 name const * g_has_emptyc_emptyc = nullptr;
 name const * g_has_insert_insert = nullptr;
-name const * g_has_inv = nullptr;
-name const * g_has_inv_inv = nullptr;
-name const * g_has_le = nullptr;
-name const * g_has_le_le = nullptr;
-name const * g_has_lt = nullptr;
-name const * g_has_lt_lt = nullptr;
-name const * g_has_mul = nullptr;
-name const * g_has_mul_mul = nullptr;
-name const * g_has_neg = nullptr;
 name const * g_has_neg_neg = nullptr;
 name const * g_has_one = nullptr;
 name const * g_has_one_one = nullptr;
@@ -97,7 +86,6 @@ name const * g_has_sep_sep = nullptr;
 name const * g_has_singleton_singleton = nullptr;
 name const * g_has_sizeof = nullptr;
 name const * g_has_sizeof_mk = nullptr;
-name const * g_has_sub = nullptr;
 name const * g_has_sub_sub = nullptr;
 name const * g_has_to_format = nullptr;
 name const * g_has_well_founded = nullptr;
@@ -222,13 +210,10 @@ name const * g_ne = nullptr;
 name const * g_neq_of_not_iff = nullptr;
 name const * g_not = nullptr;
 name const * g_not_of_eq_false = nullptr;
-name const * g_not_of_iff_false = nullptr;
 name const * g_of_eq_true = nullptr;
-name const * g_of_iff_true = nullptr;
 name const * g_opt_param = nullptr;
 name const * g_or = nullptr;
 name const * g_out_param = nullptr;
-name const * g_partial_order = nullptr;
 name const * g_pprod = nullptr;
 name const * g_pprod_fst = nullptr;
 name const * g_pprod_mk = nullptr;
@@ -295,6 +280,7 @@ name const * g_well_founded_tactics = nullptr;
 name const * g_well_founded_tactics_dec_tac = nullptr;
 name const * g_well_founded_tactics_default = nullptr;
 name const * g_well_founded_tactics_rel_tac = nullptr;
+name const * g_widget_term_goal_widget = nullptr;
 void initialize_constants() {
     g_absurd = new name{"absurd"};
     g_acc_cases_on = new name{"acc", "cases_on"};
@@ -354,7 +340,6 @@ void initialize_constants() {
     g_false = new name{"false"};
     g_false_rec = new name{"false", "rec"};
     g_false_of_true_eq_false = new name{"false_of_true_eq_false"};
-    g_false_of_true_iff_false = new name{"false_of_true_iff_false"};
     g_fin_mk = new name{"fin", "mk"};
     g_fin_ne_of_vne = new name{"fin", "ne_of_vne"};
     g_forall_congr = new name{"forall_congr"};
@@ -368,19 +353,9 @@ void initialize_constants() {
     g_has_bind_and_then = new name{"has_bind", "and_then"};
     g_has_bind_seq = new name{"has_bind", "seq"};
     g_has_coe_t = new name{"has_coe_t"};
-    g_has_div = new name{"has_div"};
     g_has_div_div = new name{"has_div", "div"};
     g_has_emptyc_emptyc = new name{"has_emptyc", "emptyc"};
     g_has_insert_insert = new name{"has_insert", "insert"};
-    g_has_inv = new name{"has_inv"};
-    g_has_inv_inv = new name{"has_inv", "inv"};
-    g_has_le = new name{"has_le"};
-    g_has_le_le = new name{"has_le", "le"};
-    g_has_lt = new name{"has_lt"};
-    g_has_lt_lt = new name{"has_lt", "lt"};
-    g_has_mul = new name{"has_mul"};
-    g_has_mul_mul = new name{"has_mul", "mul"};
-    g_has_neg = new name{"has_neg"};
     g_has_neg_neg = new name{"has_neg", "neg"};
     g_has_one = new name{"has_one"};
     g_has_one_one = new name{"has_one", "one"};
@@ -390,7 +365,6 @@ void initialize_constants() {
     g_has_singleton_singleton = new name{"has_singleton", "singleton"};
     g_has_sizeof = new name{"has_sizeof"};
     g_has_sizeof_mk = new name{"has_sizeof", "mk"};
-    g_has_sub = new name{"has_sub"};
     g_has_sub_sub = new name{"has_sub", "sub"};
     g_has_to_format = new name{"has_to_format"};
     g_has_well_founded = new name{"has_well_founded"};
@@ -515,13 +489,10 @@ void initialize_constants() {
     g_neq_of_not_iff = new name{"neq_of_not_iff"};
     g_not = new name{"not"};
     g_not_of_eq_false = new name{"not_of_eq_false"};
-    g_not_of_iff_false = new name{"not_of_iff_false"};
     g_of_eq_true = new name{"of_eq_true"};
-    g_of_iff_true = new name{"of_iff_true"};
     g_opt_param = new name{"opt_param"};
     g_or = new name{"or"};
     g_out_param = new name{"out_param"};
-    g_partial_order = new name{"partial_order"};
     g_pprod = new name{"pprod"};
     g_pprod_fst = new name{"pprod", "fst"};
     g_pprod_mk = new name{"pprod", "mk"};
@@ -588,6 +559,7 @@ void initialize_constants() {
     g_well_founded_tactics_dec_tac = new name{"well_founded_tactics", "dec_tac"};
     g_well_founded_tactics_default = new name{"well_founded_tactics", "default"};
     g_well_founded_tactics_rel_tac = new name{"well_founded_tactics", "rel_tac"};
+    g_widget_term_goal_widget = new name{"widget", "term_goal_widget"};
 }
 void finalize_constants() {
     delete g_absurd;
@@ -648,7 +620,6 @@ void finalize_constants() {
     delete g_false;
     delete g_false_rec;
     delete g_false_of_true_eq_false;
-    delete g_false_of_true_iff_false;
     delete g_fin_mk;
     delete g_fin_ne_of_vne;
     delete g_forall_congr;
@@ -662,19 +633,9 @@ void finalize_constants() {
     delete g_has_bind_and_then;
     delete g_has_bind_seq;
     delete g_has_coe_t;
-    delete g_has_div;
     delete g_has_div_div;
     delete g_has_emptyc_emptyc;
     delete g_has_insert_insert;
-    delete g_has_inv;
-    delete g_has_inv_inv;
-    delete g_has_le;
-    delete g_has_le_le;
-    delete g_has_lt;
-    delete g_has_lt_lt;
-    delete g_has_mul;
-    delete g_has_mul_mul;
-    delete g_has_neg;
     delete g_has_neg_neg;
     delete g_has_one;
     delete g_has_one_one;
@@ -684,7 +645,6 @@ void finalize_constants() {
     delete g_has_singleton_singleton;
     delete g_has_sizeof;
     delete g_has_sizeof_mk;
-    delete g_has_sub;
     delete g_has_sub_sub;
     delete g_has_to_format;
     delete g_has_well_founded;
@@ -809,13 +769,10 @@ void finalize_constants() {
     delete g_neq_of_not_iff;
     delete g_not;
     delete g_not_of_eq_false;
-    delete g_not_of_iff_false;
     delete g_of_eq_true;
-    delete g_of_iff_true;
     delete g_opt_param;
     delete g_or;
     delete g_out_param;
-    delete g_partial_order;
     delete g_pprod;
     delete g_pprod_fst;
     delete g_pprod_mk;
@@ -882,6 +839,7 @@ void finalize_constants() {
     delete g_well_founded_tactics_dec_tac;
     delete g_well_founded_tactics_default;
     delete g_well_founded_tactics_rel_tac;
+    delete g_widget_term_goal_widget;
 }
 name const & get_absurd_name() { return *g_absurd; }
 name const & get_acc_cases_on_name() { return *g_acc_cases_on; }
@@ -941,7 +899,6 @@ name const & get_expr_subst_name() { return *g_expr_subst; }
 name const & get_false_name() { return *g_false; }
 name const & get_false_rec_name() { return *g_false_rec; }
 name const & get_false_of_true_eq_false_name() { return *g_false_of_true_eq_false; }
-name const & get_false_of_true_iff_false_name() { return *g_false_of_true_iff_false; }
 name const & get_fin_mk_name() { return *g_fin_mk; }
 name const & get_fin_ne_of_vne_name() { return *g_fin_ne_of_vne; }
 name const & get_forall_congr_name() { return *g_forall_congr; }
@@ -955,19 +912,9 @@ name const & get_has_andthen_andthen_name() { return *g_has_andthen_andthen; }
 name const & get_has_bind_and_then_name() { return *g_has_bind_and_then; }
 name const & get_has_bind_seq_name() { return *g_has_bind_seq; }
 name const & get_has_coe_t_name() { return *g_has_coe_t; }
-name const & get_has_div_name() { return *g_has_div; }
 name const & get_has_div_div_name() { return *g_has_div_div; }
 name const & get_has_emptyc_emptyc_name() { return *g_has_emptyc_emptyc; }
 name const & get_has_insert_insert_name() { return *g_has_insert_insert; }
-name const & get_has_inv_name() { return *g_has_inv; }
-name const & get_has_inv_inv_name() { return *g_has_inv_inv; }
-name const & get_has_le_name() { return *g_has_le; }
-name const & get_has_le_le_name() { return *g_has_le_le; }
-name const & get_has_lt_name() { return *g_has_lt; }
-name const & get_has_lt_lt_name() { return *g_has_lt_lt; }
-name const & get_has_mul_name() { return *g_has_mul; }
-name const & get_has_mul_mul_name() { return *g_has_mul_mul; }
-name const & get_has_neg_name() { return *g_has_neg; }
 name const & get_has_neg_neg_name() { return *g_has_neg_neg; }
 name const & get_has_one_name() { return *g_has_one; }
 name const & get_has_one_one_name() { return *g_has_one_one; }
@@ -977,7 +924,6 @@ name const & get_has_sep_sep_name() { return *g_has_sep_sep; }
 name const & get_has_singleton_singleton_name() { return *g_has_singleton_singleton; }
 name const & get_has_sizeof_name() { return *g_has_sizeof; }
 name const & get_has_sizeof_mk_name() { return *g_has_sizeof_mk; }
-name const & get_has_sub_name() { return *g_has_sub; }
 name const & get_has_sub_sub_name() { return *g_has_sub_sub; }
 name const & get_has_to_format_name() { return *g_has_to_format; }
 name const & get_has_well_founded_name() { return *g_has_well_founded; }
@@ -1102,13 +1048,10 @@ name const & get_ne_name() { return *g_ne; }
 name const & get_neq_of_not_iff_name() { return *g_neq_of_not_iff; }
 name const & get_not_name() { return *g_not; }
 name const & get_not_of_eq_false_name() { return *g_not_of_eq_false; }
-name const & get_not_of_iff_false_name() { return *g_not_of_iff_false; }
 name const & get_of_eq_true_name() { return *g_of_eq_true; }
-name const & get_of_iff_true_name() { return *g_of_iff_true; }
 name const & get_opt_param_name() { return *g_opt_param; }
 name const & get_or_name() { return *g_or; }
 name const & get_out_param_name() { return *g_out_param; }
-name const & get_partial_order_name() { return *g_partial_order; }
 name const & get_pprod_name() { return *g_pprod; }
 name const & get_pprod_fst_name() { return *g_pprod_fst; }
 name const & get_pprod_mk_name() { return *g_pprod_mk; }
@@ -1175,4 +1118,5 @@ name const & get_well_founded_tactics_name() { return *g_well_founded_tactics; }
 name const & get_well_founded_tactics_dec_tac_name() { return *g_well_founded_tactics_dec_tac; }
 name const & get_well_founded_tactics_default_name() { return *g_well_founded_tactics_default; }
 name const & get_well_founded_tactics_rel_tac_name() { return *g_well_founded_tactics_rel_tac; }
+name const & get_widget_term_goal_widget_name() { return *g_widget_term_goal_widget; }
 }

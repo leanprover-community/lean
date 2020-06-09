@@ -118,9 +118,14 @@ static optional<unsigned> to_unsigned(expr const & e) {
 }
 
 static name * g_pp_using_anonymous_constructor = nullptr;
+static name * g_pp_nodot = nullptr;
 
 bool pp_using_anonymous_constructor(environment const & env, name const & n) {
     return has_attribute(env, *g_pp_using_anonymous_constructor, n);
+}
+
+bool pp_nodot(environment const & env, name const & n) {
+    return has_attribute(env, *g_pp_nodot, n);
 }
 
 void initialize_pp() {
@@ -147,6 +152,7 @@ void initialize_pp() {
     g_nat_numeral_pp  = new nat_numeral_pp();
 
     g_pp_using_anonymous_constructor = new name("pp_using_anonymous_constructor");
+    g_pp_nodot = new name("pp_nodot");
 
     register_system_attribute(basic_attribute::with_check(
                                   *g_pp_using_anonymous_constructor,
@@ -158,9 +164,11 @@ void initialize_pp() {
                                               "invalid 'pp_using_anonymous_constructor' use, "
                                               "only structures can be marked with this attribute");
                                               }));
+    register_system_attribute(basic_attribute(*g_pp_nodot, "Do not pretty-print using dot-notation."));
 }
 
 void finalize_pp() {
+    delete g_pp_nodot;
     delete g_pp_using_anonymous_constructor;
     delete g_nat_numeral_pp;
     delete g_ellipsis_n_fmt;
@@ -327,6 +335,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_numerals_name(), false);
         o = o.update_if_undef(get_pp_strings_name(), false);
         o = o.update_if_undef(get_pp_binder_types_name(), true);
+        o = o.update_if_undef(get_pp_generalized_field_notation_name(), false);
     }
     m_options           = o;
     m_indent            = get_pp_indent(o);
@@ -909,6 +918,7 @@ bool pretty_fn<T>::is_field_notation_candidate(expr const & e) {
     if (!is_constant(f)) return false;
     name const & fn = const_name(f);
     if (!fn.is_string()) return false;
+    if (pp_nodot(m_env, fn)) return false;
     name const & S = fn.get_prefix();
     /* The @ explicitness annotation cannot be combined with field notation, so fail on implicit args */
     if (m_implict && has_implicit_args(e)) return false;

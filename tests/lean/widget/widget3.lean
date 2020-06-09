@@ -20,3 +20,6 @@ widget.component.mk
   (λ x y, ff)
 
 #html qwerty_c
+
+-- the point of this test is to see whether the state is kept even if the child component is rerendered.
+-- so after hitting '+', you should see `1[ *** ][1, 0]` which means that 'init' was called again with the carried over state.

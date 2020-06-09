@@ -43,6 +43,7 @@ public:
   vdom(vdom_cell * ptr) : m_ptr(ptr) { lean_assert(m_ptr);  m_ptr->inc_ref(); }
   vdom(vdom const & s) : m_ptr(s.m_ptr) { if (m_ptr) m_ptr->inc_ref(); }
   vdom(vdom && s) : m_ptr(s.m_ptr) { s.m_ptr = nullptr; }
+  vdom() : m_ptr(nullptr) {}
   ~vdom() {if (m_ptr) m_ptr->dec_ref(); }
   vdom & operator=(vdom const & s) { LEAN_COPY_REF(s); }
   vdom & operator=(vdom && s) { LEAN_MOVE_REF(s); }

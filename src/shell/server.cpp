@@ -629,26 +629,7 @@ json server::info(std::shared_ptr<module_info const> const & mod_info, pos_info 
     return j;
 }
 
-json server::widget_event(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos, json const & message) {
-    json j;
-    try {
-        parse_breaking_at_pos(mod_info->m_id, mod_info, pos);
-    } catch (break_at_pos_exception & e) {
-        auto opts = m_ios.get_options();
-        auto env = m_initial_env;
-        if (auto snap = get_closest_snapshot(mod_info, e.m_token_info.m_pos)) {
-            env = snap->m_snapshot_at_end->m_env;
-            opts = snap->m_snapshot_at_end->m_options;
-        }
-        update_widget(env, opts, m_ios, m_path, *mod_info, get_info_managers(m_lt), pos, e, j, message);
-    } catch (throwable & ex) {}
-
-    return j;
-}
-
 task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
     // [todo] Need some help on how multithreading works. Should all events happen synchronously?
     // what happens if it is processing an event and then a second event occurs? There needs to be an event queue.
     // there should at least be a thread lock on modifying a vdom object.
@@ -658,9 +639,10 @@ task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
     auto mod_info = m_mod_mgr->get_module(fn);
 
     return task_builder<cmd_res>([=] {
-        return cmd_res(req.m_seq_num, widget_event(mod_info, pos, req.m_payload));
-    }).wrap(library_scopes(log_tree::node()))
-      .set_cancellation_token(m_bg_task_ctok).build();
+        json j;
+        update_widget(*mod_info, get_info_managers(m_lt), pos, j, req.m_payload);
+        return cmd_res(req.m_seq_num, j);
+    }).wrap(library_scopes(log_tree::node())).build();
 }
 
 task<server::cmd_res> server::handle_info(server::cmd_req const & req) {

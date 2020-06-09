@@ -61,7 +61,6 @@ run_cmd script_check_id `expr.subst
 run_cmd script_check_id `false
 run_cmd script_check_id `false.rec
 run_cmd script_check_id `false_of_true_eq_false
-run_cmd script_check_id `false_of_true_iff_false
 run_cmd script_check_id `fin.mk
 run_cmd script_check_id `fin.ne_of_vne
 run_cmd script_check_id `forall_congr
@@ -75,19 +74,9 @@ run_cmd script_check_id `has_andthen.andthen
 run_cmd script_check_id `has_bind.and_then
 run_cmd script_check_id `has_bind.seq
 run_cmd script_check_id `has_coe_t
-run_cmd script_check_id `has_div
 run_cmd script_check_id `has_div.div
 run_cmd script_check_id `has_emptyc.emptyc
 run_cmd script_check_id `has_insert.insert
-run_cmd script_check_id `has_inv
-run_cmd script_check_id `has_inv.inv
-run_cmd script_check_id `has_le
-run_cmd script_check_id `has_le.le
-run_cmd script_check_id `has_lt
-run_cmd script_check_id `has_lt.lt
-run_cmd script_check_id `has_mul
-run_cmd script_check_id `has_mul.mul
-run_cmd script_check_id `has_neg
 run_cmd script_check_id `has_neg.neg
 run_cmd script_check_id `has_one
 run_cmd script_check_id `has_one.one
@@ -97,7 +86,6 @@ run_cmd script_check_id `has_sep.sep
 run_cmd script_check_id `has_singleton.singleton
 run_cmd script_check_id `has_sizeof
 run_cmd script_check_id `has_sizeof.mk
-run_cmd script_check_id `has_sub
 run_cmd script_check_id `has_sub.sub
 run_cmd script_check_id `has_to_format
 run_cmd script_check_id `has_well_founded
@@ -222,13 +210,10 @@ run_cmd script_check_id `ne
 run_cmd script_check_id `neq_of_not_iff
 run_cmd script_check_id `not
 run_cmd script_check_id `not_of_eq_false
-run_cmd script_check_id `not_of_iff_false
 run_cmd script_check_id `of_eq_true
-run_cmd script_check_id `of_iff_true
 run_cmd script_check_id `opt_param
 run_cmd script_check_id `or
 run_cmd script_check_id `out_param
-run_cmd script_check_id `partial_order
 run_cmd script_check_id `pprod
 run_cmd script_check_id `pprod.fst
 run_cmd script_check_id `pprod.mk
@@ -295,3 +280,4 @@ run_cmd script_check_id `well_founded_tactics
 run_cmd script_check_id `well_founded_tactics.dec_tac
 run_cmd script_check_id `well_founded_tactics.default
 run_cmd script_check_id `well_founded_tactics.rel_tac
+run_cmd script_check_id `widget.term_goal_widget

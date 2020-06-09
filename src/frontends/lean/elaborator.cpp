@@ -3411,7 +3411,15 @@ expr elaborator::visit_let(expr const & e, optional<expr> const & expected_type)
 
 expr elaborator::visit_placeholder(expr const & e, optional<expr> const & expected_type) {
     expr const & ref = e;
-    return mk_metavar(expected_type, ref);
+    expr mvar = mk_metavar(expected_type, ref);
+    if (is_explicit_placeholder(e)) {
+        if (auto pip = get_pos_info_provider()) {
+            if (auto pos = pip->get_pos_info(e)) {
+                m_underscores.insert(mvar, *pos);
+            }
+        }
+    }
+    return mvar;
 }
 
 static bool is_have_expr(expr const & e) {
@@ -3772,6 +3780,13 @@ void elaborator::ensure_no_unassigned_metavars(expr & e) {
                         msg << "\n";
                         msg << "context:";
                         report_error(s, msg.str(), e);
+                    }
+                    if (m_uses_infom) {
+                        if (auto pos = m_underscores.find(e)) {
+                            expr hole_args = mk_app(mk_constant(get_list_nil_name(), {mk_level_zero()}),
+                              mk_app(mk_constant(get_expr_name()), mk_constant(get_bool_ff_name())));
+                            m_info.add_hole_info(*pos, {pos->first, pos->second+1}, s, hole_args);
+                        }
                     }
                     m_ctx.assign(e, copy_tag(e, mk_sorry(ty)));
                     ensure_no_unassigned_metavars(ty);

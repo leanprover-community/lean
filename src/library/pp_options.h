@@ -22,6 +22,7 @@ name const & get_pp_numerals_name();
 name const & get_pp_strings_name();
 name const & get_pp_binder_types_name();
 name const & get_pp_use_holes_name();
+name const & get_pp_generalized_field_notation_name();
 
 unsigned get_pp_max_depth(options const & opts);
 unsigned get_pp_max_steps(options const & opts);

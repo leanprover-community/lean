@@ -68,7 +68,6 @@ public:
 };
 
 
-
 class info_data {
 private:
     info_data_cell * m_ptr;
@@ -94,6 +93,7 @@ public:
 hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
 vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
+bool is_term_goal(info_data const & d);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
@@ -133,7 +133,7 @@ public:
     /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
      *  Returns true when the widget was successfully updated.
      */
-    bool update_widget(environment const & env, options const & o, io_state const & ios, pos_info pos, json & record, json const & message) const;
+    bool update_widget(pos_info pos, json & record, json const & message) const;
 };
 
 info_manager * get_global_info_manager();
