@@ -52,6 +52,7 @@ private:
     list<expr>        m_numeral_types;
     list<expr_pair>   m_tactics;
     list<expr_pair>   m_holes;
+    rb_expr_map<pos_info> m_underscores;
 
     /* m_depth is only used for tracing */
     unsigned          m_depth{0};
