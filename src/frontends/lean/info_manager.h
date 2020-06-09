@@ -115,6 +115,7 @@ hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
 vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
 widget_info const * is_widget_info(info_data const & d);
+bool is_term_goal(info_data const & d);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 

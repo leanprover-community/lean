@@ -110,6 +110,10 @@ public:
     tactic_state const & get_tactic_state() const { return m_state; }
 };
 
+bool is_term_goal(info_data const & d) {
+    return dynamic_cast<term_goal_data const *>(d.raw());
+}
+
 #ifdef LEAN_JSON
 void vm_obj_format_info::report(io_state_stream const & ios, json & record) const {
     if (!m_cache) {
