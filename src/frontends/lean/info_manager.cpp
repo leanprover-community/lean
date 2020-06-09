@@ -22,6 +22,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/json.h"
 #include "frontends/lean/info_manager.h"
 #include "frontends/lean/interactive.h"
+#include "library/constants.h"
 
 namespace lean {
 class type_info_data : public info_data_cell {
@@ -81,30 +82,37 @@ widget_info const * is_widget_info(info_data const & d) {
 }
 
 
-class term_goal_data : public info_data_cell {
-    pos_info m_pos;
+class term_goal_data : public widget_info {
     tactic_state m_state;
 
 public:
-    term_goal_data(tactic_state const & s, pos_info const & pos) : m_pos(pos), m_state(s) {}
+    term_goal_data(tactic_state const & s, pos_info const & pos) : widget_info(s.env(), pos), m_state(s) {}
 
     virtual void instantiate_mvars(metavar_context const & mctx0) override {
-        if (auto goal = m_state.get_main_goal_decl()) {
-            auto mctx = mctx0;
-            expr new_goal = mctx.mk_metavar_decl(goal->get_context(), goal->get_type());
-            m_state = set_mctx_goals(m_state, mctx, list<expr>(new_goal));
-        }
+        auto goal = m_state.get_main_goal_decl();
+        if (!goal) return;
+        auto mctx = mctx0;
+        expr new_goal = mctx.mk_metavar_decl(goal->get_context(), goal->get_type());
+        m_state = set_mctx_goals(m_state, mctx, list<expr>(new_goal));
+
+        if (m_env.find(get_widget_term_goal_widget_name())) try {
+            vm_state S(m_env, options());
+            vm_obj widget = S.get_constant(get_widget_term_goal_widget_name());
+            m_vdom = vdom(new component_instance(widget, to_obj(m_state)));
+        } catch (exception &) {}
     }
 
-#ifdef LEAN_JSON
-    virtual void report(io_state_stream const &, json & record) const override {
+    virtual void report(io_state_stream const & out, json & record) const override {
         record["state"] = (sstream() << m_state.pp()).str();
+        widget_info::report(out, record);
     }
-#endif
 
     tactic_state const & get_tactic_state() const { return m_state; }
-    pos_info const & get_pos() const { return m_pos; }
 };
+
+bool is_term_goal(info_data const & d) {
+    return dynamic_cast<term_goal_data const *>(d.raw());
+}
 
 #ifdef LEAN_JSON
 void vm_obj_format_info::report(io_state_stream const & ios, json & record) const {
@@ -126,6 +134,7 @@ json widget_info::to_json() const {
 }
 
 void widget_info::report(io_state_stream const & ios, json & record) const {
+    if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     mutex * mp = const_cast<mutex *>(&m_mutex);
     lock_guard<mutex> _(*mp);
@@ -137,6 +146,7 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
 }
 
 void widget_info::update(json const & message, json & record) {
+    if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     lock_guard<mutex> _(m_mutex);
     vm_state S(m_env, options());

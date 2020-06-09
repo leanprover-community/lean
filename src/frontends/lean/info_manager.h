@@ -68,10 +68,12 @@ public:
 };
 
 class widget_info : public info_data_cell {
+protected:
     environment  m_env;
     pos_info     m_pos;
     vdom         m_vdom;
     mutex        m_mutex;
+    widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
 public:
     widget_info(environment const & env, pos_info const & pos, vdom const & vd): m_env(env), m_pos(pos), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
@@ -113,6 +115,7 @@ hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
 vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
 widget_info const * is_widget_info(info_data const & d);
+bool is_term_goal(info_data const & d);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 

@@ -192,6 +192,12 @@ component.ignore_action $ tactic_view_component show_type_component show_type_co
 meta def tactic_state_widget : component tactic_state string :=
 tc.to_component tactic_render
 
+/--
+Widget used to display term-proof goals.
+-/
+meta def term_goal_widget : component tactic_state string :=
+tactic_state_widget
+
 end widget
 
 
