@@ -5,14 +5,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Gabriel Ebner
 */
 #include "util/task.h"
+#include "util/interrupt.h"
 
 namespace lean {
-
-void gtask_cell::cancel(std::shared_ptr<cancellable> const & self) {
-    if (auto self_task = std::dynamic_pointer_cast<gtask_cell>(self)) {
-        taskq().fail_and_dispose(self_task);
-    }
-}
 
 std::exception_ptr gtask_cell::peek_exception() const {
     if (m_state.load() == task_state::Failed) {
@@ -35,7 +30,10 @@ void task_queue::wait_for_success(gtask const & t) {
     }
 }
 
-void task_queue::execute(gtask const & t) {
+void task_queue::execute(weak_gtask const & t0) {
+    auto t = t0.lock();
+    if (!t) return;
+
     lean_always_assert(t);
     lean_always_assert(t->m_state.load() == task_state::Running);
     lean_always_assert(t->m_data);
@@ -55,11 +53,22 @@ void task_queue::execute(gtask const & t) {
             }
         }
 
-        t->execute();
-        t->m_state = task_state::Success;
+        auto imp = t->m_data->m_imp;
+        t.reset();
+        {
+            scoped_interrupt_flag _(&imp->m_interrupt);
+            imp->execute();
+        }
+
+        if (auto t = t0.lock()) {
+            t->store();
+            t->m_state = task_state::Success;
+        }
     } catch (...) {
-        t->m_exception = std::current_exception();
-        t->m_state = task_state::Failed;
+        if (auto t = t0.lock()) {
+            t->m_exception = std::current_exception();
+            t->m_state = task_state::Failed;
+        }
     }
 }
 

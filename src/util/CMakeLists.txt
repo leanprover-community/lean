@@ -4,6 +4,6 @@ add_library(util OBJECT debug.cpp name.cpp name_set.cpp fresh_name.cpp
   stackinfo.cpp lean_path.cpp serializer.cpp lbool.cpp
   bitap_fuzzy_search.cpp init_module.cpp thread.cpp memory_pool.cpp
   utf8.cpp name_map.cpp line_endings.cpp list_fn.cpp file_lock.cpp
-  timeit.cpp timer.cpp task.cpp task_builder.cpp cancellable.cpp
+  timeit.cpp timer.cpp task.cpp
   log_tree.cpp small_object_allocator.cpp subscripted_name_set.cpp
   parser_exception.cpp name_generator.cpp)

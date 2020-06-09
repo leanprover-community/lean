@@ -42,9 +42,6 @@ public:
         MaxLevel = std::numeric_limits<detail_level>::max();
 
     struct node_cell {
-        MK_LEAN_RC()
-        void dealloc() { delete this; }
-
         name_map<node> m_children;
         name_set m_used_names;
 
@@ -58,14 +55,13 @@ public:
         gtask m_producer;
         detail_level m_detail_level = DefaultLevel;
         state m_state = state::Created;
-
-        node_cell() : m_rc(0) {}
     };
 
     class node {
         friend class log_tree;
+        friend class weak_node;
 
-        node_cell * m_ptr;
+        std::shared_ptr<node_cell> m_ptr;
 
         void detach_core(std::vector<event> & events) const;
         void notify(std::vector<event> const & events, unique_lock<mutex> & lock) const;
@@ -73,16 +69,16 @@ public:
 
         unique_lock<mutex> lock() const { return unique_lock<mutex>(m_ptr->m_tree->m_mutex); }
 
-        node(node_cell * ptr) : m_ptr(ptr) { if (m_ptr) m_ptr->inc_ref(); }
+        node(std::shared_ptr<node_cell> const & ptr) : m_ptr(ptr) {}
 
     public:
-        node() : m_ptr(nullptr) {}
-        node(node const & n) : node(n.m_ptr) {}
-        node(node && n) : m_ptr(n.m_ptr) { n.m_ptr = nullptr; }
-        ~node() { if (m_ptr) m_ptr->dec_ref(); }
+        node() {}
+        node(node const & n) : m_ptr(n.m_ptr) {}
+        node(node && n) : m_ptr(std::move(n.m_ptr)) {}
+        ~node() {}
 
-        node & operator=(node const & n) { LEAN_COPY_REF(n); }
-        node & operator=(node && n) { LEAN_MOVE_REF(n); }
+        node & operator=(node const & n) { m_ptr = n.m_ptr; return *this; }
+        node & operator=(node && n) { m_ptr = std::move(n.m_ptr); return *this; }
 
         void clear_entries() const;
 
@@ -120,7 +116,15 @@ public:
         void print_to(std::ostream &, unsigned) const;
         void print() const;
 
-        operator bool() const { return m_ptr != nullptr; }
+        operator bool() const { return !!m_ptr; }
+    };
+
+    class weak_node {
+        std::weak_ptr<node_cell> m_ptr;
+
+    public:
+        weak_node(node const & n) : m_ptr(n.m_ptr) {}
+        node lock() const { return m_ptr.lock(); }
     };
 
     struct event {

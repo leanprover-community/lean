@@ -19,12 +19,12 @@ struct library_scopes_imp : public delegating_task_imp {
 
     // TODO(gabriel): set logtree status to cancelled?
 
-    void execute(void * result) override {
+    void execute() override {
         scope_global_ios scope1(m_ios);
         scope_log_tree scope2(m_lt);
         if (m_lt) m_lt.set_state(log_tree::state::Running);
         try {
-            delegating_task_imp::execute(result);
+            delegating_task_imp::execute();
         } catch (interrupted &) {
             if (m_lt) m_lt.set_state(log_tree::state::Cancelled);
             throw;
@@ -41,9 +41,9 @@ struct exception_reporter_imp : public delegating_task_imp {
     exception_reporter_imp(std::unique_ptr<gtask_imp> && base) :
         delegating_task_imp(std::forward<std::unique_ptr<gtask_imp>>(base)) {}
 
-    void execute(void * result) override {
+    void execute() override {
         try {
-            delegating_task_imp::execute(result);
+            delegating_task_imp::execute();
         } catch (std::exception & ex) {
             message_builder(environment(), get_global_ios(),
                             logtree().get_location().m_file_name,

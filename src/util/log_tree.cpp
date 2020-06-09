@@ -24,7 +24,7 @@ void log_tree::add_listener(log_tree::listener const & l) {
 }
 
 log_tree::log_tree() {
-    auto cell = new node_cell;
+    auto cell = std::make_shared<node_cell>();
     cell->m_tree = this;
     m_root = node(cell);
 }
@@ -72,7 +72,7 @@ void log_tree::node::notify(std::vector<log_tree::event> const & events, unique_
 }
 
 log_tree::node log_tree::node::clone_core() const {
-    auto copy = node(new node_cell);
+    auto copy = node(std::make_shared<node_cell>());
     copy.m_ptr->m_children = m_ptr->m_children;
     m_ptr->m_children.clear();
     copy.m_ptr->m_tree = m_ptr->m_tree;
@@ -120,7 +120,7 @@ log_tree::node log_tree::node::mk_child(name n, std::string const & description,
         child = existing->clone_core();
         existing->detach_core(events);
     } else {
-        child = node(new node_cell);
+        child = node(std::make_shared<node_cell>());
         child.m_ptr->m_tree = m_ptr->m_tree;
         child.m_ptr->m_detached = m_ptr->m_detached;
     }

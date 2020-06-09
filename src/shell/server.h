@@ -13,7 +13,6 @@ Authors: Gabriel Ebner, Sebastian Ullrich
 #include "library/module_mgr.h"
 #include "frontends/lean/json.h"
 #include "library/mt_task_queue.h"
-#include "util/cancellable.h"
 
 namespace lean {
 
@@ -80,8 +79,6 @@ class server : public module_vfs {
     std::unique_ptr<module_mgr> m_mod_mgr;
     std::unique_ptr<task_queue> m_tq;
     fs_module_vfs m_fs_vfs;
-
-    cancellation_token m_bg_task_ctok;
 
     template <class Msg>
     void send_msg(Msg const &);

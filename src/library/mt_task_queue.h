@@ -8,6 +8,7 @@ Author: Gabriel Ebner
 #include <deque>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <functional>
 #include "util/task.h"
@@ -16,10 +17,30 @@ namespace lean {
 
 #if defined(LEAN_MULTI_THREAD)
 
+struct weak_gtask2 {
+    gtask_cell * m_ptr = nullptr;
+    weak_gtask m_wptr;
+
+public:
+    weak_gtask2() {}
+    weak_gtask2(gtask const & t) : m_ptr(t.get()), m_wptr(t) {}
+
+    gtask lock() const { return m_wptr.lock(); }
+    weak_gtask const & weak() const { return m_wptr; }
+    weak_gtask & weak() { return m_wptr; }
+
+    bool operator==(weak_gtask2 const & that) const { return m_ptr == that.m_ptr; }
+    operator bool() const { return !!m_ptr; }
+
+    struct hash {
+        unsigned operator()(weak_gtask2 const & t) const { return std::hash<gtask_cell *>()(t.m_ptr); }
+    };
+};
+
 class mt_task_queue : public task_queue {
     mutex m_mutex;
-    std::map<unsigned, std::deque<gtask>> m_queue;
-    std::unordered_set<gtask> m_waiting;
+    std::map<unsigned, std::deque<weak_gtask2>> m_queue;
+    std::unordered_set<weak_gtask2, weak_gtask2::hash> m_waiting;
     condition_variable m_queue_added, m_queue_changed;
     void notify_queue_changed();
 
@@ -28,7 +49,7 @@ class mt_task_queue : public task_queue {
 
     struct worker_info {
         std::unique_ptr<lthread> m_thread;
-        gtask m_current_task;
+        weak_gtask2 m_current_task;
     };
     std::vector<std::shared_ptr<worker_info>> m_workers;
     void spawn_worker();
@@ -37,7 +58,7 @@ class mt_task_queue : public task_queue {
     int m_required_workers;
     condition_variable m_wake_up_worker;
 
-    gtask dequeue();
+    weak_gtask2 dequeue();
     void enqueue(gtask const &);
 
     bool check_deps(gtask const &);
@@ -47,8 +68,9 @@ class mt_task_queue : public task_queue {
     bool empty_core();
 
     void handle_finished(gtask const &);
+    void handle_finished(weak_gtask2 const &);
 
-    struct mt_sched_info : public scheduling_info {
+    struct mt_sched_info {
         unsigned m_prio;
         std::vector<gtask> m_reverse_deps;
         std::shared_ptr<condition_variable> m_has_finished;
@@ -58,9 +80,8 @@ class mt_task_queue : public task_queue {
         template <class Fn> void wait(unique_lock<mutex> &, Fn &&);
         void notify();
     };
-    mt_sched_info & get_sched_info(gtask const & t) {
-        return static_cast<mt_sched_info &>(*get_data(t)->m_sched_info);
-    }
+    std::unordered_map<weak_gtask2, mt_sched_info, weak_gtask2::hash> m_sched_info;
+    mt_sched_info & get_sched_info(gtask const & t) { return m_sched_info.at(t); }
 
     unsigned & get_prio(gtask const & t) { return get_sched_info(t).m_prio; }
     gtask_imp * get_imp(gtask const & t) { return get_data(t)->m_imp.get(); }
@@ -72,7 +93,6 @@ public:
     ~mt_task_queue();
 
     void wait_for_finish(gtask const & t) override;
-    void fail_and_dispose(gtask const &t) override;
 
     void submit(gtask const & t, unsigned prio) override;
     void submit(gtask const & t) override;

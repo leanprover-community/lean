@@ -208,8 +208,6 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
 
             mod->m_result = mk_pure_task<module_info::parse_result>(res);
 
-            if (auto & old_mod = m_modules[id])
-                cancel(old_mod->m_cancel);
             m_modules[id] = mod;
         } else if (mod->m_source == module_src::LEAN) {
             build_lean(mod, module_stack);
@@ -267,11 +265,8 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     auto mod_parser_fn = std::make_shared<module_parser>(id, mod->m_contents, m_initial_env, ldr);
     mod_parser_fn->save_info(m_server_mode);
 
-    module_parser_result snapshots;
-    std::tie(mod->m_cancel, snapshots) = build_lean_snapshots(
+    module_parser_result snapshots = build_lean_snapshots(
             mod_parser_fn, m_modules[id], deps, mod->m_contents);
-    lean_assert(!mod->m_cancel->is_cancelled());
-    scope_cancellation_token scope_cancel(mod->m_cancel);
 
     if (m_server_mode) {
         // Even just keeping a reference to the final environment costs us
@@ -329,14 +324,12 @@ static optional<pos_info> get_first_diff_pos(std::string const & as, std::string
     return optional<pos_info>(line, 0);
 }
 
-std::pair<cancellation_token, module_parser_result>
+module_parser_result
 module_mgr::build_lean_snapshots(std::shared_ptr<module_parser> const & mod_parser,
                                  std::shared_ptr<module_info> const & old_mod,
                                  std::vector<gtask> const & deps, std::string const & contents) {
     auto rebuild = [&] {
-        if (old_mod) cancel(old_mod->m_cancel);
-        auto cancel_tok = mk_cancellation_token();
-        return std::make_pair(cancel_tok, mod_parser->parse(optional<std::vector<gtask>>(deps)));
+        return mod_parser->parse(optional<std::vector<gtask>>(deps));
     };
 
     if (!m_server_mode) return rebuild();
@@ -356,12 +349,10 @@ module_mgr::build_lean_snapshots(std::shared_ptr<module_parser> const & mod_pars
     auto snap = *old_mod->m_snapshots;
     logtree().reuse("_next"); // TODO(gabriel): this needs to be the same name as in module_parser...
     if (auto diff_pos = get_first_diff_pos(contents, old_mod->m_contents)) {
-        return std::make_pair(old_mod->m_cancel,
-                              mod_parser->resume_from_start(snap, old_mod->m_cancel,
-                                                            *diff_pos, optional<std::vector<gtask>>(deps)));
+        return mod_parser->resume_from_start(snap, *diff_pos, optional<std::vector<gtask>>(deps));
     } else {
         // no diff
-        return std::make_pair(old_mod->m_cancel, snap);
+        return snap;
     }
 }
 
@@ -432,14 +423,6 @@ std::vector<std::shared_ptr<module_info const>> module_mgr::get_all_modules() {
     }
 
     return mods;
-}
-
-void module_mgr::cancel_all() {
-    for (auto & m : m_modules) {
-        if (auto mod = m.second) {
-            cancel(mod->m_cancel);
-        }
-    }
 }
 
 std::shared_ptr<module_info> fs_module_vfs::load_module(module_id const & id, bool can_use_olean) {

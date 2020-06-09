@@ -58,7 +58,6 @@ struct module_info {
 
     gtask m_olean_task;
 
-    cancellation_token m_cancel;
     log_tree::node m_lt;
 
     environment const & get_produced_env() const {
@@ -110,7 +109,7 @@ class module_mgr {
 
     std::vector<module_name> get_direct_imports(module_id const & id, std::string const & contents);
     void build_lean(std::shared_ptr<module_info> const & mod, name_set const & module_stack);
-    std::pair<cancellation_token, module_parser_result>
+    module_parser_result
     build_lean_snapshots(std::shared_ptr<module_parser> const & mod_parser,
                          std::shared_ptr<module_info> const & old_mod, std::vector<gtask> const & deps,
                          std::string const & contents);
@@ -128,8 +127,6 @@ public:
     std::shared_ptr<module_info const> get_module(module_id const &);
 
     std::vector<std::shared_ptr<module_info const>> get_all_modules();
-
-    void cancel_all();
 
     void set_server_mode(bool use_snapshots) { m_server_mode = use_snapshots; }
     bool get_server_mode() const { return m_server_mode; }

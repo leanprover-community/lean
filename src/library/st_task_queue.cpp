@@ -16,13 +16,6 @@ void st_task_queue::wait_for_finish(gtask const & t) {
     }
 }
 
-void st_task_queue::fail_and_dispose(gtask const & t) {
-    if (t && get_state(t).load() < task_state::Running) {
-        fail(t, std::make_exception_ptr(cancellation_exception()));
-        clear(t);
-    }
-}
-
 void st_task_queue::submit(gtask const & t) {
     wait_for_finish(t);
 }

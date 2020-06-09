@@ -14,9 +14,9 @@ Author: Gabriel Ebner
 #if defined(LEAN_MULTI_THREAD)
 namespace lean {
 
-LEAN_THREAD_PTR(gtask, g_current_task);
-struct scoped_current_task : flet<gtask *> {
-    scoped_current_task(gtask * t) : flet(g_current_task, t) {}
+LEAN_THREAD_PTR(weak_gtask, g_current_task);
+struct scoped_current_task : flet<weak_gtask *> {
+    scoped_current_task(weak_gtask * t) : flet(g_current_task, t) {}
 };
 
 template <class T>
@@ -102,23 +102,32 @@ void mt_task_queue::spawn_worker() {
                 }
             }
 
-            auto t = dequeue();
-            if (get_state(t).load() != task_state::Queued) continue;
+            auto t0 = dequeue();
+            if (auto t = t0.lock()) {
+                if (get_state(t).load() != task_state::Queued) continue;
+                get_state(t) = task_state::Running;
+            } else {
+                handle_finished(t0);
+                continue;
+            }
 
-            get_state(t) = task_state::Running;
             reset_heartbeat();
             reset_thread_local();
             {
-                flet<gtask> _(this_worker->m_current_task, t);
-                scoped_current_task scope_cur_task(&t);
+                flet<weak_gtask2> _1(this_worker->m_current_task, t0);
+                scoped_current_task scope_cur_task(&t0.weak());
                 notify_queue_changed();
                 lock.unlock();
-                execute(t);
+                execute(t0.weak());
                 lock.lock();
             }
             reset_heartbeat();
 
-            handle_finished(t);
+            if (auto t = t0.lock()) {
+                handle_finished(t);
+            } else {
+                handle_finished(t0);
+            }
 
             notify_queue_changed();
         }
@@ -139,13 +148,22 @@ void mt_task_queue::handle_finished(gtask const & t) {
     lean_always_assert(get_state(t).load() > task_state::Running);
     lean_always_assert(get_data(t));
 
-    if (!get_data(t)->m_sched_info)
+    handle_finished(weak_gtask2(t));
+    clear(t);
+}
+
+void mt_task_queue::handle_finished(weak_gtask2 const & t) {
+    if (!m_sched_info.count(t))
         return;  // task has never been submitted
 
-    m_waiting.erase(t);
-    get_sched_info(t).notify();
+    auto it = m_sched_info.find(t);
+    auto sched_info = std::move(it->second);
+    m_sched_info.erase(it);
 
-    for (auto & rdep : get_sched_info(t).m_reverse_deps) {
+    m_waiting.erase(t);
+    sched_info.notify();
+
+    for (auto & rdep : sched_info.m_reverse_deps) {
         switch (get_state(rdep).load()) {
             case task_state::Waiting: case task_state::Queued:
                 if (check_deps(rdep)) {
@@ -174,8 +192,6 @@ void mt_task_queue::handle_finished(gtask const & t) {
             default: lean_unreachable();
         }
     }
-
-    clear(t);
 }
 
 void mt_task_queue::submit(gtask const & t, unsigned prio) {
@@ -187,7 +203,7 @@ void mt_task_queue::submit_core(gtask const & t, unsigned prio) {
     if (!t) return;
     switch (get_state(t).load()){
         case task_state::Created:
-            get_data(t)->m_sched_info.reset(new mt_sched_info(prio));
+            m_sched_info.emplace(t, prio);
             if (check_deps(t)) {
                 if (get_state(t).load() < task_state::Running) {
                     // TODO(gabriel): we need to give up the lock on m_mutex for this
@@ -301,31 +317,12 @@ void mt_task_queue::wait_for_finish(gtask const & t) {
     }
 }
 
-void mt_task_queue::cancel_core(gtask const & t) {
-    if (!t) return;
-    switch (get_state(t).load()) {
-        case task_state::Waiting:
-            m_waiting.erase(t);
-            /* fall-thru */
-        case task_state::Created: case task_state::Queued:
-            fail(t, std::make_exception_ptr(cancellation_exception()));
-            handle_finished(t);
-            return;
-        default: return;
-    }
-}
-void mt_task_queue::fail_and_dispose(gtask const & t) {
-    if (!t) return;
-    unique_lock<mutex> lock(m_mutex);
-    cancel_core(t);
-}
-
 void mt_task_queue::join() {
     unique_lock<mutex> lock(m_mutex);
     m_queue_changed.wait(lock, [=] { return empty_core(); });
 }
 
-gtask mt_task_queue::dequeue() {
+weak_gtask2 mt_task_queue::dequeue() {
     lean_always_assert(!m_queue.empty());
     auto it = m_queue.begin();
     auto & highest_prio = it->second;
@@ -353,11 +350,8 @@ void mt_task_queue::enqueue(gtask const & t) {
 
 void mt_task_queue::evacuate() {
     unique_lock<mutex> lock(m_mutex);
-    for (auto & q : m_queue) for (auto & t : q.second) cancel_core(t);
-
-    buffer<gtask> to_cancel; // copy because of iterator invalidation
-    for (auto & t : m_waiting) to_cancel.push_back(t);
-    for (auto & t : to_cancel) cancel_core(t);
+    m_queue.clear();
+    m_waiting.clear();
 }
 
 void mt_task_queue::submit(gtask const & t) {
@@ -365,11 +359,14 @@ void mt_task_queue::submit(gtask const & t) {
 }
 
 unsigned mt_task_queue::get_default_prio() {
-    if (g_current_task && get_imp(*g_current_task)) {
-        return get_prio(*g_current_task);
-    } else {
-        return 0;
+    if (g_current_task) {
+        if (auto t = g_current_task->lock()) {
+            if (get_imp(t)) {
+                return get_prio(t);
+            }
+        }
     }
+    return 0;
 }
 
 }

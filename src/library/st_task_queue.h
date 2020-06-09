@@ -12,7 +12,6 @@ namespace lean {
 class st_task_queue : public task_queue {
 public:
     void wait_for_finish(gtask const &) override;
-    void fail_and_dispose(gtask const &) override;
 
     void submit(gtask const &) override;
 

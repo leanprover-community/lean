@@ -8,7 +8,6 @@ Author: Gabriel Ebner
 #include "util/task.h"
 #include "util/unit.h"
 #include "util/list.h"
-#include "util/cancellable.h"
 #include <vector>
 #include <algorithm>
 #include <type_traits>
@@ -24,13 +23,8 @@ struct delegating_task_imp : public gtask_imp {
     delegating_task_imp(std::unique_ptr<gtask_imp> && base) : m_base(std::forward<std::unique_ptr<gtask_imp>>(base)) {}
 
     void get_dependencies(buffer<gtask> & deps) override { m_base->get_dependencies(deps); }
-    void execute(void * result) override { return m_base->execute(result); }
-};
-
-struct cancellation_support {
-    cancellation_token m_ctok;
-    cancellation_support(cancellation_token const & ctok) : m_ctok(ctok) {}
-    std::unique_ptr<gtask_imp> operator()(std::unique_ptr<gtask_imp> &&);
+    void execute() override { return m_base->execute(); }
+    void store(void * result) override { return m_base->store(result); }
 };
 
 template <class Fn>
@@ -50,24 +44,25 @@ template <class Res>
 class task_builder {
     std::unique_ptr<gtask_imp> m_imp;
     task_flags m_flags;
-    cancellation_token m_cancel_tok;
 
     template <class Fn>
     struct base_task_imp : public gtask_imp {
         Fn m_fn;
+        optional<Res> m_res;
 
         base_task_imp(Fn && fn) : m_fn(fn) {}
 
-        void execute(void * result) override {
-            *static_cast<Res *>(result) = m_fn();
+        void execute() override { m_res = m_fn(); }
+
+        void store(void * result) override {
+            *static_cast<optional<Res> *>(result) = std::move(m_res);
         }
     };
 
 public:
     task_builder() : task_builder([] { return Res(); }) {}
     template <class Fn> task_builder(Fn && fn) :
-            m_imp(new base_task_imp<Fn>(std::forward<Fn>(fn))),
-            m_cancel_tok(global_cancellation_token()) {}
+            m_imp(new base_task_imp<Fn>(std::forward<Fn>(fn))) {}
 
     task_builder<Res> execute_eagerly() {
         m_flags.m_eager_execution = true;
@@ -78,11 +73,6 @@ public:
     task_builder<Res> wrap(Wrapper && wrapper) {
         m_imp = wrapper(std::move(m_imp));
         lean_assert(m_imp);
-        return std::move(*this);
-    }
-
-    task_builder<Res> set_cancellation_token(cancellation_token const & ctok) {
-        m_cancel_tok = ctok;
         return std::move(*this);
     }
 
@@ -116,19 +106,12 @@ public:
         });
     }
 
-    task<Res> build_without_cancellation() {
+    task<Res> build() {
         return mk_task<Res>(std::move(m_imp), m_flags);
     }
 
     gtask build_dep_task() {
-        return execute_eagerly().build_without_cancellation();
-    }
-
-    task<Res> build() {
-        auto ctok = mk_cancellation_token(m_cancel_tok);
-        auto task = wrap(cancellation_support(ctok)).build_without_cancellation();
-        ctok->add_child(task);
-        return task;
+        return execute_eagerly().build();
     }
 };
 

@@ -776,7 +776,6 @@ certified_declaration check(environment const & env, declaration const & d, bool
     checker.ensure_sort(sort, d.get_type());
     if (d.is_definition()) {
         if (!immediately && env.trust_lvl() != 0 && d.is_theorem()) {
-            // TODO(gabriel): cancellation
             auto checked_proof =
                     map<expr>(d.get_value_task(),
                               [d, env, memoize, trusted_only] (expr const & val) -> expr {

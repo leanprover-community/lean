@@ -8,7 +8,6 @@ Author: Gabriel Ebner
 #include <memory>
 #include "util/buffer.h"
 #include "util/thread.h"
-#include "util/cancellable.h"
 
 namespace lean {
 
@@ -19,10 +18,6 @@ template <class Res> class task_cell;
 template <class Res> using task = std::shared_ptr<task_cell<Res>>;
 class task_queue;
 
-struct scheduling_info {
-    virtual ~scheduling_info() {}
-};
-
 struct task_flags {
     bool m_eager_execution = false;
 };
@@ -30,19 +25,22 @@ struct task_flags {
 using task_dep_fn = std::function<void(buffer<gtask>&)>;
 
 struct gtask_imp {
+    atomic_bool m_interrupt = { false };
+
     gtask_imp() {}
     virtual ~gtask_imp() {}
 
     virtual void get_dependencies(buffer<gtask> &) {}
-    virtual void execute(void * result) = 0;
+    virtual void execute() = 0;
+    virtual void store(void *) = 0;
 };
 
 struct gtask_data {
-    std::unique_ptr<gtask_imp> m_imp;
-    std::unique_ptr<scheduling_info> m_sched_info;
+    std::shared_ptr<gtask_imp> m_imp;
     task_flags m_flags;
 
     gtask_data(gtask_imp * imp, task_flags flags) : m_imp(imp), m_flags(flags) {}
+    ~gtask_data() { m_imp->m_interrupt = true; }
 };
 
 enum class task_state {
@@ -54,12 +52,12 @@ enum class task_state {
     Success = 5,
 };
 
-class gtask_cell : public cancellable {
+class gtask_cell {
     friend class task_queue;
     template <class Res> friend class task_cell;
     template <class Res> friend task<Res> mk_task(std::unique_ptr<gtask_imp> &&, task_flags);
 
-    virtual void execute() {};
+    virtual void store() {};
 
     atomic<task_state>          m_state;
     std::unique_ptr<gtask_data> m_data;
@@ -77,8 +75,6 @@ class gtask_cell : public cancellable {
     struct called_from_friend {};
 
 public:
-    void cancel(std::shared_ptr<cancellable> const & self) override;
-
     bool peek_is_finished() const { return m_state.load() > task_state::Running; }
     std::exception_ptr peek_exception() const;
 
@@ -91,10 +87,7 @@ class task_cell : public gtask_cell {
 
     optional<Res> m_result;
 
-    void execute() override {
-        m_result = optional<Res>(Res());
-        m_data->m_imp->execute(&*m_result);
-    }
+    void store() override { m_data->m_imp->store(&m_result); }
 
 public:
     task_cell(called_from_friend, gtask_imp * imp, task_flags flags) : gtask_cell(imp, flags) {}
@@ -126,7 +119,7 @@ protected:
 
     void clear(gtask const & t) const { t->m_data.reset(nullptr); }
 
-    void execute(gtask const & t);
+    void execute(weak_gtask const & t);
     void fail(gtask const & t, std::exception_ptr const & ex);
     void fail(gtask const & t, gtask const & failed);
 
@@ -143,7 +136,6 @@ public:
         return *t->m_result;
     }
 
-    virtual void fail_and_dispose(gtask const &) = 0;
     virtual void evacuate() = 0;
     virtual void join() = 0;
 
