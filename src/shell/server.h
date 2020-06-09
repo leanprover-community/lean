@@ -81,8 +81,6 @@ class server : public module_vfs {
     std::unique_ptr<task_queue> m_tq;
     fs_module_vfs m_fs_vfs;
 
-    cancellation_token m_bg_task_ctok;
-
     template <class Msg>
     void send_msg(Msg const &);
 
