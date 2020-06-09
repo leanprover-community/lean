@@ -331,7 +331,6 @@ server::server(unsigned num_threads, search_path const & path, environment const
 
 server::~server() {
     m_mod_mgr->cancel_all();
-    cancel(m_bg_task_ctok);
     m_tq->evacuate();
 }
 
@@ -578,9 +577,6 @@ json server::autocomplete(std::shared_ptr<module_info const> const & mod_info, b
 }
 
 task<server::cmd_res> server::handle_complete(cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
-
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
     bool skip_completions = false;
@@ -591,7 +587,6 @@ task<server::cmd_res> server::handle_complete(cmd_req const & req) {
 
     return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, autocomplete(mod_info, skip_completions, pos)); })
         .wrap(library_scopes(log_tree::node()))
-        .set_cancellation_token(m_bg_task_ctok)
         .build();
 }
 
@@ -646,9 +641,6 @@ task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
 }
 
 task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
-
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
 
@@ -656,8 +648,7 @@ task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
 
     return task_builder<cmd_res>([=] {
         return cmd_res(req.m_seq_num, info(mod_info, pos));
-    }).wrap(library_scopes(log_tree::node()))
-      .set_cancellation_token(m_bg_task_ctok).build();
+    }).wrap(library_scopes(log_tree::node())).build();
 }
 
 json server::hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action,
@@ -669,7 +660,6 @@ json server::hole_command(std::shared_ptr<module_info const> const & mod_info, s
 }
 
 task<server::cmd_res> server::handle_hole(cmd_req const & req) {
-    auto ctok = mk_cancellation_token();
     std::string action = req.m_payload.at("action");
     std::string fn     = req.m_payload.at("file_name");
     pos_info pos       = {req.m_payload.at("line"), req.m_payload.at("column")};
@@ -677,7 +667,6 @@ task<server::cmd_res> server::handle_hole(cmd_req const & req) {
 
     return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, hole_command(mod_info, action, pos)); })
         .wrap(library_scopes(log_tree::node()))
-        .set_cancellation_token(ctok)
         .build();
 }
 
