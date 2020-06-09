@@ -154,33 +154,35 @@ tc.stateless $ λ _, do
       set_goals [g],
       lcs ← local_context,
       lchs : list (html γ) ← lcs.mmap (λ lc, do
-        pn ← pure $ expr.local_pp_name lc,
+        let pn := lc.local_pp_name,
         lh : html γ ← local_c lc,
-        pure
-          $ h "tr" [key $ to_string $ expr.local_uniq_name lc] [
-              h "td" [cn "goal-hyp b"] [html.of_name pn],
-              h "td" [] [html.of_string " : "],
-              h "td" [] [lh]
-          ]
+        pure $ h "li" [key lc.local_uniq_name] [
+            h "span" [cn "goal-hyp b"] [html.of_name pn],
+            " : ",
+            h "span" [cn "goal-hyp-type"] [lh]
+        ]
       ),
       t_comp ← target_c g,
       (expr.mvar u_n pp_n y) ← pure g,
-      pure $ h "table" [key $ expr.hash g, className "font-code"] [
-        h "tbody" [] $ lchs ++ [
-            h "tr" [key u_n, className "bt"] [
-              h "td" [] [] ,
-              h "td" [cn "goal-vdash b"] [html.of_string " ⊢ "],
-              h "td" [] [t_comp]
-        ]]
-      ]
+      pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
+        h "li" [key u_n] [
+          h "span" [cn "goal-vdash b"] ["⊢ "],
+          t_comp
+      ]]
     ),
     set_goals gs,
-    goal_message : string ← pure $ if gs.length = 0 then "goals accomplished" else if gs.length = 1 then "1 goal" else (to_string gs.length) ++ " goals",
-    goal_message : html γ ← pure $ h "strong" [cn "goal-goals"] [goal_message],
+    let goal_message :=
+      if gs.length = 0 then
+        "goals accomplished"
+      else if gs.length = 1 then
+        "1 goal"
+      else
+        to_string gs.length ++ " goals",
+    let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
     pure $ [h "ul" [className "list pl0"]
         $ list.map_with_index (λ i x,
           let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-          h "li" [className $ "lh-copy mv3 " ++ border_cn] [x])
+          h "li" [className $ "lh-copy " ++ border_cn] [x])
         $ (goal_message :: hs)]
 
 
