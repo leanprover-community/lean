@@ -1,3 +1,27 @@
+3.16.0c (10 June 2020)
+----------------------
+
+Features:
+- Add docstrings for `cc_state` primitives (#295)
+- Use `BUILD_TESTING` to enable or disable building tests (#292)
+- Additional meta constants (#294)
+- Add `@[pp_nodot]` (#297)
+- Make widget look more like current tactic state (#303)
+- Show term-proof goals as widgets (#304, #306)
+- Add holes for underscores (#307)
+
+Bug fixes:
+- Fix case of header files for building on case-sensitive filesystems (#290)
+- Remove useless setting of `_GLIBCXX_USE_CXX11_ABI` with MinGW (#293)
+- Fix guards to make it possible to build for BSD systems (#291)
+- Rename `tactic.tactic.run_simple` -> `tactic.run_simple` (#298)
+- Use instance instead of semireducible transparency in type-class synthesis (#300)
+- Widget events contain position (#301)
+- Server: do not cancel info queries, etc. (#308)
+
+Changes:
+- Lower precedence of unary `-` (#287)
+
 3.15.0c (28 May 2020)
 ---------------------
 

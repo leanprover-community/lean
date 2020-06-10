@@ -145,46 +145,53 @@ tc.stateless (λ x, do
   pure y_comp
 )
 
+/-- Component that displays the main (first) goal. -/
+meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
+tc.stateless $ λ _, do
+  g@(expr.mvar u_n pp_n y) ← main_goal,
+  set_goals [g],
+  lcs ← local_context,
+  lchs ← lcs.mmap (λ lc, do
+    lh ← local_c lc,
+    pure $ h "li" [key lc.local_uniq_name] [
+        h "span" [cn "goal-hyp b"] [html.of_name lc.local_pp_name],
+        " : ",
+        h "span" [cn "goal-hyp-type"] [lh]
+    ]),
+  t_comp ← target_c g,
+  pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
+    h "li" [key u_n] [
+      h "span" [cn "goal-vdash b"] ["⊢ "],
+      t_comp
+  ]]
+
+/-- Component that displays all goals, together with the `$n goals` message. -/
 meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
 tc.stateless $ λ _, do
-    gs ← get_goals,
-    hs : list (html γ) ← gs.mmap (λ g, do
-      ts ← read,
-      gn ← pp g,
-      set_goals [g],
-      lcs ← local_context,
-      lchs : list (html γ) ← lcs.mmap (λ lc, do
-        let pn := lc.local_pp_name,
-        lh : html γ ← local_c lc,
-        pure $ h "li" [key lc.local_uniq_name] [
-            h "span" [cn "goal-hyp b"] [html.of_name pn],
-            " : ",
-            h "span" [cn "goal-hyp-type"] [lh]
-        ]
-      ),
-      t_comp ← target_c g,
-      (expr.mvar u_n pp_n y) ← pure g,
-      pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
-        h "li" [key u_n] [
-          h "span" [cn "goal-vdash b"] ["⊢ "],
-          t_comp
-      ]]
-    ),
-    set_goals gs,
-    let goal_message :=
-      if gs.length = 0 then
-        "goals accomplished"
-      else if gs.length = 1 then
-        "1 goal"
-      else
-        to_string gs.length ++ " goals",
-    let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
-    pure $ [h "ul" [className "list pl0"]
-        $ list.map_with_index (λ i x,
-          let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-          h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
-        $ (goal_message :: hs)]
+  gs ← get_goals,
+  hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html () $ tactic_view_goal local_c target_c),
+  set_goals gs,
+  let goal_message :=
+    if gs.length = 0 then
+      "goals accomplished"
+    else if gs.length = 1 then
+      "1 goal"
+    else
+      to_string gs.length ++ " goals",
+  let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
+  pure [h "ul" [className "list pl0"]
+      $ list.map_with_index (λ i x,
+        let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
+        h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
+      $ (goal_message :: hs)]
 
+/-- Component that displays the term-mode goal. -/
+meta def tactic_view_term_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
+tc.stateless $ λ _, do
+  goal ← flip tc.to_html () $ tactic_view_goal local_c target_c,
+  pure [h "ul" [className "list pl0"] [
+    h "li" [className "lh-copy"] [h "strong" [cn "goal-goals"] ["expected type:"]],
+    h "li" [className "lh-copy"] [goal]]]
 
 meta def tactic_render : tc unit string :=
 component.ignore_action $ tactic_view_component show_type_component show_type_component
@@ -196,7 +203,7 @@ tc.to_component tactic_render
 Widget used to display term-proof goals.
 -/
 meta def term_goal_widget : component tactic_state string :=
-tactic_state_widget
+(tactic_view_term_goal show_type_component show_type_component).to_component
 
 end widget
 
