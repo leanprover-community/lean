@@ -25,6 +25,7 @@ Author: Sebastian Ullrich
 #include "frontends/lean/interactive.h"
 #include "frontends/lean/pp.h"
 #include "frontends/lean/tactic_notation.h"
+#include "library/library_task_builder.h"
 
 namespace lean {
 LEAN_THREAD_VALUE(break_at_pos_exception::token_context, g_context, break_at_pos_exception::token_context::none);
@@ -112,7 +113,7 @@ void report_completions(environment const & env, options const & opts, pos_info 
 
 void update_widget(module_info const & m_mod_info,
                  std::vector<info_manager> const & info_managers, pos_info const & pos,
-                 json & j, json const & message) { // [hack] copied from `report_info` make dry.
+                 json & j, json const & message) {
     for (info_manager const & infom : info_managers) {
         if (infom.get_file_name() == m_mod_info.m_id) {
             json r;
@@ -123,6 +124,19 @@ void update_widget(module_info const & m_mod_info,
         }
     }
 }
+
+task<json> await_widget_task(module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos,
+                 json const & message) {
+    for (info_manager const & infom : info_managers) {
+        if (infom.get_file_name() == m_mod_info.m_id) {
+            return map(infom.await_widget_task(pos, message), [] (json const & r) {
+                json j; j["record"] = r; return j;
+            });
+        }
+    }
+}
+
 
 void report_info(environment const & env, options const & opts, io_state const & ios,
                  search_path const & path, module_info const & m_mod_info,

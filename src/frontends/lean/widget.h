@@ -73,10 +73,12 @@ struct vdom_string : public vdom_cell {
 };
 
 struct component_hook {
-  /** Called for a new component. */
+  /** Called for a fresh component with no previous value. */
   virtual void initialize(vm_obj const & props) {};
   /** Update the hook based on the previous value.
+   * This should be called whenever the props change.
    * If it returns true then the view should rerender.
+   * If false is returned then all of the later hooks will not be reconciled.
    */
   virtual bool reconcile(vm_obj const & props, component_hook const & previous) { return true; };
   // virtual bool should_update(vm_obj const & new_props) { return true; };
@@ -86,29 +88,39 @@ struct component_hook {
 };
 
 class component_instance : public vdom_cell {
+  // set on construction
+  unsigned int m_component_hash;
   ts_vm_obj m_view;
   ts_vm_obj const m_props;
-  ts_vm_obj m_inner_props;
-  unsigned int m_component_hash;
-  unsigned m_id;
-  list<unsigned> m_route;
-  bool m_has_rendered = false;
-  unsigned m_reconcile_count = 0;
-  std::vector<vdom> m_render;
   std::vector<component_hook> m_hooks;
+  unsigned m_id;
+  // set on initialisation / reconciliation
+  bool m_has_initialized = false;
+  ts_vm_obj m_inner_props;
+  list<unsigned> m_route;
+  unsigned m_reconcile_count = 0;
+  // set on rendering
+  bool m_has_rendered = false;
+  std::vector<component_instance *> m_children;
+  std::vector<vdom> m_render;
   std::map<unsigned, ts_vm_obj> m_handlers;
 
-  std::vector<component_instance *> m_children;
   list<unsigned> child_route() {return cons(m_id, m_route); }
   /** convert an inner action to an outer action */
   optional<vm_obj> handle_action(vm_obj const & a);
+  /** Compute the vdom tree for this component.
+   * Assumes that initialize or reconcile was called. */
   void render();
+  void compute_props();
   void reconcile(vdom const & old);
+  /** Perform initialisation step:
+   *  initialise the hooks, including setting states and starting tasks.
+   */
   void initialize();
   void update_capture_state(unsigned cs);
 public:
   json component_instance::to_json(list<unsigned> const & route) override;
-  void handle_task_completed(list<unsigned> const & route);
+  task<unit> await_tasks(list<unsigned> const & route);
   void handle_mouse_gain_capture(list<unsigned> const & route);
   void handle_mouse_lose_capture(list<unsigned> const & route);
 
@@ -141,13 +153,5 @@ public:
     virtual throwable * clone() const { return new invalid_handler(); }
     virtual void rethrow() const { throw *this; }
 };
-
-typedef std::vector<task<list<unsigned>>> pending_tasks;
-void set_pending_tasks(pending_tasks * q);
-void unset_pending_tasks();
-pending_tasks & get_pending_tasks();
-
-
-
 
 }

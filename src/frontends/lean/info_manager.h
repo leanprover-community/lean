@@ -86,6 +86,11 @@ public:
      * It will throw is the json message has the wrong format.
      */
     void update(json const & message, json & record);
+    /** takes a message of shape `{handler: {r:number[]}}`
+     * and returns a task that completes when all of the
+     * tasks on the component at the given route are set.
+     */
+    task<unit> await_task(json const & message);
     json to_json() const;
 };
 
@@ -156,6 +161,10 @@ public:
      *  Returns true when the widget was successfully updated.
      */
     bool update_widget(pos_info pos, json & record, json const & message) const;
+    /** Looks for a widget_state at the given position, if one is found then returns true and sets `result`
+     * to be a task that completes with a new resulting widget record.
+     */
+    bool await_widget_task(pos_info pos, task<unit> & result, json const & message) const;
 };
 
 info_manager * get_global_info_manager();

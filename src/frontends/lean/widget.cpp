@@ -18,6 +18,7 @@ Author: E.W.Ayers
 #include "frontends/lean/json.h"
 #include "util/optional.h"
 #include "util/pair.h"
+#include "library/library_task_builder.h"
 
 namespace lean {
 
@@ -26,7 +27,7 @@ enum mouse_capture_state {
     inside_immediate = 1,
     inside_child = 2
 };
-
+// derived from library/init/meta/widget/basic.lean
 enum component_idx {
     pure = 0,
     filter_map_action = 1,
@@ -157,7 +158,6 @@ struct stateful_hook : public component_hook {
         // assume the props have changed
         if (prev) {
             m_state = prev->m_state;
-            initialize(props);
         }
         initialize(props);
         return true;
@@ -188,27 +188,21 @@ struct with_mouse_capture_hook : public component_hook {
     }
     with_mouse_capture_hook() {}
 };
+
 struct with_task_hook : public component_hook {
     ts_vm_obj const m_tb;
     task<ts_vm_obj> m_task;
     virtual bool reconcile(vm_obj const & props, component_hook const & old) override {
-        // assume that the props have changed. so we have to just recompute.
-        // with_task_hook const * t_old = dynamic_cast<with_task_hook const *>(&old);
+        // assume that the props have changed. So we have to assume that any in-flight task is no longer valid.
+        // You can avoid a re-issue of the task by adding a `with_props_eq` hook prior to this.
         initialize(props);
         return true;
     }
     virtual void initialize(vm_obj const & props) override {
-        if (m_task) {return; }
+        if (m_task) { return; }
         vm_obj vt = invoke(m_tb.to_vm_obj(), props);
         m_task = to_task(vt);
         taskq().submit(m_task);
-        // [todo]: set up a handler for when the task completes.
-        // unsigned handler_id = g_fresh_handler_id.fetch_add(1);
-        // m_handler = handler_id;
-        // auto route = cons(m_id, m_route);
-        // pending_tasks().push_back(task_builder<list<unsigned>>([route] {
-        //     return route;
-        // }).depends_on(t).build());
     }
     vm_obj get_props(vm_obj const & props) override {
         optional<ts_vm_obj> result = peek(m_task);
@@ -264,7 +258,7 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
 }
 
 void component_instance::render() {
-    lean_assert(m_inner_props);
+    lean_assert(m_has_initialized);
     std::vector<component_instance *> children;
     std::map<unsigned, ts_vm_obj> handlers;
     vm_obj view = invoke(m_view.to_vm_obj(), m_inner_props.to_vm_obj());
@@ -278,42 +272,44 @@ void component_instance::render() {
 }
 
 void component_instance::reconcile(vdom const & old) {
-    lean_assert(!m_has_rendered);
-    component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
+    component_instance const * ci_old = dynamic_cast<component_instance *>(old.raw());
     // If they contain vm_externals which are not hashable then we assume they are the same component.
-    // This is acceptable, but confusing, behaviour for now. It just means that the component won't always
+    // This is acceptable behaviour for now. It just means that the component won't always
     // update correctly if a non-prop dependency of a component changes.
     // But users of components should be using Props anyway so there is a workaround.
-    if (ci_old && ci_old->m_component_hash == m_component_hash) {
+    if (ci_old && ci_old->m_component_hash == m_component_hash && m_hooks.size() == ci_old->m_hooks.size()) {
+        lean_assert(ci_old->m_has_initialized);
         // if the components are the same:
-        // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
         vm_obj p_new = m_props.to_vm_obj();
         vm_obj p_old = ci_old->m_props.to_vm_obj();
-        lean_assert(m_hooks.length == ci_old->m_hooks.size());
-        bool should_update = p_new != p_old;
+        bool should_update = true;
         for (unsigned i = 0; i < m_hooks.size(); i++) {
             if (should_update) {
-                should_update &= m_hooks[i].reconcile(p_new, ci_old->m_hooks[i]);
-            }
-            if (!should_update) {
-                m_hooks[i] = ci_old->m_hooks[i];
+                bool result = m_hooks[i].reconcile(p_new, ci_old->m_hooks[i]);
+                if (!result) {
+                    should_update = false;
+                }
             } else {
-                p_new = m_hooks[i].get_props(p_new);
+                // a prior hook decided that later hooks shouldn't update, so we
+                // assume that the old hooks are valid here.
+                m_hooks[i] = ci_old->m_hooks[i];
             }
+            p_new = m_hooks[i].get_props(p_new);
         }
+        m_inner_props = p_new;
+        m_has_initialized = true;
 
         if (!should_update) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
-            m_inner_props = ci_old->m_inner_props;
-            m_children = ci_old->m_children;
-            m_render   = ci_old->m_render;
-            m_id       = ci_old->m_id;
-            m_has_rendered = true;
+            m_children        = ci_old->m_children;
+            m_render          = ci_old->m_render;
+            m_handlers        = ci_old->m_handlers;
+            m_id              = ci_old->m_id;
+            m_has_rendered    = true;
             m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
         } else {
             // the props have changed, so we need to rerender this component.
-            m_inner_props = p_new;
             render();
         }
     } else {
@@ -330,12 +326,22 @@ void component_instance::initialize() {
         p = h.get_props(p);
     }
     m_inner_props = p;
+    m_has_initialized = true;
 }
 
+void component_instance::compute_props() {
+    vm_obj props = m_props.to_vm_obj();
+    for (auto h : m_hooks) {
+        props = h.get_props(props);
+    }
+    m_inner_props = props;
+}
 
 json component_instance::to_json(list<unsigned> const & route) {
-    if (!m_has_rendered) {
+    if (!m_has_initialized) {
         initialize();
+    }
+    if (!m_has_rendered) {
         render();
     }
     json children = json::array();
@@ -347,8 +353,18 @@ json component_instance::to_json(list<unsigned> const & route) {
     for (auto h : m_hooks) {
         with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
         if (mh) {
-            result["mouse_capture"]["r"] = route_to_json(route);
-            break;
+            // tell the client that this component is expecting to be notified with whether or not
+            // the mouse is present. (eg you want a hover rect to disappear when the mouse is in a different location)
+            result["r"] = route_to_json(route);
+            result["mouse_capture"] = true;
+            continue;
+        }
+        with_task_hook * mt = dynamic_cast<with_task_hook *>(&h);
+        if (mt && !peek(mt->m_task)) {
+            // tell the client that this component is running a task.
+            result["r"] = route_to_json(route);
+            result["task"] = true;
+            continue;
         }
     }
     result["id"] = m_id;
@@ -384,15 +400,26 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
     throw invalid_handler();
 }
 
-void component_instance::handle_task_completed(list<unsigned> const & route) {
+task<unit> component_instance::await_tasks(list<unsigned> const & route) {
     if (empty(route)) {
-        initialize();
-        render();
-        return;
+        std::vector<gtask const> tasks;
+        for (auto const & h : m_hooks) {
+            with_task_hook const * mt = dynamic_cast<with_task_hook const *>(&h);
+            if (mt) {
+                tasks.push_back(mt->m_task);
+            }
+        }
+        return task_builder<unit>([this] {
+            // potential [bug]: if `this` has been disposed, then the dependency tasks should all have been cancelled so
+            // this should never be called? I don't know whether this is the right mental model...
+            this->compute_props();
+            this->render();
+            return unit{};
+        }).depends_on(tasks).build();
     } else {
         for (auto const & c : m_children) {
             if (c->m_id == head(route)) {
-                return c->handle_task_completed(tail(route));
+                return c->await_tasks(tail(route));
             }
         }
     }
@@ -407,7 +434,7 @@ void component_instance::update_capture_state(unsigned ms) {
         }
     }
     if (should_update) {
-        initialize();
+        reconcile(this);
         render();
     }
 }
@@ -466,7 +493,6 @@ void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> cons
         }
     }
 }
-
 
 void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers) {
     unsigned handler_id = g_fresh_handler_id.fetch_add(1);
@@ -571,20 +597,5 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
 void initialize_widget() {}
 
 void finalize_widget() {}
-
-
-static pending_tasks * g_pending_tasks = nullptr;
-void set_pending_tasks(pending_tasks * q) {
-    if (g_pending_tasks) throw exception("cannot set task queue twice");
-    g_pending_tasks = q;
-}
-void unset_pending_tasks() {
-    g_pending_tasks = nullptr;
-}
-pending_tasks & get_pending_tasks() {
-    return *g_pending_tasks;
-}
-
-
 
 }

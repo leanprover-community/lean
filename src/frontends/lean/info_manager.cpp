@@ -23,6 +23,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/info_manager.h"
 #include "frontends/lean/interactive.h"
 #include "library/constants.h"
+#include "library/library_task_builder.h"
 
 namespace lean {
 class type_info_data : public info_data_cell {
@@ -145,6 +146,14 @@ void widget_info::report(io_state_stream const & ios, json & record) const {
     record["widget"]["column"] = m_pos.second;
 }
 
+list<unsigned> route_of_json(json const & j_route) {
+    list<unsigned> route; // now root index is at the _front_.
+    for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
+      route = cons(unsigned(*it), route);
+    }
+    return route;
+}
+
 void widget_info::update(json const & message, json & record) {
     if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
@@ -153,10 +162,7 @@ void widget_info::update(json const & message, json & record) {
     scope_vm_state scope(S);
     unsigned handler_idx = message["handler"]["h"];
     json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
-    list<unsigned> route; // now root index is at the _front_.
-    for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
-      route = cons(unsigned(*it), route);
-    }
+    list<unsigned> route = route_of_json(j_route);
     route = tail(route); // disregard the top component id because that is the root component
     json j_args = message["args"];
     component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
@@ -195,6 +201,21 @@ void widget_info::update(json const & message, json & record) {
     } catch (const invalid_handler & e) {
         record["status"] = "invalid_handler";
     }
+}
+
+task<unit> widget_info::await_task(json const & message) {
+    if (!m_vdom.raw()) {
+        return mk_pure_task<unit>({});
+    }
+    list<unsigned> route = tail(route_of_json(message["handler"]["r"]));
+    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
+    try {
+        auto result = c->await_tasks(route);
+        return task_builder<unit>([] () {return unit{}; }).depends_on(result).build();
+    } catch (const invalid_handler & e) {
+        return mk_pure_task<unit>({});
+    }
+
 }
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }
@@ -347,6 +368,30 @@ bool info_manager::update_widget(pos_info pos, json & record, json const & messa
     }
     return false;
 }
+
+bool info_manager::await_widget_task(pos_info pos, task<json> & result, json const & message) const {
+    auto ds = get_info(pos);
+    if (!ds) {
+        json record;
+        record["status"] = "error";
+        record["message"] = "could not find a widget at the given position";
+        result = mk_pure_task<json>(record);
+        return true;
+    }
+    // get last widget_info (only the last widget is shown if there is more than one at a position)
+    widget_info * w = nullptr;
+    for (auto & d : *ds) {
+        if (auto cw = is_widget_info(d))
+            w = const_cast<widget_info *>(cw);
+    }
+    if (w) {
+        auto t = w->await_task(message);
+        result = t;
+        return true;
+    }
+    return false;
+}
+
 
 LEAN_THREAD_PTR(info_manager, g_info_m);
 scoped_info_manager::scoped_info_manager(info_manager *infom) {
