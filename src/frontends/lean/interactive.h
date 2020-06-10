@@ -20,8 +20,11 @@ void report_info(environment const & env, options const & opts, io_state const &
                  break_at_pos_exception const & e, json & j);
 /** Finds the widget at the given position and calls its event handler update function `. */
 void update_widget(module_info const & m_mod_info,
-                 std::vector<info_manager> const & info_managers, pos_info const & pos,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos, unsigned id,
                  json & j, json const & message);
+void get_widget(module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos, unsigned id,
+                 json & j);
 void get_hole_commands(module_info const & m_mod_info,
                        std::vector<info_manager> const & info_managers,
                        pos_info const & pos, json & j);

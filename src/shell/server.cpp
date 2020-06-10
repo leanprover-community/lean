@@ -462,6 +462,8 @@ void server::handle_request(server::cmd_req const & req) {
         taskq().wait_for_finish(this->m_lt.get_root().wait_for_finish());
     } else if (command == "widget_event") {
         handle_async_response(req, handle_widget_event(req));
+    } else if (command == "get_widget") {
+        handle_async_response(req, handle_get_widget(req));
     } else {
         send_msg(cmd_res(req.m_seq_num, std::string("unknown command")));
     }
@@ -630,12 +632,27 @@ task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
     // there should at least be a thread lock on modifying a vdom object.
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+    unsigned id = req.m_payload.at("id");
 
     auto mod_info = m_mod_mgr->get_module(fn);
 
     return task_builder<cmd_res>([=] {
         json j;
-        update_widget(*mod_info, get_info_managers(m_lt), pos, j, req.m_payload);
+        update_widget(*mod_info, get_info_managers(m_lt), pos, id, j, req.m_payload);
+        return cmd_res(req.m_seq_num, j);
+    }).wrap(library_scopes(log_tree::node())).build();
+}
+
+task<server::cmd_res> server::handle_get_widget(server::cmd_req const & req) {
+    std::string fn = req.m_payload.at("file_name");
+    pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+    unsigned id = req.m_payload.at("id");
+
+    auto mod_info = m_mod_mgr->get_module(fn);
+
+    return task_builder<cmd_res>([=] {
+        json j;
+        get_widget(*mod_info, get_info_managers(m_lt), pos, id, j);
         return cmd_res(req.m_seq_num, j);
     }).wrap(library_scopes(log_tree::node())).build();
 }

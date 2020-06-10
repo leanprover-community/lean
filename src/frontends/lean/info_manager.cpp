@@ -98,7 +98,9 @@ public:
         if (m_env.find(get_widget_term_goal_widget_name())) try {
             vm_state S(m_env, options());
             vm_obj widget = S.get_constant(get_widget_term_goal_widget_name());
-            m_vdom = vdom(new component_instance(widget, to_obj(m_state)));
+            auto ci = new component_instance(widget, to_obj(m_state));
+            m_id = ci->id();
+            m_vdom = vdom(ci);
         } catch (exception &) {}
     }
 
@@ -133,16 +135,24 @@ json widget_info::to_json() const {
     return vd->to_json();
 }
 
-void widget_info::report(io_state_stream const & ios, json & record) const {
+void widget_info::report(io_state_stream const &, json & record) const {
     if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
-    mutex * mp = const_cast<mutex *>(&m_mutex);
-    lock_guard<mutex> _(*mp);
-    vm_state S(m_env, ios.get_options());
+    record["widget"]["line"] = m_pos.first;
+    record["widget"]["column"] = m_pos.second;
+    record["widget"]["id"] = m_id;
+}
+
+void widget_info::get(json & record) {
+    if (!m_vdom.raw()) return;
+    if (!get_global_module_mgr()->get_report_widgets()) { return; }
+    lock_guard<mutex> _(m_mutex);
+    vm_state S(m_env, options());
     scope_vm_state scope(S);
     record["widget"]["html"] = to_json();
     record["widget"]["line"] = m_pos.first;
     record["widget"]["column"] = m_pos.second;
+    record["widget"]["id"] = m_id;
 }
 
 void widget_info::update(json const & message, json & record) {
@@ -175,6 +185,7 @@ void widget_info::update(json const & message, json & record) {
         record["widget"]["html"] = to_json();
         record["widget"]["line"] = m_pos.first;
         record["widget"]["column"] = m_pos.second;
+        record["widget"]["id"] = m_id;
         if (result) {
             record["status"] = "edit";
             record["action"] = to_string(*result);
@@ -195,8 +206,9 @@ info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
 }
 
 info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
-    vdom c = vdom(new component_instance(widget, props));
-    return info_data(new widget_info(env, pos, c));
+    auto ci = new component_instance(widget, props);
+    vdom c = ci;
+    return info_data(new widget_info(env, pos, ci->id(), c));
 }
 
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
@@ -317,25 +329,39 @@ optional<list<info_data>> info_manager::get_info(pos_info pos) const{
     return result;
 }
 
-bool info_manager::update_widget(pos_info pos, json & record, json const & message) const {
+bool info_manager::update_widget(pos_info pos, unsigned id, json & record, json const & message) const {
     auto ds = get_info(pos);
-    if (!ds) {
-        record["status"] = "error";
-        record["message"] = "could not find a widget at the given position";
-        return false;
-    }
-    // get last widget_info (only the last widget is shown if there is more than one at a position)
+    if (!ds) return false;
     widget_info * w = nullptr;
     for (auto & d : *ds) {
         if (auto cw = is_widget_info(d)) {
-            // HACK(gabriel): if there are any non-term goals, pick the last non-term goal
-            // these are also prioritized in the info request....
-            if (!w || dynamic_cast<term_goal_data *>(w) || !is_term_goal(d))
+            if (cw->has_widget() && cw->id() == id) {
                 w = const_cast<widget_info *>(cw);
+                break;
+            }
         }
     }
     if (w) {
         w->update(message, record);
+        return true;
+    }
+    return false;
+}
+
+bool info_manager::get_widget(pos_info pos, unsigned id, json & record) const {
+    auto ds = get_info(pos);
+    if (!ds) return false;
+    widget_info * w = nullptr;
+    for (info_data const & d : *ds) {
+        if (auto cw = is_widget_info(d)) {
+            if (cw->has_widget() && cw->id() == id) {
+                w = const_cast<widget_info *>(cw);
+                break;
+            }
+        }
+    }
+    if (w) {
+        w->get(record);
         return true;
     }
     return false;
