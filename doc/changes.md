@@ -1,3 +1,10 @@
+3.16.1c (10 June 2020)
+----------------------
+
+Bug fixes:
+- Add key to `li` in `tactic_view_component` (#311)
+- Fix widget updates in `by ...` (#312)
+
 3.16.0c (10 June 2020)
 ----------------------
 
