@@ -524,8 +524,8 @@ iff.intro (λ h, h trivial) (λ h h', h)
 /--
 The existential quantifier.
 
-To prove a goal of the form `⊢ ∃ x, p x`, you can provide a witness `x` with the tactic `use x`.
-You'll then be left with the goal `⊢ p x`.
+To prove a goal of the form `⊢ ∃ x, p x`, you can provide a witness `y` with the tactic `use y`.
+You'll then be left with the goal `⊢ p y`.
 
 To extract a witness `x` and proof `hx : p x` from a hypothesis `h : ∃ x, p x`,
 use the tactic `cases h with x hx`.
