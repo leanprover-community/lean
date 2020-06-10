@@ -102,6 +102,7 @@ public:
     void reconcile(vdom const & old);
     optional<vm_obj> handle_action(vm_obj const & a);
     optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+    unsigned id() const { return m_id; }
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
