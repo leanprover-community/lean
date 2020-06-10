@@ -327,8 +327,12 @@ bool info_manager::update_widget(pos_info pos, json & record, json const & messa
     // get last widget_info (only the last widget is shown if there is more than one at a position)
     widget_info * w = nullptr;
     for (auto & d : *ds) {
-        if (auto cw = is_widget_info(d))
-            w = const_cast<widget_info *>(cw);
+        if (auto cw = is_widget_info(d)) {
+            // HACK(gabriel): if there are any non-term goals, pick the last non-term goal
+            // these are also prioritized in the info request....
+            if (!w || dynamic_cast<term_goal_data *>(w) || !is_term_goal(d))
+                w = const_cast<widget_info *>(cw);
+        }
     }
     if (w) {
         w->update(message, record);
