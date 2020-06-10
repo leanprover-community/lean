@@ -328,12 +328,10 @@ bool info_manager::update_widget(pos_info pos, json & record, json const & messa
     widget_info * w = nullptr;
     for (auto & d : *ds) {
         if (auto cw = is_widget_info(d)) {
-            w = const_cast<widget_info *>(cw);
-
-            // HACK(gabriel): stop at first goal, because these are also prioritized in the info request....
-            if (!is_term_goal(d)) {
-                break;
-            }
+            // HACK(gabriel): if there are any non-term goals, pick the last non-term goal
+            // these are also prioritized in the info request....
+            if (!w || dynamic_cast<term_goal_data *>(w) || !is_term_goal(d))
+                w = const_cast<widget_info *>(cw);
         }
     }
     if (w) {
