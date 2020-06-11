@@ -108,6 +108,7 @@ struct filter_map_action_hook : public hook_cell {
         vm_obj o = invoke(m_map.to_vm_obj(), props, action);
         return get_optional(o);
     }
+    std::string to_string() { return "filter_map_action"; }
     filter_map_action_hook(ts_vm_obj const map): m_map(map) {}
 };
 
@@ -116,6 +117,7 @@ struct map_props_hook: public hook_cell {
     virtual vm_obj get_props(vm_obj const & props) override {
         return invoke(m_map.to_vm_obj(), props);
     }
+    std::string to_string() { return "map_props"; }
     map_props_hook(ts_vm_obj const map): m_map(map) {}
 };
 
@@ -133,6 +135,7 @@ struct with_should_update_hook : public hook_cell {
         m_props = new_props;
         return to_bool(invoke(m_su.to_vm_obj(), prev_props, new_props));
     }
+    std::string to_string() { return "should_update"; }
     with_should_update_hook(ts_vm_obj const su): m_su(su) {}
 };
 
@@ -172,18 +175,29 @@ struct stateful_hook : public hook_cell {
         m_state = cfield(r, 0);
         return get_optional(cfield(r, 1));
     }
+    std::string to_string() { return "stateful"; }
     stateful_hook(vm_obj const & init, vm_obj const & pc, vm_obj const & update) : m_init(init), m_props_changed(pc), m_update(update) {}
 };
 
 struct with_mouse_capture_hook : public hook_cell {
-    mouse_capture_state m_s;
+    mouse_capture_state m_s = mouse_capture_state::outside;
     vm_obj get_props(vm_obj const & props) override {
-        return mk_vm_pair(mk_vm_simple(0), props);
+        return mk_vm_pair(mk_vm_simple((unsigned)m_s), props);
+    }
+    bool reconcile(vm_obj const &, hook const & previous) override {
+        with_mouse_capture_hook const * prev = dynamic_cast<with_mouse_capture_hook const *>(previous.get());
+        if (prev) {
+            m_s = prev->m_s;
+        }
+        return true;
     }
     bool set_state(mouse_capture_state s) {
         if (m_s == s) {return false;}
         m_s = s;
         return true;
+    }
+    std::string to_string() override {
+        return "with_mouse";
     }
     with_mouse_capture_hook() {}
 };
@@ -229,7 +243,8 @@ void component_instance::render() {
     lean_assert(m_has_initialized);
     std::vector<component_instance *> children;
     std::map<unsigned, ts_vm_obj> handlers;
-    vm_obj view = invoke(m_view.to_vm_obj(), m_inner_props.to_vm_obj());
+    vm_obj props = m_inner_props.to_vm_obj();
+    vm_obj view = invoke(m_view.to_vm_obj(), props);
     std::vector<vdom> elements = render_html_list(view, children, handlers, cons(m_id, m_route));
     std::vector<vdom> old_elements = m_render;
     reconcile_children(elements, old_elements);
@@ -266,13 +281,13 @@ void component_instance::reconcile(vdom const & old) {
         }
         m_inner_props = p_new;
         m_has_initialized = true;
+        m_id              = ci_old->m_id;
 
         if (!should_update) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
             m_children        = ci_old->m_children;
             m_render          = ci_old->m_render;
             m_handlers        = ci_old->m_handlers;
-            m_id              = ci_old->m_id;
             m_has_rendered    = true;
             m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
@@ -323,7 +338,7 @@ json component_instance::to_json(list<unsigned> const & route) {
         if (mh) {
             // tell the client that this component is expecting to be notified with whether or not
             // the mouse is present. (eg you want a hover rect to disappear when the mouse is in a different location)
-            result["r"] = route_to_json(route);
+            result["r"] = route_to_json(cons(m_id, route));
             result["mouse_capture"] = true;
             continue;
         }
@@ -344,11 +359,14 @@ optional<vm_obj> component_instance::handle_action(vm_obj const & action) {
 
 optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args) {
     if (empty(route)) {
+        if (m_handlers.find(handler_id) == m_handlers.end()) {
+            throw invalid_handler();
+        }
         vm_obj handler = m_handlers[handler_id].to_vm_obj();
         vm_obj action = (invoke(handler, event_args));
         return handle_action(action);
     }
-    for (auto const & c : m_children) {
+    for (auto c : m_children) {
         if (c->m_id == head(route)) {
             optional<vm_obj> a = c->handle_event(tail(route), handler_id, event_args);
             if (a) {
@@ -385,15 +403,23 @@ void component_instance::update_mouse_state(mouse_capture_state ms) {
 }
 
 void component_instance::handle_mouse(list<unsigned> const & old_route, list<unsigned> const & new_route) {
-    auto old_c = !empty(old_route) ? get_child(head(old_route)) : nullptr;
-    auto new_c = !empty(new_route) ? get_child(head(new_route)) : nullptr;
+    component_instance * old_c = nullptr;
+    if (!empty(old_route)) {
+        unsigned oi = head(old_route);
+        old_c = get_child(oi);
+    }
+    component_instance * new_c = nullptr;
+    if (!empty(new_route)) {
+        unsigned ni = head(new_route);
+        new_c = get_child(ni);
+    }
+
     if (!new_c) {
         if (!old_c) {
-            // routes are the same, shouldn't happen.
         } else {
             old_c->mouse_out(tail(old_route));
         }
-        update_mouse_state(mouse_capture_state::inside_immediate);
+        update_mouse_state(mouse_capture_state::immediate);
     } else {
         if (!old_c) {
             new_c->mouse_in(tail(new_route));
@@ -403,7 +429,7 @@ void component_instance::handle_mouse(list<unsigned> const & old_route, list<uns
             old_c->mouse_out(tail(old_route));
             new_c->mouse_in(tail(new_route));
         }
-        update_mouse_state(mouse_capture_state::inside_child);
+        update_mouse_state(mouse_capture_state::child);
     }
 }
 
@@ -416,10 +442,10 @@ void component_instance::mouse_out(list<unsigned> const & route) {
 void component_instance::mouse_in(list<unsigned> const & route) {
     auto c = empty(route) ? nullptr : get_child(head(route));
     if (c) {
-        c->mouse_out(tail(route));
-        update_mouse_state(mouse_capture_state::inside_child);
+        c->mouse_in(tail(route));
+        update_mouse_state(mouse_capture_state::child);
     } else {
-        update_mouse_state(mouse_capture_state::inside_immediate);
+        update_mouse_state(mouse_capture_state::immediate);
     }
 }
 

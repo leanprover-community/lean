@@ -9,6 +9,7 @@ import init.function
 import init.data.option.basic
 import init.util
 import init.meta.tactic
+import init.meta.mk_dec_eq_instance
 
 /-! A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
@@ -117,10 +118,11 @@ inductive mouse_event_kind
 | on_mouse_enter
 | on_mouse_leave
 
+@[derive decidable_eq]
 inductive mouse_capture_state
 | outside
-| inside_immediate
-| inside_child
+| immediate
+| child
 
 meta mutual inductive component, html, attr
 

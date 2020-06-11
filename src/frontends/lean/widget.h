@@ -88,12 +88,13 @@ public:
   virtual bool reconcile(vm_obj const &, hook const &) { return true; };
   virtual vm_obj get_props(vm_obj const & props) { return props; }
   virtual optional<vm_obj> action(vm_obj const & action) { return optional<vm_obj>(action); };
+  virtual std::string to_string() {return "hook";}
 };
 
 enum mouse_capture_state {
   outside = 0,
-  inside_immediate = 1,
-  inside_child = 2
+  immediate = 1,
+  child = 2
 };
 
 class component_instance : public vdom_cell {

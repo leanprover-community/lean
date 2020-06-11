@@ -171,10 +171,11 @@ void widget_info::update(json const & message, json & record) {
     for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
       route = cons(unsigned(*it), route);
     }
-    route = tail(route); // disregard the top component id because that is the root component
 
     std::string kind = message.find("kind") != message.end() ? message["kind"] : "unknown";
     component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
+
+    route = empty(route) ? route : tail(route); // disregard the top component id because that is the root component
 
     if (kind == "onMouse") {
         c->handle_mouse(m_mouse, route);
@@ -183,6 +184,7 @@ void widget_info::update(json const & message, json & record) {
         record["status"] = "success";
         return;
     }
+
 
     unsigned handler_idx = message["handler"]["h"];
     json j_args = message["args"];
