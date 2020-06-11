@@ -603,7 +603,7 @@ void init_cmd_table(cmd_table & r) {
                         open_cmd));
     add_cmd(r, cmd_info("export",            "create aliases for declarations", export_cmd));
     add_cmd(r, cmd_info("set_option",        "set configuration option", set_option_cmd));
-    add_cmd(r, cmd_info("#exit",             "exit", exit_cmd));
+    add_cmd(r, cmd_info("#exit",             "exit", exit_cmd, false));
     add_cmd(r, cmd_info("#print",            "print a string or information about an indentifier", print_cmd));
     add_cmd(r, cmd_info("section",           "open a new section", section_cmd));
     add_cmd(r, cmd_info("namespace",         "open a new namespace", namespace_cmd));
