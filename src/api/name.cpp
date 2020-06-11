@@ -104,7 +104,7 @@ lean_bool lean_name_get_idx(lean_name n, unsigned * r, lean_exception * ex) {
 lean_bool lean_name_to_string(lean_name n, char const **r, lean_exception * ex) {
     LEAN_TRY;
     check_nonnull(n);
-    *r = mk_string(to_name_ref(n).to_string());
+    *r = mk_string(to_name_ref(n).escape());
     LEAN_CATCH;
 }
 
