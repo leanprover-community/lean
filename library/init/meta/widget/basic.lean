@@ -127,7 +127,7 @@ meta mutual inductive component, html, attr
 with component : Type → Type → Type
 | pure
      {Props Action : Type}
-     (view : Props → html Action)
+     (view : Props → list (html Action))
      : component Props Action
 | filter_map_action
      {Props InnerAction OuterAction}
@@ -147,7 +147,7 @@ with component : Type → Type → Type
      (init : Props → State)
      (props_changed : Props → Props → State → State)
      (update : Props → State → InnerAction → State × option Action)
-     : component (State × Props) Action → component Props Action
+     : component (State × Props) InnerAction → component Props Action
 | with_mouse
      {Props Action : Type}
      : component (mouse_capture_state × Props) Action → component Props Action
@@ -176,13 +176,22 @@ meta def ignore_action : component π α → component π β
 | c := component.filter_map_action (λ p a, none) c
 
 meta def ignore_props : component unit α → component π α
-| c := component.map_props (λ p, ()) c
+| c := with_should_update (λ a b, ff) $ component.map_props (λ p, ()) c
 
 meta instance : has_coe (component π empty) (component π α)
 := ⟨component.filter_map_action (λ p x, none)⟩
 
--- meta def mk_simple [decidable_eq π] (β σ : Type) (init : σ) (update : π → σ → β → σ × option α) (view : π → σ → list (html β)) : component π α :=
--- component.mk β σ (λ x o, init <| o) update view (λ x y, x = y)
+meta def stateful {π α : Type}
+     (β σ : Type)
+     (init : π → option σ → σ)
+     (update : π → σ → β → σ × option α)
+     (view : π → σ → list (html β))
+     : component π α :=
+with_state β σ (λ p, init p none) (λ _ p s, init p $ some s) update (component.pure (λ ⟨s,p⟩, view p s))
+
+meta def stateless {π α : Type} [decidable_eq π] (view : π → list (html α)) : component π α :=
+component.with_should_update (λ p1 p2, p1 ≠ p2)
+$ component.pure view
 
 end component
 

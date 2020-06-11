@@ -39,7 +39,8 @@ meta def mk_simple
   (update : π → σ → β → tactic (σ × option α))
   (view : π → σ → tactic (list (html β)))
   : tc π α :=
-@component.mk
+component.with_should_update (λ ⟨_,old_p⟩ ⟨_,new_p⟩, old_p ≠ new_p)
+$ @component.stateful
   (tactic_state × π)
   α
   β
@@ -69,7 +70,6 @@ meta def mk_simple
     | (exception msg pos s) := ["state of tactic component has failed!"]
     end
   )
-  (λ ⟨_,p1⟩ ⟨_,p2⟩, p1 = p2)
 
 meta def stateless [decidable_eq π] (view : π → tactic (list (html α))) : tc π α :=
 tc.mk_simple α unit (λ p, pure ()) (λ _ _ b, pure ((),some b)) (λ p _, view p)

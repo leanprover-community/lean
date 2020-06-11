@@ -9,5 +9,4 @@ import init.meta.widget.basic
 import init.meta.widget.interactive_expr
 import init.meta.widget.tactic_component
 import init.meta.widget.html_cmd
-import init.meta.widget.components
 import init.meta.widget.replace_save_info

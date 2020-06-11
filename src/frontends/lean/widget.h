@@ -72,19 +72,22 @@ struct vdom_string : public vdom_cell {
     json to_json(list<unsigned> const &) override { return m_val; }
 };
 
-struct component_hook {
+class hook_cell;
+typedef std::shared_ptr<hook_cell> hook;
+class hook_cell {
+public:
+  hook_cell() {}
+  virtual ~hook_cell() {}
   /** Called for a fresh component with no previous value. */
-  virtual void initialize(vm_obj const & props) {};
+  virtual void initialize(vm_obj const &) {};
   /** Update the hook based on the previous value.
    * This should be called whenever the props change.
    * If it returns true then the view should rerender.
    * If false is returned then all of the later hooks will not be reconciled.
    */
-  virtual bool reconcile(vm_obj const & props, component_hook const & previous) { return true; };
-  // virtual bool should_update(vm_obj const & new_props) { return true; };
+  virtual bool reconcile(vm_obj const &, hook const &) { return true; };
   virtual vm_obj get_props(vm_obj const & props) { return props; }
   virtual optional<vm_obj> action(vm_obj const & action) { return optional<vm_obj>(action); };
-  // virtual ~component_hook() {};
 };
 
 enum mouse_capture_state {
@@ -98,7 +101,7 @@ class component_instance : public vdom_cell {
   unsigned int m_component_hash;
   ts_vm_obj m_view;
   ts_vm_obj const m_props;
-  std::vector<component_hook> m_hooks;
+  std::vector<hook> m_hooks;
   unsigned m_id;
   // set on initialisation / reconciliation
   bool m_has_initialized = false;
@@ -130,16 +133,19 @@ class component_instance : public vdom_cell {
   component_instance * get_child(unsigned id);
 
 public:
-  json component_instance::to_json(list<unsigned> const & route) override;
-  void handle_mouse(list<unsigned> const & old_route, list<unsigned> const & new_route);
+  json to_json(list<unsigned> const & route) override;
 
+  /** Performs a diff of old_route vs new_route and rerenders components whose mouse_capture property has changed.
+   * Child components update first.
+   */
+  void handle_mouse(list<unsigned> const & old_route, list<unsigned> const & new_route);
   optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
   component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
   unsigned id() {return m_id;}
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
- *  new_children is mutated so that they point to vdom components that were successfully reconciled with the old version.
+ *  `new_children` is mutated so that they point to vdom components that were successfully reconciled with the old version.
  */
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & old_elements);
 

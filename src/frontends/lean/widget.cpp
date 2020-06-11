@@ -28,7 +28,7 @@ enum component_idx {
     map_props = 2,
     with_should_update = 3,
     with_state = 4,
-    with_mouse_capture = 5
+    with_mouse = 5
 };
 enum html_idx {
     element = 6,
@@ -92,25 +92,26 @@ json vdom_element::to_json(list<unsigned> const & route) {
     return entry;
 }
 
-struct filter_map_action_hook : public component_hook {
+struct filter_map_action_hook : public hook_cell {
     ts_vm_obj const m_map;
     ts_vm_obj m_props;
     virtual void initialize(vm_obj const & props) override {
         m_props = props;
     }
-    virtual bool reconcile(vm_obj const & props, component_hook const & prev) override {
+    virtual bool reconcile(vm_obj const & props, hook const &) override {
         m_props = props;
         return true;
     }
     virtual optional<vm_obj> action(vm_obj const & action) override {
-        lean_assert(m_props);
-        vm_obj o = invoke(m_map.to_vm_obj(), m_props.to_vm_obj(), action);
+        vm_obj props = m_props.to_vm_obj();
+        lean_assert(props);
+        vm_obj o = invoke(m_map.to_vm_obj(), props, action);
         return get_optional(o);
     }
     filter_map_action_hook(ts_vm_obj const map): m_map(map) {}
 };
 
-struct map_props_hook: public component_hook {
+struct map_props_hook: public hook_cell {
     ts_vm_obj const m_map;
     virtual vm_obj get_props(vm_obj const & props) override {
         return invoke(m_map.to_vm_obj(), props);
@@ -118,14 +119,14 @@ struct map_props_hook: public component_hook {
     map_props_hook(ts_vm_obj const map): m_map(map) {}
 };
 
-struct with_should_update_hook : public component_hook {
+struct with_should_update_hook : public hook_cell {
     ts_vm_obj const m_su;
     ts_vm_obj m_props;
     virtual void initialize(vm_obj const & props) override {
         m_props = props;
     }
-    virtual bool reconcile(vm_obj const & new_props, component_hook const & previous) override {
-        with_should_update_hook const * prev = dynamic_cast<with_should_update_hook const *>(&previous);
+    virtual bool reconcile(vm_obj const & new_props, hook const & previous) override {
+        with_should_update_hook const * prev = dynamic_cast<with_should_update_hook const *>(previous.get());
         if (!prev) {return true;}
         vm_obj prev_props = (prev->m_props).to_vm_obj();
         if (!prev_props) {return true;}
@@ -135,7 +136,7 @@ struct with_should_update_hook : public component_hook {
     with_should_update_hook(ts_vm_obj const su): m_su(su) {}
 };
 
-struct stateful_hook : public component_hook {
+struct stateful_hook : public hook_cell {
     ts_vm_obj const m_init;
     ts_vm_obj const m_props_changed;
     ts_vm_obj const m_update;
@@ -150,11 +151,12 @@ struct stateful_hook : public component_hook {
         }
         m_props = optional<ts_vm_obj>(props);
     }
-    bool reconcile(vm_obj const & props, component_hook const & previous) override {
-        stateful_hook const * prev = dynamic_cast<stateful_hook const *>(&previous);
+    bool reconcile(vm_obj const & props, hook const & previous) override {
+        stateful_hook const * prev = dynamic_cast<stateful_hook const *>(previous.get());
         // assume the props have changed
         if (prev) {
             m_state = prev->m_state;
+            m_props = prev->m_props;
         }
         initialize(props);
         return true;
@@ -167,13 +169,13 @@ struct stateful_hook : public component_hook {
         lean_assert(m_state);
         lean_assert(m_props);
         vm_obj r = invoke(m_update.to_vm_obj(), (*m_props).to_vm_obj(), (*m_state).to_vm_obj(), action);
-        m_state = cfield(r,0);
-        return get_optional(cfield(r,1));
+        m_state = cfield(r, 0);
+        return get_optional(cfield(r, 1));
     }
-    stateful_hook(vm_obj const & init, vm_obj const & update) : m_init(init), m_update(update) {}
+    stateful_hook(vm_obj const & init, vm_obj const & pc, vm_obj const & update) : m_init(init), m_props_changed(pc), m_update(update) {}
 };
 
-struct with_mouse_capture_hook : public component_hook {
+struct with_mouse_capture_hook : public hook_cell {
     mouse_capture_state m_s;
     vm_obj get_props(vm_obj const & props) override {
         return mk_vm_pair(mk_vm_simple(0), props);
@@ -196,31 +198,31 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
         switch (cidx(c)) {
             case component_idx::pure: break;
             case component_idx::filter_map_action:
-                m_hooks.push_back(filter_map_action_hook(cfield(c, 0)));
-                c = cfield(c,1);
+                m_hooks.push_back(hook(new filter_map_action_hook(cfield(c, 0))));
+                c = cfield(c, 1);
                 break;
             case component_idx::map_props:
-                m_hooks.push_back(map_props_hook(cfield(c,0)));
-                c = cfield(c,1);
+                m_hooks.push_back(hook(new map_props_hook(cfield(c, 0))));
+                c = cfield(c, 1);
                 break;
             case component_idx::with_should_update:
-                m_hooks.push_back(with_should_update_hook(cfield(c,0)));
-                c = cfield(c,1);
+                m_hooks.push_back(hook(new with_should_update_hook(cfield(c, 0))));
+                c = cfield(c, 1);
                 break;
             case component_idx::with_state:
-                m_hooks.push_back(stateful_hook(cfield(c,0), cfield(c,1)));
-                c = cfield(c,2);
+                m_hooks.push_back(hook(new stateful_hook(cfield(c, 0), cfield(c, 1), cfield(c, 2))));
+                c = cfield(c, 3);
                 break;
-            case component_idx::with_mouse_capture:
-                m_hooks.push_back(with_mouse_capture_hook());
-                c = cfield(c,0);
+            case component_idx::with_mouse:
+                m_hooks.push_back(hook(new with_mouse_capture_hook()));
+                c = cfield(c, 0);
                 break;
             default:
                 lean_unreachable();
                 break;
         }
     }
-    m_view = cfield(c,0);
+    m_view = cfield(c, 0);
 }
 
 void component_instance::render() {
@@ -251,7 +253,7 @@ void component_instance::reconcile(vdom const & old) {
         bool should_update = true;
         for (unsigned i = 0; i < m_hooks.size(); i++) {
             if (should_update) {
-                bool result = m_hooks[i].reconcile(p_new, ci_old->m_hooks[i]);
+                bool result = m_hooks[i]->reconcile(p_new, ci_old->m_hooks[i]);
                 if (!result) {
                     should_update = false;
                 }
@@ -260,7 +262,7 @@ void component_instance::reconcile(vdom const & old) {
                 // assume that the old hooks are valid here.
                 m_hooks[i] = ci_old->m_hooks[i];
             }
-            p_new = m_hooks[i].get_props(p_new);
+            p_new = m_hooks[i]->get_props(p_new);
         }
         m_inner_props = p_new;
         m_has_initialized = true;
@@ -288,8 +290,8 @@ void component_instance::reconcile(vdom const & old) {
 void component_instance::initialize() {
     vm_obj p = m_props.to_vm_obj();
     for (auto h : m_hooks) {
-        h.initialize(p);
-        p = h.get_props(p);
+        h->initialize(p);
+        p = h->get_props(p);
     }
     m_inner_props = p;
     m_has_initialized = true;
@@ -298,7 +300,7 @@ void component_instance::initialize() {
 void component_instance::compute_props() {
     vm_obj props = m_props.to_vm_obj();
     for (auto h : m_hooks) {
-        props = h.get_props(props);
+        props = h->get_props(props);
     }
     m_inner_props = props;
 }
@@ -317,7 +319,7 @@ json component_instance::to_json(list<unsigned> const & route) {
     json result;
     result["c"] = children;
     for (auto h : m_hooks) {
-        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
+        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(h.get());
         if (mh) {
             // tell the client that this component is expecting to be notified with whether or not
             // the mouse is present. (eg you want a hover rect to disappear when the mouse is in a different location)
@@ -326,16 +328,17 @@ json component_instance::to_json(list<unsigned> const & route) {
             continue;
         }
     }
-    result["id"] = m_id;
     return result;
 }
 
 optional<vm_obj> component_instance::handle_action(vm_obj const & action) {
         optional<vm_obj> result = optional<vm_obj>(action);
-        for (unsigned i = m_hooks.size() - 1; i >= 0; i--) {
+        for (int i = m_hooks.size() - 1; i >= 0; i--) {
             if (!result) {break;}
-            result = m_hooks[i].action(*result);
+            result = m_hooks[i]->action(*result);
         }
+        compute_props();
+        render();
         return result;
 }
 
@@ -369,7 +372,7 @@ component_instance * component_instance::get_child(unsigned id) {
 void component_instance::update_mouse_state(mouse_capture_state ms) {
     bool should_update = false;
     for (auto h : m_hooks) {
-        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
+        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(h.get());
         if (mh) {
             bool result = mh->set_state(ms);
             should_update = should_update || result;

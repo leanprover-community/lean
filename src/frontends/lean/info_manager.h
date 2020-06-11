@@ -74,6 +74,10 @@ protected:
     unsigned     m_id = 0;
     vdom         m_vdom;
     mutex        m_mutex;
+    /** The component that currently has the mouse in it. */
+    list<unsigned> m_mouse;
+
+    void get_core(json & record);
     widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
 public:
     widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd): m_env(env), m_pos(pos), m_id(id), m_vdom(vd) {}

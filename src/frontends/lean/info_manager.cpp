@@ -143,16 +143,20 @@ void widget_info::report(io_state_stream const &, json & record) const {
     record["widget"]["id"] = m_id;
 }
 
+void widget_info::get_core(json & record) {
+    record["widget"]["html"] = to_json();
+    record["widget"]["line"] = m_pos.first;
+    record["widget"]["column"] = m_pos.second;
+    record["widget"]["id"] = m_id;
+}
+
 void widget_info::get(json & record) {
     if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     lock_guard<mutex> _(m_mutex);
     vm_state S(m_env, options());
     scope_vm_state scope(S);
-    record["widget"]["html"] = to_json();
-    record["widget"]["line"] = m_pos.first;
-    record["widget"]["column"] = m_pos.second;
-    record["widget"]["id"] = m_id;
+    get_core(record);
 }
 
 void widget_info::update(json const & message, json & record) {
@@ -169,16 +173,17 @@ void widget_info::update(json const & message, json & record) {
     }
     route = tail(route); // disregard the top component id because that is the root component
 
-    std::string kind = message["kind"];
+    std::string kind = message.find("kind") != message.end() ? message["kind"] : "unknown";
+    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
 
     if (kind == "onMouse") {
-        c->update_mouse(m_mouse, route);
+        c->handle_mouse(m_mouse, route);
         m_mouse = route;
-        record["widget"]
+        get_core(record);
+        record["status"] = "success";
         return;
     }
 
-    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
     unsigned handler_idx = message["handler"]["h"];
     json j_args = message["args"];
     vm_obj vm_args;
@@ -193,10 +198,7 @@ void widget_info::update(json const & message, json & record) {
     }
     try {
         optional<vm_obj> result = c->handle_event(route, handler_idx, vm_args);
-        record["widget"]["html"] = to_json();
-        record["widget"]["line"] = m_pos.first;
-        record["widget"]["column"] = m_pos.second;
-        record["widget"]["id"] = m_id;
+        get_core(record);
         if (result) {
             record["status"] = "edit";
             record["action"] = to_string(*result);
