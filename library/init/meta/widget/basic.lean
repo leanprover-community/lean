@@ -127,7 +127,7 @@ meta mutual inductive component, html, attr
 with component : Type → Type → Type
 | pure
      {Props Action : Type}
-     (view : Props → list (html Action))
+     (view : Props → html Action)
      : component Props Action
 | filter_map_action
      {Props InnerAction OuterAction}
@@ -144,15 +144,11 @@ with component : Type → Type → Type
 | with_state
      {Props Action : Type}
      (InnerAction State : Type)
-     (init : Props → option State → State)
+     (init : Props → State)
+     (props_changed : Props → Props → State → State)
      (update : Props → State → InnerAction → State × option Action)
      : component (State × Props) Action → component Props Action
-| with_task
-     {Props Result Action : Type}
-     (task_builder : Props → task Result)
-     (comp : component ((option Result) × Props) Action)
-     : component Props Action
-| with_mouse_capture
+| with_mouse
      {Props Action : Type}
      : component (mouse_capture_state × Props) Action → component Props Action
 

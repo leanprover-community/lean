@@ -23,7 +23,6 @@ Author: Leonardo de Moura
 #include "frontends/lean/info_manager.h"
 #include "frontends/lean/interactive.h"
 #include "library/constants.h"
-#include "library/library_task_builder.h"
 
 namespace lean {
 class type_info_data : public info_data_cell {
@@ -156,26 +155,32 @@ void widget_info::get(json & record) {
     record["widget"]["id"] = m_id;
 }
 
-list<unsigned> route_of_json(json const & j_route) {
-    list<unsigned> route; // now root index is at the _front_.
-    for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
-      route = cons(unsigned(*it), route);
-    }
-    return route;
-}
-
 void widget_info::update(json const & message, json & record) {
     if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     lock_guard<mutex> _(m_mutex);
     vm_state S(m_env, options());
     scope_vm_state scope(S);
-    unsigned handler_idx = message["handler"]["h"];
+
     json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
-    list<unsigned> route = route_of_json(j_route);
+    list<unsigned> route; // now root index is at the _front_.
+    for (json::iterator it = j_route.begin(); it != j_route.end(); ++it) {
+      route = cons(unsigned(*it), route);
+    }
     route = tail(route); // disregard the top component id because that is the root component
-    json j_args = message["args"];
+
+    std::string kind = message["kind"];
+
+    if (kind == "onMouse") {
+        c->update_mouse(m_mouse, route);
+        m_mouse = route;
+        record["widget"]
+        return;
+    }
+
     component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
+    unsigned handler_idx = message["handler"]["h"];
+    json j_args = message["args"];
     vm_obj vm_args;
     std::string arg_type = j_args["type"];
     if (arg_type == "unit") {
@@ -183,17 +188,6 @@ void widget_info::update(json const & message, json & record) {
     } else if (arg_type == "string") {
           std::string arg = j_args["value"];
           vm_args = to_obj(arg);
-    } else if {
-        try {
-            c->handle_mouse_lose_capture(m_mouse_focus);
-            c->handle_mouse_gain_capture(route);
-            m_mouse_focus = route;
-            record["status"] = "success";
-            record["widget"]["html"] = to_json();
-        } catch (const invalid_handler & e) {
-            record["status"] = "invalid_handler";
-        }
-        return;
     } else {
         throw exception("expecting arg_type to be either 'unit' or 'string' but was '" + arg_type + "'");
     }
@@ -212,21 +206,6 @@ void widget_info::update(json const & message, json & record) {
     } catch (const invalid_handler & e) {
         record["status"] = "invalid_handler";
     }
-}
-
-task<unit> widget_info::await_task(json const & message) {
-    if (!m_vdom.raw()) {
-        return mk_pure_task<unit>({});
-    }
-    list<unsigned> route = tail(route_of_json(message["handler"]["r"]));
-    component_instance * c = const_cast<component_instance *>(dynamic_cast<component_instance *>(m_vdom.raw()));
-    try {
-        auto result = c->await_tasks(route);
-        return task_builder<unit>([] () {return unit{}; }).depends_on(result).build();
-    } catch (const invalid_handler & e) {
-        return mk_pure_task<unit>({});
-    }
-
 }
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }

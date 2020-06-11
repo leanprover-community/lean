@@ -12,21 +12,15 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
-#include "library/vm/vm_task.h"
 #include "util/list.h"
 #include "frontends/lean/widget.h"
 #include "frontends/lean/json.h"
 #include "util/optional.h"
 #include "util/pair.h"
-#include "library/library_task_builder.h"
 
 namespace lean {
 
-enum mouse_capture_state {
-    outside = 0,
-    inside_immediate = 1,
-    inside_child = 2
-};
+
 // derived from library/init/meta/widget/basic.lean
 enum component_idx {
     pure = 0,
@@ -34,20 +28,19 @@ enum component_idx {
     map_props = 2,
     with_should_update = 3,
     with_state = 4,
-    with_task = 5,
-    with_mouse_capture = 6
+    with_mouse_capture = 5
 };
 enum html_idx {
-    element = 7,
-    of_string = 8,
-    of_component = 9
+    element = 6,
+    of_string = 7,
+    of_component = 8
 };
 enum attr_idx {
-    val = 10,
-    mouse_event = 11,
-    style = 12,
-    tooltip = 13,
-    text_change_event = 14
+    val = 9,
+    mouse_event = 10,
+    style = 11,
+    tooltip = 12,
+    text_change_event = 13
 };
 
 std::atomic_uint g_fresh_handler_id;
@@ -144,14 +137,18 @@ struct with_should_update_hook : public component_hook {
 
 struct stateful_hook : public component_hook {
     ts_vm_obj const m_init;
+    ts_vm_obj const m_props_changed;
     ts_vm_obj const m_update;
-    ts_vm_obj m_props;
+    optional<ts_vm_obj> m_props;
     optional<ts_vm_obj> m_state;
     void initialize(vm_obj const & props) override {
-        vm_obj s = m_state ? mk_vm_none() : mk_vm_some((*m_state).to_vm_obj());
-        vm_obj r = invoke(m_init.to_vm_obj(), props, s);
-        m_state = r;
-        m_props = props;
+        if (!m_state || !m_props) {
+            m_state = optional<ts_vm_obj>(invoke(m_init.to_vm_obj(), props));
+        } else {
+            vm_obj r = invoke(m_props_changed.to_vm_obj(), (*m_props).to_vm_obj(), props, (*m_state).to_vm_obj());
+            m_state = optional<ts_vm_obj>(r);
+        }
+        m_props = optional<ts_vm_obj>(props);
     }
     bool reconcile(vm_obj const & props, component_hook const & previous) override {
         stateful_hook const * prev = dynamic_cast<stateful_hook const *>(&previous);
@@ -169,7 +166,7 @@ struct stateful_hook : public component_hook {
     optional<vm_obj> action(vm_obj const & action) override {
         lean_assert(m_state);
         lean_assert(m_props);
-        vm_obj r = invoke(m_update.to_vm_obj(), m_props.to_vm_obj(), (*m_state).to_vm_obj(), action);
+        vm_obj r = invoke(m_update.to_vm_obj(), (*m_props).to_vm_obj(), (*m_state).to_vm_obj(), action);
         m_state = cfield(r,0);
         return get_optional(cfield(r,1));
     }
@@ -187,33 +184,6 @@ struct with_mouse_capture_hook : public component_hook {
         return true;
     }
     with_mouse_capture_hook() {}
-};
-
-struct with_task_hook : public component_hook {
-    ts_vm_obj const m_tb;
-    task<ts_vm_obj> m_task;
-    virtual bool reconcile(vm_obj const & props, component_hook const & old) override {
-        // assume that the props have changed. So we have to assume that any in-flight task is no longer valid.
-        // You can avoid a re-issue of the task by adding a `with_props_eq` hook prior to this.
-        initialize(props);
-        return true;
-    }
-    virtual void initialize(vm_obj const & props) override {
-        if (m_task) { return; }
-        vm_obj vt = invoke(m_tb.to_vm_obj(), props);
-        m_task = to_task(vt);
-        taskq().submit(m_task);
-    }
-    vm_obj get_props(vm_obj const & props) override {
-        optional<ts_vm_obj> result = peek(m_task);
-        return mk_vm_pair(result ? mk_vm_some((*result).to_vm_obj()) : mk_vm_none(), props);
-    }
-    with_task_hook(vm_obj const & tb): m_tb(tb) {}
-    ~with_task_hook() {
-        if (m_task) {
-            taskq().fail_and_dispose(m_task); //hopefully this doesn't error if it's already disposed.
-        }
-    }
 };
 
 component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
@@ -240,10 +210,6 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
             case component_idx::with_state:
                 m_hooks.push_back(stateful_hook(cfield(c,0), cfield(c,1)));
                 c = cfield(c,2);
-                break;
-            case component_idx::with_task:
-                m_hooks.push_back(with_task_hook(cfield(c,0)));
-                c = cfield(c,1);
                 break;
             case component_idx::with_mouse_capture:
                 m_hooks.push_back(with_mouse_capture_hook());
@@ -359,13 +325,6 @@ json component_instance::to_json(list<unsigned> const & route) {
             result["mouse_capture"] = true;
             continue;
         }
-        with_task_hook * mt = dynamic_cast<with_task_hook *>(&h);
-        if (mt && !peek(mt->m_task)) {
-            // tell the client that this component is running a task.
-            result["r"] = route_to_json(route);
-            result["task"] = true;
-            continue;
-        }
     }
     result["id"] = m_id;
     return result;
@@ -400,37 +359,20 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
     throw invalid_handler();
 }
 
-task<unit> component_instance::await_tasks(list<unsigned> const & route) {
-    if (empty(route)) {
-        std::vector<gtask const> tasks;
-        for (auto const & h : m_hooks) {
-            with_task_hook const * mt = dynamic_cast<with_task_hook const *>(&h);
-            if (mt) {
-                tasks.push_back(mt->m_task);
-            }
-        }
-        return task_builder<unit>([this] {
-            // potential [bug]: if `this` has been disposed, then the dependency tasks should all have been cancelled so
-            // this should never be called? I don't know whether this is the right mental model...
-            this->compute_props();
-            this->render();
-            return unit{};
-        }).depends_on(tasks).build();
-    } else {
-        for (auto const & c : m_children) {
-            if (c->m_id == head(route)) {
-                return c->await_tasks(tail(route));
-            }
-        }
+component_instance * component_instance::get_child(unsigned id) {
+    for (auto c : m_children) {
+        if (c->m_id == id) { return c; }
     }
+    return nullptr;
 }
 
-void component_instance::update_capture_state(unsigned ms) {
+void component_instance::update_mouse_state(mouse_capture_state ms) {
     bool should_update = false;
     for (auto h : m_hooks) {
         with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(&h);
         if (mh) {
-            should_update |= mh->set_state(mouse_capture_state(ms));
+            bool result = mh->set_state(ms);
+            should_update = should_update || result;
         }
     }
     if (should_update) {
@@ -439,33 +381,42 @@ void component_instance::update_capture_state(unsigned ms) {
     }
 }
 
-void component_instance::handle_mouse_gain_capture(list<unsigned> const & route) {
-    if (empty(route)) {
-        // go through the hooks and find
-        update_capture_state(mouse_capture_state::inside_immediate);
-        return;
-    } else {
-        update_capture_state(mouse_capture_state::inside_child);
-        for (auto const & c : m_children) {
-            if (c->m_id == head(route)) {
-                c->handle_mouse_gain_capture(tail(route));
-                return;
-            }
+void component_instance::handle_mouse(list<unsigned> const & old_route, list<unsigned> const & new_route) {
+    auto old_c = !empty(old_route) ? get_child(head(old_route)) : nullptr;
+    auto new_c = !empty(new_route) ? get_child(head(new_route)) : nullptr;
+    if (!new_c) {
+        if (!old_c) {
+            // routes are the same, shouldn't happen.
+        } else {
+            old_c->mouse_out(tail(old_route));
         }
+        update_mouse_state(mouse_capture_state::inside_immediate);
+    } else {
+        if (!old_c) {
+            new_c->mouse_in(tail(new_route));
+        } else if (old_c == new_c) {
+            old_c->handle_mouse(tail(old_route), tail(new_route));
+        } else {
+            old_c->mouse_out(tail(old_route));
+            new_c->mouse_in(tail(new_route));
+        }
+        update_mouse_state(mouse_capture_state::inside_child);
     }
 }
-void component_instance::handle_mouse_lose_capture(list<unsigned> const & route) {
-    update_capture_state(mouse_capture_state::outside);
-    if (empty(route)) {
-        return;
+
+void component_instance::mouse_out(list<unsigned> const & route) {
+    auto c = empty(route) ? nullptr : get_child(head(route));
+    if (c) { c->mouse_out(tail(route)); }
+    update_mouse_state(mouse_capture_state::outside);
+}
+
+void component_instance::mouse_in(list<unsigned> const & route) {
+    auto c = empty(route) ? nullptr : get_child(head(route));
+    if (c) {
+        c->mouse_out(tail(route));
+        update_mouse_state(mouse_capture_state::inside_child);
     } else {
-        for (auto const & c : m_children) {
-            if (c->m_id == head(route)) {
-                c->handle_mouse_lose_capture(tail(route));
-                return;
-            } else {
-            }
-        }
+        update_mouse_state(mouse_capture_state::inside_immediate);
     }
 }
 

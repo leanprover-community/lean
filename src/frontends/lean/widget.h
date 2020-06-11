@@ -87,6 +87,12 @@ struct component_hook {
   // virtual ~component_hook() {};
 };
 
+enum mouse_capture_state {
+  outside = 0,
+  inside_immediate = 1,
+  inside_child = 2
+};
+
 class component_instance : public vdom_cell {
   // set on construction
   unsigned int m_component_hash;
@@ -114,18 +120,22 @@ class component_instance : public vdom_cell {
   void compute_props();
   void reconcile(vdom const & old);
   /** Perform initialisation step:
-   *  initialise the hooks, including setting states and starting tasks.
+   *  initialise the hooks, including setting states.
    */
   void initialize();
-  void update_capture_state(unsigned cs);
+
+  void update_mouse_state(mouse_capture_state cs);
+  void mouse_out(list<unsigned> const & route);
+  void mouse_in(list<unsigned> const & route);
+  component_instance * get_child(unsigned id);
+
 public:
-    void render();
-    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
-    json to_json(list<unsigned> const & route) override;
-    void reconcile(vdom const & old);
-    optional<vm_obj> handle_action(vm_obj const & a);
-    optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
-    unsigned id() const { return m_id; }
+  json component_instance::to_json(list<unsigned> const & route) override;
+  void handle_mouse(list<unsigned> const & old_route, list<unsigned> const & new_route);
+
+  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+  unsigned id() {return m_id;}
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).

@@ -88,11 +88,6 @@ public:
      * It will throw is the json message has the wrong format.
      */
     void update(json const & message, json & record);
-    /** takes a message of shape `{handler: {r:number[]}}`
-     * and returns a task that completes when all of the
-     * tasks on the component at the given route are set.
-     */
-    task<unit> await_task(json const & message);
     json to_json() const;
 
     bool has_widget() const { return m_vdom.raw(); }
