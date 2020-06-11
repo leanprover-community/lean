@@ -1,0 +1,1 @@
+variables (A B : Type*)
