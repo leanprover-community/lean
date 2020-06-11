@@ -397,7 +397,7 @@ cmd_table const & get_cmd_table(environment const & env) {
 }
 
 environment add_command(environment const & env, name const & n, cmd_info const & info) {
-    auto env2 = token_ext::register_entry(env, get_dummy_ios(), token_entry(n.to_string()));
+    auto env2 = token_ext::register_entry(env, get_dummy_ios(), token_entry(n.to_string_unescaped()));
     cmd_ext ext = get_extension(env2);
     ext.m_cmds.insert(n, info);
     return env2.update(g_ext->m_ext_id, std::make_shared<cmd_ext>(ext));

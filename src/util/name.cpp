@@ -358,21 +358,16 @@ name name::drop_prefix() const {
     }
 }
 
-std::string name::to_string(char const * sep) const {
+std::string name::to_string_unescaped(char const * sep) const {
     std::ostringstream s;
-    imp::display(s, m_ptr, false, sep);
+    display(s, false, sep);
     return s.str();
 }
 
 std::string name::escape(char const * sep) const {
     std::ostringstream s;
-    imp::display(s, m_ptr, true, sep);
+    display(s, true, sep);
     return s.str();
-}
-
-std::ostream & operator<<(std::ostream & out, name const & n) {
-    name::imp::display(out, n.m_ptr, false);
-    return out;
 }
 
 name operator+(name const & n1, name const & n2) {

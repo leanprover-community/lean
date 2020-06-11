@@ -786,7 +786,7 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
 
     auto begin_pos = p.cmd_pos();
     auto end_pos = p.pos();
-    scope_log_tree lt(logtree().mk_child({}, (get_namespace(env) + mlocal_pp_name(fn)).to_string(),
+    scope_log_tree lt(logtree().mk_child({}, (get_namespace(env) + mlocal_pp_name(fn)).escape(),
                                          {logtree().get_location().m_file_name, {begin_pos, end_pos}}));
 
     // skip elaboration of definitions during reparsing
