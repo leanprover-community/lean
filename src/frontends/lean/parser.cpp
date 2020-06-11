@@ -189,7 +189,7 @@ void parser::check_break_at_pos(break_at_pos_exception::token_context ctxt) {
             // context).
             if (m_complete && m_break_at_pos->second == p.second + tk.utf8_size() - 1 &&
                     !curr_is_token(get_period_tk())) {
-                auto s = tk.to_string();
+                auto s = tk.to_string_unescaped();
                 if (!is_id_rest(get_utf8_last_char(s.c_str()), s.c_str() + s.size()))
                     return;
             }
@@ -222,7 +222,7 @@ void parser::scan() {
         m_curr = m_scanner.scan(m_env);
         // when breaking on a '.' token trailing an identifier, report them as a single, concatenated token
         if (*m_break_at_pos == pos() && curr_is_token(get_period_tk()))
-            throw break_at_pos_exception(curr_pos, name(curr_ident.to_string() + get_period_tk()));
+            throw break_at_pos_exception(curr_pos, name(curr_ident.escape() + get_period_tk()));
         return;
     }
     m_curr = m_scanner.scan(m_env);
@@ -1283,7 +1283,7 @@ static bool curr_is_terminator_of_exprs_action(parser const & p, list<pair<notat
         notation::action const & a = pr.first.get_action();
         if (a.kind() == notation::action_kind::Exprs &&
             a.get_terminator() &&
-            p.curr_is_token(name(utf8_trim(a.get_terminator()->to_string())))) {
+            p.curr_is_token(name(utf8_trim(a.get_terminator()->to_string_unescaped())))) {
             r = &pr;
             return true;
         }
@@ -1379,10 +1379,10 @@ expr parser::parse_notation(parse_table t, expr * left) {
             buffer<expr> r_args;
             auto terminator = a.get_terminator();
             if (terminator)
-                terminator = some(name(utf8_trim(terminator->to_string()))); // remove padding
+                terminator = some(name(utf8_trim(terminator->to_string_unescaped()))); // remove padding
             if (!terminator || !curr_is_token(*terminator)) {
                 r_args.push_back(parse_expr(a.rbp()));
-                name sep = utf8_trim(a.get_sep().to_string()); // remove padding
+                name sep = utf8_trim(a.get_sep().to_string_unescaped()); // remove padding
                 while (curr_is_token(sep)) {
                     check_break();
                     next();
@@ -1395,7 +1395,7 @@ expr parser::parse_notation(parse_table t, expr * left) {
                     next();
                 } else {
                     maybe_throw_error({sstream() << "invalid composite expression, '"
-                                                 << *terminator << "' expected" , pos()});
+                                                 << terminator->to_string_unescaped() << "' expected" , pos()});
                 }
             }
             has_Exprs = true;
@@ -2222,7 +2222,7 @@ expr parser::parse_nud() {
             lean_assert(is_local(e));
             // note: This number is not accurate for an escaped identifier. We should be able to do a better job
             // in the new backtracking parser.
-            auto id_len = utf8_strlen(id.to_string().c_str());
+            auto id_len = utf8_strlen(id.escape().c_str());
             auto p = pos();
             if (p.first == id_pos.first && p.second == id_pos.second + id_len) {
                 next();
@@ -2517,7 +2517,7 @@ bool parser::parse_imports(unsigned & fingerprint, std::vector<module_name> & im
                 }
             } catch (break_at_pos_exception & e) {
                 if (k_init)
-                    e.m_token_info.m_token = std::string(k + 1, '.') + e.m_token_info.m_token.to_string();
+                    e.m_token_info.m_token = std::string(k + 1, '.') + e.m_token_info.m_token.to_string_unescaped();
                 e.m_token_info.m_context = break_at_pos_exception::token_context::import;
                 e.m_token_info.m_pos = p;
                 throw;

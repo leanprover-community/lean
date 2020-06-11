@@ -61,7 +61,7 @@ void report_completions(environment const & env, options const & opts, pos_info 
     g_context = e.m_token_info.m_context;
     unsigned offset = pos.second - e.m_token_info.m_pos.second;
     // TODO(gabriel): this is broken with french quotes
-    std::string prefix = e.m_token_info.m_token == name("") ? "" : e.m_token_info.m_token.to_string();
+    std::string prefix = e.m_token_info.m_token == name("") ? "" : e.m_token_info.m_token.to_string_unescaped();
     if (auto stop = utf8_char_pos(prefix.c_str(), offset))
         prefix = prefix.substr(0, *stop);
     switch (e.m_token_info.m_context) {
@@ -99,7 +99,7 @@ void report_completions(environment const & env, options const & opts, pos_info 
         case break_at_pos_exception::token_context::single_completion:
             if (!skip_completions) {
                 json completion;
-                completion["text"] = e.m_token_info.m_param.to_string();
+                completion["text"] = e.m_token_info.m_param.to_string_unescaped();
                 j["completions"] = std::vector<json>{completion};
             }
             break;
@@ -155,7 +155,7 @@ void report_info(environment const & env, options const & opts, io_state const &
                 add_source_info(env, tk, record);
                 break;
             case break_at_pos_exception::token_context::import: {
-                auto parsed = parse_import(tk.to_string());
+                auto parsed = parse_import(tk.to_string_unescaped());
                 try {
                     auto base_dir = dirname(m_mod_info.m_id);
                     auto f = find_file(path, base_dir, parsed.first, string_to_name(parsed.second),
@@ -181,7 +181,7 @@ void report_info(environment const & env, options const & opts, io_state const &
                 break;
             } case break_at_pos_exception::token_context::field: {
                 auto name = e.m_token_info.m_param + e.m_token_info.m_token;
-                record["full-id"] = name.to_string();
+                record["full-id"] = name.escape();
                 add_source_info(env, name, record);
                 if (auto doc = get_doc_string(env, name))
                     record["doc"] = *doc;
@@ -305,7 +305,7 @@ bool json_of_hole(hole_info_data const & hole, std::string const & file, json & 
     std::vector<json> ds;
     for (auto const & p : cmd_descrs) {
         json d;
-        d["name"] = p.first.to_string();
+        d["name"] = p.first.escape();
         d["description"] = p.second;
         ds.push_back(d);
     }

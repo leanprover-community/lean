@@ -231,9 +231,9 @@ void action::display(io_state_stream & out) const {
         out << "(fold" << (is_fold_right() ? "r" : "l");
         if (get_terminator())
             out << "*";
-        out << " " << rbp() << " `" << get_sep() << "`";
+        out << " " << rbp() << " `" << get_sep().to_string_unescaped() << "`";
         if (get_terminator())
-            out << " `" << *get_terminator() << "`";
+            out << " `" << get_terminator()->to_string_unescaped() << "`";
         out << ")";
         break;
     case action_kind::ScopedExpr:
@@ -544,9 +544,9 @@ void display(io_state_stream & out, unsigned num, transition const * ts, list<ac
         out << "_ ";
     for (unsigned i = 0; i < num; i++) {
         if (i > 0) out << " ";
-        out << "`" << ts[i].get_token() << "`";
+        out << "`" << ts[i].get_token().to_string_unescaped() << "`";
         if (tt) {
-            if (auto prec = get_expr_precedence(*tt, ts[i].get_token().to_string().c_str())) {
+            if (auto prec = get_expr_precedence(*tt, ts[i].get_token().to_string_unescaped().c_str())) {
                 out << ":" << *prec;
             }
         }
