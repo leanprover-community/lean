@@ -96,6 +96,7 @@ class server : public module_vfs {
     task<cmd_res> handle_complete(cmd_req const & req);
     task<cmd_res> handle_info(cmd_req const & req);
     task<cmd_res> handle_widget_event(cmd_req const & req);
+    task<cmd_res> handle_get_widget(cmd_req const & req);
     task<cmd_res> handle_hole(cmd_req const & req);
     cmd_res handle_hole_commands(cmd_req const & req);
     cmd_res handle_all_hole_commands(cmd_req const & req);

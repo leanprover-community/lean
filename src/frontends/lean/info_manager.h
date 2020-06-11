@@ -71,12 +71,14 @@ class widget_info : public info_data_cell {
 protected:
     environment  m_env;
     pos_info     m_pos;
+    unsigned     m_id = 0;
     vdom         m_vdom;
     mutex        m_mutex;
     widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
 public:
-    widget_info(environment const & env, pos_info const & pos, vdom const & vd): m_env(env), m_pos(pos), m_vdom(vd) {}
+    widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd): m_env(env), m_pos(pos), m_id(id), m_vdom(vd) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
+    void get(json & record);
     /** Given a message of the form
      * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
      * runs the event handler and updates the state.
@@ -92,6 +94,9 @@ public:
      */
     task<unit> await_task(json const & message);
     json to_json() const;
+
+    bool has_widget() const { return m_vdom.raw(); }
+    unsigned id() const { return m_id; }
 };
 
 class info_data {
@@ -160,11 +165,8 @@ public:
     /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
      *  Returns true when the widget was successfully updated.
      */
-    bool update_widget(pos_info pos, json & record, json const & message) const;
-    /** Looks for a widget_state at the given position, if one is found then returns true and sets `result`
-     * to be a task that completes with a new resulting widget record.
-     */
-    bool await_widget_task(pos_info pos, task<unit> & result, json const & message) const;
+    bool update_widget(pos_info pos, unsigned id, json & record, json const & message) const;
+    bool get_widget(pos_info pos, unsigned id, json & record) const;
 };
 
 info_manager * get_global_info_manager();

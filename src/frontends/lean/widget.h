@@ -119,13 +119,13 @@ class component_instance : public vdom_cell {
   void initialize();
   void update_capture_state(unsigned cs);
 public:
-  json component_instance::to_json(list<unsigned> const & route) override;
-  task<unit> await_tasks(list<unsigned> const & route);
-  void handle_mouse_gain_capture(list<unsigned> const & route);
-  void handle_mouse_lose_capture(list<unsigned> const & route);
-
-  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
-  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+    void render();
+    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+    json to_json(list<unsigned> const & route) override;
+    void reconcile(vdom const & old);
+    optional<vm_obj> handle_action(vm_obj const & a);
+    optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+    unsigned id() const { return m_id; }
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
