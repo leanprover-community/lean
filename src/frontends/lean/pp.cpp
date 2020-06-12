@@ -1491,7 +1491,7 @@ static unsigned get_some_precedence(token_table const & t, name const & tk) {
         if (auto p = get_expr_precedence(t, tk.get_string()))
             return *p;
     } else {
-        if (auto p = get_expr_precedence(t, tk.to_string().c_str()))
+        if (auto p = get_expr_precedence(t, tk.to_string_unescaped().c_str()))
             return *p;
     }
     return 0;
@@ -1549,7 +1549,7 @@ static bool is_atomic_notation(notation_entry const & entry) {
 
 template<class T>
 static T mk_tk_fmt(name const & tkn) {
-    auto tk = tkn.to_string();
+    auto tk = tkn.to_string_unescaped();
     if (!tk.empty() && tk.back() == ' ') {
         tk.pop_back();
         return T(tk) + line();
@@ -1562,7 +1562,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
     if (entry.is_numeral()) {
         return some(result(T(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token()));
+        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token().to_string_unescaped()));
         return some(result(fmt));
     } else {
         using notation::transition;
@@ -1581,7 +1581,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
             T curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token()));
+            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1648,11 +1648,11 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
                         std::reverse(rec_args.begin(), rec_args.end());
                     unsigned curr_lbp = token_lbp;
                     if (auto t = a.get_terminator()) {
-                        curr = T(*t);
+                        curr = T(t->to_string_unescaped());
                         curr_lbp = get_some_precedence(m_token_table, *t);
                     }
                     unsigned j       = rec_args.size();
-                    T sep_fmt   = T(a.get_sep());
+                    T sep_fmt   = T(a.get_sep().to_string_unescaped());
                     unsigned sep_lbp = get_some_precedence(m_token_table, a.get_sep());
                     while (j > 0) {
                         --j;

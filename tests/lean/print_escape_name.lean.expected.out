@@ -1,0 +1,5 @@
+constant «x.y» : false
+theorem «a.b» : false :=
+«x.y»
+«a.b» : false
+«x.y»

@@ -145,7 +145,8 @@ public:
     /** \brief Given a name of the form a_1.a_2. ... .a_k, return a_1 if k >= 1, or the empty name otherwise. */
     name get_root() const;
     /** \brief Convert this hierarchical name into a string. */
-    std::string to_string(char const * sep = lean_name_separator) const;
+    std::string to_string_unescaped(char const * sep = lean_name_separator) const;
+    std::string to_string(char const * sep) const { return to_string_unescaped(sep); }
     std::string escape(char const * sep = lean_name_separator) const;
     /** \brief Size of the this name (in characters). */
     size_t size() const;
@@ -154,7 +155,9 @@ public:
     unsigned hash() const { return m_ptr ? m_ptr->m_hash : 11; }
     /** \brief Return true iff the name contains only safe ASCII chars */
     bool is_safe_ascii() const;
-    friend std::ostream & operator<<(std::ostream & out, name const & n);
+    void display(std::ostream & out, bool escape, char const * sep = lean_name_separator) const {
+        imp::display(out, m_ptr, escape, sep);
+    }
     /** \brief Concatenate the two given names. */
     friend name operator+(name const & n1, name const & n2);
 
@@ -222,6 +225,11 @@ public:
     struct ptr_hash { unsigned operator()(name const & n) const { return std::hash<imp*>()(n.m_ptr); } };
     struct ptr_eq { bool operator()(name const & n1, name const & n2) const { return n1.m_ptr == n2.m_ptr; } };
 };
+
+inline std::ostream & operator<<(std::ostream & out, name const & n) {
+    n.display(out, true);
+    return out;
+}
 
 inline unsigned hash(name const & n) { return n.hash(); };
 name string_to_name(std::string const & str);
