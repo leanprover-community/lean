@@ -20,7 +20,6 @@ Author: E.W.Ayers
 
 namespace lean {
 
-std::atomic_uint g_fresh_handler_id;
 std::atomic_uint g_fresh_component_instance_id;
 
 optional<std::string> vdom_element::key() {
