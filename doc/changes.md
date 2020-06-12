@@ -1,3 +1,20 @@
+3.16.2c (12 June 2020)
+----------------------
+
+Bug fixes:
+- Stop scanning after `#exit` (#318, fixes #309)
+- Allow `variables (A B : Type*)` (#319, fixes #29)
+- Escape names using French quotes by default (#320, fixes #114)
+- Fix `lean --deps` (#323)
+- Selection disco issue in tactic state widget (#324)
+
+Features:
+- Add `get_widget` server request (#314)
+- Allow namespaces inside sections (#317, fixes #315)
+
+Server protocol changes:
+- The `info` request no longer returns the widget HTML.  Instead it returns an `id` field in addition to `line` and `column`.  The `get_widget` request now returns the HTML.  The `widget_event` request also requires an `id` argument.
+
 3.16.1c (10 June 2020)
 ----------------------
 
