@@ -92,7 +92,7 @@ bool component_instance::props_are_equal(vm_obj const & p_old, vm_obj const & p_
 
 void component_instance::render() {
     std::vector<component_instance *> children;
-    std::map<unsigned, ts_vm_obj> handlers;
+    event_handlers handlers;
     std::vector<vdom> elements = render_html_list(view(m_props.to_vm_obj(), (*m_state).to_vm_obj()), children, handlers, cons(m_id, m_route));
     std::vector<vdom> old_elements = m_render;
     reconcile_children(elements, old_elements);
@@ -216,13 +216,13 @@ void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> cons
 }
 
 
-void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers) {
-    unsigned handler_id = g_fresh_handler_id.fetch_add(1);
+void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, event_handlers & handlers) {
+    unsigned handler_id = handlers.size();
     events[name] = handler_id;
     handlers[handler_id] = handler;
 }
 
-vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     // | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
     std::string tag = to_string(cfield(elt, 0));
     vm_obj v_attrs = cfield(elt, 1);
@@ -286,7 +286,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
     return vdom(new vdom_element(tag, attributes, events, children, tooltip));
 }
 
-vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
         case 1: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
             vdom elt = render_element(html, components, handlers, route);
@@ -305,7 +305,7 @@ vdom render_html(vm_obj const & html, std::vector<component_instance*> & compone
     }
 }
 
-std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     std::vector<vdom> elements;
     vm_obj l = htmls;
     while (!is_simple(l)) {
