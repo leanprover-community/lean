@@ -333,8 +333,7 @@ json component_instance::to_json(list<unsigned> const & route) {
     json result;
     result["c"] = children;
     for (auto h : m_hooks) {
-        with_mouse_capture_hook * mh = dynamic_cast<with_mouse_capture_hook *>(h.get());
-        if (mh) {
+        if (auto mh = dynamic_cast<with_mouse_capture_hook *>(h.get())) {
             // tell the client that this component is expecting to be notified with whether or not
             // the mouse is present. (eg you want a hover rect to disappear when the mouse is in a different location)
             result["r"] = route_to_json(cons(m_id, route));

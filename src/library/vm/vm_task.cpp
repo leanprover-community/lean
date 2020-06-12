@@ -101,7 +101,6 @@ void initialize_vm_task() {
     DECLARE_VM_BUILTIN(name({"task", "pure"}), vm_task_pure);
     DECLARE_VM_BUILTIN(name({"task", "map"}),  vm_task_map);
     DECLARE_VM_BUILTIN(name({"task", "flatten"}), vm_task_flatten);
-    // DECLARE_VM_BUILTIN(name({"task", "timeout"}), vm_task_timeout);
 }
 
 void finalize_vm_task() {
