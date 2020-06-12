@@ -81,13 +81,11 @@ meta def mk {γ} (tooltip : tc subexpr γ) : tc expr γ :=
 let tooltip_comp :=
    component.with_should_update (λ (x y : tactic_state × expr × expr.address), x.2.2 ≠ y.2.2)
    $ component.map_action (action.on_tooltip_action) tooltip in
-component.with_mouse
-$ component.map_props (λ ⟨m,ts,p⟩, (ts,(m,p)))
-$ tc.mk_simple
+tc.mk_simple
   (action γ)
   (option subexpr × option subexpr)
   (λ _, pure $ (none, none))
-  (λ ⟨_,e⟩ ⟨ca, sa⟩ act, pure $
+  (λ e ⟨ca, sa⟩ act, pure $
     match act with
     | (action.on_mouse_enter ⟨e, ea⟩) := ((ca, some (e, ea)), none)
     | (action.on_mouse_leave_all)     := ((ca, none), none)
@@ -96,8 +94,7 @@ $ tc.mk_simple
     | (action.on_close_tooltip)       := ((none, sa), none)
     end
   )
-  (λ ⟨ms,e⟩ ⟨ca, sa⟩, do
-    sa ← pure $ match ms with mouse_capture_state.outside := none | _ := sa end,
+  (λ e ⟨ca, sa⟩, do
     ts ← tactic.read,
     let m : sf  := sf.flatten $ to_simple $ tactic_state.pp_tagged ts e,
     let m : sf  := sf.tag_expr [] e m, -- [hack] in pp.cpp I forgot to add an expr-boundary for the root expression.
