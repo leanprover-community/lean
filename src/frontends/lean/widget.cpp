@@ -43,7 +43,6 @@ enum attr_idx {
     text_change_event = 13
 };
 
-std::atomic_uint g_fresh_handler_id;
 std::atomic_uint g_fresh_component_instance_id;
 
 optional<std::string> vdom_element::key() {
@@ -242,7 +241,7 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
 void component_instance::render() {
     lean_assert(m_has_initialized);
     std::vector<component_instance *> children;
-    std::map<unsigned, ts_vm_obj> handlers;
+    event_handlers handlers;
     vm_obj props = m_inner_props.to_vm_obj();
     vm_obj view = invoke(m_view.to_vm_obj(), props);
     std::vector<vdom> elements = render_html_list(view, children, handlers, cons(m_id, m_route));
@@ -474,13 +473,19 @@ void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> cons
     }
 }
 
-void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers) {
-    unsigned handler_id = g_fresh_handler_id.fetch_add(1);
+void render_event(std::string const & name, vm_obj const & handler, std::map<std::string, unsigned> & events, event_handlers & handlers) {
+    // potential [bug]: an invalid handler may be invoked if a render with different events occurs between two
+    // sequential widget_updates.
+    // However it is important that the handlers are robust across renders because otherwise we get
+    // too many invalid_handlers which leads to a bad UX.
+    // The solution is to replace `handlers.size()` with something deterministic based on the name and the handler.
+    // Using vm_obj hashes produced too many clashes (because some vm_externals return zero.)
+    unsigned handler_id = handlers.size();
     events[name] = handler_id;
     handlers[handler_id] = handler;
 }
 
-vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     // | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
     std::string tag = to_string(cfield(elt, 0));
     vm_obj v_attrs = cfield(elt, 1);
@@ -544,7 +549,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
     return vdom(new vdom_element(tag, attributes, events, children, tooltip));
 }
 
-vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
         case html_idx::element: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
             vdom elt = render_element(html, components, handlers, route);
@@ -563,7 +568,7 @@ vdom render_html(vm_obj const & html, std::vector<component_instance*> & compone
     }
 }
 
-std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route) {
+std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     std::vector<vdom> elements;
     vm_obj l = htmls;
     while (!is_simple(l)) {

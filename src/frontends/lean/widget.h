@@ -18,6 +18,8 @@ Author: E.W.Ayers
 
 namespace lean {
 
+typedef std::map<unsigned, ts_vm_obj> event_handlers;
+
 class vdom;
 
 enum class vdom_kind { String, Element, ComponentInstance};
@@ -113,7 +115,7 @@ class component_instance : public vdom_cell {
   bool m_has_rendered = false;
   std::vector<component_instance *> m_children;
   std::vector<vdom> m_render;
-  std::map<unsigned, ts_vm_obj> m_handlers;
+  event_handlers m_handlers;
 
   list<unsigned> child_route() {return cons(m_id, m_route); }
   /** convert an inner action to an outer action */
@@ -150,10 +152,10 @@ public:
  */
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & old_elements);
 
-// void render_attr(vm_obj const & attr, json & attributes, std::map<std::string, unsigned> & events, std::map<unsigned, ts_vm_obj> & handlers);
-vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
-vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
-std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, std::map<unsigned, ts_vm_obj> & handlers, list<unsigned> const & route);
+// void render_attr(vm_obj const & attr, json & attributes, std::map<std::string, unsigned> & events, event_handlers & handlers);
+vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
+vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
+std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
 
 void initialize_widget();
 void finalize_widget();
