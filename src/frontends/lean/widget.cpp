@@ -116,13 +116,13 @@ void component_instance::reconcile(vdom const & old) {
         // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
         vm_obj p_new = m_props.to_vm_obj();
         vm_obj p_old = ci_old->m_props.to_vm_obj();
+        m_id       = ci_old->m_id;
         if (p_new == p_old || props_are_equal(p_old, p_new)) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
             m_handlers = ci_old->m_handlers;
             m_children = ci_old->m_children;
             m_render   = ci_old->m_render;
             m_state    = ci_old->m_state;
-            m_id       = ci_old->m_id;
             m_has_rendered = true;
             m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
