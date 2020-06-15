@@ -45,9 +45,9 @@ typedef interaction_monad<lean_parser_state> lean_parser;
 #define CATCH } catch (break_at_pos_exception const & ex) { throw; }\
                 catch (exception const & ex) { return lean_parser::mk_exception(ex, s); }
 
-vm_obj run_parser(parser & p, expr const & spec, buffer<vm_obj> const & args) {
+vm_obj run_parser(parser & p, expr const & spec, buffer<vm_obj> const & args, bool allow_profiler) {
     type_context_old ctx(p.env(), p.get_options());
-    auto r = lean_parser::evaluator(ctx, p.get_options())(spec, args, lean_parser_state {&p});
+    auto r = lean_parser::evaluator(ctx, p.get_options(), allow_profiler)(spec, args, {&p});
     return lean_parser::get_success_value(r);
 }
 
