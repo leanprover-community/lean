@@ -200,16 +200,13 @@ def fix_core (F : parser α → parser α) : ∀ (max_depth : ℕ), parser α
 | (max_depth+1) := F (fix_core max_depth)
 
 /-- Matches a digit (0-9). -/
-def digit : parser nat := do
-  c ← any_char,
-  let c' := c.to_nat - '0'.to_nat,
-  if 0 ≤ c' ∧ c' ≤ 9
-    then pure c'
-    else parser.fail $ "expected a digit, got: " ++ c.to_string
+def digit : parser nat := decorate_error "<digit>" $ do
+  c ← sat (λ c, '0' ≤ c ∧ c ≤ '9'),
+  pure $ c.to_nat - '0'.to_nat
 
 /-- Matches a natural number. Large numbers may cause performance issues, so
 don't run this parser on untrusted input. -/
-def nat : parser nat := do
+def nat : parser nat := decorate_error "<natural>" $ do
   digits ← many1 digit,
   pure $ prod.fst $ digits.foldr
     (λ digit ⟨sum, magnitude⟩, ⟨sum + digit * magnitude, magnitude * 10⟩)
