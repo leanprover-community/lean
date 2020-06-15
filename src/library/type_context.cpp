@@ -3838,8 +3838,6 @@ struct instance_synthesizer {
                     if (m_ctx.is_def_eq(e.m_mvar, **r)) {
                         m_state.m_stack = tail(m_state.m_stack);
                         return true;
-                    } else {
-                        tout() << "badbad\n";
                     }
                 } else {
                     m_choices.push_back(choice());
