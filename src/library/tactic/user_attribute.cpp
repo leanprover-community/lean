@@ -134,10 +134,14 @@ static environment add_user_attr(environment const & env, name const & d) {
     if (!is_none(cfield(o, 2))) {
         after_set = [=](environment const & env, io_state const & ios, name const & n, unsigned prio, bool persistent) {
             vm_state vm(env, ios.get_options());
+            vm_state::profiler prof(vm, ios.get_options());
             scope_vm_state scope(vm);
             vm_obj o = vm.get_constant(d);
             tactic_state s = mk_tactic_state_for(env, options(), {}, local_context(), mk_true());
             auto vm_r = vm.invoke(get_some_value(cfield(o, 2)), to_obj(n), mk_vm_nat(prio), mk_vm_bool(persistent), to_obj(s));
+            if (prof.enabled()) {
+                prof.get_snapshots().display(d.to_string_unescaped(), ios.get_options(), ios.get_regular_stream());
+            }
             tactic::report_exception(vm, vm_r);
             return tactic::to_state(tactic::get_success_state(vm_r)).env();
         };
@@ -146,10 +150,14 @@ static environment add_user_attr(environment const & env, name const & d) {
     if (!is_none(cfield(o, 3))) {
         before_unset = [=](environment const & env, io_state const & ios, name const & n, bool persistent) {
             vm_state vm(env, ios.get_options());
+            vm_state::profiler prof(vm, ios.get_options());
             scope_vm_state scope(vm);
             vm_obj o = vm.get_constant(d);
             tactic_state s = mk_tactic_state_for(env, options(), {}, local_context(), mk_true());
             auto vm_r = vm.invoke(get_some_value(cfield(o, 3)), to_obj(n), mk_vm_bool(persistent), to_obj(s));
+            if (prof.enabled()) {
+                prof.get_snapshots().display(d.to_string_unescaped(), ios.get_options(), ios.get_regular_stream());
+            }
             tactic::report_exception(vm, vm_r);
             return tactic::to_state(tactic::get_success_state(vm_r)).env();
         };

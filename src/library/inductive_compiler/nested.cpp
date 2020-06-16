@@ -183,8 +183,8 @@ class add_nested_inductive_decl_fn {
         lean_assert(!prefix.is_anonymous());
         lean_assert(prefix.is_string());
 
-        std::string s1 = prefix.to_string();
-        std::string::size_type nest_prefix_len = g_nest_prefix->to_string().size();
+        std::string s1 = prefix.to_string_unescaped();
+        std::string::size_type nest_prefix_len = g_nest_prefix->to_string_unescaped().size();
         if (s1.length() > nest_prefix_len) {
             std::string s2 = s1;
             s2.resize(nest_prefix_len);

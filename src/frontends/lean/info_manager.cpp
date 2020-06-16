@@ -51,7 +51,7 @@ public:
 
 #ifdef LEAN_JSON
     virtual void report(io_state_stream const & ios, json & record) const override {
-        record["full-id"] = m_full_id.to_string();
+        record["full-id"] = m_full_id.escape();
         add_source_info(ios.get_environment(), m_full_id, record);
         if (auto doc = get_doc_string(ios.get_environment(), m_full_id))
             record["doc"] = *doc;

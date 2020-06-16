@@ -66,13 +66,13 @@ json serialize_decl(name const & short_name, name const & long_name, environment
             if (!binding_info(type).is_implicit() && !binding_info(type).is_inst_implicit())
                 break;
             std::string q("?");
-            q += binding_name(type).to_string();
+            q += binding_name(type).escape();
             expr m = mk_constant(name(q.c_str()));
             type   = instantiate(binding_body(type), m);
         }
     }
     json completion;
-    completion["text"] = short_name.to_string();
+    completion["text"] = short_name.escape();
     interactive_report_type(env, o, type, completion);
     add_source_info(env, long_name, completion);
     if (auto doc = get_doc_string(env, long_name))
