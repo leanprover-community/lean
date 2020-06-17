@@ -735,19 +735,18 @@ scanner::scanner(std::istream & strm, char const * strm_name):
     lean_assert(pos_info(get_line(), get_pos()) == pos_info(1, 0));
 }
 
-scanner::scanner(std::istream & strm, char const * strm_name, pos_info const & pos) :
-        scanner(strm, strm_name) {
-    skip_to_pos(pos);
-}
-
-void scanner::skip_to_pos(pos_info const & pos) {
-    for (unsigned line_no = 1; line_no < pos.first; line_no++)
+bool scanner::skip_to_pos(pos_info const & pos) {
+    for (unsigned line_no = 1; line_no < pos.first; line_no++) {
+        if (m_curr == Eof) return false;
         fetch_line();
+    }
     m_line = m_sline;
-    while (static_cast<unsigned>(m_upos) < pos.second)
+    while (static_cast<unsigned>(m_upos) < pos.second) {
+        if (m_curr == Eof) return false;
         next();
+    }
     m_pos = m_upos; // we assume that the argument is the start of a token
-    lean_assert(pos == pos_info(get_line(), get_pos()));
+    return pos == pos_info(get_line(), get_pos());
 }
 
 std::ostream & operator<<(std::ostream & out, token_kind k) {
