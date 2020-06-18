@@ -305,7 +305,7 @@ bool json_of_hole(hole_info_data const & hole, std::string const & file, json & 
     std::vector<json> ds;
     for (auto const & p : cmd_descrs) {
         json d;
-        d["name"] = p.first.escape();
+        d["name"] = p.first.to_string_unescaped();
         d["description"] = p.second;
         ds.push_back(d);
     }
