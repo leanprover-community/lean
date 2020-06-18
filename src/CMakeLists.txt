@@ -210,11 +210,6 @@ if (NOT DEFINED CMAKE_MACOSX_RPATH)
   set(CMAKE_MACOSX_RPATH 0)
 endif()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  # The following options is needed to generate a shared library
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-endif()
-
 # SPLIT_STACK
 if (SPLIT_STACK)
   if ((${CMAKE_SYSTEM_NAME} MATCHES "Linux") AND ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"))
@@ -431,7 +426,6 @@ else()
 endif()
 add_library(leanstatic ${LEAN_LIBRARY_TYPE} ${LEAN_OBJS})
 target_link_libraries(leanstatic ${EXTRA_LIBS})
-add_subdirectory(api)
 
 if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
 # skip building main files
@@ -457,24 +451,6 @@ add_subdirectory(tests/util/numerics)
 add_subdirectory(tests/kernel)
 add_subdirectory(tests/library)
 add_subdirectory(tests/frontends/lean)
-
-# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
-# For some strange reason, it contains a copy of pthread_equal.
-# Remark: this problem does not happen when we generate the DLL using msys2 on Windows.
-if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
-  if ("${STATIC}" MATCHES "OFF")
-    add_library(leanshared SHARED shared/init.cpp $<TARGET_OBJECTS:api> ${LEAN_OBJS})
-    target_link_libraries(leanshared ${EXTRA_LIBS})
-    install(TARGETS leanshared DESTINATION lib)
-  endif()
-  install(TARGETS leanstatic DESTINATION lib)
-endif()
-
-# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
-# For some strange reason, it contains a copy of pthread_equal.
-if (NOT("${CROSS_COMPILE}" MATCHES "ON") AND ("${STATIC}" MATCHES "OFF"))
-  add_subdirectory(tests/shared)
-endif()
 
 endif()
 
