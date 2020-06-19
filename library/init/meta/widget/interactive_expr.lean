@@ -133,6 +133,31 @@ tc.stateless (λ ⟨e,ea⟩, do
 
 end interactive_expression
 
+meta inductive filter_type
+| none
+| no_instances
+| only_props
+
+meta def filter_local : filter_type → expr → tactic bool
+| (filter_type.none) e := pure tt
+| (filter_type.no_instances) e := do
+  t ← infer_type e,
+  bnot <$> is_class t
+| (filter_type.only_props) e := do
+  t ← infer_type e,
+  is_prop t
+
+meta def filter_component : component filter_type filter_type
+component.stateless (λ lf,
+  [ h "label" [] ["filter: "],
+    select [
+      ⟨filter_type.none, "0", "no filter"⟩,
+      ⟨filter_type.no_instances, "1", "no instances"⟩
+      ⟨filter_type.only_props, "2", "only props"⟩
+    ]
+  ]
+)
+
 meta def html.of_name {α : Type} : name → html α
 | n := html.of_string $ name.to_string n
 
@@ -163,11 +188,12 @@ meta def to_local_collection : list local_collection → list expr → tactic (l
   <|> (to_local_collection (⟨to_string $ expr.local_uniq_name $ l, [n], l_type⟩::acc) ls)
 
 /-- Component that displays the main (first) goal. -/
-meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
-tc.stateless $ λ _, do
+meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc filter_type γ :=
+tc.stateless $ λ ft, do
   g@(expr.mvar u_n pp_n y) ← main_goal,
   set_goals [g],
   lcs ← local_context >>= to_local_collection [],
+  lcs ← lcs.mfilter (filter_local ft) lcs,
   lchs ← lcs.mmap (λ lc, do
     lh ← local_c lc.type,
     ns ← pure $ lc.names.map (λ n, h "span" [cn "goal-hyp b ml2"] [html.of_name n]),
@@ -179,25 +205,39 @@ tc.stateless $ λ _, do
       t_comp
   ]]
 
+
+meta inductive tactic_view_action (γ : Type)
+| out (a:γ)
+| filter (f: filter_type)
+
 /-- Component that displays all goals, together with the `$n goals` message. -/
 meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
-tc.stateless $ λ _, do
-  gs ← get_goals,
-  hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html () $ tactic_view_goal local_c target_c),
-  set_goals gs,
-  let goal_message :=
-    if gs.length = 0 then
-      "goals accomplished"
-    else if gs.length = 1 then
-      "1 goal"
-    else
-      to_string gs.length ++ " goals",
-  let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
-  pure [h "ul" [className "list pl0"]
-      $ list.map_with_index (λ i x,
-        let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-        h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
-      $ (goal_message :: hs)]
+tc.mk_simple
+  (tactic_view_action γ)
+  (filter_type)
+  (λ ⟨⟩, filter_type.none)
+  (λ ⟨⟩ ft a, match a with
+              | (tactic_view_action.out a) := (ft, some a)
+              | (tactic_view_action.filter ft) := (ft, none)
+              end)
+  (λ ⟨⟩ ft, do
+    gs ← get_goals,
+    hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html () $ tactic_view_goal local_c target_c),
+    set_goals gs,
+    let goal_message :=
+      if gs.length = 0 then
+        "goals accomplished"
+      else if gs.length = 1 then
+        "1 goal"
+      else
+        to_string gs.length ++ " goals",
+    let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
+    pure [
+      h "ul" [className "list pl0"]
+        $ list.map_with_index (λ i x,
+          let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
+          h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
+        $ (goal_message :: hs)])
 
 /-- Component that displays the term-mode goal. -/
 meta def tactic_view_term_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
