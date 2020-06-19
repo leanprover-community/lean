@@ -97,17 +97,28 @@ end
 def decorate_error (msg : thunk string) (p : parser α) : parser α :=
 decorate_errors [msg ()] p
 
+/-- Matches a single character. Fails only if there is no more input. -/
+def any_char : parser char :=
+λ input pos,
+if h : pos < input.size
+  then
+    let c := input.read ⟨pos, h⟩ in
+    parse_result.done (pos+1) c
+  else
+    parse_result.fail pos dlist.empty
+
 /-- Matches a single character satisfying the given predicate. -/
 def sat (p : char → Prop) [decidable_pred p] : parser char :=
 λ input pos,
-if h : pos < input.size then
-  let c := input.read ⟨pos, h⟩ in
-  if p c then
-    parse_result.done (pos+1) $ input.read ⟨pos, h⟩
+if h : pos < input.size
+  then
+    let c := input.read ⟨pos, h⟩ in
+    if p c then
+      parse_result.done (pos+1) c
+    else
+      parse_result.fail pos dlist.empty
   else
     parse_result.fail pos dlist.empty
-else
-  parse_result.fail pos dlist.empty
 
 /-- Matches the empty word. -/
 def eps : parser unit := return ()
@@ -187,6 +198,19 @@ sep_by1 sep p <|> return []
 def fix_core (F : parser α → parser α) : ∀ (max_depth : ℕ), parser α
 | 0             := failure
 | (max_depth+1) := F (fix_core max_depth)
+
+/-- Matches a digit (0-9). -/
+def digit : parser nat := decorate_error "<digit>" $ do
+  c ← sat (λ c, '0' ≤ c ∧ c ≤ '9'),
+  pure $ c.to_nat - '0'.to_nat
+
+/-- Matches a natural number. Large numbers may cause performance issues, so
+don't run this parser on untrusted input. -/
+def nat : parser nat := decorate_error "<natural>" $ do
+  digits ← many1 digit,
+  pure $ prod.fst $ digits.foldr
+    (λ digit ⟨sum, magnitude⟩, ⟨sum + digit * magnitude, magnitude * 10⟩)
+    ⟨0, 1⟩
 
 /-- Fixpoint combinator satisfying `fix F = F (fix F)`. -/
 def fix (F : parser α → parser α) : parser α :=

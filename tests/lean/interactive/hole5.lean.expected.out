@@ -1,0 +1,4 @@
+{"msgs":[{"caption":"","file_name":"hole5.lean","pos_col":0,"pos_line":6,"severity":"warning","text":"declaration 'x' uses sorry"}],"response":"all_messages"}
+{"message":"file invalidated","response":"ok","seq_num":0}
+{"holes":[{"end":{"column":16,"line":7},"file":"hole5.lean","results":[{"description":"Infer type of the expression in the hole","name":"Infer"},{"description":"Show the current goal","name":"Show"},{"description":"Try to fill the hole using the given argument","name":"Use"},{"description":"foobarbaz","name":"a b"}],"start":{"column":5,"line":7}}],"response":"ok","seq_num":4}
+{"message":"failed\nstate:\na : ℕ\n⊢ ℕ","response":"ok","seq_num":8}

@@ -1,3 +1,22 @@
+3.16.3c (18 June 2020)
+----------------------
+
+Bug fixes:
+- Remove as-is annotations (#338, fixes #334)
+- Handle EOF in `skip_to_pos` (#342, fixes #85)
+- Fix holes with space in name (#343)
+
+Features:
+- Add profiling for user attributes (#328)
+- Profile user commands (#329)
+- Support `lean --profile --run` (#337)
+- Add `parser.{any_char,digit,nat}` (#331)
+- Cache type-class searches w/o mvars (#332)
+
+Changes:
+- Put `is_strict_total_order` in `Prop` (#327)
+- Remove redundant lemmas (#321)
+
 3.16.2c (12 June 2020)
 ----------------------
 

@@ -3526,8 +3526,9 @@ struct instance_synthesizer {
     struct stack_entry {
         expr     m_mvar;
         unsigned m_depth;
-        stack_entry(expr const & m, unsigned d):
-            m_mvar(m), m_depth(d) {}
+        bool m_assigned;
+        stack_entry(expr const & m, unsigned d, bool a):
+            m_mvar(m), m_depth(d), m_assigned(a) {}
     };
 
     struct state {
@@ -3632,9 +3633,11 @@ struct instance_synthesizer {
             }
             r = locals.mk_lambda(r);
             m_ctx.assign(mvar, r);
+            // keep copy of current mvar (when we get back to this mvar, we'll try to cache the result)
+            m_state.m_stack = cons(stack_entry(e.m_mvar, e.m_depth, true), m_state.m_stack);
             // copy new_inst_mvars to stack
             for (auto & mvar : new_inst_mvars) {
-                m_state.m_stack = cons(stack_entry(mvar, e.m_depth+1), m_state.m_stack);
+                m_state.m_stack = cons(stack_entry(mvar, e.m_depth+1, false), m_state.m_stack);
             }
             return true;
         } catch (exception & ex) {
@@ -3735,6 +3738,11 @@ struct instance_synthesizer {
             return true;
         }
         cs.back().m_instances = list<name>();
+        // We've run out of choices, cache a failure.
+        expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+        if (!has_idx_metavar(ty)) {
+            cache_result(ty, none_expr());
+        }
         return false;
     }
 
@@ -3794,7 +3802,7 @@ struct instance_synthesizer {
             unsigned i = new_inst_mvars.size();
             while (i > 0) {
                 --i;
-                m_state.m_stack = cons(stack_entry(new_inst_mvars[i], e.m_depth+1), m_state.m_stack);
+                m_state.m_stack = cons(stack_entry(new_inst_mvars[i], e.m_depth+1, false), m_state.m_stack);
             }
             return true;
         }
@@ -3804,6 +3812,17 @@ struct instance_synthesizer {
     bool process_next_mvar() {
         lean_assert(!is_done());
         stack_entry e = head(m_state.m_stack);
+        if (e.m_assigned) {
+            expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+            if (!has_idx_metavar(ty)) {
+                expr inst = m_ctx.instantiate_mvars(e.m_mvar);
+                if (!has_idx_metavar(inst)) {
+                    cache_result(ty, some_expr(inst));
+                }
+            }
+            m_state.m_stack = tail(m_state.m_stack);
+            return true;
+        }
         if (process_special(e))
             return true;
         if (m_ctx.is_assigned(e.m_mvar)) {
@@ -3811,6 +3830,21 @@ struct instance_synthesizer {
             // This typically happens if the instance has already been found via unification.
             m_state.m_stack = tail(m_state.m_stack);
             return true;
+        }
+        expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+        if (!has_idx_metavar(ty)) {
+            if (auto r = get_cache(ty)) {
+                if (*r) {
+                    if (m_ctx.is_def_eq(e.m_mvar, **r)) {
+                        m_state.m_stack = tail(m_state.m_stack);
+                        return true;
+                    }
+                } else {
+                    m_choices.push_back(choice());
+                    push_scope();
+                    return false;
+                }
+            }
         }
         if (!mk_choice_point(e.m_mvar))
             return false;
@@ -3862,23 +3896,39 @@ struct instance_synthesizer {
     }
 
     void cache_result(expr const & type, optional<expr> const & inst) {
-        if (!has_expr_metavar(type))
-            m_ctx.m_cache->set_instance(type, inst);
+        lean_trace("class_instances",
+                    scope_trace_env scope(m_ctx.env(), m_ctx);
+                    if (inst)
+                        tout() << "caching instance for " << type << "\n" << *inst << "\n";
+                    else
+                        tout() << "caching failure for " << type << "\n";);
+        m_ctx.m_cache->set_instance(type, inst);
+    }
+
+    optional<optional<expr>> get_cache(expr const & type) {
+        auto r = m_ctx.m_cache->get_instance(type);
+        if (r) {
+            /* instance/failure is already cached */
+            lean_trace("class_instances",
+                        scope_trace_env scope(m_ctx.env(), m_ctx);
+                        if (*r)
+                            tout() << "cached instance for " << type << "\n" << *(*r) << "\n";
+                        else
+                            tout() << "cached failure for " << type << "\n";);
+        }
+        return r;
     }
 
     optional<expr> ensure_no_meta(optional<expr> r) {
         while (true) {
             if (!r) {
-                cache_result(m_ctx.infer(m_main_mvar), r);
+                expr type = m_ctx.infer(m_main_mvar);
+                if (!has_expr_metavar(type))
+                    cache_result(type, none_expr());
                 return none_expr();
             }
             *r = m_ctx.instantiate_mvars(*r);
             if (!has_idx_metavar(*r)) {
-                expr type = m_ctx.infer(m_main_mvar);
-                if (!has_idx_metavar(type)) {
-                    /* We only cache the result if it does not contain universe tmp metavars. */
-                    cache_result(type, some_expr(m_ctx.instantiate_mvars(*r)));
-                }
                 return r;
             }
             lean_trace("class_instances",
@@ -3891,20 +3941,13 @@ struct instance_synthesizer {
     optional<expr> mk_class_instance_core(expr const & type) {
         /* We do not cache results when multiple instances have to be generated. */
         if (!has_expr_metavar(type)) {
-            if (auto r = m_ctx.m_cache->get_instance(type)) {
-                /* instance/failure is already cached */
-                lean_trace("class_instances",
-                           scope_trace_env scope(m_ctx.env(), m_ctx);
-                           if (*r)
-                               tout() << "cached instance for " << type << "\n" << *(*r) << "\n";
-                           else
-                               tout() << "cached failure for " << type << "\n";);
+            if (auto r = get_cache(type)) {
                 return *r;
             }
         }
         m_state          = state();
         m_main_mvar      = m_ctx.mk_tmp_mvar(type);
-        m_state.m_stack  = to_list(stack_entry(m_main_mvar, 0));
+        m_state.m_stack  = to_list(stack_entry(m_main_mvar, 0, false));
         auto r = search();
         return ensure_no_meta(r);
     }

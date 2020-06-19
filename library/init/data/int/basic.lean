@@ -140,23 +140,17 @@ local attribute [simp] of_nat_add_of_nat of_nat_mul_of_nat neg_of_nat_zero neg_o
 
 /- some basic functions and properties -/
 
-protected lemma of_nat_inj {m n : ℕ} (h : of_nat m = of_nat n) : m = n :=
-int.no_confusion h id
-
 protected lemma coe_nat_inj {m n : ℕ} (h : (↑m : ℤ) = ↑n) : m = n :=
-int.of_nat_inj h
+int.of_nat.inj h
 
 lemma of_nat_eq_of_nat_iff (m n : ℕ) : of_nat m = of_nat n ↔ m = n :=
-iff.intro int.of_nat_inj (congr_arg _)
+iff.intro int.of_nat.inj (congr_arg _)
 
 protected lemma coe_nat_eq_coe_nat_iff (m n : ℕ) : (↑m : ℤ) = ↑n ↔ m = n :=
 of_nat_eq_of_nat_iff m n
 
-lemma neg_succ_of_nat_inj {m n : ℕ} (h : neg_succ_of_nat m = neg_succ_of_nat n) : m = n :=
-int.no_confusion h id
-
 lemma neg_succ_of_nat_inj_iff {m n : ℕ} : neg_succ_of_nat m = neg_succ_of_nat n ↔ m = n :=
-⟨neg_succ_of_nat_inj, assume H, by simp [H]⟩
+⟨neg_succ_of_nat.inj, assume H, by simp [H]⟩
 
 lemma neg_succ_of_nat_eq (n : ℕ) : -[1+ n] = -(n + 1) := rfl
 
@@ -542,7 +536,7 @@ protected lemma distrib_right (a b c : ℤ) : (a + b) * c = a * c + b * c :=
 begin rw [int.mul_comm, int.distrib_left], simp [int.mul_comm] end
 
 protected lemma zero_ne_one : (0 : int) ≠ 1 :=
-assume h : 0 = 1, succ_ne_zero _ (int.of_nat_inj h).symm
+assume h : 0 = 1, succ_ne_zero _ (int.of_nat.inj h).symm
 
 lemma of_nat_sub {n m : ℕ} (h : m ≤ n) : of_nat (n - m) = of_nat n - of_nat m :=
 show of_nat (n - m) = of_nat n + neg_of_nat m, from match m, h with

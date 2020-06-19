@@ -812,9 +812,6 @@ by cases n; simp
 theorem exists_eq_succ_of_ne_zero {n : ℕ} (H : n ≠ 0) : ∃k : ℕ, n = succ k :=
 ⟨_, (eq_zero_or_eq_succ_pred _).resolve_left H⟩
 
-theorem succ_inj {n m : ℕ} (H : succ n = succ m) : n = m :=
-nat.succ.inj_arrow H id
-
 theorem discriminate {B : Sort u} {n : ℕ} (H1: n = 0 → B) (H2 : ∀m, n = succ m → B) : B :=
 by induction h : n; [exact H1 h, exact H2 _ h]
 
