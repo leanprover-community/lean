@@ -250,6 +250,7 @@ meta def select {α} [decidable_eq α] : list (select_item α) → α → html �
               end in
      h "select" [
           attr.val "value" k,
+          attr.val "key" k,
           attr.text_change_event (λ k,
                match items.filter (λ i, select_item.key i = k) with
                | [] := undefined
