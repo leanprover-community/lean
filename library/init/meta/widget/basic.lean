@@ -240,7 +240,7 @@ meta def textbox : string → (string → α) → html α
 meta structure select_item (α : Type) :=
 (result : α)
 (key : string)
-(view: list (html empty))
+(view : list (html α))
 
 /-- Choose from a dropdown selection list. -/
 meta def select {α} [decidable_eq α] : list (select_item α) → α → html α
@@ -256,7 +256,7 @@ meta def select {α} [decidable_eq α] : list (select_item α) → α → html �
                | (h::_) := h.result
                end
           )]
-     $ items.map (λ i, h "option" [attr.val "value" i.key] $ i.view)
+     $ items.map (λ i, h "option" [attr.val "value" i.key] $ select_item.view i)
 
 /-- If the html is not an of_element it will wrap it in a div. -/
 meta def with_attrs : list (attr α) →  html α → html α

@@ -9,6 +9,7 @@ import init.meta.widget.basic
 import init.meta.widget.tactic_component
 import init.meta.tagged_format
 import init.data.punit
+import init.meta.mk_dec_eq_instance
 
 meta def subexpr := (expr × expr.address)
 
@@ -133,6 +134,7 @@ tc.stateless (λ ⟨e,ea⟩, do
 
 end interactive_expression
 
+@[derive decidable_eq]
 meta inductive filter_type
 | none
 | no_instances
@@ -141,20 +143,20 @@ meta inductive filter_type
 meta def filter_local : filter_type → expr → tactic bool
 | (filter_type.none) e := pure tt
 | (filter_type.no_instances) e := do
-  t ← infer_type e,
-  bnot <$> is_class t
+  t ← tactic.infer_type e,
+  bnot <$> tactic.is_class t
 | (filter_type.only_props) e := do
-  t ← infer_type e,
-  is_prop t
+  t ← tactic.infer_type e,
+  tactic.is_prop t
 
-meta def filter_component : component filter_type filter_type
+meta def filter_component : component filter_type filter_type :=
 component.stateless (λ lf,
   [ h "label" [] ["filter: "],
     select [
-      ⟨filter_type.none, "0", "no filter"⟩,
-      ⟨filter_type.no_instances, "1", "no instances"⟩
-      ⟨filter_type.only_props, "2", "only props"⟩
-    ]
+      ⟨filter_type.none, "0", ["no filter"]⟩,
+      ⟨filter_type.no_instances, "1", ["no instances"]⟩,
+      ⟨filter_type.only_props, "2", ["only props"]⟩
+    ] lf
   ]
 )
 
@@ -192,8 +194,9 @@ meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : 
 tc.stateless $ λ ft, do
   g@(expr.mvar u_n pp_n y) ← main_goal,
   set_goals [g],
-  lcs ← local_context >>= to_local_collection [],
-  lcs ← lcs.mfilter (filter_local ft) lcs,
+  lcs ← local_context,
+  lcs ← list.mfilter (filter_local ft) lcs,
+  lcs ← to_local_collection [] lcs,
   lchs ← lcs.mmap (λ lc, do
     lh ← local_c lc.type,
     ns ← pure $ lc.names.map (λ n, h "span" [cn "goal-hyp b ml2"] [html.of_name n]),
@@ -207,22 +210,22 @@ tc.stateless $ λ ft, do
 
 
 meta inductive tactic_view_action (γ : Type)
-| out (a:γ)
-| filter (f: filter_type)
+| out (a:γ): tactic_view_action
+| filter (f: filter_type): tactic_view_action
 
 /-- Component that displays all goals, together with the `$n goals` message. -/
 meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
 tc.mk_simple
   (tactic_view_action γ)
   (filter_type)
-  (λ ⟨⟩, filter_type.none)
+  (λ _, pure $ filter_type.none)
   (λ ⟨⟩ ft a, match a with
-              | (tactic_view_action.out a) := (ft, some a)
-              | (tactic_view_action.filter ft) := (ft, none)
+              | (tactic_view_action.out a) := pure (ft, some a)
+              | (tactic_view_action.filter ft) := pure (ft, none)
               end)
   (λ ⟨⟩ ft, do
     gs ← get_goals,
-    hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html () $ tactic_view_goal local_c target_c),
+    hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html ft $ tactic_view_goal local_c target_c),
     set_goals gs,
     let goal_message :=
       if gs.length = 0 then
@@ -232,17 +235,20 @@ tc.mk_simple
       else
         to_string gs.length ++ " goals",
     let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
-    pure [
-      h "ul" [className "list pl0"]
+    let goals : html γ := h "ul" [className "list pl0"]
         $ list.map_with_index (λ i x,
           let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
           h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
-        $ (goal_message :: hs)])
+        $ (goal_message :: hs),
+    pure [
+      h "div" [className "fr"] [html.of_component ft $ component.map_action tactic_view_action.filter filter_component],
+      html.map_action tactic_view_action.out goals
+      ])
 
 /-- Component that displays the term-mode goal. -/
 meta def tactic_view_term_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
 tc.stateless $ λ _, do
-  goal ← flip tc.to_html () $ tactic_view_goal local_c target_c,
+  goal ← flip tc.to_html (filter_type.none) $ tactic_view_goal local_c target_c,
   pure [h "ul" [className "list pl0"] [
     h "li" [className "lh-copy"] [h "strong" [cn "goal-goals"] ["expected type:"]],
     h "li" [className "lh-copy"] [goal]]]
