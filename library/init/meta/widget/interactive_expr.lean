@@ -145,19 +145,33 @@ tc.stateless (λ x, do
   pure y_comp
 )
 
+/-- A group of local constants in the context that should be rendered as one line. -/
+meta structure local_collection :=
+(key : string)
+(names : list name)
+(type : expr)
+
+/-- Group consecutive locals according to whether they have the same type -/
+meta def to_local_collection : list local_collection → list expr → tactic (list local_collection)
+| acc [] := pure $ list.map (λ lc : local_collection, {names := lc.names.reverse, ..lc}) $ list.reverse $ acc
+| acc (l::ls) := do
+  l_type ← infer_type l,
+  n ← pure $ (expr.local_pp_name l),
+  (do (⟨k,ns,t⟩::acc) ← pure acc,
+      is_def_eq t l_type,
+      to_local_collection (⟨k,n::ns,t⟩::acc) ls)
+  <|> (to_local_collection (⟨to_string $ expr.local_uniq_name $ l, [n], l_type⟩::acc) ls)
+
 /-- Component that displays the main (first) goal. -/
 meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
 tc.stateless $ λ _, do
   g@(expr.mvar u_n pp_n y) ← main_goal,
   set_goals [g],
-  lcs ← local_context,
+  lcs ← local_context >>= to_local_collection [],
   lchs ← lcs.mmap (λ lc, do
-    lh ← local_c lc,
-    pure $ h "li" [key lc.local_uniq_name] [
-        h "span" [cn "goal-hyp b"] [html.of_name lc.local_pp_name],
-        " : ",
-        h "span" [cn "goal-hyp-type"] [lh]
-    ]),
+    lh ← local_c lc.type,
+    ns ← pure $ lc.names.map (λ n, h "span" [cn "goal-hyp b ml2"] [html.of_name n]),
+    pure $ h "li" [key lc.key] (ns ++ [" : ", h "span" [cn "goal-hyp-type"] [lh]])),
   t_comp ← target_c g,
   pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
     h "li" [key u_n] [
