@@ -568,7 +568,9 @@ static environment run_command_cmd(parser & p) {
     expr val             = mk_typed_expr(mk_true(), mk_by(tactic));
     bool check_unassigned = false;
     bool recover_from_errors = true;
-    elaborate(env, opts, "_run_command", mctx, local_context(), val, check_unassigned, recover_from_errors);
+    local_context lctx;
+    lctx.freeze_local_instances(local_instances());
+    elaborate(env, opts, "_run_command", mctx, lctx, val, check_unassigned, recover_from_errors);
     return env;
 }
 

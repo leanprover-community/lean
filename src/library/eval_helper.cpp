@@ -14,6 +14,7 @@ namespace lean {
 eval_helper::eval_helper(environment const & env, options const & opts, name const & fn) :
         m_env(env), m_opts(opts), m_tc(env, opts, transparency_mode::None),
         m_vms(env, opts), m_prof(m_vms, opts), m_fn(fn) {
+    m_tc.freeze_local_instances();
     auto d = env.get(m_fn);
     m_ty = m_tc.whnf(d.get_type());
 
