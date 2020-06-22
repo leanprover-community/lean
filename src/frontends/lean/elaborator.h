@@ -298,6 +298,8 @@ public:
     elaborator(environment const & env, options const & opts, name const & decl_name,
                metavar_context const & mctx, local_context const & lctx,
                bool recover_from_errors = true, bool in_pattern = false, bool in_quote = false);
+    elaborator(type_context_old && ctx, options const & opts, name const & decl_name,
+        bool recover_from_errors = true, bool in_pattern = false, bool in_quote = false);
     ~elaborator();
     abstract_context_cache & get_cache() { return m_cache; }
     metavar_context const & mctx() const { return m_ctx.mctx(); }

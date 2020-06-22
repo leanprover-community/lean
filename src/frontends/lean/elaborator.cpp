@@ -144,6 +144,15 @@ elaborator::elaborator(environment const & env, options const & opts, name const
     m_coercions = get_elaborator_coercions(opts);
 }
 
+elaborator::elaborator(type_context_old && ctx, options const & opts, name const & decl_name, bool recover_from_errors,
+                       bool in_pattern, bool in_quote):
+    m_env(ctx.env()), m_opts(opts), m_cache(), m_decl_name(decl_name),
+    m_ctx(std::move(ctx)),
+    m_recover_from_errors(recover_from_errors),
+    m_uses_infom(get_global_info_manager() != nullptr), m_in_pattern(in_pattern), m_in_quote(in_quote) {
+    m_coercions = get_elaborator_coercions(opts);
+}
+
 elaborator::~elaborator() {
     try {
         if (m_uses_infom && get_global_info_manager() && !in_thread_finalization()) {
