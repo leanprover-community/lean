@@ -9,6 +9,7 @@ import init.meta.widget.basic
 import init.meta.widget.tactic_component
 import init.meta.tagged_format
 import init.data.punit
+import init.meta.mk_dec_eq_instance
 
 meta def subexpr := (expr × expr.address)
 
@@ -133,6 +134,32 @@ tc.stateless (λ ⟨e,ea⟩, do
 
 end interactive_expression
 
+@[derive decidable_eq]
+meta inductive filter_type
+| none
+| no_instances
+| only_props
+
+meta def filter_local : filter_type → expr → tactic bool
+| (filter_type.none) e := pure tt
+| (filter_type.no_instances) e := do
+  t ← tactic.infer_type e,
+  bnot <$> tactic.is_class t
+| (filter_type.only_props) e := do
+  t ← tactic.infer_type e,
+  tactic.is_prop t
+
+meta def filter_component : component filter_type filter_type :=
+component.stateless (λ lf,
+  [ h "label" [] ["filter: "],
+    select [
+      ⟨filter_type.none, "0", ["no filter"]⟩,
+      ⟨filter_type.no_instances, "1", ["no instances"]⟩,
+      ⟨filter_type.only_props, "2", ["only props"]⟩
+    ] lf
+  ]
+)
+
 meta def html.of_name {α : Type} : name → html α
 | n := html.of_string $ name.to_string n
 
@@ -145,19 +172,35 @@ tc.stateless (λ x, do
   pure y_comp
 )
 
+/-- A group of local constants in the context that should be rendered as one line. -/
+@[derive decidable_eq]
+meta structure local_collection :=
+(key : string)
+(locals : list expr)
+(type : expr)
+
+/-- Group consecutive locals according to whether they have the same type -/
+meta def to_local_collection : list local_collection → list expr → tactic (list local_collection)
+| acc [] := pure $ list.map (λ lc : local_collection, {locals := lc.locals.reverse, ..lc}) $ list.reverse $ acc
+| acc (l::ls) := do
+  l_type ← infer_type l,
+  (do (⟨k,ns,t⟩::acc) ← pure acc,
+      is_def_eq t l_type,
+      to_local_collection (⟨k,l::ns,t⟩::acc) ls)
+  <|> (to_local_collection (⟨to_string $ expr.local_uniq_name $ l, [l], l_type⟩::acc) ls)
+
 /-- Component that displays the main (first) goal. -/
-meta def tactic_view_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
-tc.stateless $ λ _, do
+meta def tactic_view_goal {γ} (local_c : tc local_collection γ) (target_c : tc expr γ) : tc filter_type γ :=
+tc.stateless $ λ ft, do
   g@(expr.mvar u_n pp_n y) ← main_goal,
   set_goals [g],
   lcs ← local_context,
+  lcs ← list.mfilter (filter_local ft) lcs,
+  lcs ← to_local_collection [] lcs,
   lchs ← lcs.mmap (λ lc, do
     lh ← local_c lc,
-    pure $ h "li" [key lc.local_uniq_name] [
-        h "span" [cn "goal-hyp b"] [html.of_name lc.local_pp_name],
-        " : ",
-        h "span" [cn "goal-hyp-type"] [lh]
-    ]),
+    ns ← pure $ lc.locals.map (λ n, h "span" [cn "goal-hyp b ml2"] [html.of_name $ expr.local_pp_name n]),
+    pure $ h "li" [key lc.key] (ns ++ [" : ", h "span" [cn "goal-hyp-type"] [lh]])),
   t_comp ← target_c g,
   pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
     h "li" [key u_n] [
@@ -165,36 +208,59 @@ tc.stateless $ λ _, do
       t_comp
   ]]
 
+meta inductive tactic_view_action (γ : Type)
+| out (a:γ): tactic_view_action
+| filter (f: filter_type): tactic_view_action
+
 /-- Component that displays all goals, together with the `$n goals` message. -/
-meta def tactic_view_component {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
-tc.stateless $ λ _, do
-  gs ← get_goals,
-  hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html () $ tactic_view_goal local_c target_c),
-  set_goals gs,
-  let goal_message :=
-    if gs.length = 0 then
-      "goals accomplished"
-    else if gs.length = 1 then
-      "1 goal"
-    else
-      to_string gs.length ++ " goals",
-  let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
-  pure [h "ul" [className "list pl0"]
-      $ list.map_with_index (λ i x,
-        let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-        h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
-      $ (goal_message :: hs)]
+meta def tactic_view_component {γ} (local_c : tc local_collection γ) (target_c : tc expr γ) : tc unit γ :=
+tc.mk_simple
+  (tactic_view_action γ)
+  (filter_type)
+  (λ _, pure $ filter_type.none)
+  (λ ⟨⟩ ft a, match a with
+              | (tactic_view_action.out a) := pure (ft, some a)
+              | (tactic_view_action.filter ft) := pure (ft, none)
+              end)
+  (λ ⟨⟩ ft, do
+    gs ← get_goals,
+    hs ← gs.mmap (λ g, do set_goals [g], flip tc.to_html ft $ tactic_view_goal local_c target_c),
+    set_goals gs,
+    let goal_message :=
+      if gs.length = 0 then
+        "goals accomplished"
+      else if gs.length = 1 then
+        "1 goal"
+      else
+        to_string gs.length ++ " goals",
+    let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
+    let goals : html γ := h "ul" [className "list pl0"]
+        $ list.map_with_index (λ i x,
+          let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
+          h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
+        $ (goal_message :: hs),
+    pure [
+      h "div" [className "fr"] [html.of_component ft $ component.map_action tactic_view_action.filter filter_component],
+      html.map_action tactic_view_action.out goals
+    ])
 
 /-- Component that displays the term-mode goal. -/
-meta def tactic_view_term_goal {γ} (local_c : tc expr γ) (target_c : tc expr γ) : tc unit γ :=
+meta def tactic_view_term_goal {γ} (local_c : tc local_collection γ) (target_c : tc expr γ) : tc unit γ :=
 tc.stateless $ λ _, do
-  goal ← flip tc.to_html () $ tactic_view_goal local_c target_c,
+  goal ← flip tc.to_html (filter_type.none) $ tactic_view_goal local_c target_c,
   pure [h "ul" [className "list pl0"] [
     h "li" [className "lh-copy"] [h "strong" [cn "goal-goals"] ["expected type:"]],
     h "li" [className "lh-copy"] [goal]]]
 
+meta def show_local_collection_component : tc local_collection empty :=
+tc.stateless (λ lc, do
+  (l::_) ← pure lc.locals,
+  c ← show_type_component l,
+  pure [c]
+)
+
 meta def tactic_render : tc unit string :=
-component.ignore_action $ tactic_view_component show_type_component show_type_component
+component.ignore_action $ tactic_view_component show_local_collection_component show_type_component
 
 meta def tactic_state_widget : component tactic_state string :=
 tc.to_component tactic_render
@@ -203,7 +269,7 @@ tc.to_component tactic_render
 Widget used to display term-proof goals.
 -/
 meta def term_goal_widget : component tactic_state string :=
-(tactic_view_term_goal show_type_component show_type_component).to_component
+(tactic_view_term_goal show_local_collection_component show_type_component).to_component
 
 end widget
 

@@ -237,6 +237,28 @@ meta def button : string → thunk α → html α
 meta def textbox : string → (string → α) → html α
 | s t := h "input" [attr.val "type" "text", attr.val "value" s, attr.text_change_event t] []
 
+meta structure select_item (α : Type) :=
+(result : α)
+(key : string)
+(view : list (html α))
+
+/-- Choose from a dropdown selection list. -/
+meta def select {α} [decidable_eq α] : list (select_item α) → α → html α
+| items value :=
+     let k := match list.filter (λ i, select_item.result i = value) items with
+              | [] := "" | (h::_) := select_item.key h
+              end in
+     h "select" [
+          attr.val "value" k,
+          attr.val "key" k,
+          attr.text_change_event (λ k,
+               match items.filter (λ i, select_item.key i = k) with
+               | [] := undefined
+               | (h::_) := h.result
+               end
+          )]
+     $ items.map (λ i, h "option" [attr.val "value" i.key] $ select_item.view i)
+
 /-- If the html is not an of_element it will wrap it in a div. -/
 meta def with_attrs : list (attr α) →  html α → html α
 | a x := match as_element x with
