@@ -1,3 +1,13 @@
+3.16.4c (22 June 2020)
+----------------------
+
+Features:
+- Use `tactic_state_context_cache` more (#347)
+- Goal widget: collect locals with the same type and local filtering (#346)
+
+Bug fixes:
+- Fix error message in `cases`
+
 3.16.3c (18 June 2020)
 ----------------------
 
