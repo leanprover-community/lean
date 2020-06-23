@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include "util/thread.h"
 #include "util/numerics/mpz.h"
 #include <string>
+#include <vector>
 
 namespace lean {
 mpz::mpz(uint64 v):
