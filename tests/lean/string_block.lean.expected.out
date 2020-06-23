@@ -1,0 +1,17 @@
+" foo " : string
+" /- foo -/ " : string
+" /-\"\" foo -/ " : string
+" /-\"\" foo -/ \"\"" : string
+" /-\"\" foo -/ \"-\"\"\"" ++ "" : string
+
+## Markdown heading
+
+String blocks are like comments:
+```lean
+/-- My declaration -/
+def my_declaration : string :=
+/-"
+  They can be nicely nested
+"-/
+```
+
