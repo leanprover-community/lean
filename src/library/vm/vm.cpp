@@ -453,7 +453,9 @@ struct ts_vm_obj::to_ts_vm_obj_fn {
         case vm_obj_kind::External:      r = visit_external(o); break;
         case vm_obj_kind::NativeClosure: r = visit_native_closure(o); break;
         }
-        m_objs.push_back(r.raw());
+        // Leak r so that the vm_obj destructor is never called.
+        // We use a different allocator here so it needs to be deallocated in ts_vm_obj::data::~data
+        m_objs.push_back(vm_obj(r).steal_ptr());
         m_cache.insert(mk_pair(o.raw(), r));
         return r;
     }
