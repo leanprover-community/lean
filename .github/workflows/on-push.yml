@@ -99,7 +99,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: msys2/setup-msys2@v1
         with:
-          update: true
+          # update: true
           install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
       - run: mkdir -p ./build
       - name: Configure
