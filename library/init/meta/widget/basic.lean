@@ -281,5 +281,17 @@ meta def with_key {β} [has_to_string β] : β → html α → html α
 
 end widget
 
+namespace tactic
+
 /-- Same as `tactic.save_info_thunk` except saves a widget to be displayed by a compatible infoviewer. -/
-meta constant tactic.save_widget : pos → widget.component tactic_state string → tactic unit
+meta constant save_widget : pos → widget.component tactic_state string → tactic unit
+
+/-- Outputs a widget trace position at the given position. -/
+meta constant trace_widget_at (p : pos) (w : widget.component tactic_state string)
+     (text := "(widget)") : tactic unit
+
+/-- Outputs a widget trace position at the current default trace position. -/
+meta def trace_widget (w : widget.component tactic_state string) (text := "(widget)") : tactic unit :=
+do p ← get_trace_msg_pos, trace_widget_at p w text
+
+end tactic

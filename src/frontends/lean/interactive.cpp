@@ -196,7 +196,7 @@ void report_info(environment const & env, options const & opts, io_state const &
             if (e.m_goal_pos) {
                 // in the case that e has a goal pos, report that.
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
-                            return is_vm_obj_format_info(d) || (is_widget_info(d) && !is_term_goal(d));
+                            return is_vm_obj_format_info(d) || is_widget_goal_info(d);
                         });
             }
             // first check for field infos inside token

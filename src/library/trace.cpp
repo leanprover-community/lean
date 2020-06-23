@@ -22,6 +22,7 @@ MK_THREAD_LOCAL_GET_DEF(std::vector<name>, get_disabled_trace_classes);
 MK_THREAD_LOCAL_GET_DEF(environment, get_dummy_env);
 MK_THREAD_LOCAL_GET_DEF(options,     get_dummy_options);
 LEAN_THREAD_VALUE(bool,                g_silent, false);
+LEAN_THREAD_VALUE(pos_info,            g_trace_msg_pos, pos_info(0,0));
 LEAN_THREAD_PTR(environment,           g_env);
 LEAN_THREAD_PTR(options,               g_opts);
 LEAN_THREAD_PTR(abstract_type_context, g_ctx);
@@ -220,8 +221,12 @@ void finalize_trace() {
     delete g_trace_as_messages;
 }
 
+pos_info get_trace_msg_pos() {
+    return g_trace_msg_pos;
+}
+
 scope_traces_as_messages::scope_traces_as_messages(std::string const & stream_name, pos_info const & pos) :
-    m_stream_name(stream_name), m_pos(pos) {
+        flet<pos_info>(g_trace_msg_pos, pos), m_stream_name(stream_name), m_pos(pos) {
     if (get_global_ios().get_options().get_bool(*g_trace_as_messages, false)) {
         m_redirected_ios = std::unique_ptr<io_state>(new io_state(get_global_ios()));
         m_buffer = std::make_shared<string_output_channel>();
