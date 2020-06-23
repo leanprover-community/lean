@@ -46,6 +46,23 @@ jobs:
         run: ctest -j2 --output-on-failure
         working-directory: ./build
 
+  build_sanitize_job:
+    runs-on: ubuntu-latest
+    name: Build sanitized
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - name: Configure
+        run: |
+          cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLEAN_EXTRA_CXX_FLAGS="-fsanitize=address,undefined"
+        working-directory: ./build
+      - name: Build
+        run: make -j2
+        working-directory: ./build
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
   build_macos_job:
     runs-on: macos-latest
     name: Build macos ${{ matrix.build_type }}
