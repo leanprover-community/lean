@@ -97,10 +97,10 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
-      - uses: eine/setup-msys2@v1
+      - uses: msys2/setup-msys2@v1
         with:
           update: true
-          install: 'base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git'
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
       - run: mkdir -p ./build
       - name: Configure
         run: |
