@@ -33,7 +33,7 @@ public:
 
 pos_info get_trace_msg_pos();
 
-class scope_traces_as_messages : flet<pos_info> {
+class scope_traces_as_messages : flet<pos_info *> {
     std::string                            m_stream_name;
     pos_info                               m_pos;
     std::unique_ptr<io_state>              m_redirected_ios;
