@@ -1,2 +1,2 @@
 {"seq_num": 0, "command": "sync", "file_name": "widget4.lean"}
-{"seq_num": 1, "command": "get_widget", "file_name": "widget4.lean", "column":0,"id":2,"line":3}
+{"seq_num": 1, "command": "get_widget", "file_name": "widget4.lean", "column":0,"id":3,"line":3}
