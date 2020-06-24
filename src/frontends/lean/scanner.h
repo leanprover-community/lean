@@ -85,6 +85,7 @@ protected:
     void read_doc_block_core();
     token_kind read_doc_block();
     token_kind read_mod_doc_block();
+    token_kind read_string_block();
 
 public:
     scanner(std::istream & strm, char const * strm_name = nullptr);
