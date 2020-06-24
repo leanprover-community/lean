@@ -22,7 +22,7 @@ MK_THREAD_LOCAL_GET_DEF(std::vector<name>, get_disabled_trace_classes);
 MK_THREAD_LOCAL_GET_DEF(environment, get_dummy_env);
 MK_THREAD_LOCAL_GET_DEF(options,     get_dummy_options);
 LEAN_THREAD_VALUE(bool,                g_silent, false);
-LEAN_THREAD_VALUE(pos_info,            g_trace_msg_pos, pos_info(0,0));
+LEAN_THREAD_VALUE(pos_info,            g_trace_msg_pos, pos_info(0, 0));
 LEAN_THREAD_PTR(environment,           g_env);
 LEAN_THREAD_PTR(options,               g_opts);
 LEAN_THREAD_PTR(abstract_type_context, g_ctx);
