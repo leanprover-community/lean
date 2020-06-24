@@ -341,6 +341,8 @@ meta def get_decl (n : name) : tactic declaration :=
 do s ← read,
    (env s).get n
 
+meta constant get_trace_msg_pos : tactic pos
+
 meta def trace {α : Type u} [has_to_tactic_format α] (a : α) : tactic unit :=
 do fmt ← pp a,
    return $ _root_.trace_fmt fmt (λ u, ())
