@@ -221,7 +221,7 @@ info_data mk_widget_goal_info(environment const & env, pos_info const & pos, vm_
 info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
     auto ci = new component_instance(widget, props);
     vdom c = ci;
-    return info_data(new widget_goal_info(env, pos, ci->id(), c));
+    return info_data(new widget_info(env, pos, ci->id(), c));
 }
 
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {

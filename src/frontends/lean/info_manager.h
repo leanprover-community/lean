@@ -88,6 +88,7 @@ public:
      */
     void update(json const & message, json & record);
     json to_json() const;
+    virtual void report(io_state_stream const &, json &) const {}
 
     bool has_widget() const { return m_vdom.raw(); }
     unsigned id() const { return m_id; }
