@@ -1,3 +1,18 @@
+3.16.5c (25 June 2020)
+----------------------
+
+Features:
+- Add comment-like string blocks (#352)
+- Add widgets to trace messages (#355)
+- Show case tags in goal widget (#357)
+
+Bug fixes:
+- Handle exceptions in `ts_clone` (#350)
+- Support `sorry #` (#356)
+
+Server protocol changes:
+- The (Lean error) messages returned by the server may now contain an additional `"widget"` field.
+
 3.16.4c (22 June 2020)
 ----------------------
 
