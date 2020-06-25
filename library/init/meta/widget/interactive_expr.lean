@@ -193,16 +193,23 @@ meta def to_local_collection : list local_collection → list expr → tactic (l
 meta def tactic_view_goal {γ} (local_c : tc local_collection γ) (target_c : tc expr γ) : tc filter_type γ :=
 tc.stateless $ λ ft, do
   g@(expr.mvar u_n pp_n y) ← main_goal,
-  set_goals [g],
+  t ← get_tag g,
+  let case_tag : list (html γ) :=
+    match interactive.case_tag.parse t with
+    | some t :=
+      [h "li" [key "_case"] $ [h "span" [cn "goal-case b"] ["case"]] ++
+        (t.case_names.bind $ λ n, [" ", n])]
+    | none := []
+    end,
   lcs ← local_context,
   lcs ← list.mfilter (filter_local ft) lcs,
   lcs ← to_local_collection [] lcs,
   lchs ← lcs.mmap (λ lc, do
     lh ← local_c lc,
-    ns ← pure $ lc.locals.map (λ n, h "span" [cn "goal-hyp b ml2"] [html.of_name $ expr.local_pp_name n]),
+    ns ← pure $ lc.locals.map (λ n, h "span" [cn "goal-hyp b"] [html.of_name $ expr.local_pp_name n]),
     pure $ h "li" [key lc.key] (ns ++ [" : ", h "span" [cn "goal-hyp-type"] [lh]])),
   t_comp ← target_c g,
-  pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ lchs ++ [
+  pure $ h "ul" [key g.hash, className "list pl0 font-code"] $ case_tag ++ lchs ++ [
     h "li" [key u_n] [
       h "span" [cn "goal-vdash b"] ["⊢ "],
       t_comp
@@ -236,8 +243,7 @@ tc.mk_simple
     let goal_message : html γ := h "strong" [cn "goal-goals"] [goal_message],
     let goals : html γ := h "ul" [className "list pl0"]
         $ list.map_with_index (λ i x,
-          let border_cn := if i < hs.length then "ba bl-0 bt-0 br-0 b--dotted b--black-30" else "" in
-          h "li" [className $ "lh-copy " ++ border_cn, key i] [x])
+          h "li" [className $ "lh-copy mt2", key i] [x])
         $ (goal_message :: hs),
     pure [
       h "div" [className "fr"] [html.of_component ft $ component.map_action tactic_view_action.filter filter_component],
