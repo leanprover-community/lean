@@ -194,11 +194,9 @@ void widget_info::update(json const & message, json & record) {
         record["widget"]["column"] = m_pos.second;
         record["widget"]["id"] = m_id;
         if (result) {
-            record["status"] = "edit";
-            record["action"] = to_string(*result);
-        } else {
-            record["status"] = "success";
+            record["effects"] = get_effect(*result);
         }
+        record["status"] = "success";
     } catch (const invalid_handler & e) {
         record["status"] = "invalid_handler";
     }
