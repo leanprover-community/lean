@@ -83,7 +83,7 @@ json vdom_element::to_json(list<unsigned> const & route) {
 
 component_instance::component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : m_component(c), m_props(props), m_route(route) {
     lean_assert(cidx(c) == component_idx::mk);
-    m_id = g_fresh_component_instance_id.fetch_add(1);
+    m_id = g_fresh_component_instance_id.fetch_add(1) + 1;
     m_has_rendered = false;
     m_reconcile_count = 0;
     m_component_hash = hash(c);

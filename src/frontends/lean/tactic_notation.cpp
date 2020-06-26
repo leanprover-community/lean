@@ -190,7 +190,12 @@ static expr parse_interactive_tactic(parser & p, name const & decl_name, name co
             }
             while (p.curr_lbp() >= get_max_prec()) {
                 p.check_break_before();
+                auto pos = p.pos();
                 args.push_back(p.parse_expr(get_max_prec()));
+                if (p.pos() == pos) {
+                    // parse_expr does not necessarily consume input if there is a syntax error
+                    break;
+                }
             }
             p.check_break_before();
         } catch (break_at_pos_exception &) {

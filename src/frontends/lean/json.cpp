@@ -40,6 +40,11 @@ json json_of_message(message const & msg) {
     j["severity"]  = json_of_severity(msg.get_severity());
     j["caption"]   = msg.get_caption();
     j["text"]      = msg.get_text();
+    if (msg.get_widget_id()) {
+        j["widget"]["id"] = msg.get_widget_id();
+        j["widget"]["line"] = msg.get_pos().first;
+        j["widget"]["column"] = msg.get_pos().second;
+    }
     return j;
 }
 

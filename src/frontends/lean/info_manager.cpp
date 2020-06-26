@@ -80,6 +80,9 @@ vm_obj_format_info const * is_vm_obj_format_info(info_data const & d) {
 widget_info const * is_widget_info(info_data const & d) {
     return dynamic_cast<widget_info const *>(d.raw());
 }
+widget_goal_info const * is_widget_goal_info(info_data const & d) {
+    return dynamic_cast<widget_goal_info const *>(d.raw());
+}
 
 
 class term_goal_data : public widget_info {
@@ -95,6 +98,7 @@ public:
         expr new_goal = mctx.mk_metavar_decl(goal->get_context(), goal->get_type());
         m_state = set_mctx_goals(m_state, mctx, list<expr>(new_goal));
 
+        if (!get_global_module_mgr()->get_report_widgets()) { return; }
         if (m_env.find(get_widget_term_goal_widget_name())) try {
             vm_state S(m_env, options());
             vm_obj widget = S.get_constant(get_widget_term_goal_widget_name());
@@ -104,9 +108,12 @@ public:
         } catch (exception &) {}
     }
 
-    virtual void report(io_state_stream const & out, json & record) const override {
+    virtual void report(io_state_stream const &, json & record) const override {
         record["state"] = (sstream() << m_state.pp()).str();
-        widget_info::report(out, record);
+        if (!m_vdom.raw()) return;
+        record["widget"]["line"] = m_pos.first;
+        record["widget"]["column"] = m_pos.second;
+        record["widget"]["id"] = m_id;
     }
 
     tactic_state const & get_tactic_state() const { return m_state; }
@@ -135,7 +142,7 @@ json widget_info::to_json() const {
     return vd->to_json();
 }
 
-void widget_info::report(io_state_stream const &, json & record) const {
+void widget_goal_info::report(io_state_stream const &, json & record) const {
     if (!m_vdom.raw()) return;
     if (!get_global_module_mgr()->get_report_widgets()) { return; }
     record["widget"]["line"] = m_pos.first;
@@ -203,6 +210,12 @@ info_data mk_identifier_info(name const & full_id) { return info_data(new identi
 
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
+}
+
+info_data mk_widget_goal_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
+    auto ci = new component_instance(widget, props);
+    vdom c = ci;
+    return info_data(new widget_goal_info(env, pos, ci->id(), c));
 }
 
 info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
@@ -307,6 +320,13 @@ void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj co
     add_info(pos, mk_widget_info(tactic::to_state(props).env(), pos, props, widget));
 }
 
+void info_manager::add_widget_goal_info(pos_info pos, vm_obj const & props, vm_obj const & widget) {
+#ifdef LEAN_NO_INFO
+    return;
+#endif
+    add_info(pos, mk_widget_goal_info(tactic::to_state(props).env(), pos, props, widget));
+}
+
 
 #ifdef LEAN_JSON
 void info_manager::get_info_record(environment const & env, options const & o, io_state const & ios, pos_info pos,
@@ -394,8 +414,25 @@ vm_obj tactic_save_info_thunk(vm_obj const & pos, vm_obj const & thunk, vm_obj c
 vm_obj tactic_save_widget(vm_obj const & pos, vm_obj const & widget, vm_obj const & s) {
     try {
         if (g_info_m) {
-            g_info_m->add_widget_info(to_pos_info(pos), s, widget);
+            g_info_m->add_widget_goal_info(to_pos_info(pos), s, widget);
         }
+        return tactic::mk_success(tactic::to_state(s));
+    } catch (exception & ex) {
+        return tactic::mk_exception(ex, tactic::to_state(s));
+    }
+}
+
+vm_obj tactic_trace_widget_at(vm_obj const & _pos, vm_obj const & widget, vm_obj const & _text, vm_obj const & s) {
+    try {
+#ifndef LEAN_NO_INFO
+        if (g_info_m && get_global_module_mgr()->get_report_widgets()) {
+            auto pos = to_pos_info(_pos);
+            auto wi = mk_widget_info(tactic::to_state(s).env(), pos, s, widget);
+            auto & loc = logtree().get_location();
+            g_info_m->add_info(pos, wi);
+            logtree().add(std::make_shared<message>(loc.m_file_name, pos, to_string(_text), is_widget_info(wi)->id()));
+        }
+#endif
         return tactic::mk_success(tactic::to_state(s));
     } catch (exception & ex) {
         return tactic::mk_exception(ex, tactic::to_state(s));
@@ -405,6 +442,7 @@ vm_obj tactic_save_widget(vm_obj const & pos, vm_obj const & widget, vm_obj cons
 void initialize_info_manager() {
     DECLARE_VM_BUILTIN(name({"tactic", "save_info_thunk"}),  tactic_save_info_thunk);
     DECLARE_VM_BUILTIN(name({"tactic", "save_widget"}),  tactic_save_widget);
+    DECLARE_VM_BUILTIN(name({"tactic", "trace_widget_at"}),  tactic_trace_widget_at);
 }
 void finalize_info_manager() {
 }
