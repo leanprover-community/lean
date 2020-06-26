@@ -341,6 +341,14 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
     return elements;
 }
 
+json to_file_name(vm_obj const & a) {
+    if (is_none(a)) {
+        return nullptr;
+    } else {
+        return to_string(get_some_value(a));
+    }
+}
+
 json get_effect(vm_obj const & o_effects) {
     json result = json::array();
     list<vm_obj> effects = to_list(o_effects);
@@ -353,10 +361,11 @@ json get_effect(vm_obj const & o_effects) {
                 });
                 break;
             } case effect_idx::reveal_position: {
+
                 auto pos = to_pos_info(cfield(e, 1));
                 result.push_back({
                     {"kind", "reveal_position"},
-                    {"file_name", to_string(cfield(e, 0))},
+                    {"file_name", to_file_name(cfield(e, 0))},
                     {"line", pos.first},
                     {"column", pos.second}
                 });
@@ -365,7 +374,7 @@ json get_effect(vm_obj const & o_effects) {
                 auto pos = to_pos_info(cfield(e, 1));
                 result.push_back({
                     {"kind", "highlight_position"},
-                    {"file_name", to_string(cfield(e, 0))},
+                    {"file_name", to_file_name(cfield(e, 0))},
                     {"line", pos.first},
                     {"column", pos.second}
                 });

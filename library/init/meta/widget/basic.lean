@@ -283,8 +283,8 @@ meta def with_key {β} [has_to_string β] : β → html α → html α
 and can give instructions to the editor to perform some task. -/
 meta inductive effect : Type
 | insert_text (text : string)
-| reveal_position (file_name : string) (p : pos)
-| highlight_position (file_name : string) (p : pos)
+| reveal_position (file_name : option string) (p : pos)
+| highlight_position (file_name : option string) (p : pos)
 | clear_highlighting
 | custom (key : string) (value : string)
 
