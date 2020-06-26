@@ -361,7 +361,6 @@ json get_effect(vm_obj const & o_effects) {
                 });
                 break;
             } case effect_idx::reveal_position: {
-
                 auto pos = to_pos_info(cfield(e, 1));
                 result.push_back({
                     {"kind", "reveal_position"},
