@@ -279,19 +279,30 @@ meta def with_cn : string → html α → html α
 meta def with_key {β} [has_to_string β] : β → html α → html α
 | s h := with_attr (key s) h
 
+/-- An effect is an action at the root of the widget component hierarchy
+and can give instructions to the editor to perform some task. -/
+meta inductive effect : Type
+| insert_text (text : string)
+| reveal_position (file_name : string) (p : pos)
+| highlight_position (file_name : string) (p : pos)
+| clear_highlighting
+| custom (key : string) (value : string)
+
+meta def effects := list effect
+
 end widget
 
 namespace tactic
 
 /-- Same as `tactic.save_info_thunk` except saves a widget to be displayed by a compatible infoviewer. -/
-meta constant save_widget : pos → widget.component tactic_state string → tactic unit
+meta constant save_widget : pos → widget.component tactic_state widget.effects → tactic unit
 
 /-- Outputs a widget trace position at the given position. -/
-meta constant trace_widget_at (p : pos) (w : widget.component tactic_state string)
+meta constant trace_widget_at (p : pos) (w : widget.component tactic_state widget.effects)
      (text := "(widget)") : tactic unit
 
 /-- Outputs a widget trace position at the current default trace position. -/
-meta def trace_widget (w : widget.component tactic_state string) (text := "(widget)") : tactic unit :=
+meta def trace_widget (w : widget.component tactic_state widget.effects) (text := "(widget)") : tactic unit :=
 do p ← get_trace_msg_pos, trace_widget_at p w text
 
 end tactic

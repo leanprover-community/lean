@@ -132,4 +132,7 @@ public:
     virtual void rethrow() const { throw *this; }
 };
 
+
+json get_effect(vm_obj const & effect);
+
 }

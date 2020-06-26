@@ -12,6 +12,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_pos_info.h"
 #include "util/list.h"
 #include "frontends/lean/widget.h"
 #include "frontends/lean/json.h"
@@ -36,8 +37,13 @@ enum attr_idx {
     tooltip = 7,
     text_change_event = 8
 };
-
-
+enum effect_idx {
+    insert_text = 0,
+    reveal_position = 1,
+    highlight_position = 2,
+    clear_highlighting = 3,
+    custom = 4,
+};
 
 std::atomic_uint g_fresh_component_instance_id;
 
@@ -334,6 +340,56 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
     }
     return elements;
 }
+
+json get_effect(vm_obj const & o_effects) {
+    json result = json::array();
+    list<vm_obj> effects = to_list(o_effects);
+    for (auto e : effects) {
+        switch (cidx(e)) {
+            case effect_idx::insert_text: {
+                result.push_back({
+                    {"kind", "insert_text"},
+                    {"text", to_string(cfield(e, 0))}
+                });
+                break;
+            } case effect_idx::reveal_position: {
+                auto pos = to_pos_info(cfield(e, 1));
+                result.push_back({
+                    {"kind", "reveal_position"},
+                    {"file_name", to_string(cfield(e, 0))},
+                    {"line", pos.first},
+                    {"column", pos.second}
+                });
+                break;
+            } case effect_idx::highlight_position: {
+                auto pos = to_pos_info(cfield(e, 1));
+                result.push_back({
+                    {"kind", "highlight_position"},
+                    {"file_name", to_string(cfield(e, 0))},
+                    {"line", pos.first},
+                    {"column", pos.second}
+                });
+                break;
+            } case effect_idx::clear_highlighting: {
+                result.push_back({
+                    {"kind", "clear_highlighting"}
+                });
+                break;
+            } case effect_idx::custom: {
+                result.push_back({
+                    {"kind", "custom"},
+                    {"key", to_string(cfield(e, 0))},
+                    {"value", to_string(cfield(e, 1))}
+                });
+                break;
+            } default: {
+                lean_unreachable();
+            }
+        }
+    }
+    return result;
+}
+
 
 void initialize_widget() {}
 
