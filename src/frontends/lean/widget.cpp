@@ -20,6 +20,25 @@ Author: E.W.Ayers
 
 namespace lean {
 
+// derived from library/init/meta/widget/basic.lean
+enum component_idx {
+    mk = 0
+};
+enum html_idx {
+    element = 1,
+    of_string = 2,
+    of_component = 3
+};
+enum attr_idx {
+    val = 4,
+    mouse_event = 5,
+    style = 6,
+    tooltip = 7,
+    text_change_event = 8
+};
+
+
+
 std::atomic_uint g_fresh_component_instance_id;
 
 optional<std::string> vdom_element::key() {
@@ -63,6 +82,7 @@ json vdom_element::to_json(list<unsigned> const & route) {
 }
 
 component_instance::component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : m_component(c), m_props(props), m_route(route) {
+    lean_assert(cidx(c) == component_idx::mk);
     m_id = g_fresh_component_instance_id.fetch_add(1);
     m_has_rendered = false;
     m_reconcile_count = 0;
@@ -233,7 +253,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
         vm_obj attr = head(v_attrs);
         v_attrs = tail(v_attrs);
         switch (cidx(attr)) {
-            case 4: { // val {\a} : string -> string -> attr
+            case attr_idx::val: { // val {\a} : string -> string -> attr
                 std::string key = to_string(cfield(attr, 0));
                 std::string value = to_string(cfield(attr, 1));
                 // [note] className fields should be merged.
@@ -246,7 +266,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     attributes[key] = value;
                 }
                 break;
-            } case 5: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
+            } case attr_idx::mouse_event: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
                 int mouse_event_kind = cidx(cfield(attr, 0));
                 vm_obj handler = cfield(attr, 1);
                 switch (mouse_event_kind) {
@@ -256,7 +276,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     default: lean_unreachable();
                 }
                 break;
-            } case 6: { // style {a} : list (string × string) → html.attr
+            } case attr_idx::style: { // style {a} : list (string × string) → html.attr
                 auto l = cfield(attr, 0);
                 while (!is_simple(l)) {
                     auto h = head(l);
@@ -266,12 +286,12 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     l = tail(l);
                 }
                 break;
-            } case 7: { // tooltip {a} :  html Action → html.attr
+            } case attr_idx::tooltip: { // tooltip {a} :  html Action → html.attr
                 auto content = cfield(attr, 0);
                 vdom tooltip_child = render_html(content, components, handlers, route);
                 tooltip = optional<vdom>(tooltip_child);
                 break;
-            } case 8: { // text_change_event {a} : (string -> Action) -> html.attr
+            } case attr_idx::text_change_event: { // text_change_event {a} : (string -> Action) -> html.attr
                 auto handler = cfield(attr, 0);
                 render_event("onChange", handler, events, handlers);
                 break;
@@ -287,12 +307,12 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
 
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
-        case 1: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
+        case html_idx::element: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
             vdom elt = render_element(html, components, handlers, route);
             return elt;
-        } case 2: { // | of_string    {α : Type} : string → html α
+        } case html_idx::of_string: { // | of_string    {α : Type} : string → html α
             return vdom(new vdom_string(to_string(cfield(html, 0))));
-        } case 3: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
+        } case html_idx::of_component: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
             vm_obj props = cfield(html, 0);
             vm_obj comp  = cfield(html, 1);
             component_instance * c = new component_instance(comp, props, route);
