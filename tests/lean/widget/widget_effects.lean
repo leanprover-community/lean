@@ -6,7 +6,7 @@ widget.component.mk
   nat
   (λ p s,(0) <| s)
   (λ p ls ⟨⟩, ⟨ls + 1, some ([
-    effect.reveal_position "tests/lean/widget/widget_effects.lean" (pos.mk 60 14)
+    effect.reveal_position none (pos.mk 60 14)
   ])⟩)
   (λ p s, [to_string s, button "+" (), " *** "]) (λ a b, ff)
 
