@@ -351,7 +351,12 @@ json to_file_name(vm_obj const & a) {
 
 json get_effect(vm_obj const & o_effects) {
     json result = json::array();
-    list<vm_obj> effects = to_list(o_effects);
+    buffer<vm_obj> effects;
+    vm_obj l = o_effects;
+    while (!is_simple(l)) {
+        effects.push_back(head(l));
+        l = tail(l);
+    }
     for (auto e : effects) {
         switch (cidx(e)) {
             case effect_idx::insert_text: {
