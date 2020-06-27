@@ -182,7 +182,7 @@ struct stateful_hook : public hook_cell {
 
 component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
   m_props(props), m_route(route) {
-    m_id = g_fresh_component_instance_id.fetch_add(1);
+    m_id = g_fresh_component_instance_id.fetch_add(1) + 1;
     m_reconcile_count = 0;
     m_component_hash = hash(component);
     vm_obj c = component;
