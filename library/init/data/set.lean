@@ -66,9 +66,6 @@ instance : has_inter (set α) :=
 def compl (s : set α) : set α :=
 {a | a ∉ s}
 
-instance : has_neg (set α) :=
-⟨compl⟩
-
 protected def diff (s t : set α) : set α :=
 {a ∈ s | a ∉ t}
 
