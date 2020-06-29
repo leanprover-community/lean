@@ -1361,7 +1361,7 @@ begin
     rw [nat.one_mul, nat.mul_comm] at this,
     exact iff.mpr (nat.div_lt_iff_lt_mul n n m_pos) this
   },
-  exact nat.mul_lt_mul h₂ (le_refl _) h₁ (nat.zero_le _)
+  exact nat.mul_lt_mul h₂ (le_refl _) h₁
 end
 
 end nat
