@@ -1302,7 +1302,7 @@ theorem pow_lt_pow_of_lt_left {x y : ℕ} (H : x < y) {i} (h : i > 0) : x^i < y^
 begin
   cases i with i, { exact absurd h (not_lt_zero _) },
   rw [pow_succ, pow_succ],
-  exact nat.mul_lt_mul' (pow_le_pow_of_le_left (le_of_lt H) _) H (zero_le _)
+  exact nat.mul_lt_mul' (pow_le_pow_of_le_left (le_of_lt H) _) H
     (pos_pow_of_pos _ $ lt_of_le_of_lt (zero_le _) H)
 end
 
