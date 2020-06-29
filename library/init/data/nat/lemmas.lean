@@ -1246,36 +1246,36 @@ by rw [nat.mul_comm m k, nat.mul_comm n k] at H; exact dvd_of_mul_dvd_mul_left k
 
 /- --- -/
 
-protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : c * a ≤ c * b :=
+protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) : c * a ≤ c * b :=
 begin
   by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.zero_mul] },
-  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 (zero_le c), nat.zero_mul] },
+  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le (zero_le c) hc0))).left,
 end
 
-protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) (h₂ : 0 ≤ c) : a * c ≤ b * c :=
+protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) : a * c ≤ b * c :=
 begin
   by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, nat.mul_zero] },
-  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 (zero_le c), nat.mul_zero] },
+  exact (le_not_le_of_lt (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le (zero_le c) hc0))).left,
 end
 
-protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) (nn_c : 0 ≤ c) :  a * b < c * d :=
+protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) :  a * b < c * d :=
 calc
   a * b < c * b : nat.mul_lt_mul_of_pos_right hac pos_b
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
 
-protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : b ≥ 0) (h4 : c > 0) :
+protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : 0 < c) :
        a * b < c * d :=
 calc
-   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1 h3
-     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h4
+   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1
+     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h3
 
 -- TODO: there are four variations, depending on which variables we assume to be nonneg
-protected lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) (nn_b : 0 ≤ b) (nn_c : 0 ≤ c) : a * b ≤ c * d :=
+protected lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) : a * b ≤ c * d :=
 calc
-  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac nn_b
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd nn_c
+  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
 
 /- pow -/
 
@@ -1283,13 +1283,13 @@ calc
 
 theorem pow_le_pow_of_le_left {x y : ℕ} (H : x ≤ y) : ∀ i : ℕ, x^i ≤ y^i
 | 0 := le_refl _
-| (succ i) := nat.mul_le_mul (pow_le_pow_of_le_left i) H (zero_le _) (zero_le _)
+| (succ i) := nat.mul_le_mul (pow_le_pow_of_le_left i) H
 
 theorem pow_le_pow_of_le_right {x : ℕ} (H : x > 0) {i : ℕ} : ∀ {j}, i ≤ j → x^i ≤ x^j
 | 0        h := by rw eq_zero_of_le_zero h; apply le_refl
 | (succ j) h := (lt_or_eq_of_le h).elim
   (λhl, by rw [pow_succ, ← nat.mul_one (x^i)]; exact
-    nat.mul_le_mul (pow_le_pow_of_le_right $ le_of_lt_succ hl) H (zero_le _) (zero_le _))
+    nat.mul_le_mul (pow_le_pow_of_le_right $ le_of_lt_succ hl) H)
   (λe, by rw e; refl)
 
 theorem pos_pow_of_pos {b : ℕ} (n : ℕ) (h : 0 < b) : 0 < b^n :=
@@ -1302,7 +1302,7 @@ theorem pow_lt_pow_of_lt_left {x y : ℕ} (H : x < y) {i} (h : i > 0) : x^i < y^
 begin
   cases i with i, { exact absurd h (not_lt_zero _) },
   rw [pow_succ, pow_succ],
-  exact nat.mul_lt_mul' (pow_le_pow_of_le_left (le_of_lt H) _) H (zero_le _)
+  exact nat.mul_lt_mul' (pow_le_pow_of_le_left (le_of_lt H) _) H
     (pos_pow_of_pos _ $ lt_of_le_of_lt (zero_le _) H)
 end
 
@@ -1361,7 +1361,7 @@ begin
     rw [nat.one_mul, nat.mul_comm] at this,
     exact iff.mpr (nat.div_lt_iff_lt_mul n n m_pos) this
   },
-  exact nat.mul_lt_mul h₂ (le_refl _) h₁ (nat.zero_le _)
+  exact nat.mul_lt_mul h₂ (le_refl _) h₁
 end
 
 end nat
