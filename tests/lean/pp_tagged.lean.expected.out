@@ -18,10 +18,6 @@
 " ="
 "\n"
 (tag_expr [app_arg] `(y) "y")
-(tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
-" ="
-"\n"
-(tag_expr [app_arg, app_fn, app_fn, app_fn] `(coe.{1 1}) "coe")
 "("
 (tag_expr [app_fn, app_arg] `(x) "x")
 ",\n"
@@ -60,4 +56,8 @@
 (tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
 " ="
 "\n"
-(tag_expr [app_arg, app_fn, app_fn] `(bar) "bar")
+(tag_expr [app_arg] `(coe.{1 1}) "coe")
+(tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
+" ="
+"\n"
+(tag_expr [app_arg] `(bar) "bar")
