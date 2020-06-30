@@ -81,7 +81,7 @@ meta def view {γ} (tooltip_component : tc subexpr (action γ)) (click_address :
 /-- Make an interactive expression. -/
 meta def mk {γ} (tooltip : tc subexpr γ) : tc expr γ :=
 let tooltip_comp :=
-   component.with_props_eq (λ (x y : tactic_state × expr × expr.address), x.2.2 = y.2.2)
+   component.with_should_update (λ (x y : tactic_state × expr × expr.address), x.2.2 ≠ y.2.2)
    $ component.map_action (action.on_tooltip_action) tooltip in
 tc.mk_simple
   (action γ)

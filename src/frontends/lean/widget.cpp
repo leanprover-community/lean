@@ -20,6 +20,31 @@ Author: E.W.Ayers
 
 namespace lean {
 
+
+// derived from library/init/meta/widget/basic.lean
+enum component_idx {
+    pure = 0,
+    filter_map_action = 1,
+    map_props = 2,
+    with_should_update = 3,
+    with_state = 4,
+    // with_effects
+    // with_mouse
+    // with_task
+};
+enum html_idx {
+    element = 5,
+    of_string = 6,
+    of_component = 7
+};
+enum attr_idx {
+    val = 8,
+    mouse_event = 9,
+    style = 10,
+    tooltip = 11,
+    text_change_event = 12
+};
+
 std::atomic_uint g_fresh_component_instance_id;
 
 optional<std::string> vdom_element::key() {
@@ -40,16 +65,22 @@ void vdom_element::reconcile(vdom const & old_vdom) {
         }
     }
 }
-json vdom_element::to_json(list<unsigned> const & route) {
-    json entry;
-    entry["t"] = m_tag;
-    entry["a"] = m_attrs;
+
+json route_to_json(list<unsigned> const & route) {
     json jr = json::array();
     for (auto const & i : route) {
         jr.push_back(i);
     }
+    return jr;
+}
+
+json vdom_element::to_json(list<unsigned> const & route) {
+    json entry;
+    entry["t"] = m_tag;
+    entry["a"] = m_attrs;
+
     for (auto const & x : m_events) {
-        entry["e"][x.first]["r"] = jr;
+        entry["e"][x.first]["r"] = route_to_json(route);
         entry["e"][x.first]["h"] = json(x.second);
     }
     entry["c"] = json::array();
@@ -62,37 +93,133 @@ json vdom_element::to_json(list<unsigned> const & route) {
     return entry;
 }
 
-component_instance::component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route) : m_component(c), m_props(props), m_route(route) {
+struct filter_map_action_hook : public hook_cell {
+    ts_vm_obj const m_map;
+    ts_vm_obj m_props;
+    virtual void initialize(vm_obj const & props) override {
+        m_props = props;
+    }
+    virtual bool reconcile(vm_obj const & props, hook const &) override {
+        m_props = props;
+        return true;
+    }
+    virtual optional<vm_obj> action(vm_obj const & action) override {
+        vm_obj props = m_props.to_vm_obj();
+        lean_assert(props);
+        vm_obj o = invoke(m_map.to_vm_obj(), props, action);
+        return get_optional(o);
+    }
+    std::string to_string() { return "filter_map_action"; }
+    filter_map_action_hook(ts_vm_obj const map): m_map(map) {}
+};
+
+struct map_props_hook: public hook_cell {
+    ts_vm_obj const m_map;
+    virtual vm_obj get_props(vm_obj const & props) override {
+        return invoke(m_map.to_vm_obj(), props);
+    }
+    std::string to_string() { return "map_props"; }
+    map_props_hook(ts_vm_obj const map): m_map(map) {}
+};
+
+struct with_should_update_hook : public hook_cell {
+    ts_vm_obj const m_su;
+    ts_vm_obj m_props;
+    virtual void initialize(vm_obj const & props) override {
+        m_props = props;
+    }
+    virtual bool reconcile(vm_obj const & new_props, hook const & previous) override {
+        with_should_update_hook const * prev = dynamic_cast<with_should_update_hook const *>(previous.get());
+        if (!prev) {return true;}
+        vm_obj prev_props = (prev->m_props).to_vm_obj();
+        if (!prev_props) {return true;}
+        m_props = new_props;
+        return to_bool(invoke(m_su.to_vm_obj(), prev_props, new_props));
+    }
+    std::string to_string() { return "should_update"; }
+    with_should_update_hook(ts_vm_obj const su): m_su(su) {}
+};
+
+struct stateful_hook : public hook_cell {
+    ts_vm_obj const m_init;
+    ts_vm_obj const m_props_changed;
+    ts_vm_obj const m_update;
+    optional<ts_vm_obj> m_props;
+    optional<ts_vm_obj> m_state;
+    void initialize(vm_obj const & props) override {
+        if (!m_state || !m_props) {
+            m_state = optional<ts_vm_obj>(invoke(m_init.to_vm_obj(), props));
+        } else {
+            vm_obj r = invoke(m_props_changed.to_vm_obj(), (*m_props).to_vm_obj(), props, (*m_state).to_vm_obj());
+            m_state = optional<ts_vm_obj>(r);
+        }
+        m_props = optional<ts_vm_obj>(props);
+    }
+    bool reconcile(vm_obj const & props, hook const & previous) override {
+        stateful_hook const * prev = dynamic_cast<stateful_hook const *>(previous.get());
+        // assume the props have changed
+        if (prev) {
+            m_state = prev->m_state;
+            m_props = prev->m_props;
+        }
+        initialize(props);
+        return true;
+    }
+    vm_obj get_props(vm_obj const & props) override {
+        if (!m_state) {initialize(props);}
+        return mk_vm_pair((*m_state).to_vm_obj(), props);
+    }
+    optional<vm_obj> action(vm_obj const & action) override {
+        lean_assert(m_state);
+        lean_assert(m_props);
+        vm_obj r = invoke(m_update.to_vm_obj(), (*m_props).to_vm_obj(), (*m_state).to_vm_obj(), action);
+        m_state = cfield(r, 0);
+        return get_optional(cfield(r, 1));
+    }
+    std::string to_string() { return "stateful"; }
+    stateful_hook(vm_obj const & init, vm_obj const & pc, vm_obj const & update) : m_init(init), m_props_changed(pc), m_update(update) {}
+};
+
+component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
+  m_props(props), m_route(route) {
     m_id = g_fresh_component_instance_id.fetch_add(1) + 1;
-    m_has_rendered = false;
     m_reconcile_count = 0;
-    m_component_hash = hash(c);
-}
-
-vm_obj component_instance::init(vm_obj const & p, optional<vm_obj> const & s) {
-    vm_obj os = s ? mk_vm_some(*s) : mk_vm_none();
-    return invoke(cfield(m_component.to_vm_obj(), 0), p, os);
-}
-
-pair<vm_obj, optional<vm_obj>> component_instance::update(vm_obj const & p, vm_obj const & s, vm_obj const & a) {
-    vm_obj sa = invoke(cfield(m_component.to_vm_obj(), 1), p, s, a);
-    vm_obj oa = cfield(sa, 1);
-    optional<vm_obj> o = is_none(oa) ? optional<vm_obj>() : optional<vm_obj>(get_some_value(oa));
-    return mk_pair(cfield(sa, 0), o);
-}
-
-vm_obj component_instance::view(vm_obj const & p, vm_obj const & s) {
-    return invoke(cfield(m_component.to_vm_obj(), 2), p, s);
-}
-
-bool component_instance::props_are_equal(vm_obj const & p_old, vm_obj const & p_new) {
-    return to_bool(invoke(cfield(m_component.to_vm_obj(), 3), p_old, p_new));
+    m_component_hash = hash(component);
+    vm_obj c = component;
+    while (cidx(c) != component_idx::pure) {
+        switch (cidx(c)) {
+            case component_idx::pure: break;
+            case component_idx::filter_map_action:
+                m_hooks.push_back(hook(new filter_map_action_hook(cfield(c, 0))));
+                c = cfield(c, 1);
+                break;
+            case component_idx::map_props:
+                m_hooks.push_back(hook(new map_props_hook(cfield(c, 0))));
+                c = cfield(c, 1);
+                break;
+            case component_idx::with_should_update:
+                m_hooks.push_back(hook(new with_should_update_hook(cfield(c, 0))));
+                c = cfield(c, 1);
+                break;
+            case component_idx::with_state:
+                m_hooks.push_back(hook(new stateful_hook(cfield(c, 0), cfield(c, 1), cfield(c, 2))));
+                c = cfield(c, 3);
+                break;
+            default:
+                lean_unreachable();
+                break;
+        }
+    }
+    m_view = cfield(c, 0);
 }
 
 void component_instance::render() {
+    lean_assert(m_has_initialized);
     std::vector<component_instance *> children;
     event_handlers handlers;
-    std::vector<vdom> elements = render_html_list(view(m_props.to_vm_obj(), (*m_state).to_vm_obj()), children, handlers, cons(m_id, m_route));
+    vm_obj props = m_inner_props.to_vm_obj();
+    vm_obj view = invoke(m_view.to_vm_obj(), props);
+    std::vector<vdom> elements = render_html_list(view, children, handlers, cons(m_id, m_route));
     std::vector<vdom> old_elements = m_render;
     reconcile_children(elements, old_elements);
     m_handlers = handlers;
@@ -102,49 +229,76 @@ void component_instance::render() {
 }
 
 void component_instance::reconcile(vdom const & old) {
-    lean_assert(!m_has_rendered);
-    component_instance * ci_old = dynamic_cast<component_instance *>(old.raw());
-    // [FIXME] There are false negatives here when the
-    // component vm object contains vm_externals.
+    component_instance const * ci_old = dynamic_cast<component_instance *>(old.raw());
     // If they contain vm_externals which are not hashable then we assume they are the same component.
-    // This is acceptable, but confusing, behaviour for now. It just means that the component won't always
+    // This is acceptable behaviour for now. It just means that the component won't always
     // update correctly if a non-prop dependency of a component changes.
     // But users of components should be using Props anyway so there is a workaround.
-    if (ci_old->m_component_hash == m_component_hash) {
+    if (ci_old && ci_old->m_component_hash == m_component_hash && m_hooks.size() == ci_old->m_hooks.size()) {
+        lean_assert(ci_old->m_has_initialized);
         // if the components are the same:
-        // note that this doesn't occur if they do the same thing but were made with different calls to component.mk.
         vm_obj p_new = m_props.to_vm_obj();
         vm_obj p_old = ci_old->m_props.to_vm_obj();
-        m_id       = ci_old->m_id;
-        if (p_new == p_old || props_are_equal(p_old, p_new)) {
+        bool should_update = true;
+        for (unsigned i = 0; i < m_hooks.size(); i++) {
+            if (should_update) {
+                bool result = m_hooks[i]->reconcile(p_new, ci_old->m_hooks[i]);
+                if (!result) {
+                    should_update = false;
+                }
+            } else {
+                // a prior hook decided that later hooks shouldn't update, so we
+                // assume that the old hooks are valid here.
+                m_hooks[i] = ci_old->m_hooks[i];
+            }
+            p_new = m_hooks[i]->get_props(p_new);
+        }
+        m_inner_props = p_new;
+        m_has_initialized = true;
+        m_id              = ci_old->m_id;
+
+        if (!should_update) {
             // the props are equal and the state didn't change, so we can just keep the old rendering.
-            m_handlers = ci_old->m_handlers;
-            m_children = ci_old->m_children;
-            m_render   = ci_old->m_render;
-            m_state    = ci_old->m_state;
-            m_has_rendered = true;
+            m_children        = ci_old->m_children;
+            m_render          = ci_old->m_render;
+            m_handlers        = ci_old->m_handlers;
+            m_has_rendered    = true;
             m_reconcile_count = ci_old->m_reconcile_count + 1;
             lean_assert(m_route == ci_old->m_route);
         } else {
             // the props have changed, so we need to rerender this component.
-            // we use `init` to recompute the state.
-            optional<vm_obj> old_state = some((*(ci_old->m_state)).to_vm_obj());
-            ts_vm_obj new_state = init(m_props.to_vm_obj(), old_state);
-            m_state = optional<ts_vm_obj>(new_state);
             render();
         }
     } else {
         // The old component is completely different, so render as a fresh component.
-        m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()));
+        initialize();
         render();
     }
 }
 
+void component_instance::initialize() {
+    vm_obj p = m_props.to_vm_obj();
+    for (auto h : m_hooks) {
+        h->initialize(p);
+        p = h->get_props(p);
+    }
+    m_inner_props = p;
+    m_has_initialized = true;
+}
+
+void component_instance::compute_props() {
+    vm_obj props = m_props.to_vm_obj();
+    for (auto h : m_hooks) {
+        props = h->get_props(props);
+    }
+    m_inner_props = props;
+}
+
 json component_instance::to_json(list<unsigned> const & route) {
+    if (!m_has_initialized) {
+        initialize();
+    }
     if (!m_has_rendered) {
-        if (!m_state) {
-            m_state = some<ts_vm_obj>(init(m_props.to_vm_obj(), optional<vm_obj>()));
-        }
         render();
     }
     json children = json::array();
@@ -156,26 +310,27 @@ json component_instance::to_json(list<unsigned> const & route) {
     return result;
 }
 
-optional<vm_obj> component_instance::handle_action(vm_obj const & a) {
-    auto p = update(m_props.to_vm_obj(), (*m_state).to_vm_obj(), a);
-    m_state = p.first;
-    render();
-    return p.second;
+optional<vm_obj> component_instance::handle_action(vm_obj const & action) {
+        optional<vm_obj> result = optional<vm_obj>(action);
+        for (int i = m_hooks.size() - 1; i >= 0; i--) {
+            if (!result) {break;}
+            result = m_hooks[i]->action(*result);
+        }
+        compute_props();
+        render();
+        return result;
 }
 
 optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args) {
     if (empty(route)) {
         if (m_handlers.find(handler_id) == m_handlers.end()) {
-            // component may have rerendered, but handler_id refers to event handler on older component.
             throw invalid_handler();
         }
-        ts_vm_obj handler = m_handlers[handler_id];
-        // [todo] to prevent a VM error in the case of bad client code, we should check that the 'type' of the event_args here is the same as what the handler expects.
-        // the event record from the client should have a `type` member which can be checked. So each of `m_handlers` should also include a string 'type' to check against.
-        auto action = invoke(handler.to_vm_obj(), event_args);
+        vm_obj handler = m_handlers[handler_id].to_vm_obj();
+        vm_obj action = (invoke(handler, event_args));
         return handle_action(action);
     }
-    for (auto const & c : m_children) {
+    for (auto c : m_children) {
         if (c->m_id == head(route)) {
             optional<vm_obj> a = c->handle_event(tail(route), handler_id, event_args);
             if (a) {
@@ -185,8 +340,15 @@ optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, 
             }
         }
     }
-    // given component no longer exists. This happens if the ui is updated but there are events from an old
+    // given component no longer exists. This happens if the ui is updated but there are events from an old vdom
     throw invalid_handler();
+}
+
+component_instance * component_instance::get_child(unsigned id) {
+    for (auto c : m_children) {
+        if (c->m_id == id) { return c; }
+    }
+    return nullptr;
 }
 
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & olds) {
@@ -233,7 +395,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
         vm_obj attr = head(v_attrs);
         v_attrs = tail(v_attrs);
         switch (cidx(attr)) {
-            case 4: { // val {\a} : string -> string -> attr
+            case attr_idx::val: { // val {\a} : string -> string -> attr
                 std::string key = to_string(cfield(attr, 0));
                 std::string value = to_string(cfield(attr, 1));
                 // [note] className fields should be merged.
@@ -246,7 +408,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     attributes[key] = value;
                 }
                 break;
-            } case 5: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
+            } case attr_idx::mouse_event: {// on_mouse_event {\a} : mouse_event_kind -> (unit -> Action) -> html.attr
                 int mouse_event_kind = cidx(cfield(attr, 0));
                 vm_obj handler = cfield(attr, 1);
                 switch (mouse_event_kind) {
@@ -256,7 +418,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     default: lean_unreachable();
                 }
                 break;
-            } case 6: { // style {a} : list (string × string) → html.attr
+            } case attr_idx::style: { // style {a} : list (string × string) → html.attr
                 auto l = cfield(attr, 0);
                 while (!is_simple(l)) {
                     auto h = head(l);
@@ -266,12 +428,12 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                     l = tail(l);
                 }
                 break;
-            } case 7: { // tooltip {a} :  html Action → html.attr
+            } case attr_idx::tooltip: { // tooltip {a} :  html Action → html.attr
                 auto content = cfield(attr, 0);
                 vdom tooltip_child = render_html(content, components, handlers, route);
                 tooltip = optional<vdom>(tooltip_child);
                 break;
-            } case 8: { // text_change_event {a} : (string -> Action) -> html.attr
+            } case attr_idx::text_change_event: { // text_change_event {a} : (string -> Action) -> html.attr
                 auto handler = cfield(attr, 0);
                 render_event("onChange", handler, events, handlers);
                 break;
@@ -287,12 +449,12 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
 
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route) {
     switch (cidx(html)) {
-        case 1: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
+        case html_idx::element: { // | of_element {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
             vdom elt = render_element(html, components, handlers, route);
             return elt;
-        } case 2: { // | of_string    {α : Type} : string → html α
+        } case html_idx::of_string: { // | of_string    {α : Type} : string → html α
             return vdom(new vdom_string(to_string(cfield(html, 0))));
-        } case 3: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
+        } case html_idx::of_component: { // | of_component {α : Type} {Props : Type} : Props → component Props α → html α
             vm_obj props = cfield(html, 0);
             vm_obj comp  = cfield(html, 1);
             component_instance * c = new component_instance(comp, props, route);

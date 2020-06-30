@@ -2,20 +2,20 @@
 open widget
 
 meta def asdf_c (message : list string) : component nat empty :=
-widget.component.mk
+widget.component.stateful
   unit
   (list nat)
   (λ p s, p :: ([] <| s))
   (λ p ls x, (ls,none))
-  (λ p ss, [h "div" [] [html.of_string $ to_string p ++ to_string message ++ to_string ss], button "asdf" ()]) (λ a b, a = b)
+  (λ p ss, [h "div" [] [html.of_string $ to_string p ++ to_string message ++ to_string ss], button "asdf" ()])
 
 meta def qwerty_c : component tactic_state string :=
-widget.component.mk
+widget.component.stateful
   unit
   nat
   (λ p s,(0) <| s)
   (λ p ls ⟨⟩, ⟨ls + 1, none⟩)
-  (λ p s, [to_string s, button "+" (), html.of_component s (asdf_c [" *** "])]) (λ a b, ff)
+  (λ p s, [to_string s, button "+" (), html.of_component s (asdf_c [" *** "])])
 
 #html qwerty_c
 

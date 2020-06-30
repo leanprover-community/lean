@@ -74,44 +74,72 @@ struct vdom_string : public vdom_cell {
     json to_json(list<unsigned> const &) override { return m_val; }
 };
 
-class component_instance : public vdom_cell {
-    ts_vm_obj const m_component;
-    unsigned int m_component_hash;
-
-    ts_vm_obj m_props;
-    optional<ts_vm_obj> m_state;
-
-    std::vector<vdom> m_render;
-    // [note] these component instances are owned by one of the vdoms in `m_render`.
-    // Should never point to something not owned by m_render.
-    std::vector<component_instance *> m_children;
-    event_handlers m_handlers;
-
-    unsigned m_id;
-    list<unsigned> m_route;
-
-    bool m_has_rendered;
-    unsigned m_reconcile_count;
-
-    vm_obj init(vm_obj const & p, optional<vm_obj> const & s);
-    pair<vm_obj, optional<vm_obj>> update(vm_obj const & p, vm_obj const & s, vm_obj const & a);
-    vm_obj view(vm_obj const & p, vm_obj const & s);
-    bool props_are_equal(vm_obj const & p_old, vm_obj const & p_new);
+class hook_cell;
+typedef std::shared_ptr<hook_cell> hook;
+class hook_cell {
 public:
-    void render();
-    component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
-    json to_json(list<unsigned> const & route) override;
-    void reconcile(vdom const & old);
-    optional<vm_obj> handle_action(vm_obj const & a);
-    optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
-    unsigned id() const { return m_id; }
+  hook_cell() {}
+  virtual ~hook_cell() {}
+  /** Called for a fresh component with no previous value. */
+  virtual void initialize(vm_obj const &) {};
+  /** Update the hook based on the previous value.
+   * This should be called whenever the props change.
+   * If it returns true then the view should rerender.
+   * If false is returned then all of the later hooks will not be reconciled.
+   */
+  virtual bool reconcile(vm_obj const &, hook const &) { return true; };
+  virtual vm_obj get_props(vm_obj const & props) { return props; }
+  virtual optional<vm_obj> action(vm_obj const & action) { return optional<vm_obj>(action); };
+  virtual std::string to_string() {return "hook";}
+};
+
+class component_instance : public vdom_cell {
+  // set on construction
+  unsigned int m_component_hash;
+  ts_vm_obj m_view;
+  ts_vm_obj const m_props;
+  std::vector<hook> m_hooks;
+  unsigned m_id;
+  // set on initialisation / reconciliation
+  bool m_has_initialized = false;
+  ts_vm_obj m_inner_props;
+  list<unsigned> m_route;
+  unsigned m_reconcile_count = 0;
+  // set on rendering
+  bool m_has_rendered = false;
+  std::vector<component_instance *> m_children;
+  std::vector<vdom> m_render;
+  event_handlers m_handlers;
+
+  list<unsigned> child_route() {return cons(m_id, m_route); }
+  /** convert an inner action to an outer action */
+  optional<vm_obj> handle_action(vm_obj const & a);
+  /** Compute the vdom tree for this component.
+   * Assumes that initialize or reconcile was called. */
+  void render();
+  void compute_props();
+  void reconcile(vdom const & old);
+  /** Perform initialisation step:
+   *  initialise the hooks, including setting states.
+   */
+  void initialize();
+
+  component_instance * get_child(unsigned id);
+
+public:
+  json to_json(list<unsigned> const & route) override;
+
+  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+  component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
+  unsigned id() {return m_id;}
 };
 
 /** Iterates, new_elements and old_elements, mutating both (but old_elements is passed by value so that doesn't matter).
- *  new_children is mutated so that they point to vdom components that were successfully reconciled with the old version.
+ *  `new_children` is mutated so that they point to vdom components that were successfully reconciled with the old version.
  */
 void reconcile_children(std::vector<vdom> & new_elements, std::vector<vdom> const & old_elements);
 
+// void render_attr(vm_obj const & attr, json & attributes, std::map<std::string, unsigned> & events, event_handlers & handlers);
 vdom render_element(vm_obj const & elt, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
 std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
