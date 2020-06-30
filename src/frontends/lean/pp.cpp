@@ -663,7 +663,7 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool 
                 return pp_child_at(f, bp, expr_address::fn(), ignore_hide, true);
             } else {
               address_scope _(*this, expr_address::fn());
-              address_reset_scope ars(*this); 
+              address_reset_scope ars(*this);
               return tag(ars.m_adr, f, pp_child_at(f, bp, expr_address::fn(), ignore_hide, true));
             }
         } else if (!m_coercion && is_coercion(e)) {
