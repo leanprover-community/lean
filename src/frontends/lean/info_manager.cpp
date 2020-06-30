@@ -168,6 +168,8 @@ void widget_info::update(json const & message, json & record) {
     lock_guard<mutex> _(m_mutex);
     vm_state S(m_env, options());
     scope_vm_state scope(S);
+    widget_context wc;
+    set_global_widget_context(&wc);
     unsigned handler_idx = message["handler"]["h"];
     json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
     list<unsigned> route; // now root index is at the _front_.
@@ -193,9 +195,15 @@ void widget_info::update(json const & message, json & record) {
         record["widget"]["line"] = m_pos.first;
         record["widget"]["column"] = m_pos.second;
         record["widget"]["id"] = m_id;
-        if (result) {
-            record["status"] = "edit";
-            record["action"] = to_string(*result);
+        if (!wc.m_effects.empty()) {
+            json j_effects = json::array();
+            for (auto effect : wc.m_effects) {
+                get_effects(effect, j_effects);
+            }
+            record["effects"] = j_effects;
+        }
+        if (result) { // should never happen
+            lean_unreachable();
         } else {
             record["status"] = "success";
         }

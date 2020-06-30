@@ -12,6 +12,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_pos_info.h"
 #include "util/list.h"
 #include "frontends/lean/widget.h"
 #include "frontends/lean/json.h"
@@ -28,21 +29,28 @@ enum component_idx {
     map_props = 2,
     with_should_update = 3,
     with_state = 4,
-    // with_effects
+    with_effects = 5,
     // with_mouse
     // with_task
 };
 enum html_idx {
-    element = 5,
-    of_string = 6,
-    of_component = 7
+    element = 6,
+    of_string = 7,
+    of_component = 8
 };
 enum attr_idx {
-    val = 8,
-    mouse_event = 9,
-    style = 10,
-    tooltip = 11,
-    text_change_event = 12
+    val = 9,
+    mouse_event = 10,
+    style = 11,
+    tooltip = 12,
+    text_change_event = 13
+};
+enum effect_idx {
+    insert_text = 0,
+    reveal_position = 1,
+    highlight_position = 2,
+    clear_highlighting = 3,
+    custom = 4,
 };
 
 std::atomic_uint g_fresh_component_instance_id;
@@ -180,6 +188,30 @@ struct stateful_hook : public hook_cell {
     stateful_hook(vm_obj const & init, vm_obj const & pc, vm_obj const & update) : m_init(init), m_props_changed(pc), m_update(update) {}
 };
 
+struct effects_hook : public hook_cell {
+    ts_vm_obj const m_emit;
+    optional<ts_vm_obj> m_props;
+    effects_hook(vm_obj const & emit): m_emit(emit) {}
+    void initialize(vm_obj const & props) override {
+        m_props = optional<ts_vm_obj>(props);
+    }
+    optional<vm_obj> action(vm_obj const & action) override {
+        lean_assert(m_props);
+        vm_obj es = invoke(m_emit.to_vm_obj(), (*m_props).to_vm_obj(), action);
+        get_global_widget_context()->m_effects.push_back(es);
+        return optional<vm_obj>(action);
+    }
+};
+
+LEAN_THREAD_PTR(widget_context, g_context);
+widget_context * get_global_widget_context() {
+    lean_assert(g_context);
+    return g_context;
+}
+void set_global_widget_context(widget_context * wc) {
+    g_context = wc;
+}
+
 component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
   m_props(props), m_route(route) {
     m_id = g_fresh_component_instance_id.fetch_add(1) + 1;
@@ -204,6 +236,10 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
             case component_idx::with_state:
                 m_hooks.push_back(hook(new stateful_hook(cfield(c, 0), cfield(c, 1), cfield(c, 2))));
                 c = cfield(c, 3);
+                break;
+            case component_idx::with_effects:
+                m_hooks.push_back(hook(new effects_hook(cfield(c, 0))));
+                c = cfield(c, 1);
                 break;
             default:
                 lean_unreachable();
@@ -476,6 +512,68 @@ std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_i
     }
     return elements;
 }
+
+json to_file_name(vm_obj const & a) {
+    if (is_none(a)) {
+        return nullptr;
+    } else {
+        return to_string(get_some_value(a));
+    }
+}
+
+void get_effects(vm_obj const & o_effects, json & result) {
+    buffer<vm_obj> effects;
+    vm_obj l = o_effects;
+    while (!is_simple(l)) {
+        effects.push_back(head(l));
+        l = tail(l);
+    }
+    for (auto e : effects) {
+        switch (cidx(e)) {
+            case effect_idx::insert_text: {
+                result.push_back({
+                    {"kind", "insert_text"},
+                    {"text", to_string(cfield(e, 0))}
+                });
+                break;
+            } case effect_idx::reveal_position: {
+                auto pos = to_pos_info(cfield(e, 1));
+               result.push_back({
+                    {"kind", "reveal_position"},
+                    {"file_name", to_file_name(cfield(e, 0))},
+                    {"line", pos.first},
+                    {"column", pos.second}
+                });
+                break;
+            } case effect_idx::highlight_position: {
+                auto pos = to_pos_info(cfield(e, 1));
+                result.push_back({
+                    {"kind", "highlight_position"},
+                    {"file_name", to_file_name(cfield(e, 0))},
+                    {"line", pos.first},
+                    {"column", pos.second}
+                });
+                break;
+            } case effect_idx::clear_highlighting: {
+                result.push_back({
+                    {"kind", "clear_highlighting"}
+                });
+                break;
+            } case effect_idx::custom: {
+                result.push_back({
+                    {"kind", "custom"},
+                    {"key", to_string(cfield(e, 0))},
+                    {"value", to_string(cfield(e, 1))}
+                });
+                break;
+            } default: {
+                lean_unreachable();
+            }
+        }
+    }
+}
+
+
 
 void initialize_widget() {}
 

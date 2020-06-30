@@ -144,6 +144,9 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
 vdom render_html(vm_obj const & html, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
 std::vector<vdom> render_html_list(vm_obj const & htmls, std::vector<component_instance*> & components, event_handlers & handlers, list<unsigned> const & route);
 
+/** Pushes to the given `result_array` array the effects from a given `widget.effects` object */
+void get_effects(vm_obj const & effects, json & result_array);
+
 void initialize_widget();
 void finalize_widget();
 
@@ -159,5 +162,13 @@ public:
     virtual throwable * clone() const { return new invalid_handler(); }
     virtual void rethrow() const { throw *this; }
 };
+
+struct widget_context {
+  std::vector<vm_obj> m_effects;
+  // [todo] tasks go here too.
+};
+
+widget_context * get_global_widget_context();
+void set_global_widget_context(widget_context * wc);
 
 }
