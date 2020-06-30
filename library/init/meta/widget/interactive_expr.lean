@@ -26,6 +26,17 @@ meta inductive sf : Type
 | compose : sf →  sf →  sf
 | of_string : string →  sf
 
+meta def sf.repr : sf → format
+| (sf.tag_expr addr e a) := format.group $ format.nest 2 $
+  "(tag_expr " ++ to_fmt addr ++ format.line ++
+    "`(" ++ to_fmt e ++ ")" ++ format.line ++ a.repr ++ ")"
+| (sf.compose a b) := a.repr ++ format.line ++ b.repr
+| (sf.of_string s) := repr s
+
+meta instance : has_to_format sf := ⟨sf.repr⟩
+meta instance : has_to_string sf := ⟨λ s, s.repr.to_string⟩
+meta instance : has_repr sf := ⟨λ s, s.repr.to_string⟩
+
 meta def sf.of_eformat : eformat → sf
 | (tag ⟨ea,e⟩ m) := sf.tag_expr ea e $ sf.of_eformat m
 | (group m) := sf.of_eformat m
