@@ -31,10 +31,10 @@ address to_address(vm_obj const & a) {
 address app(unsigned sz, unsigned i) {
     address result;
     if (sz <= i) {return result;}
-    result = cons(expr_coord::app_arg, result);
     for (unsigned j = 0; j < sz - i - 1; j++) {
         result = cons(expr_coord::app_fn, result);
     }
+    result = cons(expr_coord::app_arg, result);
     return result;
 }
 

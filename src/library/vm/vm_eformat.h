@@ -49,7 +49,7 @@ eformat paren(eformat const & x);
 
 class eformat_pretty_fn : public pretty_fn<eformat> {
     eformat tag(address const & a, expr const & e, eformat const & result) {
-        return tag_expr(a, e, result);
+        return tag_expr(reverse(a), e, result);
     }
 public:
     eformat_pretty_fn(environment const & e, options const & o, abstract_type_context & ctx) : pretty_fn<eformat>(e, o, ctx) {}

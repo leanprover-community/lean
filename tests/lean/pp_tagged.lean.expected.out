@@ -1,0 +1,60 @@
+(tag_expr [app_fn]
+  `(f x y)
+  (tag_expr [app_fn] `(f x) (tag_expr [app_fn] `(f) "f") "\n" (tag_expr [app_arg] `(x) "x"))
+  "\n"
+  (tag_expr [app_arg] `(y) "y"))
+"\n"
+(tag_expr [app_arg] `(z) "z")
+(tag_expr [app_fn, app_arg]
+  `(has_add.add.{0} nat nat.has_add x y)
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " +"
+  "\n"
+  (tag_expr [app_arg] `(y) "y"))
+" +"
+"\n"
+(tag_expr [app_arg] `(z) "z")
+(tag_expr [app_fn, app_arg] `(x) "x")
+" ="
+"\n"
+(tag_expr [app_arg] `(y) "y")
+(tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
+" ="
+"\n"
+(tag_expr [app_arg, app_fn, app_fn, app_fn] `(coe.{1 1}) "coe")
+"("
+(tag_expr [app_fn, app_arg] `(x) "x")
+",\n"
+(tag_expr [app_arg] `(y) "y")
+")"
+"("
+(tag_expr [app_fn, app_arg] `(w) "w")
+",\n"
+(tag_expr [app_arg, app_fn, app_arg] `(x) "x")
+",\n"
+(tag_expr [app_arg, app_arg, app_fn, app_arg] `(y) "y")
+",\n"
+(tag_expr [app_arg, app_arg, app_arg] `(z) "z")
+")"
+"{"
+""
+"x"
+" "
+":"
+"\n"
+(tag_expr [app_arg, lam_var_type] `(nat) "ℕ")
+" "
+"|"
+" "
+(tag_expr [app_arg, lam_body] `(false) "false")
+"}"
+pp_tagged.lean:33:0: error: invalid expression, `)` expected
+"{"
+(tag_expr [app_fn, app_arg] `(w) "w")
+",\n"
+(tag_expr [app_arg, app_fn, app_arg] `(x) "x")
+",\n"
+(tag_expr [app_arg, app_arg, app_fn, app_arg] `(y) "y")
+",\n"
+(tag_expr [app_arg, app_arg, app_arg, app_arg] `(z) "z")
+"}"
