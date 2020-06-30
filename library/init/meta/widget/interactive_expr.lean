@@ -127,8 +127,7 @@ tc.stateless (λ ⟨e,ea⟩, do
         h "div" [] [
           h "div" [] [y_comp],
           h "hr" [] [],
-          implicit_args,
-          h "div" [] [ea.repr]
+          implicit_args
         ]
       ]
   )
