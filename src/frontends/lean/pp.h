@@ -141,8 +141,8 @@ private:
 
     result pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide = false);
-    result pp_child(expr const & e, unsigned bp, bool ignore_hide = false);
-    result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false);
+    result pp_child(expr const & e, unsigned bp, bool ignore_hide = false, bool below_implicit = false);
+    result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false, bool below_implicit = false);
     result pp_subtype(expr const & e);
     result pp_sep(expr const & e);
     result pp_set_of(expr const & e);

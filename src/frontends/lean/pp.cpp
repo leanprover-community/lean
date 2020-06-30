@@ -638,7 +638,7 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     }
 }
 template<class T>
-auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> result {
+auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool below_implicit) -> result {
     if (is_app(e)) {
         if (auto r = pp_local_ref(e)){
             address_reset_scope ars(*this);
@@ -659,14 +659,24 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> re
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            return pp_child_at(f, bp, expr_address::fn(), ignore_hide);
+            if (below_implicit) {
+                return pp_child_at(f, bp, expr_address::fn(), ignore_hide, true);
+            } else {
+              address_scope _(*this, expr_address::fn());
+              address_reset_scope ars(*this); 
+              return tag(ars.m_adr, f, pp_child_at(f, bp, expr_address::fn(), ignore_hide, true));
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, bp, ignore_hide);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, bp, ignore_hide);
         }
     }
-    return add_paren_if_needed(pp(e, ignore_hide), bp);
+    if (below_implicit) {
+        return add_paren_if_needed(pp_core(e, ignore_hide), bp);
+    } else {
+        return add_paren_if_needed(pp(e, ignore_hide), bp);
+    }
 }
 template<class T>
 auto pretty_fn<T>::pp_var(expr const & e) -> result {
@@ -1918,9 +1928,9 @@ auto pretty_fn<T>::pp_at(expr const & e, address local_address, bool ignore_hide
     return  pp(e, ignore_hide);
 }
 template<class T>
-auto pretty_fn<T>::pp_child_at(expr const & e, unsigned bp, address local_address, bool ignore_hide) -> result {
+auto pretty_fn<T>::pp_child_at(expr const & e, unsigned bp, address local_address, bool ignore_hide, bool below_implicit) -> result {
      address_scope scope(*this, local_address);
-     return pp_child(e, bp, ignore_hide);
+     return pp_child(e, bp, ignore_hide, below_implicit);
 }
 template<class T>
 T pretty_fn<T>::pp_binder_at(expr const & local, address local_address) {
