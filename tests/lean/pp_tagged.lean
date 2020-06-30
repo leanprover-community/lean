@@ -18,4 +18,6 @@ constants w x y z : nat
 
 #eval (sf.of_eformat <$> tactic.pp_tagged `((int.of_nat = coe))) >>= tactic.trace
 constant bar [inhabited ℕ] [inhabited ℕ] : ℕ → ℤ
+constant foo (α : Type) [inhabited ℕ] [inhabited ℕ] : ℕ → ℤ
 #eval (sf.of_eformat <$> tactic.pp_tagged `((int.of_nat = bar))) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `((int.of_nat = (foo nat)))) >>= tactic.trace

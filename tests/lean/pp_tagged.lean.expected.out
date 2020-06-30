@@ -56,8 +56,16 @@
 (tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
 " ="
 "\n"
-(tag_expr [app_arg] `(coe.{1 1}) "coe")
+(tag_expr [app_arg] `(coe.{1 1} nat int (coe_to_lift.{1 1} nat int (coe_base.{1 1} nat int int.has_coe))) "coe")
 (tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
 " ="
 "\n"
-(tag_expr [app_arg] `(bar) "bar")
+(tag_expr [app_arg] `(bar nat.inhabited nat.inhabited) "bar")
+(tag_expr [app_fn, app_arg] `(int.of_nat) "int.of_nat")
+" ="
+"\n"
+(tag_expr [app_arg]
+  `(foo nat nat.inhabited nat.inhabited)
+  (tag_expr [app_fn, app_fn, app_fn] `(foo) "foo")
+  "\n"
+  (tag_expr [app_fn, app_fn, app_arg] `(nat) "ℕ"))

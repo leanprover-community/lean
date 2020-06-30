@@ -659,12 +659,16 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool 
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            address_scope _(*this, expr_address::fn());
             if (below_implicit) {
+                address_scope _(*this, expr_address::fn());
                 return pp_child(f, bp, ignore_hide, true);
             } else {
               address_reset_scope ars(*this);
-              return tag(ars.m_adr, f, pp_child(f, bp, ignore_hide, true));
+              result r;
+              { address_scope _(*this, expr_address::fn());
+                r = pp_child(f, bp, ignore_hide, true);
+              }
+              return tag(ars.m_adr, e, r);
             }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, bp, ignore_hide);
@@ -1526,13 +1530,16 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp,
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            address_scope s(*this, expr_address::fn());
             if (below_implicit) {
+                address_scope s(*this, expr_address::fn());
                 return pp_notation_child(f, rbp, lbp, true);
             } else {
                 address_reset_scope ars(*this);
-                result r = pp_notation_child(f, rbp, lbp, true);
-                return r.with(tag(ars.m_adr, f, r.fmt()));
+                result r;
+                { address_scope s(*this, expr_address::fn());
+                  r = pp_notation_child(f, rbp, lbp, true);
+                }
+                return r.with(tag(ars.m_adr, e, r.fmt()));
             }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, rbp);
