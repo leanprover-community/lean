@@ -245,6 +245,10 @@ meta def stateless {π α : Type} [decidable_eq π] (view : π → list (html α
 component.with_should_update (λ p1 p2, p1 ≠ p2)
 $ component.pure view
 
+/-- Causes the component to only update on a props change when `test old_props new_props` yields `ff`. -/
+meta def with_props_eq (test : π → π → bool) : component π α → component π α
+| c := component.with_should_update (λ x y, bnot $ test x y) c
+
 end component
 
 meta mutual def attr.map_action, html.map_action (f : α → β)
