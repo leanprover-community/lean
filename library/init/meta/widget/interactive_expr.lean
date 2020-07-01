@@ -26,15 +26,26 @@ meta inductive sf : Type
 | compose : sf →  sf →  sf
 | of_string : string →  sf
 
-private meta def to_simple : eformat → sf
-| (tag ⟨ea,e⟩ m) := sf.tag_expr ea e $ to_simple m
-| (group m) := to_simple m
-| (nest i m) := to_simple m
-| (highlight i m) := to_simple m
-| (of_format f) := sf.of_string $ format.to_string f
-| (compose x y) := sf.compose (to_simple x) (to_simple y)
+meta def sf.repr : sf → format
+| (sf.tag_expr addr e a) := format.group $ format.nest 2 $
+  "(tag_expr " ++ to_fmt addr ++ format.line ++
+    "`(" ++ to_fmt e ++ ")" ++ format.line ++ a.repr ++ ")"
+| (sf.compose a b) := a.repr ++ format.line ++ b.repr
+| (sf.of_string s) := repr s
 
-private meta def sf.flatten : sf → sf
+meta instance : has_to_format sf := ⟨sf.repr⟩
+meta instance : has_to_string sf := ⟨λ s, s.repr.to_string⟩
+meta instance : has_repr sf := ⟨λ s, s.repr.to_string⟩
+
+meta def sf.of_eformat : eformat → sf
+| (tag ⟨ea,e⟩ m) := sf.tag_expr ea e $ sf.of_eformat m
+| (group m) := sf.of_eformat m
+| (nest i m) := sf.of_eformat m
+| (highlight i m) := sf.of_eformat m
+| (of_format f) := sf.of_string $ format.to_string f
+| (compose x y) := sf.compose (sf.of_eformat x) (sf.of_eformat y)
+
+meta def sf.flatten : sf → sf
 | (sf.tag_expr e ea m) := (sf.tag_expr e ea $ sf.flatten m)
 | (sf.compose x y) :=
   match (sf.flatten x), (sf.flatten y) with
@@ -98,7 +109,7 @@ tc.mk_simple
   )
   (λ e ⟨ca, sa⟩, do
     ts ← tactic.read,
-    let m : sf  := sf.flatten $ to_simple $ tactic_state.pp_tagged ts e,
+    let m : sf  := sf.flatten $ sf.of_eformat $ tactic_state.pp_tagged ts e,
     let m : sf  := sf.tag_expr [] e m, -- [hack] in pp.cpp I forgot to add an expr-boundary for the root expression.
     v ← view tooltip_comp (prod.snd <$> ca) (prod.snd <$> sa) ⟨e, []⟩ m,
     pure $
