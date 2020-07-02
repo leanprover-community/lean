@@ -178,6 +178,7 @@ meta inductive effect : Type
 | reveal_position (file_name : option string) (p : pos)
 | highlight_position (file_name : option string) (p : pos)
 | clear_highlighting
+| copy_text (text : string)
 | custom (key : string) (value : string)
 
 meta def effects := list effect

@@ -50,7 +50,8 @@ enum effect_idx {
     reveal_position = 1,
     highlight_position = 2,
     clear_highlighting = 3,
-    custom = 4,
+    copy_text = 4,
+    custom = 5
 };
 
 std::atomic_uint g_fresh_component_instance_id;
@@ -548,6 +549,12 @@ void get_effects(vm_obj const & o_effects, json & result) {
             } case effect_idx::clear_highlighting: {
                 result.push_back({
                     {"kind", "clear_highlighting"}
+                });
+                break;
+            } case effect_idx::copy_text: {
+                result.push_back({
+                    {"kind", "copy_text"},
+                    {"text", to_string(cfield(e, 0))}
                 });
                 break;
             } case effect_idx::custom: {
