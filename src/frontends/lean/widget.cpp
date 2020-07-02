@@ -111,7 +111,7 @@ struct filter_map_action_hook : public hook_cell {
         m_props = props;
         return true;
     }
-    virtual optional<vm_obj> action(vm_obj const & action) override {
+    virtual optional<vm_obj> action(vm_obj const & action, widget_context &) override {
         vm_obj props = m_props.to_vm_obj();
         lean_assert(props);
         vm_obj o = invoke(m_map.to_vm_obj(), props, action);
@@ -177,7 +177,7 @@ struct stateful_hook : public hook_cell {
         if (!m_state) {initialize(props);}
         return mk_vm_pair((*m_state).to_vm_obj(), props);
     }
-    optional<vm_obj> action(vm_obj const & action) override {
+    optional<vm_obj> action(vm_obj const & action, widget_context &) override {
         lean_assert(m_state);
         lean_assert(m_props);
         vm_obj r = invoke(m_update.to_vm_obj(), (*m_props).to_vm_obj(), (*m_state).to_vm_obj(), action);
@@ -195,22 +195,13 @@ struct effects_hook : public hook_cell {
     void initialize(vm_obj const & props) override {
         m_props = optional<ts_vm_obj>(props);
     }
-    optional<vm_obj> action(vm_obj const & action) override {
+    optional<vm_obj> action(vm_obj const & action, widget_context & ctx) override {
         lean_assert(m_props);
         vm_obj es = invoke(m_emit.to_vm_obj(), (*m_props).to_vm_obj(), action);
-        get_global_widget_context()->m_effects.push_back(es);
+        ctx.m_effects.push_back(es);
         return optional<vm_obj>(action);
     }
 };
-
-LEAN_THREAD_PTR(widget_context, g_context);
-widget_context * get_global_widget_context() {
-    lean_assert(g_context);
-    return g_context;
-}
-void set_global_widget_context(widget_context * wc) {
-    g_context = wc;
-}
 
 component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
   m_props(props), m_route(route) {
@@ -346,31 +337,31 @@ json component_instance::to_json(list<unsigned> const & route) {
     return result;
 }
 
-optional<vm_obj> component_instance::handle_action(vm_obj const & action) {
+optional<vm_obj> component_instance::handle_action(vm_obj const & action, widget_context & ctx) {
         optional<vm_obj> result = optional<vm_obj>(action);
         for (int i = m_hooks.size() - 1; i >= 0; i--) {
             if (!result) {break;}
-            result = m_hooks[i]->action(*result);
+            result = m_hooks[i]->action(*result, ctx);
         }
         compute_props();
         render();
         return result;
 }
 
-optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args) {
+optional<vm_obj> component_instance::handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & event_args, widget_context & ctx) {
     if (empty(route)) {
         if (m_handlers.find(handler_id) == m_handlers.end()) {
             throw invalid_handler();
         }
         vm_obj handler = m_handlers[handler_id].to_vm_obj();
         vm_obj action = (invoke(handler, event_args));
-        return handle_action(action);
+        return handle_action(action, ctx);
     }
     for (auto c : m_children) {
         if (c->m_id == head(route)) {
-            optional<vm_obj> a = c->handle_event(tail(route), handler_id, event_args);
+            optional<vm_obj> a = c->handle_event(tail(route), handler_id, event_args, ctx);
             if (a) {
-                return handle_action(*a);
+                return handle_action(*a, ctx);
             } else {
                 return optional<vm_obj>();
             }

@@ -169,7 +169,6 @@ void widget_info::update(json const & message, json & record) {
     vm_state S(m_env, options());
     scope_vm_state scope(S);
     widget_context wc;
-    set_global_widget_context(&wc);
     unsigned handler_idx = message["handler"]["h"];
     json j_route = message["handler"]["r"]; // an array with the root index at the _back_.
     list<unsigned> route; // now root index is at the _front_.
@@ -190,7 +189,7 @@ void widget_info::update(json const & message, json & record) {
         throw exception("expecting arg_type to be either 'unit' or 'string' but was '" + arg_type + "'");
     }
     try {
-        optional<vm_obj> result = c->handle_event(route, handler_idx, vm_args);
+        optional<vm_obj> result = c->handle_event(route, handler_idx, vm_args, wc);
         record["widget"]["html"] = to_json();
         record["widget"]["line"] = m_pos.first;
         record["widget"]["column"] = m_pos.second;

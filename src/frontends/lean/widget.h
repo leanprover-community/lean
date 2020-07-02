@@ -20,6 +20,12 @@ namespace lean {
 
 typedef std::map<unsigned, ts_vm_obj> event_handlers;
 
+/** Some additional accumulators and values that are shared by an entire widget. */
+struct widget_context {
+  std::vector<vm_obj> m_effects;
+  // [todo] tasks go here too.
+};
+
 class vdom;
 
 enum class vdom_kind { String, Element, ComponentInstance};
@@ -89,7 +95,7 @@ public:
    */
   virtual bool reconcile(vm_obj const &, hook const &) { return true; };
   virtual vm_obj get_props(vm_obj const & props) { return props; }
-  virtual optional<vm_obj> action(vm_obj const & action) { return optional<vm_obj>(action); };
+  virtual optional<vm_obj> action(vm_obj const & action, widget_context &) { return optional<vm_obj>(action); };
   virtual std::string to_string() {return "hook";}
 };
 
@@ -113,7 +119,7 @@ class component_instance : public vdom_cell {
 
   list<unsigned> child_route() {return cons(m_id, m_route); }
   /** convert an inner action to an outer action */
-  optional<vm_obj> handle_action(vm_obj const & a);
+  optional<vm_obj> handle_action(vm_obj const & a, widget_context & ctx);
   /** Compute the vdom tree for this component.
    * Assumes that initialize or reconcile was called. */
   void render();
@@ -129,7 +135,7 @@ class component_instance : public vdom_cell {
 public:
   json to_json(list<unsigned> const & route) override;
 
-  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs);
+  optional<vm_obj> handle_event(list<unsigned> const & route, unsigned handler_id, vm_obj const & eventArgs, widget_context & ctx);
   component_instance(vm_obj const & c, vm_obj const & props, list<unsigned> const & route = list<unsigned>());
   unsigned id() {return m_id;}
 };
@@ -162,13 +168,5 @@ public:
     virtual throwable * clone() const { return new invalid_handler(); }
     virtual void rethrow() const { throw *this; }
 };
-
-struct widget_context {
-  std::vector<vm_obj> m_effects;
-  // [todo] tasks go here too.
-};
-
-widget_context * get_global_widget_context();
-void set_global_widget_context(widget_context * wc);
 
 }
