@@ -171,11 +171,16 @@ inductive mouse_event_kind
 | on_mouse_enter
 | on_mouse_leave
 
-@[derive decidable_eq]
-inductive mouse_capture_state
-| outside
-| immediate
-| child
+/-- An effect is an action at the root of the widget component hierarchy
+and can give instructions to the editor to perform some task. -/
+meta inductive effect : Type
+| insert_text (text : string)
+| reveal_position (file_name : option string) (p : pos)
+| highlight_position (file_name : option string) (p : pos)
+| clear_highlighting
+| custom (key : string) (value : string)
+
+meta def effects := list effect
 
 meta mutual inductive component, html, attr
 
@@ -203,6 +208,10 @@ with component : Type → Type → Type
      (props_changed : Props → Props → State → State)
      (update : Props → State → InnerAction → State × option Action)
      : component (State × Props) InnerAction → component Props Action
+| with_effects
+     {Props Action : Type}
+     (emit : Props → Action → effects)
+     : component Props Action → component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α
@@ -357,14 +366,14 @@ end widget
 namespace tactic
 
 /-- Same as `tactic.save_info_thunk` except saves a widget to be displayed by a compatible infoviewer. -/
-meta constant save_widget : pos → widget.component tactic_state string → tactic unit
+meta constant save_widget : pos → widget.component tactic_state empty → tactic unit
 
 /-- Outputs a widget trace position at the given position. -/
-meta constant trace_widget_at (p : pos) (w : widget.component tactic_state string)
+meta constant trace_widget_at (p : pos) (w : widget.component tactic_state empty)
      (text := "(widget)") : tactic unit
 
 /-- Outputs a widget trace position at the current default trace position. -/
-meta def trace_widget (w : widget.component tactic_state string) (text := "(widget)") : tactic unit :=
+meta def trace_widget (w : widget.component tactic_state empty) (text := "(widget)") : tactic unit :=
 do p ← get_trace_msg_pos, trace_widget_at p w text
 
 end tactic

@@ -9,7 +9,7 @@ widget.component.stateful
   (λ p ls x, (ls,none))
   (λ p ss, [h "div" [] [html.of_string $ to_string p ++ to_string message ++ to_string ss], button "asdf" ()])
 
-meta def qwerty_c : component tactic_state string :=
+meta def qwerty_c : component tactic_state empty :=
 widget.component.stateful
   unit
   nat

@@ -59,7 +59,7 @@ meta def todo_list (α : Type) [inhabited α] [decidable_eq α] [has_show_html �
                                     ["+"]
                                 ])]]])
 
-meta def string_todo_list : component tactic_state string :=
+meta def string_todo_list : component tactic_state empty :=
 component.map_action (λ (o : empty), empty.rec (λ _, _) o) $ component.map_props (λ p, ()) $
 todo_list string ["make some tasks", "delete some tasks"]
 

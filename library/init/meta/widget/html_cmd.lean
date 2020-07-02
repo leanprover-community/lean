@@ -15,14 +15,14 @@ open interactive
 open tactic
 open widget
 
-/-- Accepts terms with the type `component tactic_state string` or `html empty` and
+/-- Accepts terms with the type `component tactic_state empty` or `html empty` and
 renders them interactively. -/
 @[user_command]
 meta def show_widget_cmd (x : parse $ tk "#html") : parser unit := do
   ⟨l,c⟩ ← cur_pos,
   y ← parser.pexpr,
   comp ← parser.of_tactic ((do
-    tactic.eval_pexpr (component tactic_state string) y
+    tactic.eval_pexpr (component tactic_state empty) y
   ) <|> (do
     htm : html empty ← tactic.eval_pexpr (html empty) y,
     c : component unit empty ← pure $ component.stateless (λ _, [htm]),

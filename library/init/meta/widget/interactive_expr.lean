@@ -276,16 +276,16 @@ tc.stateless (λ lc, do
   pure [c]
 )
 
-meta def tactic_render : tc unit string :=
+meta def tactic_render : tc unit empty :=
 component.ignore_action $ tactic_view_component show_local_collection_component show_type_component
 
-meta def tactic_state_widget : component tactic_state string :=
+meta def tactic_state_widget : component tactic_state empty :=
 tc.to_component tactic_render
 
 /--
 Widget used to display term-proof goals.
 -/
-meta def term_goal_widget : component tactic_state string :=
+meta def term_goal_widget : component tactic_state empty :=
 (tactic_view_term_goal show_local_collection_component show_type_component).to_component
 
 end widget
