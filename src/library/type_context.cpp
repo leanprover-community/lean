@@ -3102,8 +3102,6 @@ lbool type_context_old::try_numeral_eq_numeral(expr const & t, expr const & s) {
     if (!n1) return l_undef;
     optional<mpz> n2 = eval_num(s);
     if (!n2) return l_undef;
-    if (!is_nat_type(whnf(infer(t))))
-        return l_undef;
     if (*n1 != *n2)
         return l_false;
     else if (to_small_num(t) && to_small_num(s))
@@ -3117,6 +3115,9 @@ lbool type_context_old::try_nat_offset_cnstrs(expr const & t, expr const & s) {
     /* We should not use this feature when transparency_mode is none.
        See issue #1295 */
     if (m_transparency_mode == transparency_mode::None) return l_undef;
+    // Only special-case natural numbers, see https://github.com/leanprover-community/lean/issues/362
+    if (!is_nat_type(whnf(infer(t))) || !is_nat_type(whnf(infer(s))))
+        return l_undef;
     lbool r;
     r = try_offset_eq_offset(t, s);
     if (r != l_undef) return r;
