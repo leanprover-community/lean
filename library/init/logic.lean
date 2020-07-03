@@ -924,6 +924,7 @@ match h with
 | (is_false hnc) := rfl
 end
 
+@[congr]
 lemma dif_ctx_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidable c]
                     {x : b → α} {u : c → α} {y : ¬b → α} {v : ¬c → α}
                     (h_c : b ↔ c)
