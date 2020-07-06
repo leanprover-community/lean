@@ -66,21 +66,21 @@ b.append_list s.to_list
 lemma lt_aux_1 {a b c : nat} (h : a + c < b) : a < b :=
 lt_of_le_of_lt (nat.le_add_right a c) h
 
-lemma lt_aux_2 {n} (h : n > 0) : n - 1 < n :=
+lemma lt_aux_2 {n} (h : n > 0) : n -. 1 < n :=
 have h₁ : 1 > 0, from dec_trivial,
 nat.sub_lt h h₁
 
-lemma lt_aux_3 {n i} (h : i + 1 < n) : n - 2 - i < n  :=
+lemma lt_aux_3 {n i} (h : i + 1 < n) : n -. 2 -. i < n  :=
 have n > 0,     from lt.trans (nat.zero_lt_succ i) h,
-have n - 2 < n, from nat.sub_lt this (dec_trivial),
+have n -. 2 < n, from nat.sub_lt this (dec_trivial),
 lt_of_le_of_lt (nat.sub_le _ _) this
 
 def append_array {α : Type u} {n : nat} (nz : n > 0) : buffer α → array n α → ∀ i : nat, i < n → buffer α
 | ⟨m, b⟩ a 0     _ :=
-  let i : fin n := ⟨n - 1, lt_aux_2 nz⟩ in
+  let i : fin n := ⟨n -. 1, lt_aux_2 nz⟩ in
   ⟨m+1, b.push_back (a.read i)⟩
 | ⟨m, b⟩ a (j+1) h :=
-  let i : fin n := ⟨n - 2 - j, lt_aux_3 h⟩ in
+  let i : fin n := ⟨n -. 2 -. j, lt_aux_3 h⟩ in
   append_array ⟨m+1, b.push_back (a.read i)⟩ a j (lt_aux_1 h)
 
 protected def append {α : Type u} : buffer α → buffer α → buffer α

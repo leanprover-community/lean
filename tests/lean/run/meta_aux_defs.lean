@@ -35,7 +35,7 @@ inductive stmt
 
 def eval : nat → nat → string → stmt → option (nat × string)
 | (f+1) v o (stmt.print s)   := some (v, o ++ s)
-| (f+1) v o stmt.dec         := some (v - 1, o)
+| (f+1) v o stmt.dec         := some (v -. 1, o)
 | (f+2) v o (stmt.seq s₁ s₂) :=
   match eval (f+1) v o s₁ with
   | some (v₁, o₁) := eval f v₁ o₁ s₂

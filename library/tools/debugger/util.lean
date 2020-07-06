@@ -61,7 +61,7 @@ do pos ← pos_info fn,
 meta def show_curr_fn (header : string) : vm unit :=
 do fn ← vm.curr_fn,
    sz ← vm.call_stack_size,
-   show_fn header fn (sz-1)
+   show_fn header fn (sz-.1)
 
 meta def is_valid_fn_prefix (p : name) : vm bool :=
 do env ← vm.get_env,

@@ -38,7 +38,7 @@ def head : vector α (nat.succ n) → α
 theorem head_cons (a : α) : Π (v : vector α n), head (a :: v) = a
 | ⟨ l, h ⟩ := rfl
 
-def tail : vector α n → vector α (n - 1)
+def tail : vector α n → vector α (n -. 1)
 | ⟨ [],     h ⟩ := ⟨ [], congr_arg pred h ⟩
 | ⟨ a :: v, h ⟩ := ⟨ v, congr_arg pred h ⟩
 
@@ -76,13 +76,13 @@ def map₂ (f : α → β → φ) : vector α n → vector β n → vector φ n
 def repeat (a : α) (n : ℕ) : vector α n :=
 ⟨ list.repeat a n, list.length_repeat a n ⟩
 
-def drop (i : ℕ) : vector α n → vector α (n - i)
+def drop (i : ℕ) : vector α n → vector α (n -. i)
 | ⟨l, p⟩ := ⟨ list.drop i l, by simp * ⟩
 
 def take (i : ℕ) : vector α n → vector α (min i n)
 | ⟨l, p⟩ := ⟨ list.take i l, by simp * ⟩
 
-def remove_nth (i : fin n) : vector α n → vector α (n - 1)
+def remove_nth (i : fin n) : vector α n → vector α (n -. 1)
 | ⟨l, p⟩ := ⟨ list.remove_nth l i.1, by rw [l.length_remove_nth i.1]; rw p; exact i.2 ⟩
 
 def of_fn : Π {n}, (fin n → α) → vector α n

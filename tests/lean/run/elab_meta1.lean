@@ -4,7 +4,7 @@ meta definition f : nat → nat
 
 meta definition g : nat × nat → nat
 | (0, b)     := b
-| (a+1, b+1) := g (a/.2 - 1, a + b)
+| (a+1, b+1) := g (a/.2 -. 1, a + b)
 | (a+1, 0)   := 2*a
 
 #eval f 200

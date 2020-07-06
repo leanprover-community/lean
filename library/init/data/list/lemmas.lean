@@ -42,17 +42,17 @@ end
 @[simp] lemma length_repeat (a : α) (n : ℕ) : length (repeat a n) = n :=
 by induction n; simp [*]; refl
 
-@[simp] lemma length_tail (l : list α) : length (tail l) = length l - 1 :=
+@[simp] lemma length_tail (l : list α) : length (tail l) = length l -. 1 :=
 by cases l; refl
 
 -- TODO(Leo): cleanup proof after arith dec proc
-@[simp] lemma length_drop : ∀ (i : ℕ) (l : list α), length (drop i l) = length l - i
+@[simp] lemma length_drop : ∀ (i : ℕ) (l : list α), length (drop i l) = length l -. i
 | 0 l         := rfl
 | (succ i) [] := eq.symm (nat.zero_sub (succ i))
 | (succ i) (x::l) := calc
   length (drop (succ i) (x::l))
-          = length l - i             : length_drop i l
-      ... = succ (length l) - succ i : (nat.succ_sub_succ_eq_sub (length l) i).symm
+          = length l -. i             : length_drop i l
+      ... = succ (length l) -. succ i : (nat.succ_sub_succ_eq_sub (length l) i).symm
 
 /- map -/
 
@@ -188,7 +188,7 @@ by {induction l₁; intro l₂; cases l₂; simp [*, add_one, min_succ_succ]}
 theorem length_take_le (n) (l : list α) : length (take n l) ≤ n :=
 by simp [min_le_left]
 
-theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length (remove_nth l i) = length l - 1
+theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length (remove_nth l i) = length l -. 1
 | []      _     h := rfl
 | (x::xs) 0     h := by simp [remove_nth]
 | (x::xs) (i+1) h := have i < length xs, from lt_of_succ_lt_succ h,

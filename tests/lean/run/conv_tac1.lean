@@ -9,16 +9,16 @@ end
 def Div : nat → nat → nat | x y :=
 if h : 0 < y ∧ y ≤ x
 then
-  have x - y < x, from sorry,
-  Div (x - y) y + 1
+  have x -. y < x, from sorry,
+  Div (x -. y) y + 1
 else 0
 
-example (x y : nat) : 0 < y → y ≤ x → Div x y = Div (x - y) y + 1 :=
+example (x y : nat) : 0 < y → y ≤ x → Div x y = Div (x -. y) y + 1 :=
 begin
   intros h1 h2,
   -- Use conv to focus on the lhs
   conv { to_lhs, simp [Div] {single_pass := tt}, simp [h1, h2] },
-  guard_target 1 + Div (x - y) y = Div (x - y) y + 1,
+  guard_target 1 + Div (x -. y) y = Div (x -. y) y + 1,
   simp
 end
 

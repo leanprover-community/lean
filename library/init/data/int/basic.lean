@@ -53,16 +53,16 @@ def neg_of_nat : ℕ → ℤ
 | (succ m) := -[1+ m]
 
 def sub_nat_nat (m n : ℕ) : ℤ :=
-match (n - m : nat) with
-| 0        := of_nat (m - n)  -- m ≥ n
-| (succ k) := -[1+ k]         -- m < n, and n - m = succ k
+match (n -. m : nat) with
+| 0        := of_nat (m -. n)  -- m ≥ n
+| (succ k) := -[1+ k]         -- m < n, and n -. m = succ k
 end
 
-private lemma sub_nat_nat_of_sub_eq_zero {m n : ℕ} (h : n - m = 0) :
-  sub_nat_nat m n = of_nat (m - n) :=
+private lemma sub_nat_nat_of_sub_eq_zero {m n : ℕ} (h : n -. m = 0) :
+  sub_nat_nat m n = of_nat (m -. n) :=
 begin unfold sub_nat_nat, rw h, unfold sub_nat_nat._match_1 end
 
-private lemma sub_nat_nat_of_sub_eq_succ {m n k : ℕ} (h : n - m = succ k) :
+private lemma sub_nat_nat_of_sub_eq_succ {m n k : ℕ} (h : n -. m = succ k) :
   sub_nat_nat m n = -[1+ k] :=
 begin unfold sub_nat_nat, rw h, unfold sub_nat_nat._match_1 end
 
@@ -173,7 +173,7 @@ lemma sub_nat_nat_elim (m n : ℕ) (P : ℕ → ℕ → ℤ → Prop)
   (hn : ∀i m, P m (m + i + 1) (-[1+ i])) :
   P m n (sub_nat_nat m n) :=
 begin
-  have H : ∀k, n - m = k → P m n (nat.cases_on k (of_nat (m - n)) (λa, -[1+ a])),
+  have H : ∀k, n -. m = k → P m n (nat.cases_on k (of_nat (m -. n)) (λa, -[1+ a])),
   { intro k, cases k,
     { intro e,
       cases (nat.le.dest (nat.le_of_sub_eq_zero e)) with k h,
@@ -201,8 +201,8 @@ end
 
 private lemma sub_nat_nat_add_right {m n : ℕ} :
   sub_nat_nat m (m + n + 1) = neg_succ_of_nat n :=
-calc sub_nat_nat._match_1 m (m + n + 1) (m + n + 1 - m) =
-        sub_nat_nat._match_1 m (m + n + 1) (m + (n + 1) - m) : by rw [nat.add_assoc]
+calc sub_nat_nat._match_1 m (m + n + 1) (m + n + 1 -. m) =
+        sub_nat_nat._match_1 m (m + n + 1) (m + (n + 1) -. m) : by rw [nat.add_assoc]
   ... = sub_nat_nat._match_1 m (m + n + 1) (n + 1) : by rw [nat.add_sub_cancel_left]
   ... = neg_succ_of_nat n : rfl
 
@@ -213,11 +213,11 @@ sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
   (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp [nat.add_comm, nat.add_left_comm],
     begin rw [this], exact sub_nat_nat_add_right end)
 
-private lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m - n) :=
+private lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m -. n) :=
 sub_nat_nat_of_sub_eq_zero (sub_eq_zero_of_le h)
 
-private lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
-have n - m = succ (pred (n - m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
+private lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n -. m)] :=
+have n -. m = succ (pred (n -. m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
 by rewrite sub_nat_nat_of_sub_eq_succ this
 
 /- nat_abs -/
@@ -338,9 +338,9 @@ protected lemma zero_add (a : ℤ) : 0 + a = a :=
 int.add_comm a 0 ▸ int.add_zero a
 
 private lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
-  sub_nat_nat (m - n) k = sub_nat_nat m (k + n) :=
+  sub_nat_nat (m -. n) k = sub_nat_nat m (k + n) :=
 calc
-  sub_nat_nat (m - n) k = sub_nat_nat (m - n + n) (k + n) : by rewrite [sub_nat_nat_add_add]
+  sub_nat_nat (m -. n) k = sub_nat_nat (m -. n + n) (k + n) : by rewrite [sub_nat_nat_add_add]
                     ... = sub_nat_nat m (k + n)           : by rewrite [nat.sub_add_cancel h]
 
 private lemma sub_nat_nat_add (m n k : ℕ) : sub_nat_nat (m + n) k = of_nat m + sub_nat_nat n k :=
@@ -538,10 +538,10 @@ begin rw [int.mul_comm, int.distrib_left], simp [int.mul_comm] end
 protected lemma zero_ne_one : (0 : int) ≠ 1 :=
 assume h : 0 = 1, succ_ne_zero _ (int.of_nat.inj h).symm
 
-lemma of_nat_sub {n m : ℕ} (h : m ≤ n) : of_nat (n - m) = of_nat n - of_nat m :=
-show of_nat (n - m) = of_nat n + neg_of_nat m, from match m, h with
+lemma of_nat_sub {n m : ℕ} (h : m ≤ n) : of_nat (n -. m) = of_nat n - of_nat m :=
+show of_nat (n -. m) = of_nat n + neg_of_nat m, from match m, h with
 | 0, h := rfl
-| succ m, h := show of_nat (n - succ m) = sub_nat_nat n (succ m),
+| succ m, h := show of_nat (n -. succ m) = sub_nat_nat n (succ m),
   by delta sub_nat_nat; rw sub_eq_zero_of_le h; refl
 end
 
@@ -563,7 +563,7 @@ end
 lemma neg_succ_of_nat_coe' (n : ℕ) : -[1+ n] = -↑n - 1 :=
 by rw [int.sub_eq_add_neg, ← int.neg_add]; refl
 
-protected lemma coe_nat_sub {n m : ℕ} : n ≤ m → (↑(m - n) : ℤ) = ↑m - ↑n := of_nat_sub
+protected lemma coe_nat_sub {n m : ℕ} : n ≤ m → (↑(m -. n) : ℤ) = ↑m - ↑n := of_nat_sub
 
 local attribute [simp] int.sub_eq_add_neg
 
@@ -578,9 +578,9 @@ def to_nat : ℤ → ℕ
 | (n : ℕ) := n
 | -[1+ n] := 0
 
-theorem to_nat_sub (m n : ℕ) : to_nat (m - n) = m - n :=
+theorem to_nat_sub (m n : ℕ) : to_nat (m - n) = m -. n :=
 by rw [← int.sub_nat_nat_eq_coe]; exact sub_nat_nat_elim m n
-  (λm n i, to_nat i = m - n)
+  (λm n i, to_nat i = m -. n)
   (λi n, by rw [nat.add_sub_cancel_left]; refl)
   (λi n, by rw [nat.add_assoc, nat.sub_eq_zero_of_le (nat.le_add_right _ _)]; refl)
 

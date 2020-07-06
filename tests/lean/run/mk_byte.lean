@@ -8,7 +8,7 @@ variables {α : Type u} {n : ℕ}
 
 def to_list' (v : vector α n) : list α := v.1
 
-def drop (i : ℕ) : vector α n → vector α (n - i)
+def drop (i : ℕ) : vector α n → vector α (n -. i)
 | ⟨l, p⟩ := ⟨ list.drop i l, by simp * ⟩
 
 protected axiom eq {n : ℕ} : ∀ (a1 a2 : vector α n), to_list' a1 = to_list' a2 → a1 = a2

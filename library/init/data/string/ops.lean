@@ -16,7 +16,7 @@ namespace iterator
 by induction s; refl
 
 @[simp] lemma length_next_to_string_next (it : iterator) :
-  it.next.next_to_string.length = it.next_to_string.length - 1 :=
+  it.next.next_to_string.length = it.next_to_string.length -. 1 :=
 by cases it; cases it_snd; simp [iterator.next, iterator.next_to_string, string.length, nat.add_sub_cancel_left]
 
 lemma zero_lt_length_next_to_string_of_has_next {it : iterator} :
@@ -30,7 +30,7 @@ private def split_core (p : char → bool) : iterator → iterator → list stri
 | start stop :=
 if h : stop.has_next then
   -- wf hint
-  have stop.next_to_string.length - 1 < stop.next_to_string.length,
+  have stop.next_to_string.length -. 1 < stop.next_to_string.length,
     from nat.sub_lt (iterator.zero_lt_length_next_to_string_of_has_next h) dec_trivial,
   if p stop.curr then
     let rest := stop.next.next_to_string in

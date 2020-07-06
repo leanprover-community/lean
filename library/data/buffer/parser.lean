@@ -145,7 +145,7 @@ decorate_error s $ s.to_list.mmap' ch
 
 /-- Number of remaining input characters. -/
 def remaining : parser ℕ :=
-λ input pos, parse_result.done pos (input.size - pos)
+λ input pos, parse_result.done pos (input.size -. pos)
 
 /-- Matches the end of the input. -/
 def eof : parser unit :=
@@ -158,7 +158,7 @@ def foldr_core (f : α → β → β) (p : parser α) (b : β) : ∀ (reps : ℕ
 
 /-- Matches zero or more occurrences of `p`, and folds the result. -/
 def foldr (f : α → β → β) (p : parser α) (b : β) : parser β :=
-λ input pos, foldr_core f p b (input.size - pos + 1) input pos
+λ input pos, foldr_core f p b (input.size -. pos + 1) input pos
 
 def foldl_core (f : α → β → α) : ∀ (a : α) (p : parser β) (reps : ℕ), parser α
 | a p 0 := failure
@@ -166,7 +166,7 @@ def foldl_core (f : α → β → α) : ∀ (a : α) (p : parser β) (reps : ℕ
 
 /-- Matches zero or more occurrences of `p`, and folds the result. -/
 def foldl (f : α → β → α) (a : α) (p : parser β) : parser α :=
-λ input pos, foldl_core f a p (input.size - pos + 1) input pos
+λ input pos, foldl_core f a p (input.size -. pos + 1) input pos
 
 /-- Matches zero or more occurrences of `p`. -/
 def many (p : parser α) : parser (list α) :=
@@ -202,7 +202,7 @@ def fix_core (F : parser α → parser α) : ∀ (max_depth : ℕ), parser α
 /-- Matches a digit (0-9). -/
 def digit : parser nat := decorate_error "<digit>" $ do
   c ← sat (λ c, '0' ≤ c ∧ c ≤ '9'),
-  pure $ c.to_nat - '0'.to_nat
+  pure $ c.to_nat -. '0'.to_nat
 
 /-- Matches a natural number. Large numbers may cause performance issues, so
 don't run this parser on untrusted input. -/
@@ -214,7 +214,7 @@ def nat : parser nat := decorate_error "<natural>" $ do
 
 /-- Fixpoint combinator satisfying `fix F = F (fix F)`. -/
 def fix (F : parser α → parser α) : parser α :=
-λ input pos, fix_core F (input.size - pos + 1) input pos
+λ input pos, fix_core F (input.size -. pos + 1) input pos
 
 private def make_monospaced : char → char
 | '\n' := ' '

@@ -9,7 +9,7 @@ do put_str_ln ("Generating random numbers using seed: " ++ to_string seed),
      if i > 0 then
        do { n ← rand 0 18446744073709551616,
             put_str_ln $ to_string n,
-            return $ some (i - 1) }
+            return $ some (i -. 1) }
      else
        return none,
    return ()

@@ -48,7 +48,7 @@ do
       c_inj  ← mk_const n_inj,
       arity  ← get_arity c_inj,
       tgt ← target,
-      args   ← at_end₂ h tgt (arity - 1),
+      args   ← at_end₂ h tgt (arity -. 1),
       pr     ← mk_mapp n_inj args,
       pr_type ← infer_type pr,
       pr_type ← whnf pr_type,

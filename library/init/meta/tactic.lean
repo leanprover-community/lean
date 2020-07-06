@@ -1008,7 +1008,7 @@ do gs ← get_goals,
 meta def rotate_right (n : nat) [has_mod nat] : tactic unit :=
 do ng ← num_goals,
    if ng = 0 then skip
-   else rotate_left (ng - n % ng)
+   else rotate_left (ng -. n % ng)
 
 /-- Rotate the goals to the left by `n`. That is, put the main goal to the back `n` times. -/
 meta def rotate : nat → tactic unit :=
@@ -1667,7 +1667,7 @@ meta def rename_unstable (curr : name) (new : name) : tactic unit :=
 do h ← get_local curr,
    n ← revert h,
    intro new,
-   intron (n - 1)
+   intron (n -. 1)
 
 /--
 "Replace" hypothesis `h : type` with `h : new_type` where `eq_pr` is a proof
