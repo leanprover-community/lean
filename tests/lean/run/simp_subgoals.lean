@@ -1,13 +1,13 @@
-axiom DivS (x : nat) : x ≠ 0 → x / x = 1
+axiom DivS (x : nat) : x ≠ 0 → x /. x = 1
 
 open tactic
 
-example (x : nat) (h : x ≠ 0) : x / x = 1 :=
+example (x : nat) (h : x ≠ 0) : x /. x = 1 :=
 begin
   simp[DivS, h]
 end
 
-example (x : nat) (h : x ≠ 0) : x / x = 1 :=
+example (x : nat) (h : x ≠ 0) : x /. x = 1 :=
 begin
   fail_if_success {simp [DivS]},
   simp [DivS] {discharger := assumption}

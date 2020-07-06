@@ -5,6 +5,12 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.wf init.data.nat.basic
+
+class has_idiv (α : Type*) :=
+(idiv : α → α → α)
+
+infix ` /. `:70 := has_idiv.idiv
+
 namespace nat
 
 private def div_rec_lemma {x y : nat} : 0 < y ∧ y ≤ x → x - y < x :=
@@ -15,10 +21,10 @@ if h : 0 < y ∧ y ≤ x then f (x - y) (div_rec_lemma h) y + 1 else zero
 
 protected def div := well_founded.fix lt_wf div.F
 
-instance : has_div nat :=
+instance : has_idiv nat :=
 ⟨nat.div⟩
 
-lemma div_def_aux (x y : nat) : x / y = if h : 0 < y ∧ y ≤ x then (x - y) / y + 1 else 0 :=
+lemma div_def_aux (x y : nat) : x /. y = if h : 0 < y ∧ y ≤ x then (x - y) /. y + 1 else 0 :=
 congr_fun (well_founded.fix_eq lt_wf div.F x) y
 
 private def mod.F (x : nat) (f : Π x₁, x₁ < x → nat → nat) (y : nat) : nat :=

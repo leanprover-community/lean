@@ -36,10 +36,10 @@ instance : has_repr std_gen :=
 
 def std_next : std_gen → nat × std_gen
 | ⟨s1, s2⟩ :=
-  let k    : int := s1 / 53668,
+  let k    : int := s1 /. 53668,
       s1'  : int := 40014 * ((s1 : int) - k * 53668) - k * 12211,
       s1'' : int := if s1' < 0 then s1' + 2147483563 else s1',
-      k'   : int := s2 / 52774,
+      k'   : int := s2 /. 52774,
       s2'  : int := 40692 * ((s2 : int) - k' * 52774) - k' * 3791,
       s2'' : int := if s2' < 0 then s2' + 2147483399 else s2',
       z    : int := s1'' - s2'',
@@ -62,7 +62,7 @@ instance : random_gen std_gen :=
 
 /-- Return a standard number generator. -/
 def mk_std_gen (s : nat := 0) : std_gen :=
-let q  := s / 2147483562,
+let q  := s /. 2147483562,
     s1 := s % 2147483562,
     s2 := q % 2147483398 in
 ⟨s1 + 1, s2 + 1⟩
@@ -78,16 +78,16 @@ private def rand_nat_aux {gen : Type u} [random_gen gen] (gen_lo gen_mag : nat) 
 | r'@(r+1) v g :=
   let (x, g') := random_gen.next g,
       v'      := v*gen_mag + (x - gen_lo)
-  in have r' / gen_mag - 1 < r',
+  in have r' /. gen_mag - 1 < r',
      begin
-       by_cases h : (r + 1) / gen_mag = 0,
+       by_cases h : (r + 1) /. gen_mag = 0,
        { rw [h], simp, apply nat.zero_lt_succ },
-       { have : (r + 1) / gen_mag > 0, from nat.pos_of_ne_zero h,
-         have h₁ : (r + 1) / gen_mag - 1 < (r + 1) / gen_mag, { apply nat.sub_lt, assumption, tactic.comp_val },
-         have h₂ : (r + 1) / gen_mag ≤ r + 1, { apply nat.div_le_self },
+       { have : (r + 1) /. gen_mag > 0, from nat.pos_of_ne_zero h,
+         have h₁ : (r + 1) /. gen_mag - 1 < (r + 1) /. gen_mag, { apply nat.sub_lt, assumption, tactic.comp_val },
+         have h₂ : (r + 1) /. gen_mag ≤ r + 1, { apply nat.div_le_self },
          exact lt_of_lt_of_le h₁ h₂ }
      end,
-     rand_nat_aux (r' / gen_mag - 1) v' g'
+     rand_nat_aux (r' /. gen_mag - 1) v' g'
 
 /-- Generate a random natural number in the interval [lo, hi]. -/
 def rand_nat {gen : Type u} [random_gen gen] (g : gen) (lo hi : nat) : nat × gen :=

@@ -141,7 +141,7 @@ section conversion
 
   protected def of_nat : Π (n : ℕ), nat → bitvec n
   | 0        x := nil
-  | (succ n) x := of_nat n (x / 2) ++ₜ to_bool (x % 2 = 1) :: nil
+  | (succ n) x := of_nat n (x /. 2) ++ₜ to_bool (x % 2 = 1) :: nil
 
   protected def of_int : Π (n : ℕ), int → bitvec (succ n)
   | n (int.of_nat m)          := ff :: bitvec.of_nat n m
@@ -185,7 +185,7 @@ section conversion
   end
 
   theorem of_nat_succ {k n : ℕ}
-  :  bitvec.of_nat (succ k) n = bitvec.of_nat k (n / 2) ++ₜ to_bool (n % 2 = 1) :: nil :=
+  :  bitvec.of_nat (succ k) n = bitvec.of_nat k (n /. 2) ++ₜ to_bool (n % 2 = 1) :: nil :=
   rfl
 
   theorem to_nat_of_nat {k n : ℕ}

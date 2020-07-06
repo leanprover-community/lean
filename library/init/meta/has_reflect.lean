@@ -31,8 +31,8 @@ local attribute [semireducible] reflected
 meta instance nat.reflect : has_reflect ℕ
 | n := if n = 0 then `(0 : ℕ)
        else if n = 1 then `(1 : ℕ)
-       else if n % 2 = 0 then `(bit0 %%(nat.reflect (n / 2)) : ℕ)
-       else `(bit1 %%(nat.reflect (n / 2)) : ℕ)
+       else if n % 2 = 0 then `(bit0 %%(nat.reflect (n /. 2)) : ℕ)
+       else `(bit1 %%(nat.reflect (n /. 2)) : ℕ)
 
 meta instance unsigned.reflect : has_reflect unsigned
 | ⟨n, pr⟩ := `(unsigned.of_nat' n)

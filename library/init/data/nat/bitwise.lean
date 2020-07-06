@@ -73,7 +73,7 @@ theorem bodd_add_div2 : ∀ n, cond (bodd n) 1 0 + 2 * div2 n = n
     { rw [succ_mul, nat.add_comm 1, nat.zero_add] }
 end
 
-theorem div2_val (n) : div2 n = n / 2 :=
+theorem div2_val (n) : div2 n = n /. 2 :=
 begin
   refine eq_of_mul_eq_mul_left dec_trivial
       (nat.add_left_cancel (eq.trans _ (nat.mod_add_div n 2).symm)),
@@ -196,7 +196,7 @@ lemma one_shiftl (n) : shiftl 1 n = 2 ^ n :=
 @[simp] lemma zero_shiftl (n) : shiftl 0 n = 0 :=
 (shiftl_eq_mul_pow _ _).trans (nat.zero_mul _)
 
-lemma shiftr_eq_div_pow (m) : ∀ n, shiftr m n = m / 2 ^ n
+lemma shiftr_eq_div_pow (m) : ∀ n, shiftr m n = m /. 2 ^ n
 | 0     := (nat.div_one _).symm
 | (k+1) := (congr_arg div2 (shiftr_eq_div_pow k)).trans $
            by rw [div2_val, nat.div_div_eq_div_mul]; refl

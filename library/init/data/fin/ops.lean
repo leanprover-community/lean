@@ -46,11 +46,11 @@ end
 protected def mod : fin n → fin n → fin n
 | ⟨a, h₁⟩ ⟨b, h₂⟩ := ⟨a % b, modlt h₁ h₂⟩
 
-private lemma divlt {a b n : nat} (h : a < n) : a / b < n :=
+private lemma divlt {a b n : nat} (h : a < n) : a /. b < n :=
 lt_of_le_of_lt (nat.div_le_self a b) h
 
 protected def div : fin n → fin n → fin n
-| ⟨a, h⟩ ⟨b, _⟩ := ⟨a / b, divlt h⟩
+| ⟨a, h⟩ ⟨b, _⟩ := ⟨a /. b, divlt h⟩
 
 instance : has_zero (fin (succ n)) := ⟨⟨0, succ_pos n⟩⟩
 instance : has_one (fin (succ n))  := ⟨of_nat 1⟩
@@ -58,7 +58,7 @@ instance : has_add (fin n)         := ⟨fin.add⟩
 instance : has_sub (fin n)         := ⟨fin.sub⟩
 instance : has_mul (fin n)         := ⟨fin.mul⟩
 instance : has_mod (fin n)         := ⟨fin.mod⟩
-instance : has_div (fin n)         := ⟨fin.div⟩
+instance : has_idiv (fin n)        := ⟨fin.div⟩
 
 lemma of_nat_zero : @of_nat n 0 = 0 := rfl
 
@@ -78,8 +78,8 @@ lemma mod_def (a b : fin n) : (a % b).val = a.val % b.val :=
 show (fin.mod a b).val = a.val % b.val, from
 by cases a; cases b; simp [fin.mod]
 
-lemma div_def (a b : fin n) : (a / b).val = a.val / b.val :=
-show (fin.div a b).val = a.val / b.val, from
+lemma div_def (a b : fin n) : (a /. b).val = a.val /. b.val :=
+show (fin.div a b).val = a.val /. b.val, from
 by cases a; cases b; simp [fin.div]
 
 lemma lt_def (a b : fin n) : (a < b) = (a.val < b.val) :=

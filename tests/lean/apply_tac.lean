@@ -59,10 +59,10 @@ begin
   apply @foo a b c h₁ -- uses auto_param for solving goal
 end
 
-lemma my_div_self (a : nat) (h : a ≠ 0 . assumption) : a / a = 1 :=
+lemma my_div_self (a : nat) (h : a ≠ 0 . assumption) : a /. a = 1 :=
 sorry
 
-example (a : nat) (h : a ≠ 0) : a / a = 1 :=
+example (a : nat) (h : a ≠ 0) : a /. a = 1 :=
 begin
   apply my_div_self -- uses auto_param for solving goal
 end
@@ -73,13 +73,13 @@ begin
   assumption
 end
 
-example (a : nat) (h : a ≠ 0) : a / a = 1 :=
+example (a : nat) (h : a ≠ 0) : a /. a = 1 :=
 begin
   apply_with my_div_self {auto_param := ff},
   assumption
 end
 
-example (a : nat) (h : a ≠ 0) : a / a = 1 :=
+example (a : nat) (h : a ≠ 0) : a /. a = 1 :=
 begin
   apply_with my_div_self {opt_param := ff} -- uses auto_param for solving goal
 end
