@@ -1,3 +1,26 @@
+3.17.0c (6 July 2020)
+---------------------
+
+Features:
+- Refactor widgets to use hooks (#363, #369)
+- `component.with_effects` (#370)
+- Add "copy text" effect. (#375)
+
+Bug fixes:
+- Add margin to local const names in tactic state (#365)
+- Prevent segfault in `apply` (#373, fixes #372)
+- Fix address incorrect issue in `pp_tagged` (#371)
+- Abort if no input consumed in `module_parser` (#377, fixes #374)
+- Do not unify `(1 : ℕ)` with `(1 : ℤ)` (#376, fixes #362)
+
+Changes:
+- Fix vacuous assumptions in nat lemmas (#366)
+- Remove `has_neg` instance for `set` (#367)
+- Mark `dif_ctx_congr` as `@[congr]` (#378)
+
+Server protocol changes:
+- The response of the `widget_event` request may now contain effects.
+
 3.16.5c (25 June 2020)
 ----------------------
 
