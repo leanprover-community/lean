@@ -19,7 +19,7 @@ Changes:
 - Mark `dif_ctx_congr` as `@[congr]` (#378)
 
 Server protocol changes:
-- The response of the `widget_event` request may now contains effects.
+- The response of the `widget_event` request may now contain effects.
 
 3.16.5c (25 June 2020)
 ----------------------
