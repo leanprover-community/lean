@@ -23,7 +23,7 @@ reserve infix ` +⋯+ `:65
 @[user_notation]
 meta def upto_notation (e₁ : parse lean.parser.pexpr) (_ : parse $ tk "+⋯+") (n₂ : ℕ) : parser pexpr :=
 do n₁ ← ↑(to_expr e₁ >>= eval_expr nat),
-   pure $ (n₂+1-.n₁).repeat (λ i e, ``(%%e + %%(reflect $ n₁ + i))) ``(0)
+   pure $ (n₂+1∸n₁).repeat (λ i e, ``(%%e + %%(reflect $ n₁ + i))) ``(0)
 
 #check 1 +⋯+ 10
 

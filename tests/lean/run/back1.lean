@@ -56,7 +56,7 @@ meta def search_mem_list : expr → expr → tactic expr
    hides this complexity.
    The tactic (find_assumption m) succeeds if there is a hypothesis (h : m) in
    the local context of the main goal. It is implemented in Lean, and we can
-   jump to its definition by using `M-.` (on Emacs) and `F12` (on VS Code).
+   jump to its definition by using `M∸` (on Emacs) and `F12` (on VS Code).
    On VS Code, we can also "peek" on its definition by typing (Alt-F12).
  -/
 (do m ← mk_app `has_mem.mem [a, e], find_assumption m)

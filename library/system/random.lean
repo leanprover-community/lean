@@ -49,7 +49,7 @@ def std_next : std_gen → nat × std_gen
 def std_split : std_gen → std_gen × std_gen
 | g@⟨s1, s2⟩ :=
   let new_s1  := if s1 = 2147483562 then 1 else s1 + 1,
-      new_s2  := if s2 = 1          then 2147483398 else s2 -. 1,
+      new_s2  := if s2 = 1          then 2147483398 else s2 ∸ 1,
       new_g   := (std_next g).2,
       left_g  := std_gen.mk new_s1 new_g.2,
       right_g := std_gen.mk new_g.1 new_s2
@@ -77,31 +77,31 @@ private def rand_nat_aux {gen : Type u} [random_gen gen] (gen_lo gen_mag : nat) 
 | 0        v g := (v, g)
 | r'@(r+1) v g :=
   let (x, g') := random_gen.next g,
-      v'      := v*gen_mag + (x -. gen_lo)
-  in have r' /. gen_mag -. 1 < r',
+      v'      := v*gen_mag + (x ∸ gen_lo)
+  in have r' /. gen_mag ∸ 1 < r',
      begin
        by_cases h : (r + 1) /. gen_mag = 0,
        { rw [h], simp, apply nat.zero_lt_succ },
        { have : (r + 1) /. gen_mag > 0, from nat.pos_of_ne_zero h,
-         have h₁ : (r + 1) /. gen_mag -. 1 < (r + 1) /. gen_mag, { apply nat.sub_lt, assumption, tactic.comp_val },
+         have h₁ : (r + 1) /. gen_mag ∸ 1 < (r + 1) /. gen_mag, { apply nat.sub_lt, assumption, tactic.comp_val },
          have h₂ : (r + 1) /. gen_mag ≤ r + 1, { apply nat.div_le_self },
          exact lt_of_lt_of_le h₁ h₂ }
      end,
-     rand_nat_aux (r' /. gen_mag -. 1) v' g'
+     rand_nat_aux (r' /. gen_mag ∸ 1) v' g'
 
 /-- Generate a random natural number in the interval [lo, hi]. -/
 def rand_nat {gen : Type u} [random_gen gen] (g : gen) (lo hi : nat) : nat × gen :=
 let lo'              := if lo > hi then hi else lo,
     hi'              := if lo > hi then lo else hi,
     (gen_lo, gen_hi) := random_gen.range g,
-    gen_mag          := gen_hi -. gen_lo + 1,
+    gen_mag          := gen_hi ∸ gen_lo + 1,
     /-
       Probabilities of the most likely and least likely result
       will differ at most by a factor of (1 +- 1/q).  Assuming the RandomGen
       is uniform, of course
     -/
     q       := 1000,
-    k       := hi' -. lo' + 1,
+    k       := hi' ∸ lo' + 1,
     tgt_mag := k * q,
     (v, g') := rand_nat_aux gen_lo gen_mag (nat.zero_lt_succ _) tgt_mag 0 g,
     v'      := lo' + (v % k)

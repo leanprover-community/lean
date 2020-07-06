@@ -365,7 +365,7 @@ meta def ith_arg_aux : expr → nat → expr
 | e         _     := e
 
 meta def ith_arg (e : expr) (i : nat) : expr :=
-ith_arg_aux e (get_app_num_args e -. i -. 1)
+ith_arg_aux e (get_app_num_args e ∸ i ∸ 1)
 
 meta def const_name : expr elab → name
 | (const n ls) := n

@@ -39,7 +39,7 @@ do env     ← get_env,
    arity   ← get_pi_arity ctype,
    I       ← env.inductive_type_of c,
    nparams ← return (env.inductive_num_params I),
-   return $ arity -. nparams
+   return $ arity ∸ nparams
 
 private meta def mk_name_list_aux : name → nat → nat → list name → list name × nat
 | p i 0     l := (list.reverse l, i)
@@ -96,7 +96,7 @@ private meta def mk_constructor_fresh_names_aux : nat → expr → name_set → 
      } else do {
        x        ← mk_local' n bi d,
        let ty' := b.instantiate_var x,
-       mk_constructor_fresh_names_aux (nparams -. 1) ty' s
+       mk_constructor_fresh_names_aux (nparams ∸ 1) ty' s
      }
   | _ := return ([], s)
   end

@@ -16,7 +16,7 @@ def tst : tree → nat
 | (tree.leaf v) := v
 | (tree.node v l r) :=
   match f v with
-  | tt := tst l + tst l -. tst l
+  | tt := tst l + tst l ∸ tst l
   | ff := tst r
   end
 

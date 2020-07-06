@@ -47,7 +47,7 @@ section shift
       { have h₁ := le_of_not_ge h,
         rw [min_eq_left h₁, sub_eq_zero_of_le h₁, zero_min, nat.add_zero] }
     end $
-    repeat fill (min n i) ++ₜ take (n-.i) x
+    repeat fill (min n i) ++ₜ take (n∸i) x
 
   -- unsigned shift right
   def ushr (x : bitvec n) (i : ℕ) : bitvec n :=

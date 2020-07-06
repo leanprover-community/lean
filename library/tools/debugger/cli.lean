@@ -76,11 +76,11 @@ meta def show_breakpoints : list name → vm unit
 
 meta def up_cmd (frame : nat) : vm nat :=
 if frame = 0 then return 0
-else show_frame (frame -. 1) >> return (frame -. 1)
+else show_frame (frame ∸ 1) >> return (frame ∸ 1)
 
 meta def down_cmd (frame : nat) : vm nat :=
 do sz ← vm.call_stack_size,
-   if frame >= sz -. 1 then return frame
+   if frame >= sz ∸ 1 then return frame
    else show_frame (frame + 1) >> return (frame + 1)
 
 meta def pidx_cmd : nat → list string → vm unit
@@ -158,7 +158,7 @@ meta def cmd_loop_core : state → nat → list string → vm state
 
 meta def cmd_loop (s : state) (default_cmd : list string) : vm state :=
 do csz ← vm.call_stack_size,
-   cmd_loop_core s (csz -. 1) default_cmd
+   cmd_loop_core s (csz ∸ 1) default_cmd
 
 def prune_active_bps_core (csz : nat) : list (nat × name) → list (nat × name)
 | []              := []

@@ -166,7 +166,7 @@ lemma shiftr_add (m n) : ∀ k, shiftr m (n + k) = shiftr (shiftr m n) k
 | 0     := rfl
 | (k+1) := congr_arg div2 (shiftr_add k)
 
-lemma shiftl'_sub (b m) : ∀ {n k}, k ≤ n → shiftl' b m (n -. k) = shiftr (shiftl' b m n) k
+lemma shiftl'_sub (b m) : ∀ {n k}, k ≤ n → shiftl' b m (n ∸ k) = shiftr (shiftl' b m n) k
 | n     0     h := rfl
 | (n+1) (k+1) h := begin
   simp [shiftl'], rw [nat.add_comm, shiftr_add],
@@ -174,7 +174,7 @@ lemma shiftl'_sub (b m) : ∀ {n k}, k ≤ n → shiftl' b m (n -. k) = shiftr (
   apply shiftl'_sub (nat.le_of_succ_le_succ h)
 end
 
-lemma shiftl_sub : ∀ m {n k}, k ≤ n → shiftl m (n -. k) = shiftr (shiftl m n) k := shiftl'_sub _
+lemma shiftl_sub : ∀ m {n k}, k ≤ n → shiftl m (n ∸ k) = shiftr (shiftl m n) k := shiftl'_sub _
 
 lemma shiftl_eq_mul_pow (m) : ∀ n, shiftl m n = m * 2 ^ n
 | 0     := (nat.mul_one _).symm

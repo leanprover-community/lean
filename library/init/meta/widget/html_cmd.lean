@@ -28,7 +28,7 @@ meta def show_widget_cmd (x : parse $ tk "#html") : parser unit := do
     c : component unit empty ← pure $ component.stateless (λ _, [htm]),
     pure $ component.ignore_props $ component.ignore_action $ c
   )),
-  save_widget ⟨l, c -. "#html".length -. 1⟩ comp,
+  save_widget ⟨l, c ∸ "#html".length ∸ 1⟩ comp,
   trace "successfully rendered widget"
   pure ()
 

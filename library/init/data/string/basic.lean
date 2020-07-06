@@ -198,7 +198,7 @@ private def to_nat_core : string.iterator → nat → nat → nat
 | it      0     r := r
 | it      (i+1) r :=
   let c := it.curr in
-  let r := r*10 + c.to_nat -. '0'.to_nat in
+  let r := r*10 + c.to_nat ∸ '0'.to_nat in
   to_nat_core it.next i r
 
 def string.to_nat (s : string) : nat :=

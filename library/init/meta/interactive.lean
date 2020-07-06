@@ -599,7 +599,7 @@ focus1 $ do {
         locals.mmap' (try ∘ clear),
         pure h
       },
-      intron (n-.1),
+      intron (n∸1),
       e ← intro1,
       pure (e, newvars, locals)
    },
@@ -716,7 +716,7 @@ do ⟨goal, tag⟩ ← goal_with_matching_tag ns,
    match tag with
    | (case_tag.pi _ num_args) := do
      intro_lst ids,
-     when (num_ids < num_args) $ intron (num_args -. num_ids)
+     when (num_ids < num_args) $ intron (num_args ∸ num_ids)
    | (case_tag.hyps _ new_hyp_names) := do
        let num_new_hyps := new_hyp_names.length,
        when (num_ids > num_new_hyps) $ fail format!

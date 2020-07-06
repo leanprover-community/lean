@@ -11,7 +11,7 @@ notation `ℕ` := nat
 class has_tsub (α : Type*) :=
 (tsub : α → α → α)
 
-infixl ` -. `:65 := has_tsub.tsub
+infixl ` ∸ `:65 := has_tsub.tsub
 
 namespace nat
 
@@ -121,9 +121,9 @@ less_than_or_equal.cases_on h (or.inl rfl) (λ n h, or.inr (succ_le_succ h))
 lemma lt_succ_of_le {a b : ℕ} : a ≤ b → a < succ b :=
 succ_le_succ
 
-@[simp] lemma succ_sub_succ_eq_sub (a b : ℕ) : succ a -. succ b = a -. b :=
+@[simp] lemma succ_sub_succ_eq_sub (a b : ℕ) : succ a ∸ succ b = a ∸ b :=
 nat.rec_on b
-  (show succ a -. succ zero = a -. zero, from (eq.refl (succ a -. succ zero)))
+  (show succ a ∸ succ zero = a ∸ zero, from (eq.refl (succ a ∸ succ zero)))
   (λ b, congr_arg pred)
 
 lemma not_succ_le_self : ∀ n : ℕ, ¬succ n ≤ n :=
@@ -143,15 +143,15 @@ lemma pred_lt : ∀ {n : ℕ}, n ≠ 0 → pred n < n
 | 0        h := absurd rfl h
 | (succ a) h := lt_succ_of_le less_than_or_equal.refl
 
-lemma sub_le (a b : ℕ) : a -. b ≤ a :=
-nat.rec_on b (nat.le_refl (a -. 0)) (λ b₁, nat.le_trans (pred_le (a -. b₁)))
+lemma sub_le (a b : ℕ) : a ∸ b ≤ a :=
+nat.rec_on b (nat.le_refl (a ∸ 0)) (λ b₁, nat.le_trans (pred_le (a ∸ b₁)))
 
-lemma sub_lt : ∀ {a b : ℕ}, 0 < a → 0 < b → a -. b < a
+lemma sub_lt : ∀ {a b : ℕ}, 0 < a → 0 < b → a ∸ b < a
 | 0     b     h1 h2 := absurd h1 (nat.lt_irrefl 0)
 | (a+1) 0     h1 h2 := absurd h2 (nat.lt_irrefl 0)
 | (a+1) (b+1) h1 h2 :=
   eq.symm (succ_sub_succ_eq_sub a b) ▸
-    show a -. b < succ a, from
+    show a ∸ b < succ a, from
     lt_succ_of_le (sub_le a b)
 
 protected lemma lt_of_lt_of_le {n m k : ℕ} : n < m → m ≤ k → n < k :=
