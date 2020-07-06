@@ -8,6 +8,12 @@ import init.logic
 
 notation `ℕ` := nat
 
+/--
+Truncating subtraction, which truncates negative results to zero.
+
+The motivating example is the truncating subtraction of natural numbers,
+where for example `3 ∸ 5 = 0` and `5 ∸ 3 = 2`.
+-/
 class has_tsub (α : Type*) :=
 (tsub : α → α → α)
 

@@ -6,6 +6,12 @@ Authors: Leonardo de Moura
 prelude
 import init.wf init.data.nat.basic
 
+/--
+Integer division, which rounds the result to the next integer.
+
+This type class is used for division on natural numbers and integers.
+For example `1 /. 2 = 0`.
+-/
 class has_idiv (α : Type*) :=
 (idiv : α → α → α)
 
