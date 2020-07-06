@@ -1,0 +1,2 @@
+zero_lt_zero_point_one.lean:1:16: error: failed to synthesize type class instance for
+⊢ has_div ℕ

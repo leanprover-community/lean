@@ -1,0 +1,1 @@
+example : ¬ 0 < 0.1 := sorry
