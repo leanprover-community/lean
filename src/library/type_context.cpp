@@ -2370,10 +2370,19 @@ bool type_context_old::is_def_eq_binding(expr e1, expr e2) {
 }
 
 optional<expr> type_context_old::mk_class_instance_at(local_context const & lctx, expr const & type) {
-    if (m_cache->get_frozen_local_instances() &&
-        m_cache->get_frozen_local_instances() == lctx.get_frozen_local_instances() &&
-        equal_locals(m_lctx, lctx)) {
-        return mk_class_instance(type);
+    if (m_lctx.get_frozen_local_instances() &&
+            m_lctx.get_frozen_local_instances() == lctx.get_frozen_local_instances()) {
+        if (equal_locals(m_lctx, lctx)) {
+            // same local context, just synthesize instance here
+            return mk_class_instance(type);
+        } else {
+            // same frozen instances, reuse cache
+            type_context_old tmp_ctx(env(), m_mctx, lctx, *m_cache, m_transparency_mode);
+            auto r = tmp_ctx.mk_class_instance(type);
+            if (r)
+                m_mctx = tmp_ctx.mctx();
+            return r;
+        }
     } else {
         context_cacheless tmp_cache(*m_cache, true);
         type_context_old tmp_ctx(env(), m_mctx, lctx, tmp_cache, m_transparency_mode);
@@ -3543,6 +3552,7 @@ struct instance_synthesizer {
     };
 
     type_context_old &        m_ctx;
+    local_instances       m_local_instances;
     expr                  m_main_mvar;
     state                 m_state;    // active state
     buffer<choice>        m_choices;
@@ -3552,6 +3562,8 @@ struct instance_synthesizer {
 
     instance_synthesizer(type_context_old & ctx):
         m_ctx(ctx),
+        m_local_instances(ctx.lctx().get_frozen_local_instances() ?
+            *ctx.lctx().get_frozen_local_instances() : ctx.m_local_instances),
         m_displayed_trace_header(false),
         m_old_transparency_mode(m_ctx.m_transparency_mode),
         m_old_zeta(m_ctx.m_zeta) {
@@ -3664,7 +3676,7 @@ struct instance_synthesizer {
 
     list<expr> get_local_instances(name const & cname) {
         buffer<expr> selected;
-        for (local_instance const & li : m_ctx.m_local_instances) {
+        for (local_instance const & li : m_local_instances) {
             if (li.get_class_name() == cname)
                 selected.push_back(li.get_local());
         }
