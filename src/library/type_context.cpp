@@ -2379,11 +2379,11 @@ optional<expr> type_context_old::mk_class_instance_at(local_context const & lctx
             // same frozen instances, reuse cache
             type_context_old tmp_ctx(env(), m_mctx, lctx, *m_cache, m_transparency_mode);
             auto r = tmp_ctx.mk_class_instance(type);
-            if (r)
-                m_mctx = tmp_ctx.mctx();
+            m_mctx = tmp_ctx.mctx();
             return r;
         }
     } else {
+        // TODO(gabriel): allow local caching
         context_cacheless tmp_cache(*m_cache, true);
         type_context_old tmp_ctx(env(), m_mctx, lctx, tmp_cache, m_transparency_mode);
         auto r = tmp_ctx.mk_class_instance(type);
@@ -2408,7 +2408,14 @@ bool type_context_old::mk_nested_instance(expr const & m, expr const & m_type) {
     } else {
         optional<metavar_decl> mdecl = m_mctx.find_metavar_decl(m);
         if (!mdecl) return false;
-        inst = mk_class_instance_at(mdecl->get_context(), m_type);
+
+        // HACK(gabriel): do not reuse type-class cache for nested resolution problems
+        // For one example that easily breaks, see the default field values in `init/control/lawful.lean`
+        // TODO(gabriel): allow local caching
+        context_cacheless tmp_cache(*m_cache, true);
+        type_context_old tmp_ctx(env(), m_mctx, mdecl->get_context(), tmp_cache, m_transparency_mode);
+        inst = tmp_ctx.mk_class_instance(m_type);
+        if (inst) m_mctx = tmp_ctx.mctx();
     }
     if (inst) {
         assign(m, *inst);
