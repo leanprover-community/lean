@@ -1,3 +1,12 @@
+3.17.1c (8 July 2020)
+---------------------
+
+Features:
+- Reuse type-class cache (#383)
+
+Bug fixes:
+- Info error for commands directly after imports (#386, fixes #382)
+
 3.17.0c (6 July 2020)
 ---------------------
 
