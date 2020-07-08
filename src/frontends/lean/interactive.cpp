@@ -163,7 +163,8 @@ void report_info(environment const & env, options const & opts, io_state const &
                     record["source"]["file"] = f;
                     record["source"]["line"] = 1;
                     record["source"]["column"] = 0;
-                } catch (file_not_found_exception &) {}
+                } catch (file_not_found_exception &) {
+                } catch (lean_file_not_found_exception &) {}
                 break;
             }
             case break_at_pos_exception::token_context::option:
