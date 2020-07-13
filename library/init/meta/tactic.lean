@@ -586,8 +586,9 @@ meta constant induction (h : expr) (ns : list name := []) (rec : option name := 
 
    The `cases` tactic is implemented using this one, and it relaxes the restriction of `h`.
 
-   Note: The lists of new hypotheses for each new goal may contain expressions
-   that are not, in fact, local constants. These should be ignored. -/
+   Note: There is one "new hypothesis" for every constructor argument. These are
+   usually local constants, but due to dependent pattern matching, they can also
+   be arbitrary terms. -/
 meta constant cases_core (h : expr) (ns : list name := []) (md := semireducible) : tactic (list (name × list expr × list (name × expr)))
 /-- Similar to cases tactic, but does not revert/intro/clear hypotheses. -/
 meta constant destruct (e : expr) (md := semireducible) : tactic unit
@@ -1419,11 +1420,15 @@ kdependencies e md >>= revert_lst
 meta def revert_kdeps (e : expr) (md := reducible) :=
 revert_kdependencies e md
 
-/-- Postprocess the output of `cases_core`. The third component of each tuple in
-the input list (the list of substitutions) is dropped. The second component
-(the list of new hypotheses) is filtered: any expression that isn't a local
-constant is dropped. This works around a bug in `cases_core`. -/
-meta def cases_postprocess (hs : list (name × list expr × list (name × expr)))
+/-- Postprocess the output of `cases_core`:
+
+- The third component of each tuple in the input list (the list of
+  substitutions) is dropped since we don't use it anywhere.
+- The second component (the list of new hypotheses) is filtered: any expression
+  that is not a local constant is dropped. We only use the new hypotheses for
+  the renaming functionality of `case`, so we want to keep only those
+  "new hypotheses" that are, in fact, local constants. -/
+private meta def cases_postprocess (hs : list (name × list expr × list (name × expr)))
   : list (name × list expr) :=
 hs.map $ λ ⟨n, hs, _⟩, (n, hs.filter (λ h, h.is_local_constant))
 
@@ -1434,7 +1439,9 @@ hs.map $ λ ⟨n, hs, _⟩, (n, hs.filter (λ h, h.is_local_constant))
     The mode `md` is used with `cases_core` and `dmd` with `generalize` and `revert_kdeps`.
 
     It returns the constructor names associated with each new goal and the newly
-    introduced hypotheses.
+    introduced hypotheses. Note that while `cases_core` may return "new
+    hypotheses" that are not local constants, this tactic only returns local
+    constants.
 -/
 meta def cases (e : expr) (ids : list name := []) (md := semireducible) (dmd := semireducible) : tactic (list (name × list expr)) :=
 if e.is_local_constant then
