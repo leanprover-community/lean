@@ -1552,6 +1552,13 @@ meta def is_protected_decl (n : name) : tactic bool :=
 do env ← get_env,
    return $ env.is_protected n
 
+/-- get the set of equations that specify a given
+definition -/
+meta def get_defn_spec (n : name) : tactic pexpr :=
+do env ← get_env,
+   env.defn_spec n
+
+
 /-- `add_defn_equations` adds a definition specified by a list of equations.
 
   The arguments:

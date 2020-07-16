@@ -10,7 +10,7 @@ match_expr.cpp local_context_adapter.cpp decl_util.cpp definition_cmds.cpp
 brackets.cpp tactic_notation.cpp info_manager.cpp json.cpp module_parser.cpp
 interactive.cpp completion.cpp
 user_notation.cpp user_command.cpp
-widget.cpp)
+widget.cpp eqn_api.cpp)
 if(EMSCRIPTEN)
 add_dependencies(lean_frontend gmp)
 endif()

@@ -36,6 +36,7 @@ Author: Leonardo de Moura
 #include "library/compiler/rec_fn_macro.h"
 #include "library/tactic/eqn_lemmas.h"
 #include "frontends/lean/parser.h"
+#include "frontends/lean/eqn_api.h"
 #include "frontends/lean/tokens.h"
 #include "frontends/lean/elaborator.h"
 #include "frontends/lean/util.h"
@@ -475,7 +476,10 @@ static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cm
         return p.env();
 
     bool recover_from_errors = true;
-    elaborator elab(env, p.get_options(), get_namespace(env) + mlocal_pp_name(fns[0]), metavar_context(), local_context(), recover_from_errors);
+    name full_name = get_namespace(env) + mlocal_pp_name(fns[0]);
+    env = store_eqn_spec(env, full_name, val);
+    p.set_env(env);
+    elaborator elab(env, p.get_options(), full_name, metavar_context(), local_context(), recover_from_errors);
     buffer<expr> new_params;
     elaborate_params(elab, params, new_params);
     val = replace_locals_preserving_pos_info(val, params, new_params);
@@ -794,7 +798,10 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
         return p.env();
 
     bool recover_from_errors = p.m_error_recovery;
-    elaborator elab(env, p.get_options(), get_namespace(env) + mlocal_pp_name(fn), metavar_context(), local_context(), recover_from_errors);
+    name full_name = get_namespace(env) + mlocal_pp_name(fn);
+    env = store_eqn_spec(env, full_name, val);
+    p.set_env(env);
+    elaborator elab(env, p.get_options(), full_name, metavar_context(), local_context(), recover_from_errors);
     buffer<expr> new_params;
     elaborate_params(elab, params, new_params);
     elab.freeze_local_instances();
