@@ -14,16 +14,23 @@ def all : bool -> bool -> bool -> bool -> bool
 
 open tactic
 
+meta def replace_internal_name (e : pexpr) : pexpr :=
+expr.replace e $ λ e i,
+match e with
+| expr.const (name.mk_numeral _ _) ls := some $ expr.const `_ ls
+| _ := none
+end
+
 run_cmd do
  e ← get_env,
  trace "foo",
- environment.defn_spec e ``foo >>= trace,
+ environment.defn_spec e ``foo >>= trace ∘ replace_internal_name,
  trace "foo_bar",
- environment.defn_spec e ``foo_bar >>= trace,
+ environment.defn_spec e ``foo_bar >>= trace ∘ replace_internal_name,
  trace "all",
- environment.defn_spec e ``all >>= trace,
+ environment.defn_spec e ``all >>= trace ∘ replace_internal_name,
  trace "f",
- environment.defn_spec e ``f >>= trace,
+ environment.defn_spec e ``f >>= trace ∘ replace_internal_name,
  trace "g",
- environment.defn_spec e ``g >>= trace,
+ environment.defn_spec e ``g >>= trace ∘ replace_internal_name,
  skip

@@ -158,14 +158,14 @@ meta constant expr.lt : expr → expr → bool
 meta constant expr.lex_lt : expr → expr → bool
 
 /-- `expr.fold e a f`: Traverses each subexpression of `e`. The `nat` passed to the folder `f` is the binder depth. -/
-meta constant expr.fold {α : Type} : expr → α → (expr → nat → α → α) → α
+meta constant expr.fold {elab : opt_param bool tt} {α : Type} : expr elab → α → (expr elab → nat → α → α) → α
 /-- `expr.replace e f`
  Traverse over an expr `e` with a function `f` which can decide to replace subexpressions or not.
  For each subexpression `s` in the expression tree, `f s n` is called where `n` is how many binders are present above the given subexpression `s`.
  If `f s n` returns `none`, the children of `s` will be traversed.
  Otherwise if `some s'` is returned, `s'` will replace `s` and this subexpression will not be traversed further.
  -/
-meta constant expr.replace : expr → (expr → nat → option expr) → expr
+meta constant expr.replace {elab : opt_param bool tt} : expr elab → (expr elab → nat → option (expr elab)) → expr elab
 
 /-- `abstract_local e n` replaces each instance of the local constant with unique (not pretty) name `n` in `e` with a de-Bruijn variable. -/
 meta constant expr.abstract_local  : expr → name → expr
