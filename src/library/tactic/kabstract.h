@@ -20,6 +20,7 @@ void for_each_key_equivalence(environment const & env, std::function<void(buffer
     not assigned. */
 expr kabstract(type_context_old & ctx, expr const & s, expr const & t, occurrences const & occs, bool unify);
 inline expr kabstract(type_context_old & ctx, expr const & s, expr const & t) { return kabstract(ctx, s, t, occurrences(), true); }
+bool kdepends_on(type_context_old & ctx, expr const & e, expr const & t);
 
 void initialize_kabstract();
 void finalize_kabstract();
