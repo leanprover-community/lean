@@ -1861,6 +1861,10 @@ expr elaborator::visit_no_confusion_app(expr const & fn, buffer<expr> const & ar
 expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<expr> const & expected_type,
                                 expr const & ref) {
     arg_mask amask = arg_mask::Default;
+
+    if (is_as_is(fn))
+        return visit_base_app(get_as_is_arg(fn), amask, args, expected_type, ref);
+
     if (is_explicit(fn)) {
         fn   = get_explicit_arg(fn);
         amask = arg_mask::AllExplicit;
