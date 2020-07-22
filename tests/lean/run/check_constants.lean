@@ -240,7 +240,6 @@ run_cmd script_check_id `repr
 run_cmd script_check_id `rfl
 run_cmd script_check_id `scope_trace
 run_cmd script_check_id `set_of
-run_cmd script_check_id `set_replacement
 run_cmd script_check_id `sizeof
 run_cmd script_check_id `string
 run_cmd script_check_id `string.empty

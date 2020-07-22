@@ -235,7 +235,6 @@ repr
 rfl
 scope_trace
 set_of
-set_replacement
 sizeof
 string
 string.empty

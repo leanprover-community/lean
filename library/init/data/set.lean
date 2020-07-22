@@ -13,9 +13,6 @@ def set (α : Type u) := α → Prop
 def set_of {α : Type u} (p : α → Prop) : set α :=
 p
 
-def set_replacement {α : Type u} {β : Type v} (f : α → β) : set β :=
-λ y, ∃ x, f x = y
-
 namespace set
 variables {α : Type u} {β : Type v}
 

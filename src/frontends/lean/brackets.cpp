@@ -39,19 +39,32 @@ static expr parse_set_of(parser & p, pos_info const & pos, expr const & local) {
 
 /* Parse rest of the set_replacement expression prefix '{' '(' expr ')' '|' ... */
 static expr parse_set_replacement(parser & p, pos_info const & pos, expr const & hole_expr) {
-    // At this point, we have parsed `hole_expr`, promising any missing variable is in the local scope.
-    // Now we need to make that promise come true, by parsing the binders.
-    // Note that `{ (f x) | x : α }` works only if `x` is not defined elsewhere,
-    // because it should be mapped to a local constant.
-    // TODO: "just" parse the binders before parsing the expression!
-    auto id_pos = p.pos();
-    name id     = p.check_id_next("invalid set_replacement, identifier expected");
-    expr name = p.id_to_expr(id, id_pos);
+    // At this point, we have parsed `hole_expr`, assuming all identifiers are local variables.
+    // This will work, as long as we later update any identifiers that actually are globals.
+    // So we parse the binders, assemble an expression for the characteristic predicate,
+    // then use `patexpr_to_expr` to do the updating.
+    buffer<expr> params;
+    auto env = p.parse_binders(params, false);
     p.check_token_next(get_rcurly_tk(), "invalid set_replacement, '}' expected");
-    bool use_cache = false;
-    expr func = p.save_pos(Fun(name, hole_expr, use_cache), pos);
-    expr set_replacement = p.save_pos(mk_constant(get_set_replacement_name()), pos);
-    return p.mk_app(set_replacement, func, pos);
+
+    // The predicate will look like `λ _x, ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x`.
+    name x_name = name("_x");
+    expr x = p.id_to_expr(x_name, pos);
+    // `hole_expr[p1, p2, ...] = _x`
+    expr pred = p.mk_app(mk_constant(get_eq_name()), hole_expr, pos);
+    pred = p.mk_app(pred, x, pos);
+
+    expr exists = mk_constant(get_Exists_name());
+    for (int i = params.size() - 1; i >= 0; i--) {
+        // `∃ p_i, ∃ p_(i+1) ..., hole_expr[p_1, p_2, ...] = _x`
+        pred = p.mk_app(exists, p.save_pos(Fun(params[i], pred), pos), pos);
+    }
+    // `λ _x, ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x`
+    pred = p.save_pos(Fun(x, pred), pos);
+    // Update identifiers so globals are actually globals.
+    pred = p.patexpr_to_expr(pred);
+    // Construct the set.
+    return p.mk_app(mk_constant(get_set_of_name()), pred, pos);
 }
 
 /* Create singletoncollection for '{' expr '}' */
@@ -206,10 +219,11 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
     } else if (p.curr_is_token(get_lparen_tk())) {
         // '{' '(' expr ')' '|' binders '}'
         p.next();
-        // The expression is parsed before the binders, so we need to make a new scope
-        // and assume that later on we will find the identifiers there.
+        // The expression is parsed before the binders, so we need to make a new scope here.
+        // We assume for now all identifiers are in this scope,
+        // and parse_set_replacement will update any variables once it determines the actual binders.
         parser::local_scope scope(p);
-        parser::undef_id_to_local_scope undef_id(p);
+        parser::all_id_local_scope scope_assumption(p);
         e = p.parse_expr();
         p.check_token_next(get_rparen_tk(), "invalid set replacement notation, ')' expected");
         p.check_token_next(get_bar_tk(), "invalid set replacement notation, '|' expected");
