@@ -319,6 +319,7 @@ public:
     expr infer_type(expr const & e) { return m_ctx.infer(e); }
     expr instantiate_mvars(expr const & e);
     void freeze_local_instances() { m_ctx.freeze_local_instances(); }
+    void unfreeze_local_instances() { m_ctx.unfreeze_local_instances(); }
     expr elaborate(expr const & e);
     expr elaborate_type(expr const & e);
     expr_pair elaborate_with_type(expr const & e, expr const & e_type);
