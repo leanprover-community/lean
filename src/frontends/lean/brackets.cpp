@@ -8,6 +8,7 @@ Author: Leonardo de Moura
 #include "library/constants.h"
 #include "library/placeholder.h"
 #include "frontends/lean/parser.h"
+#include "frontends/lean/builtin_exprs.h"
 #include "frontends/lean/util.h"
 #include "frontends/lean/tokens.h"
 #include "frontends/lean/structure_instance.h"
@@ -63,7 +64,7 @@ static expr parse_set_replacement(parser & p, pos_info const & pos, expr const &
     pred = p.save_pos(Fun(x, pred), pos);
     // Update identifiers so globals are actually globals.
     pred = p.patexpr_to_expr(pred);
-    // Construct the set.
+    // `{_x | ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x}`
     return p.mk_app(mk_constant(get_set_of_name()), pred, pos);
 }
 
@@ -224,8 +225,7 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
         // and parse_set_replacement will update any variables once it determines the actual binders.
         parser::local_scope scope(p);
         parser::all_id_local_scope scope_assumption(p);
-        e = p.parse_expr();
-        p.check_token_next(get_rparen_tk(), "invalid set replacement notation, ')' expected");
+        e = parse_lparen(p, 0, NULL, pos); // parses the `expr ')'` part of the expression
         p.check_token_next(get_bar_tk(), "invalid set replacement notation, '|' expected");
         return parse_set_replacement(p, pos, e);
     } else if (p.curr_is_token(get_period_tk())) {
