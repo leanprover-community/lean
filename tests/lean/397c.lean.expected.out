@@ -1,0 +1,9 @@
+[class_instances]  class-instance resolution trace
+[class_instances] (0) ?x_0 : has_one α := @ring.to_has_one ?x_1 ?x_2
+[class_instances] (1) ?x_2 : ring α := _inst_1
+[class_instances] caching instance for ring α
+_inst_1
+[class_instances] caching instance for has_one α
+@ring.to_has_one α _inst_1
+[class_instances] cached instance for has_one α
+@ring.to_has_one α _inst_1

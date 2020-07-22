@@ -91,6 +91,10 @@ void type_context_old::freeze_local_instances() {
     m_lctx.freeze_local_instances(m_local_instances);
 }
 
+void type_context_old::unfreeze_local_instances() {
+    m_lctx.unfreeze_local_instances();
+}
+
 void type_context_old::init_local_instances() {
     m_local_instances = local_instances();
     m_lctx.for_each([&](local_decl const & decl) {
