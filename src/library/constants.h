@@ -242,6 +242,7 @@ name const & get_repr_name();
 name const & get_rfl_name();
 name const & get_scope_trace_name();
 name const & get_set_of_name();
+name const & get_set_replacement_name();
 name const & get_sizeof_name();
 name const & get_string_name();
 name const & get_string_empty_name();

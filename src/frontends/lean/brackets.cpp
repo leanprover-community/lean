@@ -37,6 +37,23 @@ static expr parse_set_of(parser & p, pos_info const & pos, expr const & local) {
     return p.mk_app(set_of, pred, pos);
 }
 
+/* Parse rest of the set_replacement expression prefix '{' '(' expr ')' '|' ... */
+static expr parse_set_replacement(parser & p, pos_info const & pos, expr const & hole_expr) {
+    // At this point, we have parsed `hole_expr`, promising any missing variable is in the local scope.
+    // Now we need to make that promise come true, by parsing the binders.
+    // Note that `{ (f x) | x : α }` works only if `x` is not defined elsewhere,
+    // because it should be mapped to a local constant.
+    // TODO: "just" parse the binders before parsing the expression!
+    auto id_pos = p.pos();
+    name id     = p.check_id_next("invalid set_replacement, identifier expected");
+    expr name = p.id_to_expr(id, id_pos);
+    p.check_token_next(get_rcurly_tk(), "invalid set_replacement, '}' expected");
+    bool use_cache = false;
+    expr func = p.save_pos(Fun(name, hole_expr, use_cache), pos);
+    expr set_replacement = p.save_pos(mk_constant(get_set_replacement_name()), pos);
+    return p.mk_app(set_replacement, func, pos);
+}
+
 /* Create singletoncollection for '{' expr '}' */
 static expr mk_singleton(parser & p, pos_info const & pos, expr const & e) {
     return p.mk_app(p.save_pos(mk_constant(get_has_singleton_singleton_name()), pos), e, pos);
@@ -186,6 +203,17 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
             }
             e = left;
         }
+    } else if (p.curr_is_token(get_lparen_tk())) {
+        // '{' '(' expr ')' '|' binders '}'
+        p.next();
+        // The expression is parsed before the binders, so we need to make a new scope
+        // and assume that later on we will find the identifiers there.
+        parser::local_scope scope(p);
+        parser::undef_id_to_local_scope undef_id(p);
+        e = p.parse_expr();
+        p.check_token_next(get_rparen_tk(), "invalid set replacement notation, ')' expected");
+        p.check_token_next(get_bar_tk(), "invalid set replacement notation, '|' expected");
+        return parse_set_replacement(p, pos, e);
     } else if (p.curr_is_token(get_period_tk())) {
         p.next();
         p.check_token_next(get_rcurly_tk(), "invalid empty structure instance, '}' expected");
