@@ -576,16 +576,16 @@ public:
 
 private:
     pair<expr, level_param_names> elaborate(name const & decl_name, metavar_context & mctx, local_context_adapter const & adapter,
-                                            expr const & e, bool check_unassigned = true);
+                                            expr const & e, bool check_unassigned = true, bool freeze_instances = true);
 
 public:
     local_context_adapter mk_local_context_adapter() { return local_context_adapter(m_local_decls); }
-    pair<expr, level_param_names> elaborate(name const & decl_name, metavar_context & mctx, expr const & e, bool check_unassigned = true);
-    pair<expr, level_param_names> elaborate(name const & decl_name, metavar_context & mctx, list<expr> const & lctx, expr const & e, bool check_unassigned);
+    pair<expr, level_param_names> elaborate(name const & decl_name, metavar_context & mctx, expr const & e, bool check_unassigned = true, bool freeze_instances = true);
+    pair<expr, level_param_names> elaborate(name const & decl_name, metavar_context & mctx, list<expr> const & lctx, expr const & e, bool check_unassigned, bool freeze_instances);
     pair<expr, level_param_names> elaborate(name const & decl_name, list<expr> const & ctx, expr const & e);
-    pair<expr, level_param_names> elaborate_type(name const & decl_name, list<expr> const & lctx, expr const & e);
+    pair<expr, level_param_names> elaborate_type(name const & decl_name, list<expr> const & lctx, expr const & e, bool freeze_instances = true);
     /* Elaborate \c e as a type using the given metavariable context, and using m_local_decls as the local context */
-    pair<expr, level_param_names> elaborate_type(name const & decl_name, metavar_context & mctx, expr const & e);
+    pair<expr, level_param_names> elaborate_type(name const & decl_name, metavar_context & mctx, expr const & e, bool freeze_instances = true);
 
     /** return true iff profiling is enabled */
     bool profiling() const { return m_profile; }

@@ -4046,8 +4046,10 @@ expr elaborator::finalize_theorem_proof(expr const & val, theorem_finalization_i
 pair<expr, level_param_names>
 elaborate(environment & env, options const & opts, name const & decl_name,
           metavar_context & mctx, local_context const & lctx, expr const & e,
-          bool check_unassigned, bool recover_from_errors) {
+          bool check_unassigned, bool recover_from_errors,
+          bool freeze_local_instances) {
     elaborator elab(env, opts, decl_name, mctx, lctx, recover_from_errors);
+    if (freeze_local_instances) elab.freeze_local_instances();
     expr r = elab.elaborate(e);
     auto p = elab.finalize(r, check_unassigned, true);
     mctx = elab.mctx();

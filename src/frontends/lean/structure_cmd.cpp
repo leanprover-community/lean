@@ -541,7 +541,7 @@ struct structure_cmd_fn {
                 return elaborate_for_each<expr>(ctx, tmp, std::bind(&structure_cmd_fn::elaborate_local, this, false, _1, _2, _3, _4), [&](expr tmp) {
                     level_param_names new_ls;
                     expr new_tmp;
-                    std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, list<expr>(), tmp);
+                    std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, list<expr>(), tmp, false);
                     levels new_meta_ls = map2<level>(new_ls, [&](name const &) { return m_ctx.mk_univ_metavar_decl(); });
                     return instantiate_univ_params(new_tmp, new_ls, new_meta_ls);
                 });
@@ -944,7 +944,7 @@ struct structure_cmd_fn {
                             level_param_names new_ls;
                             expr new_tmp;
                             metavar_context mctx = m_ctx.mctx();
-                            std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, mctx, tmp);
+                            std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, mctx, tmp, false);
                             m_ctx.set_mctx(mctx);
                             for (auto new_l : new_ls)
                                 m_level_names.push_back(new_l);
