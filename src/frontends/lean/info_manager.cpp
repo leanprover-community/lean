@@ -331,7 +331,7 @@ void info_manager::add_widget_goal_info(pos_info pos, vm_obj const & props, vm_o
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_goal_info(tactic::to_state(props).env(), pos, props, widget));
+    add_info(pos, mk_widget_goal_info(get_vm_state().env(), pos, props, widget));
 }
 
 
@@ -410,7 +410,7 @@ vm_obj tactic_save_info_thunk(vm_obj const & pos, vm_obj const & thunk, vm_obj c
     try {
         if (g_info_m) {
             auto _pos = to_pos_info(pos);
-            g_info_m->add_vm_obj_format_info(_pos, tactic::to_state(s).env(), thunk);
+            g_info_m->add_vm_obj_format_info(_pos, get_vm_state().env(), thunk);
         }
         return tactic::mk_success(tactic::to_state(s));
     } catch (exception & ex) {
