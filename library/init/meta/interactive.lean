@@ -1536,9 +1536,9 @@ meta def match_target (t : parse texpr) (m := reducible) : tactic unit :=
 tactic.match_target t m >> skip
 
 /--
-`by_cases (h :)? p` splits the main goal into two cases, assuming `h : p` in the first branch, and `h : ¬ p` in the second branch.
-
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
+`by_cases p` splits the main goal into two cases, assuming `h : p` in the first branch, and
+`h : ¬ p` in the second branch. You can specify the name of the new hypothesis using the syntax
+`by_cases h : p`.
 -/
 meta def by_cases : parse cases_arg_p → tactic unit
 | (n, q) := concat_tags $ do
