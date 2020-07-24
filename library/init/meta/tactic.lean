@@ -8,6 +8,7 @@ import init.function init.data.option.basic init.util
 import init.control.combinators init.control.monad init.control.alternative init.control.monad_fail
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.meta.interaction_monad
+import init.classical
 
 open native
 
@@ -1515,12 +1516,24 @@ meta def refine (e : pexpr) : tactic unit :=
 do tgt : expr ← target,
    to_expr ``(%%e : %%tgt) tt >>= exact
 
-meta def by_cases (e : expr) (h : name) : tactic unit :=
-do dec_e ← (mk_app `decidable [e] <|> fail "by_cases tactic failed, type is not a proposition"),
-   inst  ← (mk_instance dec_e <|> fail "by_cases tactic failed, type of given expression is not decidable"),
-   t     ← target,
-   tm    ← mk_mapp `dite [some e, some inst, some t],
-   seq' (apply tm >> skip) (intro h >> skip)
+/--
+`by_cases p h` splits the main goal into two cases, assuming `h : p` in the
+first branch, and `h : ¬ p` in the second branch. The expression `p` needs to
+be a proposition.
+
+The produced proof term is `dite p ?m_1 ?m_2`.
+-/
+meta def by_cases (e : expr) (h : name) : tactic unit := do
+dec_e ← mk_app ``decidable [e] <|> fail "by_cases tactic failed, type is not a proposition",
+inst ← mk_instance dec_e <|> pure `(classical.prop_decidable %%e),
+tgt ← target,
+expr.sort tgt_u ← infer_type tgt >>= whnf,
+g1 ← mk_meta_var (e.imp tgt),
+g2 ← mk_meta_var (`(¬ %%e).imp tgt),
+focus1 $ do
+  exact $ expr.const ``dite [tgt_u] e inst tgt g1 g2,
+  set_goals [g1, g2],
+  all_goals' $ intro h >> skip
 
 meta def funext_core : list name → bool → tactic unit
 | []  tt       := return ()
