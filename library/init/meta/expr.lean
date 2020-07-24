@@ -492,6 +492,11 @@ meta def binding_body : expr → expr
 | (lam _ _ _ b) := b
 | e             := e
 
+meta def nth_binding_body : ℕ → expr → expr
+| 0 e := e
+| (n + 1) (pi _ _ _ b) := nth_binding_body n b
+| (n + 1) e := e
+
 meta def is_macro : expr → bool
 | (macro d a) := tt
 | e           := ff
@@ -502,6 +507,14 @@ meta def is_numeral : expr → bool
 | `(@bit0 %%α %%s %%v)       := is_numeral v
 | `(@bit1 %%α %%s₁ %%s₂ %%v) := is_numeral v
 | _                          := ff
+
+meta def pi_arity : expr → ℕ
+| (pi _ _ _ b) := pi_arity b + 1
+| _ := 0
+
+meta def lam_arity : expr → ℕ
+| (lam _ _ _ b) := lam_arity b + 1
+| _ := 0
 
 meta def imp (a b : expr) : expr :=
 pi `_ binder_info.default a b

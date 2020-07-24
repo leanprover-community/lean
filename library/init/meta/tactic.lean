@@ -795,11 +795,28 @@ do t ← target,
    if expr.is_pi t ∨ expr.is_let t then intro_core n
    else whnf_target >> intro_core n
 
+/--
+A variant of `intro` which makes sure that the introduced hypothesis's name is
+unique in the context. If there is no hypothesis named `n` in the context yet,
+`intro_fresh n` is the same as `intro n`. If there is already a hypothesis named
+`n`, the new hypothesis is named `n_1` (or `n_2` if `n_1` already exists, etc.).
+If `offset` is given, the new names are `n_offset`, `n_offset+1` etc.
+
+If `n` is `_`, `intro_fresh n` is the same as `intro1`. The `offset` is ignored
+in this case.
+-/
+meta def intro_fresh (n : name) (offset : option nat := none) : tactic expr :=
+  if n = `_
+    then intro `_
+    else do
+      n ← get_unused_name n offset,
+      intro n
+
 /-- Like `intro` except the name is derived from the bound name in the Π. -/
 meta def intro1 : tactic expr :=
 intro `_
 
-/-- Repeatedly apply `intro1` and return the list of new local constants in order of introduction.-/
+/-- Repeatedly apply `intro1` and return the list of new local constants in order of introduction. -/
 meta def intros : tactic (list expr) :=
 do t ← target,
 match t with
@@ -809,9 +826,15 @@ match t with
 end
 
 /-- Same as `intros`, except with the given names for the new hypotheses. Use the name ```_``` to instead use the binder's name.-/
-meta def intro_lst : list name → tactic (list expr)
-| []      := return []
-| (n::ns) := do H ← intro n, Hs ← intro_lst ns, return (H :: Hs)
+meta def intro_lst (ns : list name) : tactic (list expr) :=
+ns.mmap intro
+
+/--
+A variant of `intro_lst` which makes sure that the introduced hypotheses' names
+are unique in the context. See `intro_fresh`.
+-/
+meta def intro_lst_fresh (ns : list name) : tactic (list expr) :=
+ns.mmap intro_fresh
 
 /-- Introduces new hypotheses with forward dependencies.  -/
 meta def intros_dep : tactic (list expr) :=
@@ -837,12 +860,38 @@ meta def introv : list name → tactic (list expr)
 constants. Fails if there are not at least `n` arguments to introduce. If you do
 not need the return value, use `intron`.
 -/
-meta def intron' : ℕ → tactic (list expr)
-| 0 := pure []
-| (n + 1) := do
-  h ← intro1,
-  hs ← intron' n,
-  pure $ h :: hs
+meta def intron' (n : ℕ) : tactic (list expr)
+:= iterate_exactly n intro1
+
+/--
+Like `intron'` but the introduced hypotheses' names are derived from `base`,
+i.e. `base`, `base_1` etc. The new names are unique in the context. If `offset`
+is given, the new names will be `base_offset`, `base_offset+1` etc.
+-/
+meta def intron_base (n : ℕ) (base : name) (offset : option nat := none)
+  : tactic (list expr)
+:= iterate_exactly n (intro_fresh base offset)
+
+/--
+`intron_with i ns base offset` introduces `i` hypotheses using the names from
+`ns`. If `ns` contains less than `i` names, the remaining hypotheses' names are
+derived from `base` and `offset` (as with `intron_base`). If `base` is `_`, the
+names are derived from the Π binder names.
+
+Returns the introduced local constants and the remaining names from `ns` (if
+`ns` contains more than `i` names).
+-/
+meta def intron_with
+  : ℕ → list name → opt_param name `_ → opt_param (option ℕ) none
+  → tactic (list expr × list name)
+| 0 ns _ _ := pure ([], ns)
+| (i + 1) [] base offset := do
+  hs ← intron_base (i + 1) base offset,
+  pure (hs, [])
+| (i + 1) (n :: ns) base offset := do
+  h ← intro n,
+  ⟨hs, rest⟩ ← intron_with i ns base offset,
+  pure (h :: hs, rest)
 
 /-- Returns n fully qualified if it refers to a constant, or else fails. -/
 meta def resolve_constant (n : name) : tactic name :=
