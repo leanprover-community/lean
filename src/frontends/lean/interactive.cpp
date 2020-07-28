@@ -184,7 +184,7 @@ void report_info(environment const & env, options const & opts, io_state const &
                 auto name = e.m_token_info.m_param + e.m_token_info.m_token;
                 record["full-id"] = name.escape();
                 add_source_info(env, name, record);
-                if (auto doc = get_doc_string(env, name))
+                if (auto doc = get_doc_string_including_override(env, name))
                     record["doc"] = *doc;
                 interactive_report_type(env, opts, env.get(name).get_type(), record);
             } default:

@@ -53,7 +53,7 @@ public:
     virtual void report(io_state_stream const & ios, json & record) const override {
         record["full-id"] = m_full_id.escape();
         add_source_info(ios.get_environment(), m_full_id, record);
-        if (auto doc = get_doc_string(ios.get_environment(), m_full_id))
+        if (auto doc = get_doc_string_including_override(ios.get_environment(), m_full_id))
             record["doc"] = *doc;
     }
 #endif
@@ -84,6 +84,15 @@ widget_goal_info const * is_widget_goal_info(info_data const & d) {
     return dynamic_cast<widget_goal_info const *>(d.raw());
 }
 
+optional<std::string> get_doc_string_including_override(environment const & env, name const & n) {
+    auto maybe_doc = get_doc_string(env, n);
+    auto override_name = get_vm_override_name(env, n, true);
+    if (!override_name) return maybe_doc;
+    sstream doc;
+    doc << "Overridden in the VM using: `" << *override_name << "`";
+    if (maybe_doc) doc << "\n\n" << *maybe_doc;
+    return optional<std::string>(doc.str());
+}
 
 class term_goal_data : public widget_info {
     tactic_state m_state;
