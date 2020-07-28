@@ -1,3 +1,22 @@
+3.18.0c (28 July 2020)
+----------------------
+
+Features:
+- Notation for set replacement (#402)
+
+Bug fixes:
+- Drop non-local-constant exprs from `cases` output (#390)
+- Freeze local instances for definition parameters (#403, fixes #397)
+- Freeze local instances in `#check` (#404, fixes #398)
+- Honor `as_is` attribute for functions (#399)
+- Fix VM environment issue (#405)
+- Remove `tactic.norm_num` (#406)
+- Fix injection introducing too many hyps (#407, fixes #400)
+- Handle corner cases in `by_cases` (#409)
+
+Changes:
+- Use a structure for `well_founded` (#408)
+
 3.17.1c (8 July 2020)
 ---------------------
 
