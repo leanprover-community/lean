@@ -189,7 +189,7 @@ void type_context_old::set_env(environment const & env) {
 }
 
 void type_context_old::update_local_instances(expr const & new_local, expr const & new_type) {
-    if (!m_cache->get_frozen_local_instances()) {
+    if (!lctx().get_frozen_local_instances()) {
         if (auto c_name = is_class(new_type)) {
             m_local_instances = local_instances(local_instance(*c_name, new_local), m_local_instances);
             flush_instance_cache();
@@ -210,7 +210,7 @@ expr type_context_old::push_let(name const & ppn, expr const & type, expr const 
 }
 
 void type_context_old::pop_local() {
-    if (!m_cache->get_frozen_local_instances() && m_local_instances) {
+    if (!lctx().get_frozen_local_instances() && m_local_instances) {
         optional<local_decl> decl = m_lctx.find_last_local_decl();
         if (decl && decl->get_name() == mlocal_name(head(m_local_instances).get_local())) {
             m_local_instances = tail(m_local_instances);
