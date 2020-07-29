@@ -226,13 +226,14 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
         parser::local_scope scope(p);
         parser::all_id_local_scope scope_assumption(p);
         e = parse_lparen(p, 0, NULL, pos); // parses the `expr ')'` part of the expression
-        if (p.curr_is_token(get_rcurly_tk())) {
-            // singleton `{ (...) }`
+        if (p.curr_is_token(get_bar_tk())) {
             p.next();
-            return mk_singleton(p, pos, e);
-        } else {
-            p.check_token_next(get_bar_tk(), "invalid set replacement notation, '|' expected");
             return parse_set_replacement(p, pos, e);
+        } else if (p.curr_is_token(get_comma_tk()) || p.curr_is_token(get_rcurly_tk())) {
+            return parse_fin_set(p, pos, p.patexpr_to_expr(e));
+        } else {
+            p.maybe_throw_error({"invalid set replacement notation, ',', '}', or `|` expected", p.pos()});
+            return mk_singleton(p, pos, p.patexpr_to_expr(e));
         }
     } else if (p.curr_is_token(get_period_tk())) {
         p.next();

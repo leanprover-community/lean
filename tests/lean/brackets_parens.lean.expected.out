@@ -1,0 +1,3 @@
+{1} : ?M_1
+{1, 2, 3} : ?M_1
+{function.comp, function.comp} : set ((ℕ → ℕ) → (ℕ → ℕ) → ℕ → ℕ)
