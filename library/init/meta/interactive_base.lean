@@ -104,6 +104,7 @@ private meta def parser_desc_aux : expr → tactic (list format)
 | `(ident)  := return ["id"]
 | `(ident_) := return ["id"]
 | `(parser.pexpr %%v) := return ["expr"]
+| `(small_nat) := return ["n"]
 | `(tk %%c) := list.ret <$> to_fmt <$> eval_expr string c
 | `(cur_pos) := return []
 | `(pure ._) := return []
@@ -159,7 +160,7 @@ meta def param_desc : expr → tactic format
 | e := if is_constant e ∧ (const_name e).components.ilast = `itactic
   then return $ to_fmt "{ tactic }"
   else paren <$> pp e
-
+#print param_desc
 
 private meta constant parse_binders_core (rbp : ℕ) : parser (list pexpr)
 meta def parse_binders (rbp := std.prec.max) := with_desc "<binders>" (parse_binders_core rbp)
