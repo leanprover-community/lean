@@ -1,3 +1,12 @@
+3.18.3c (29 July 2020)
+----------------------
+
+Features:
+- Show VM overrides in info request (#417)
+
+Bug fixes:
+- Support `{(1 : α)}` and `{(∘), (∘)}` (#420, fixes #419 and #418)
+
 3.18.2c (28 July 2020)
 ----------------------
 
