@@ -130,6 +130,8 @@ widget_info const * is_widget_info(info_data const & d);
 widget_goal_info const * is_widget_goal_info(info_data const & d);
 bool is_term_goal(info_data const & d);
 
+optional<std::string> get_doc_string_including_override(environment const & env, name const & n);
+
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
 class info_manager : public log_entry_cell {
