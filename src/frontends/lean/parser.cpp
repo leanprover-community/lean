@@ -1938,6 +1938,10 @@ public:
 
 expr parser::patexpr_to_expr(expr const & pat_or_expr) {
     error_if_undef_scope scope(*this);
+    return patexpr_to_expr_core(pat_or_expr);
+}
+
+expr parser::patexpr_to_expr_core(expr const & pat_or_expr) {
     return patexpr_to_expr_fn(*this)(pat_or_expr);
 }
 

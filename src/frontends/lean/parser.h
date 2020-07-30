@@ -514,6 +514,7 @@ public:
     expr patexpr_to_pattern(expr const & pat_or_expr, bool skip_main_fn, buffer<expr> & new_locals);
     /** \brief Convert an expression parsed using parse_pattern_or_expr into a regular term. */
     expr patexpr_to_expr(expr const & pat_or_expr);
+    expr patexpr_to_expr_core(expr const & pat_or_expr);
     expr parse_pattern(buffer<expr> & new_locals, unsigned rbp = 0) {
         return patexpr_to_pattern(parse_pattern_or_expr(rbp), false, new_locals);
     }

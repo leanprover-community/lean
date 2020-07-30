@@ -50,7 +50,7 @@ static expr parse_set_replacement(parser & p, pos_info const & pos, expr const &
 
     // The predicate will look like `λ _x, ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x`.
     name x_name = name("_x");
-    expr x = p.id_to_expr(x_name, pos);
+    expr x = mk_local(x_name, p.save_pos(mk_expr_placeholder(), pos));
     // `hole_expr[p1, p2, ...] = _x`
     expr pred = p.mk_app(mk_constant(get_eq_name()), hole_expr, pos);
     pred = p.mk_app(pred, x, pos);
@@ -63,7 +63,7 @@ static expr parse_set_replacement(parser & p, pos_info const & pos, expr const &
     // `λ _x, ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x`
     pred = p.save_pos(Fun(x, pred), pos);
     // Update identifiers so globals are actually globals.
-    pred = p.patexpr_to_expr(pred);
+    pred = p.patexpr_to_expr_core(pred);
     // `{_x | ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x}`
     return p.mk_app(mk_constant(get_set_of_name()), pred, pos);
 }
@@ -219,21 +219,19 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
         }
     } else if (p.curr_is_token(get_lparen_tk())) {
         // '{' '(' expr ')' '|' binders '}'
-        p.next();
         // The expression is parsed before the binders, so we need to make a new scope here.
         // We assume for now all identifiers are in this scope,
         // and parse_set_replacement will update any variables once it determines the actual binders.
-        parser::local_scope scope(p);
-        parser::all_id_local_scope scope_assumption(p);
-        e = parse_lparen(p, 0, NULL, pos); // parses the `expr ')'` part of the expression
+        e = (parser::local_scope(p), parser::all_id_local_scope(p),
+            p.parse_expr()); // parses the `'(' expr ')'` part of the expression
         if (p.curr_is_token(get_bar_tk())) {
             p.next();
             return parse_set_replacement(p, pos, e);
         } else if (p.curr_is_token(get_comma_tk()) || p.curr_is_token(get_rcurly_tk())) {
-            return parse_fin_set(p, pos, p.patexpr_to_expr(e));
+            return parse_fin_set(p, pos, p.patexpr_to_expr_core(e));
         } else {
             p.maybe_throw_error({"invalid set replacement notation, ',', '}', or `|` expected", p.pos()});
-            return mk_singleton(p, pos, p.patexpr_to_expr(e));
+            return mk_singleton(p, pos, p.patexpr_to_expr_core(e));
         }
     } else if (p.curr_is_token(get_period_tk())) {
         p.next();
