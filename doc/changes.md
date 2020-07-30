@@ -1,3 +1,13 @@
+3.18.4c (30 July 2020)
+----------------------
+
+Features:
+- Ensure `@max (order_dual α) = @min α` (#425)
+
+Bug fixes:
+- Description for `small_nat` (#424)
+- More set replacement fixes (#426, fixes #422 and #423)
+
 3.18.3c (29 July 2020)
 ----------------------
 
