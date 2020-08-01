@@ -137,7 +137,7 @@ lemma le_iff_lt_or_eq [partial_order α] : ∀ {a b : α}, a ≤ b ↔ a < b ∨
 | a b := ⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
 
 lemma lt_of_le_of_ne [partial_order α] {a b : α} : a ≤ b → a ≠ b → a < b :=
-λ h₁ h₂, or.resolve_right (lt_or_eq_of_le h₁) h₂
+λ h₁ h₂, lt_of_le_not_le h₁ $ mt (le_antisymm h₁) h₂
 
 lemma lt_trichotomy [linear_order α] (a b : α) : a < b ∨ a = b ∨ b < a :=
 or.elim (le_total a b)
