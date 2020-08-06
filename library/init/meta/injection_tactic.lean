@@ -11,15 +11,21 @@ namespace tactic
 open expr
 
 /- Given a local constant `H : C x₁ ... xₙ = D y₁ ... yₘ`, where `C` and `D` are
-   fully applied constructors, `injection_with H ns base offset` does the
-   following:
+fully applied constructors, `injection_with H ns base offset` does the
+following:
 
-   - If `C ≠ D`, it solves the goal (using the no-confusion rule).
-   - If `C = D` (and thus `n = m`), it adds hypotheses
-     `h₁ : x₁ = y₁, ..., hₙ : xₙ = yₙ` to the local context. Names for the `hᵢ`
-     are taken from `ns`. If `ns` does not contain enough names, then the names
-     are derived from `base` and `offset` (by default `h_1`, `h_2` etc.; see
-     `intro_fresh`).
+- If `C ≠ D`, it solves the goal (using the no-confusion rule).
+- If `C = D` (and thus `n = m`), it adds hypotheses
+  `h₁ : x₁ = y₁, ..., hₙ : xₙ = yₙ` to the local context. Names for the `hᵢ`
+  are taken from `ns`. If `ns` does not contain enough names, then the names
+  are derived from `base` and `offset` (by default `h_1`, `h_2` etc.; see
+  `intro_fresh`).
+- Special case: if `C = D` and `n = 0` (i.e. the constructors have no
+  arguments), the hypothesis `h : true` is added to the context.
+
+`injection_with` returns the new hypotheses and the leftover names from `ns`
+(i.e. those names that were not used to name the new hypotheses). If (and only
+if) the goal was solved, the list of new hypotheses is empty.
 -/
 meta def injection_with (h : expr) (ns : list name)
   (base := `h) (offset := some 1) : tactic (list expr × list name) :=
@@ -57,7 +63,7 @@ do
     tgt ← target,
     proof ← mk_mapp inj_name (list.repeat none (inj_arity - 3) ++ [some h, some tgt]),
     eapply proof,
-    intron_with num_equations ns `h (some 1)
+    intron_with num_equations ns base offset
   else do
     tgt ← target,
     let inductive_name := constructor_left.get_prefix,
@@ -65,6 +71,11 @@ do
     exact pr,
     return ([], ns)
 
+/--
+Simplify the equation `h` using injectivity of constructors. See
+`injection_with`. Returns the hypotheses that were added to the context, or an
+empty list if the goal was solved by contradiction.
+-/
 meta def injection (h : expr) (base := `h) (offset := some 1)
   : tactic (list expr) :=
 prod.fst <$> injection_with h [] base offset
@@ -81,6 +92,20 @@ private meta def injections_with_inner (base : name) (offset : option ℕ)
   | some (t, ns') := injections_with_inner n (t ++ lc) ns'
   end
 
+/--
+Simplifies equations in the context using injectivity of constructors. For
+each equation `h : C x₁ ... xₙ = D y₁ ... yₘ` in the context, where `C` and `D`
+are constructors of the same data type, `injections_with` does the following:
+
+- If `C = D`, it adds equations `x₁ = y₁`, ..., `xₙ = yₙ`.
+- If `C ≠ D`, it solves the goal by contradiction.
+
+See `injection_with` for details, including information about `base` and
+`offset`.
+
+`injections_with` also recurses into the new equations `xᵢ = yᵢ`. If it has to
+recurse more than five times, it fails.
+-/
 meta def injections_with (ns : list name) (base := `h) (offset := some 1)
   : tactic unit :=
 do lc ← local_context,
