@@ -501,7 +501,7 @@ meta def binding_body : expr → expr
 | (elet _ _ _ b) := b
 | e              := e
 
-/-- Repeatedly apply `binding_body` to an iterated pi expression.
+/-- `nth_binding_body n e` iterates `binding_body` `n` times to an iterated pi expression `e`.
   This definition doesn't instantiate bound variables, and therefore produces a term that is open.
   See note [open expressions] in mathlib. -/
 meta def nth_binding_body : ℕ → expr → expr
