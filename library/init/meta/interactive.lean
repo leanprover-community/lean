@@ -150,6 +150,7 @@ a b : ℕ,
 h : a = b
 ⊢ b = a
 ```
+
 ```
 example : ∀ a b : nat, a = b → ∀ c, b = c → a = c :=
 begin
