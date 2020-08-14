@@ -1,23 +1,23 @@
 first goal
 p q : Prop,
-a : p,
-a_1 : q
+_x : p,
+_x_1 : q
 ⊢ p ∧ p
 --- Second goal: 
 p q : Prop,
-a : p,
-a_1 : q
+_x : p,
+_x_1 : q
 ⊢ q
 --- After
 2 goals
 p q : Prop,
-a : p,
-a_1 : q
+_x : p,
+_x_1 : q
 ⊢ p
 
 p q : Prop,
-a : p,
-a_1 : q
+_x : p,
+_x_1 : q
 ⊢ p
 should not work
 should not work

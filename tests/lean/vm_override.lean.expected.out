@@ -9,7 +9,7 @@ vm_override.lean:40:0: error: unknown declaration 'native.float.mk'
 vm_override.lean:45:5: warning: declaration 'native.float₁.mk' uses sorry
 vm_override.lean:54:0: error: type mismatch with override:
 
-float₁.rec : Π {C : native.float → Sort l}, (Π (a : ℕ), C (native.float₁.mk a)) → Π (n : native.float), C n
+float₁.rec : Π {C : native.float → Sort l}, (Π (_x : ℕ), C (native.float₁.mk _x)) → Π (n : native.float), C n
 native.float₁.rec : ℕ
 vm_override.lean:62:5: warning: declaration 'native.float.rec' uses sorry
 vm_override.lean:64:5: warning: declaration 'native.float.cases_on' uses sorry
@@ -20,39 +20,39 @@ vm_override.lean:64:5: warning: declaration 'native.float.cases_on' uses sorry
 [compiler.inline] 
 {repr := bin.nat_ovr.repr}
 [compiler.inline] 
-λ (n a : un_nat),
-  bin.nat.cases_on a n
-    (λ (a : bin.pos),
+λ (n _x : un_nat),
+  bin.nat.cases_on _x n
+    (λ (_x : bin.pos),
        bin.pos.cases_on'._main
-         ((λ (a : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n a)) bin.nat.zero)
+         ((λ (_x : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n _x)) bin.nat.zero)
          (λ (n_1 : bin.pos),
-            (λ (a : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n a)) (bin.nat.pos n_1))
-         a)
+            (λ (_x : un_nat), bin.nat_ovr.succ._main ([bin_example.add._main._meta_aux] n _x)) (bin.nat.pos n_1))
+         _x)
 [compiler.inline] 
 λ (n : un_nat), add._main n
 [compiler.inline] 
-λ (a : ℕ),
-  a.cases_on bin.nat_ovr.zero
-    (λ (a : ℕ),
-       bin.nat_ovr.add._main ([bin_example.mk_num._main._meta_aux] a)
-         (bin.nat_ovr.succ._main ([bin_example.mk_num._main._meta_aux] a)))
+λ (_x : ℕ),
+  _x.cases_on bin.nat_ovr.zero
+    (λ (n : ℕ),
+       bin.nat_ovr.add._main ([bin_example.mk_num._main._meta_aux] n)
+         (bin.nat_ovr.succ._main ([bin_example.mk_num._main._meta_aux] n)))
 [compiler.inline] 
 mk_num._main
 [compiler.inline] 
-λ (a : un_nat),
-  bin.nat.cases_on a bin.nat_ovr.zero
-    (λ (a : bin.pos),
+λ (_x : un_nat),
+  bin.nat.cases_on _x bin.nat_ovr.zero
+    (λ (_x : bin.pos),
        bin.pos.cases_on'._main
-         ((λ (a : un_nat),
-             bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] a)
-               (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] a)))
+         ((λ (_x : un_nat),
+             bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] _x)
+               (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] _x)))
             bin.nat.zero)
          (λ (n : bin.pos),
-            (λ (a : un_nat),
-               bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] a)
-                 (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] a)))
+            (λ (_x : un_nat),
+               bin.nat_ovr.add._main ([bin_example.mk_num'._main._meta_aux] _x)
+                 (bin.nat_ovr.succ._main ([bin_example.mk_num'._main._meta_aux] _x)))
               (bin.nat.pos n))
-         a)
+         _x)
 [compiler.inline] 
 mk_num'._main
 11111
@@ -66,9 +66,9 @@ bin.nat_ovr.repr._main
         (bin.nat_ovr.succ._main
            (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main (bin.nat_ovr.succ._main bin.nat_ovr.zero))))))
 [compiler.inline] 
-λ (a : float₃),
-  (λ (f : Π (a : ℕ), (λ (a : float₃), string) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
-    (λ (a : ℕ), a.repr)
+λ (_x : float₃),
+  (λ (f : Π (a : ℕ), (λ (_x : float₃), string) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
+    (λ (_x : ℕ), _x.repr)
 [compiler.inline] 
 float₃.repr._main
 [compiler.inline] 
@@ -79,9 +79,9 @@ native.float₃.mk
 [compiler.inline] 
 float₃.repr._main ((λ (_x : ℕ), native.float.one) (bit1 nat.zero.succ))
 [compiler.inline] 
-λ (a : float₃),
-  (λ (f : Π (a : ℕ), (λ (a : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
-    (λ (a : ℕ), a)
+λ (_x : float₃),
+  (λ (f : Π (a : ℕ), (λ (_x : float₃), ℕ) (native.float₃.mk a)), unchecked_cast (f nat.zero.succ))
+    (λ (_x : ℕ), _x)
 [compiler.inline] 
 get₂._main
 1
