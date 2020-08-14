@@ -65,7 +65,14 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_STRUCTURE_INTRO "mk"
 #endif
 
+#ifndef LEAN_DEFAULT_EXTENDS_PRIORITY
+#define LEAN_DEFAULT_EXTENDS_PRIORITY 100
+#endif
+
 namespace lean {
+// configuration option: priority used for instances produced by `extends`
+static name * g_extends_priority = nullptr;
+
 /** \brief Return the universe parameters, number of parameters and introduction rule for the given parent structure
 
     \pre is_structure_like(env, S) */
@@ -298,7 +305,7 @@ struct structure_cmd_fn {
         m_infer_result_universe    = false;
         m_inductive_predicate      = false;
         m_subobjects               = !p.get_options().get_bool("old_structure_cmd", false);
-        m_prio                     = get_default_priority(p.get_options());
+        m_prio                     = p.get_options().get_unsigned(*g_extends_priority, LEAN_DEFAULT_EXTENDS_PRIORITY);
         if (!meta.m_attrs.ok_for_inductive_type())
             throw exception("only attribute [class] accepted for structures");
     }
@@ -1361,5 +1368,7 @@ void register_structure_cmd(cmd_table & r) {
     add_cmd(r, cmd_info("structure",   "declare a new structure/record type", structure_cmd, false));
     add_cmd(r, cmd_info("class",       "declare a new class", class_cmd, false));
     register_bool_option("old_structure_cmd", false, "use old structures compilation strategy");
+    g_extends_priority = new name{"extends_priority"};
+    register_unsigned_option(*g_extends_priority, LEAN_DEFAULT_EXTENDS_PRIORITY, "priority for `extends` instances");
 }
 }
