@@ -979,7 +979,7 @@ protected theorem find_spec : p nat.find := nat.find_x.2.left
 protected theorem find_min : ∀ {m : ℕ}, m < nat.find → ¬p m := nat.find_x.2.right
 
 protected theorem find_min' {m : ℕ} (h : p m) : nat.find ≤ m :=
-le_of_not_gt (λ l, find_min l h)
+(nat.lt_or_ge _ _).resolve_left (λ l, find_min l h)
 
 end find
 
