@@ -966,7 +966,9 @@ suffices ∀m k, n ≤ k + m → acc lbp k, from λa, this _ _ (nat.le_add_left 
 protected def find_x : {n // p n ∧ ∀m < n, ¬p m} :=
 @well_founded.fix _ (λk, (∀n < k, ¬p n) → {n // p n ∧ ∀m < n, ¬p m}) lbp wf_lbp
 (λm IH al, if pm : p m then ⟨m, pm, al⟩ else
-    have ∀ n ≤ m, ¬p n, from λn h, or.elim (lt_or_eq_of_le h) (al n) (λe, by rw e; exact pm),
+    have ∀ n ≤ m, ¬p n, from λn h,
+      if e : n = m then by rw e; exact pm else
+      al n (nat.lt_of_le_and_ne h e),
     IH _ ⟨rfl, this⟩ (λn h, this n $ nat.le_of_succ_le_succ h))
 0 (λn h, absurd h (nat.not_lt_zero _))
 
