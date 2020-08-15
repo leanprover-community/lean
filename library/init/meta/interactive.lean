@@ -1524,10 +1524,10 @@ meta def guard_target (p : parse texpr) : tactic unit :=
 do t ← target, guard_expr_eq t p
 
 /--
-`guard_hyp h := t` fails if the hypothesis `h` does not have type `t`.
+`guard_hyp h : t` fails if the hypothesis `h` does not have type `t`.
 We use this tactic for writing tests.
 -/
-meta def guard_hyp (n : parse ident) (p : parse $ tk ":=" *> texpr) : tactic unit :=
+meta def guard_hyp (n : parse ident) (p : parse $ tk ":" *> texpr) : tactic unit :=
 do h ← get_local n >>= infer_type, guard_expr_eq h p
 
 /--
