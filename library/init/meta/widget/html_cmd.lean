@@ -20,7 +20,7 @@ renders them interactively. -/
 @[user_command]
 meta def show_widget_cmd (x : parse $ tk "#html") : parser unit := do
   ⟨l,c⟩ ← cur_pos,
-  y ← parser.pexpr,
+  y ← parser.pexpr 0,
   comp ← parser.of_tactic ((do
     tactic.eval_pexpr (component tactic_state empty) y
   ) <|> (do
