@@ -9,8 +9,8 @@ example (f₁ f₂ : string) (as₁ as₂ : list term) (h : term.app f₁ as₁ 
 begin
   injection h,
   trace_state,
-  guard_hyp h_1 := f₁ = f₂,
-  guard_hyp h_2 := as₁ = as₂,
+  guard_hyp h_1 : f₁ = f₂,
+  guard_hyp h_2 : as₁ = as₂,
   rw p_ax,
   assumption
 end
