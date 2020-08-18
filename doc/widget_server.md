@@ -24,6 +24,7 @@ The following arguments are also available:
 
 Incoming messages to the server are called __requests__ and outgoing messages are called __responses__.
 All messages are formatted as JSON objects.
+Requests and responses are sent via standard input and standard output.  Each request or response is sent on a separate line.
 
 ```ts
 interface Request {
@@ -85,7 +86,7 @@ In the case that the lean file is still compiling (as indicated by the orange gu
 
 # Widgets
 
-Lean attaches __widgets__ to various points in the lean document. These points are added using the `tactic.save_widget` lean constant in the same manner as `tactic.save_info`.
+Lean attaches __widgets__ to various points in the lean document. These points are added using the `tactic.save_widget` or `tactic.trace_widget` lean constants in the same manner as `tactic.save_info`.
 For example, the below Lean code attaches a counter widget to the position occupied by `#html`:
 
 ```lean
@@ -157,13 +158,11 @@ interface GetWidgetResponse extends CommandResponse {
 
 ### Example: get a widget
 
-Note, in order to be valid json all of the below keystrings need to be enclosed in `""`.
 ```ts
-→ {command: 'info', file_name: 'my_file.lean', line: 25, column: 2, seq_num: 1}
-← {response: 'ok', seq_num: 1, record: {..., widget: {line: 25, column: 0, id: 51}}}
-→ {command: 'get_widget', seq_num: 2, file_name: 'my_file.lean', line: 25, column: 0, id: 51}
-← {response: 'ok', seq_num: 2, widget: {line: 25, column: 0, id: 51, html: {...}}}
-```
+→ {command: "info", file_name: "my_file.lean", line: 25, column: 2, seq_num: 1}
+← {response: "ok", seq_num: 1, record: {..., widget: {line: 25, column: 0, id: 51}}}
+→ {command: "get_widget", seq_num: 2, file_name: "my_file.lean", line: 25, column: 0, id: 51}
+← {response: "ok", seq_num: 2, widget: {line: 25, column: 0, id: 51, html: {...}}}
 
 ## Rendering a widget
 
@@ -224,7 +223,7 @@ For example:
 
 ```json
 {
-  "t": "button"
+  "t": "button",
   "a": {
       "style": {
           "color": "red",
@@ -416,4 +415,3 @@ The currently available effects are:
 → {seq_num: 47, command : widget_event, kind:"onClick", handler : {h:0, r: [51]}, file_name: 'my_file.lean', line: 25, column: 0, id: 51, args : { type : "unit", value : {}}}
 ← {record: {status: "success", widget: {column: 0, html: {...}, id: 51, line: 35}}, response: "ok", seq_num: 47}
 ```
-
