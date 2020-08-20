@@ -35,7 +35,7 @@ interface Request {
 
 ```
 
-`command` is one of a fixed set of command strings shown below, `seq_num` is an optional parameter which lean will use to tag a subsequent response to this request. In this way, multiple requests can be in-flight at the same time.
+`command` is one of a fixed set of command strings shown below, `seq_num` is an optional parameter which Lean will use to tag a subsequent response to this request. In this way, multiple requests can be in-flight at the same time.
 
 The response from a command will implement either `CommandResponse` in the case of success, or `ErrorResponse` if an error occurred while handling the request.
 
@@ -65,7 +65,7 @@ interface InfoRequest extends Request {
 }
 ```
 
-This will cause the lean server to produce the following `InfoResponse`.
+This will cause the Lean server to produce the following `InfoResponse`.
 
 ```ts
 interface InfoResponse extends CommandResponse {
@@ -82,11 +82,11 @@ interface InfoResponse extends CommandResponse {
 }
 ```
 
-In the case that the lean file is still compiling (as indicated by the orange gutter bars in vscode), then instead this will merely return a `{response: "ok"}` response.
+In the case that the Lean file is still compiling (as indicated by the orange gutter bars in VS Code), then instead this will merely return a `{response: "ok"}` response.
 
 # Widgets
 
-Lean attaches __widgets__ to various points in the lean document. These points are added using the `tactic.save_widget` or `tactic.trace_widget` lean constants in the same manner as `tactic.save_info`.
+Lean attaches __widgets__ to various points in the Lean document. These points are added using the `tactic.save_widget` or `tactic.trace_widget` Lean constants in the same manner as `tactic.save_info`.
 For example, the below Lean code attaches a counter widget to the position occupied by `#html`:
 
 ```lean
@@ -117,9 +117,9 @@ $ component.pure (λ ⟨state, ⟨⟩⟩, [
 #html Counter ()
 ```
 
-For more information about the API for creating widgets in lean, please consult the [docs in the lean sourcecode](https://github.com/leanprover-community/lean/blob/master/library/init/meta/widget/basic.lean).
+For more information about the API for creating widgets in Lean, please consult the [docs in the Lean sourcecode](https://github.com/leanprover-community/lean/blob/master/library/init/meta/widget/basic.lean).
 
-In vscode, the user can click on the part of the document marked `#html` and interact with this widget in the info view. In the above example, there is some ephemeral UI state in the form of a counter value. This state is managed in lean and is destroyed when the server quits or if the document is modified above the widget.
+In VS Code, the user can click on the part of the document marked `#html` and interact with this widget in the info view. In the above example, there is some ephemeral UI state in the form of a counter value. This state is managed in Lean and is destroyed when the server quits or if the document is modified above the widget.
 
 ## Discovering a widget
 
@@ -166,7 +166,7 @@ interface GetWidgetResponse extends CommandResponse {
 
 ## Rendering a widget
 
-The recommended UI framework for use with rendering widgets is React, however this is not required.
+The recommended UI framework for use with rendering widgets is [React](https://reactjs.org/), however this is not required.
 A reference implementation for React can be found [here](https://github.com/leanprover/vscode-lean/blob/master/infoview/widget.tsx).
 
 After receiving a `GetWidgetResponse` object `r`, the DOM information is stored in `r.widget.html`. This has type `WidgetComponent`, whose schema can be viewed below:
@@ -255,15 +255,16 @@ Converts to the React element:
 The attributes field of `WidgetElement` takes the form of a JSON object of keys and values.
 Either both the key and value are a string, or a special case is `"style"`, whose value is a JSON object of string key/value pairs.
 Events attached to the element are placed in their own `e` field.
+
 Note: the keys of attributes and styles follow the React convention; for example `"textAlign"` and `"onClick"` instead of `"text-align"` and `"on-click"`. Additionally, `"className"` is used instead of `"class"`. So if you are not implementing with React, you will need to convert all of these keynames back to their HTML-native forms.
 
 #### `WidgetElement` Tooltips
 
-Widgets provide special support for 'tooltips' which are pieces of html that appear in 'popovers'. If the `tt` property is set on a `WidgetElement` then the `WidgetHTML` value of `tt` should be rendered in a popover-like element (always, not only when the user hovers their cursor over the element). In the vscode implementation, this is implemented with the popper.js library, where the given WidgetElement is wrapped in an additional `<div/>` also containing the tooltip content. See the [vscode implementation](https://github.com/leanprover/vscode-lean/blob/master/infoview/widget.tsx) for more details.
+Widgets provide special support for 'tooltips' which are pieces of HTML that appear in 'popovers'. If the `tt` property is set on a `WidgetElement` then the `WidgetHTML` value of `tt` should be rendered in a popover-like element (always, not only when the user hovers their cursor over the element). In the VS Code implementation, this is implemented with the [`popper.js`](https://popper.js.org/) library, where the given WidgetElement is wrapped in an additional `<div/>` also containing the tooltip content. See the [VS Code implementation](https://github.com/leanprover/vscode-lean/blob/master/infoview/widget.tsx) for more details.
 
 ### Rendering `WidgetComponent`, `null` and `string`
 
-A `WidgetHTML` with value `null` should return an empty html object (in React you can do this by returning `null` or `false`).
+A `WidgetHTML` with value `null` should return an empty HTML object (in React you can do this by returning `null` or `false`).
 If the `WidgetHTML` is a string, then return that string.
 
 A `WidgetComponent` only has one child called `c`. To render a component, simply render all of the child elements and then return them as a list.
@@ -277,7 +278,7 @@ null ↦ null
 
 ### Stylesheet
 
-The widgets provided in core lean assume that a CSS stylesheet called `tachyons.css` is loaded. This can be downloaded from tachyons.io. Note that this follows the 'functional CSS' paradigm, so the idea is that the Lean widget-writer should never need to write their own styles, and instead attaches these tachyons classes to their elements.
+The widgets provided in core Lean assume that a CSS stylesheet called `tachyons.css` is loaded. This can be downloaded from <https://tachyons.io>. Note that this follows the 'functional CSS' paradigm, so the idea is that the Lean widget-writer should never need to write their own styles, and instead attaches these tachyons classes to their elements.
 
 ### Events
 
@@ -288,7 +289,7 @@ There are currently 4 kinds of event handlers that the widget may request:
 - `onMouseLeave`
 - `onChange` which additionally must supply a string argument to the handler.
 
-In the vscode implementation, `onChange` is only allowed on `input` elements whose `type` attribute is set to `select` or `onChange`.
+In the VS Code implementation, `onChange` is only allowed on `input` elements whose `type` attribute is set to `select` or `onChange`.
 
 More information will be provided on events in the next subsection.
 
@@ -397,7 +398,7 @@ These events must be passed to the Lean server so that the UI can be updated. Th
 
 ### Effects
 
-When a `WidgetEventResponse` is returned, it may contain 'effects' these are changes to the editor state that the UI is requesting.
+When a `WidgetEventResponse` is returned, it may contain 'effects', which are changes to the editor state that the UI is requesting.
 The list of effects should be applied sequentially in the order they appear in the list.
 The currently available effects are:
 
