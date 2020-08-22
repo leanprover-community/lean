@@ -18,10 +18,9 @@ zero_lt_succ _
 
 /- Later, we define of_nat using mod, the following version is used to define the metaprogramming system. -/
 protected def of_nat' (n : nat) : unsigned :=
-if h : n < unsigned_sz then fin.mk n h else fin.mk 0 zero_lt_unsigned_sz
+if h : n < unsigned_sz then ⟨n, h⟩ else ⟨0, zero_lt_unsigned_sz⟩
 
-def to_nat (c : unsigned) : nat :=
-fin.val c
+def to_nat (c : unsigned) : nat := c.val
 
 end unsigned
 
