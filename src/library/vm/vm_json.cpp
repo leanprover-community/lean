@@ -11,6 +11,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_int.h"
 #include "library/vm/vm_list.h"
 #include "library/vm/vm_float.h"
+#include "library/vm/vm_option.h"
 #include <string>
 
 namespace lean {
@@ -80,25 +81,39 @@ vm_obj to_obj(json const & j) {
     } else if (j.is_string()) {
         std::string s = j;
         return mk_vm_constructor(json_idx::vstring, to_obj(s));
-    } else if (j.is_object()) {
-        vm_obj o = mk_vm_nil();
-        json jj = j;
-        for (json::iterator el = jj.begin(); el != jj.end(); ++el) {
-            o = mk_vm_cons(mk_vm_pair(
-                    mk_vm_constructor(json_idx::vstring, to_obj(el.key())),
-                    to_obj(el.value())), o);
-        }
-        return mk_vm_constructor(json_idx::vobject, o);
     } else if (j.is_array()) {
         vm_obj o = mk_vm_nil();
         json jj = j;
         for (json & v : jj) {
             o = mk_vm_cons(to_obj(v), o);
         }
+        return mk_vm_constructor(json_idx::varray, o);
+    } else if (j.is_object()) {
+        vm_obj o = mk_vm_nil();
+        json jj = j;
+        for (json::iterator el = jj.begin(); el != jj.end(); ++el) {
+            o = mk_vm_cons(mk_vm_pair(
+                    to_obj(el.key()),
+                    to_obj(el.value())), o);
+        }
         return mk_vm_constructor(json_idx::vobject, o);
     } else {
         lean_unreachable();
     }
 }
+
+vm_obj parse(vm_obj const & s) {
+    try {
+        json j = json::parse(to_string(s));
+        return mk_vm_some(to_obj(j));
+    } catch(...) {
+        return mk_vm_none();
+    }
+}
+
+void initialize_vm_json() {
+    DECLARE_VM_BUILTIN(name({"json", "parse"}), parse);
+}
+void finalize_vm_json() {}
 
 }

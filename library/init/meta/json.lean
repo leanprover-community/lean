@@ -38,5 +38,8 @@ meta def to_format : json → format
 
 meta instance : has_to_format json := ⟨to_format⟩
 meta instance : has_to_string json := ⟨format.to_string ∘ to_format⟩
+meta instance : has_repr json := ⟨to_string⟩
+
+protected meta constant parse : string → option json
 
 end json

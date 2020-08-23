@@ -12,4 +12,7 @@ namespace lean {
 json to_json(vm_obj const & o);
 vm_obj to_obj(json const & j);
 
+void initialize_vm_json();
+void finalize_vm_json();
+
 }
