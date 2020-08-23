@@ -214,9 +214,6 @@ with component : Type → Type → Type
      {Props Action : Type}
      (emit : Props → Action → effects)
      : component Props Action → component Props Action
-| with_width
-     {Props Action : Type}
-     : component (option nat × Props) Action → component Props Action
 
 with html : Type → Type
 | element      {α : Type} (tag : string) (attrs : list (attr α)) (children : list (html α)) : html α

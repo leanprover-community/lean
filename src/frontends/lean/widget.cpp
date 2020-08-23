@@ -19,6 +19,7 @@ Author: E.W.Ayers
 #include "frontends/lean/json.h"
 #include "util/optional.h"
 #include "util/pair.h"
+
 namespace lean {
 
 
@@ -30,21 +31,20 @@ enum component_idx {
     with_should_update = 3,
     with_state = 4,
     with_effects = 5,
-    with_width = 6,
     // with_mouse
     // with_task
 };
 enum html_idx {
-    element = 7,
-    of_string = 8,
-    of_component = 9
+    element = 6,
+    of_string = 7,
+    of_component = 8
 };
 enum attr_idx {
-    val = 10,
-    mouse_event = 11,
-    style = 12,
-    tooltip = 13,
-    text_change_event = 14
+    val = 9,
+    mouse_event = 10,
+    style = 11,
+    tooltip = 12,
+    text_change_event = 13
 };
 enum effect_idx {
     insert_text = 0,
@@ -205,18 +205,6 @@ struct effects_hook : public hook_cell {
     }
 };
 
-struct with_width_hook : public hook_cell {
-    optional<unsigned> m_width;
-    with_width_hook() {}
-    void set_width(unsigned w) {
-        m_width = optional<unsigned>(w);
-    }
-    vm_obj get_props(vm_obj const & props) override {
-        vm_obj w = m_width ? mk_vm_some(mk_vm_nat(*m_width)) : mk_vm_none();
-        return mk_vm_pair(w, props);
-    }
-};
-
 component_instance::component_instance(vm_obj const & component, vm_obj const & props, list<unsigned> const & route):
   m_props(props), m_route(route) {
     m_id = g_fresh_component_instance_id.fetch_add(1) + 1;
@@ -245,10 +233,6 @@ component_instance::component_instance(vm_obj const & component, vm_obj const & 
             case component_idx::with_effects:
                 m_hooks.push_back(hook(new effects_hook(cfield(c, 0))));
                 c = cfield(c, 1);
-                break;
-            case component_idx::with_width:
-                m_hooks.push_back(hook(new with_width_hook()));
-                c = cfield(c, 0);
                 break;
             default:
                 lean_unreachable();
@@ -352,12 +336,6 @@ json component_instance::to_json(list<unsigned> const & route) {
     }
     json result;
     result["c"] = children;
-    for (hook const & h : m_hooks) {
-        with_width_hook const * wh = dynamic_cast<with_width_hook const *>(h.get());
-        if (wh) {
-            result["onWidth"] = {{"r", route_to_json(m_route)}};
-        }
-    }
     return result;
 }
 
