@@ -46,7 +46,9 @@ json to_json(vm_obj const & o) {
         vm_obj l = cfield(o, 0);
         while (!is_simple(l)) {
             vm_obj h = head(l);
-            j[to_string(cfield(h, 0))] = to_json(cfield(h, 1));
+            std::string key = to_string(cfield(h, 0));
+            json value = to_json(cfield(h, 1));
+            j[key] = value;
             l = tail(l);
         }
         return j;
