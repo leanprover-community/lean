@@ -1,0 +1,3 @@
+"(some [0.7])"
+"(some { \"world\":[\"this is a \\\" string with an annoying quote in it. \", 3, 2, 1, false, true, null],  \"hello\":0.4})"
+"none"
