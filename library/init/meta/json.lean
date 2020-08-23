@@ -26,4 +26,17 @@ meta instance bool_coe : has_coe bool json := ⟨json.of_bool⟩
 meta instance array_coe : has_coe (list json) json := ⟨json.array⟩
 meta instance : inhabited json := ⟨json.null⟩
 
+meta def to_format : json → format
+| (of_string s) := string.quote s
+| (of_int i) := to_string i
+| (of_float f) := to_string f
+| (of_bool tt) := "true"
+| (of_bool ff) := "false"
+| (null) := "null"
+| (object kvs) := "{ " ++ (format.group $ format.nest 2 $ format.join $ list.intersperse (", " ++ format.line) $ kvs.map $ λ ⟨k,v⟩, string.quote k ++ ":" ++ to_format v) ++ "}"
+| (array js) := list.to_format $ js.map to_format
+
+meta instance : has_to_format json := ⟨to_format⟩
+meta instance : has_to_string json := ⟨format.to_string ∘ to_format⟩
+
 end json
