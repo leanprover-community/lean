@@ -58,13 +58,10 @@ do t ← target >>= instantiate_mvars,
    <|>
    (do type   ← whnf type,
        guard (type.app_fn = `(@subtype nat)),
+       applyc `subtype.ne_of_val_ne,
        (`(subtype.mk %%a %%ha), `(subtype.mk %%b %%hb)) ← is_ne t,
-       trace a,
        pr     ← mk_nat_val_ne_proof a b,
-       trace pr,
-       pr2    ← to_expr ``(@subtype.ne_of_val_ne ℕ _ ⟨%%a, %%ha⟩ ⟨%%b, %%hb⟩ %%pr),
-       trace pr2,
-       exact pr2)
+       exact pr)
    <|>
    (do (a, b) ← is_eq t,
         unify a b, to_expr ``(eq.refl %%a) >>= exact)
