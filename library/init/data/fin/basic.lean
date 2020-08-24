@@ -10,8 +10,6 @@ open nat
 /-- `fin n` is the subtype of `ℕ` consisting of natural numbers strictly smaller than `n`. -/
 def fin (n : ℕ) := {i : ℕ // i < n}
 
--- attribute [pp_using_anonymous_constructor] fin
-
 namespace fin
 
 /-- Backwards-compatible constructor for `fin n`. -/

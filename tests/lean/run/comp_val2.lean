@@ -9,7 +9,7 @@ example : "abc" ≠ "cde" := by comp_val
 example : "abc" ≠ "" := by comp_val
 example : "" ≠ "cde" := by comp_val
 
-example : @fin.mk 5 3 dec_trivial ≠ @fin.mk 5 4 dec_trivial :=
+example : (⟨3, dec_trivial⟩ : fin 5) ≠ ⟨4, dec_trivial⟩ :=
 by comp_val
 
 example : @fin.mk 5 4 dec_trivial ≠ @fin.mk 5 1 dec_trivial :=
