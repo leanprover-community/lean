@@ -1,3 +1,22 @@
+3.19.0c (27 August 2020)
+------------------------
+
+Features:
+- There is a new option `extends_priority` which controls the priority of instances produced by `extends`. It is set to 100 by default. (#440)
+- Add [docs for the Lean server API](widget_server.md) (#443)
+
+Bug fixes:
+- Fix name generation by `injection_with` (#430)
+- Fix bug in `in_current_file` (#432)
+- Fix docstring in `introv` (#434)
+- Fix parse precedence for `#html` (#444)
+
+Changes:
+- Avoid `classical.choice` in `lt_of_le_of_ne` (#428)
+- Remove usage of the axiom of choice from basic `nat` and `int` lemmas, remove `private` from internal lemmas about `int` and move the `decidable.*` order theorems from mathlib (#446)
+- Change syntax of `guard_hyp` from `guard_hyp h := t` to `guard_hyp h : t` and support `guard_hyp h : t := val` for checking `let` bindings (#445, #449)
+- Make `fin` a subtype (#452)
+
 3.18.4c (30 July 2020)
 ----------------------
 
