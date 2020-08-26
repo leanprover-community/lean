@@ -10,6 +10,7 @@ Bug fixes:
 - Fix bug in `in_current_file` (#432)
 - Fix docstring in `introv` (#434)
 - Fix parse precedence for `#html` (#444)
+- Add `\fl` and `\fr` to `lstlean.tex` (#448)
 
 Changes:
 - Avoid `classical.choice` in `lt_of_le_of_ne` (#428)
