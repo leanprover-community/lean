@@ -111,8 +111,13 @@ vm_obj parse(vm_obj const & s) {
     }
 }
 
+vm_obj unparse(vm_obj const & o) {
+    return to_obj(to_json(o).dump());
+}
+
 void initialize_vm_json() {
     DECLARE_VM_BUILTIN(name({"json", "parse"}), parse);
+    DECLARE_VM_BUILTIN(name({"json", "unparse"}), unparse);
 }
 void finalize_vm_json() {}
 

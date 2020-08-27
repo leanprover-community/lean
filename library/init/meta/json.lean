@@ -26,6 +26,9 @@ meta instance bool_coe : has_coe bool json := ⟨json.of_bool⟩
 meta instance array_coe : has_coe (list json) json := ⟨json.array⟩
 meta instance : inhabited json := ⟨json.null⟩
 
+protected meta constant parse : string → option json
+protected meta constant unparse : json → string
+
 meta def to_format : json → format
 | (of_string s) := string.quote s
 | (of_int i) := to_string i
@@ -37,9 +40,7 @@ meta def to_format : json → format
 | (array js) := list.to_format $ js.map to_format
 
 meta instance : has_to_format json := ⟨to_format⟩
-meta instance : has_to_string json := ⟨format.to_string ∘ to_format⟩
-meta instance : has_repr json := ⟨to_string⟩
-
-protected meta constant parse : string → option json
+meta instance : has_to_string json := ⟨unparse⟩
+meta instance : has_repr json := ⟨unparse⟩
 
 end json
