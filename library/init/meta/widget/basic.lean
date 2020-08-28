@@ -10,6 +10,7 @@ import init.data.option.basic
 import init.util
 import init.meta.tactic
 import init.meta.mk_dec_eq_instance
+import init.meta.json
 
 /-! A component is a piece of UI which may contain internal state. Use component.mk to build new components.
 
@@ -220,7 +221,7 @@ with html : Type → Type
 | of_component {α : Type} {Props : Type} : Props → component Props α → html α
 
 with attr : Type → Type
-| val               {α : Type} (name : string) (value : string) : attr α
+| val               {α : Type} (name : string) (value : json) : attr α
 | mouse_event       {α : Type} (kind : mouse_event_kind) (handler : unit → α) : attr α
 | style             {α : Type} : list (string × string) → attr α
 | tooltip           {α : Type} : html α → attr α

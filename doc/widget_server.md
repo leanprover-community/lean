@@ -214,7 +214,7 @@ export type WidgetHtml =
 Ignoring tooltips for now, each `WidgetElement` corresponds to a DOM element.
 
 - `"t"` is the tag of the element.
-- `"a"` are the non-event attributes of the element.
+- `"a"` are the non-event attributes of the element. These can be arbitrary JSON objects.
 - `"e"` are the event handlers that should be attached to the element.
 - `"c"` are the children of the element.
 - `"tt"` is an additional tooltip element to be discussed below.
