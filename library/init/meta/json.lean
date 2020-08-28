@@ -40,7 +40,7 @@ meta def to_format : json → format
 | (array js) := list.to_format $ js.map to_format
 
 meta instance : has_to_format json := ⟨to_format⟩
-meta instance : has_to_string json := ⟨unparse⟩
-meta instance : has_repr json := ⟨unparse⟩
+meta instance : has_to_string json := ⟨json.unparse⟩
+meta instance : has_repr json := ⟨json.unparse⟩
 
 end json
