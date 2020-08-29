@@ -45,6 +45,34 @@ bool parse_univ_params(parser & p, buffer<name> & lp_names) {
     }
 }
 
+/*
+Naming instances.
+
+For `instance [...] : C t u (D x y)`, we generate the name `D.C`.
+However, we remove the current namespace if it is a prefix of `C` and/or `D`.
+The current namespace will implicitly be prepended to the resulting name.
+
+Examples:
+
+```
+def foo := ℕ
+namespace foo
+instance : has_add foo := nat.has_add   -- foo.has_add, not foo.foo.has_add
+end
+
+namespace category_theory
+
+class is_right_adjoint := ...
+def forgetful_functor := ...
+instance : is_right_adjoint forgetful_functor := ...
+-- category_theory.forgetful_functor.is_right_adjoint, not
+-- category_theory.category_theory.forgetful_functor.category_theory.is_right_adjoint
+
+end category_theory
+```
+
+*/
+
 expr parse_single_header(parser & p, declaration_name_scope & scope,
                          buffer <name> & lp_names, buffer <expr> & params,
                          bool is_example, bool is_instance) {
@@ -79,11 +107,15 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
         while (is_pi(it)) it = binding_body(it);
         expr const & C = get_app_fn(it);
         name ns = get_namespace(p.env());
-        if (is_constant(C) && !ns.is_anonymous()) {
-            c_name = const_name(C);
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            c_name = const_name(get_app_fn(app_arg(it))) + const_name(C);
+        if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
+            /* See the note "Naming instances" above. */
+            name class_name = const_name(C);
+            name arg_name = const_name(get_app_fn(app_arg(it)));
+            if (is_prefix_of(ns, class_name))
+                class_name = class_name.replace_prefix(ns, name());
+            if (is_prefix_of(ns, arg_name))
+                arg_name = arg_name.replace_prefix(ns, name());
+	    c_name = arg_name + class_name;
             scope.set_name(c_name);
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
@@ -118,11 +150,15 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
         while (is_pi(it)) it = binding_body(it);
         expr const & C = get_app_fn(it);
         name ns = get_namespace(p.env());
-        if (is_constant(C) && !ns.is_anonymous()) {
-            c_name = const_name(C);
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            c_name = const_name(get_app_fn(app_arg(it))) + const_name(C);
+        if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
+            /* See the note "Naming instances" above. */
+            name class_name = const_name(C);
+            name arg_name = const_name(get_app_fn(app_arg(it)));
+            if (is_prefix_of(ns, class_name))
+                class_name = class_name.replace_prefix(ns, name());
+            if (is_prefix_of(ns, arg_name))
+                arg_name = arg_name.replace_prefix(ns, name());
+	    c_name = arg_name + class_name;
             scope.set_name(c_name);
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});

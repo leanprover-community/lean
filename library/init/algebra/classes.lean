@@ -217,7 +217,7 @@ lemma not_lt_of_equiv {a b : α} : a ≈ b → ¬ a ≺ b :=
 lemma not_lt_of_equiv' {a b : α} : a ≈ b → ¬ b ≺ a :=
 λ h, h.2
 
-instance : is_equiv α equiv :=
+instance is_equiv : is_equiv α equiv :=
 {refl := erefl, trans := @etrans, symm := @esymm}
 end
 
