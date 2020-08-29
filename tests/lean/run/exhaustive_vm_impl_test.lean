@@ -1,3 +1,6 @@
+instance my_pow : has_pow ℕ ℕ :=
+⟨λ x n, nat.rec_on n 1 (λ _ ih, ih * x)⟩
+
 instance nat.decidable_ball (p : ℕ → Prop) [∀ i, decidable (p i)] : ∀ n, decidable (∀ x < n, p x)
 | 0 := decidable.is_true begin intros n h, cases h end
 | (n+1) :=
