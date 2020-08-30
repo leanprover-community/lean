@@ -115,7 +115,7 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
                 class_name = class_name.replace_prefix(ns, name());
             if (is_prefix_of(ns, arg_name))
                 arg_name = arg_name.replace_prefix(ns, name());
-	    c_name = arg_name + class_name;
+            c_name = arg_name + class_name;
             scope.set_name(c_name);
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
@@ -158,7 +158,7 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
                 class_name = class_name.replace_prefix(ns, name());
             if (is_prefix_of(ns, arg_name))
                 arg_name = arg_name.replace_prefix(ns, name());
-	    c_name = arg_name + class_name;
+            c_name = arg_name + class_name;
             scope.set_name(c_name);
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
