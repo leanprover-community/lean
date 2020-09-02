@@ -409,9 +409,15 @@ meta constant head_zeta       : expr → tactic expr
 meta constant zeta            : expr → tactic expr
 /-- (head) eta reduction. `(λ x, f x)` reduces to `f`. -/
 meta constant head_eta        : expr → tactic expr
-/-- Succeeds if `t` and `s` can be unified using the given transparency setting. -/
+/-- Succeeds if `t` and `s` can be unified using the given transparency setting.
+If `approx` is set to `tt`, then metavariable context restriction is enabled.
+This means that if an mvar `?m1` is being assigned with an expression `e` depending on an mvar `?m2`, but `?m2`
+was declared in a child local context of `?m1`'s local context, then assign `?m2` with a new mvar `?m3` in the same context as `?m1`
+before assigning `?m1` with `e`.
+This process is called metavariable __restriction__ because you are effectively restricting the local constants that `?m2` is allowed to depend on.
+-/
 meta constant unify (t s : expr) (md := semireducible) (approx := ff) : tactic unit
-/-- Similar to `unify`, but it treats metavariables as constants. -/
+/-- Similar to `unify`, but it treats metavariables as constants. Setting `approx` to true enables metavariable restriction. -/
 meta constant is_def_eq (t s : expr) (md := semireducible) (approx := ff) : tactic unit
 /-- Infer the type of the given expression.
    Remark: transparency does not affect type inference -/
