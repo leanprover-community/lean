@@ -896,9 +896,6 @@ meta def intron_with
 
 /-- Returns n fully qualified if it refers to a constant, or else fails. -/
 meta def resolve_constant (n : name) : tactic name :=
--- do (expr.const n _) ← resolve_name n,
---    pure n
-
 do e ← resolve_name n,
    match e with
    | expr.const n _ := pure n
