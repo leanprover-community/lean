@@ -25,3 +25,14 @@ by simp [f_lemma1, f_lemma2]
 
 end bla
 end foo
+
+section param
+
+parameters x y : ℤ
+
+lemma my_ext (s s' : set ℤ) (h : x ∈ s ↔ y ∈ s') : true := trivial
+
+run_cmd tactic.resolve_constant `my_ext
+
+
+end param
