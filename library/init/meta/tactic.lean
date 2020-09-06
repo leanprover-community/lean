@@ -901,7 +901,8 @@ do e ← resolve_name n,
    | expr.const n _ := pure n
    | _ := do
      e ← to_expr e tt ff,
-     pure $ e.get_app_fn.const_name
+     expr.const n _ ← pure $ e.get_app_fn,
+     pure n
    end
 
 meta def to_expr_strict (q : pexpr) : tactic expr :=
