@@ -30,9 +30,12 @@ section param
 
 parameters x y : ℤ
 
-lemma my_ext (s s' : set ℤ) (h : x ∈ s ↔ y ∈ s') : true := trivial
+lemma foo.my_ext (s s' : set ℤ) (h : x ∈ s ↔ y ∈ s') : true := trivial
 
-run_cmd tactic.resolve_constant `my_ext
+open foo
 
+run_cmd do
+n ← tactic.resolve_constant `my_ext,
+guard $ n = `foo.my_ext
 
 end param
