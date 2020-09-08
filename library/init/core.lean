@@ -10,7 +10,7 @@ prelude
 notation `Prop` := Sort 0
 notation f ` $ `:1 a:0 := f a
 
-/- Reserving notation. We do this sot that the precedence of all of the operators
+/- Reserving notation. We do this so that the precedence of all of the operators
 can be seen in one place and to prevent core notation being accidentally overloaded later.  -/
 
 /- Notation for logical operations and relations -/
