@@ -221,7 +221,7 @@ def or.symm := @or.swap
 def xor (a b : Prop) := (a ∧ ¬ b) ∨ (b ∧ ¬ a)
 
 /- iff -/
-
+/-- `iff P Q`, with notation `P ↔ Q`, is the proposition asserting that `P` and `Q` are equivalent, that is, have the same truth value. -/
 structure iff (a b : Prop) : Prop :=
 intro :: (mp : a → b) (mpr : b → a)
 
