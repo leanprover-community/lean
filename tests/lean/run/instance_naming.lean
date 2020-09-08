@@ -29,17 +29,21 @@ open category_theory
 instance : category_theory.preserves_limits forgetful_functor := ⟨⟩
 end
 
-class lie (α : Type) : Type :=
+class lie_algebra (α : Type) : Type :=
 (bracket : α → α → α)
 
-namespace lie
+namespace lie_algebra
 
-instance : lie ℤ := { bracket := λ x y, x * y - y * x }
+instance : lie_algebra ℤ := ⟨λ x y, x * y - y * x⟩
 
-end lie
+def gl : Type := unit
+instance : lie_algebra gl := ⟨λ _ _, ()⟩
+
+end lie_algebra
 
 example := category_theory.forgetful_functor.is_right_adjoint
 example := category_theory.nat.zero.is_right_adjoint
 example := category_theory.functor.inhabited
 example := category_theory.forgetful_functor.category_theory.preserves_limits
-example := lie.int
+example := lie_algebra.int.lie_algebra
+example := lie_algebra.gl.lie_algebra

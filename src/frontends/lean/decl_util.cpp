@@ -50,6 +50,9 @@ Naming instances.
 
 For `instance [...] : C t u (D x y)`, we generate the name `D.C`.
 However, we remove the current namespace if it is a prefix of `C` and/or `D`.
+(Exception: if `C` *equals* the current namespace, we keep the last component of `C`.
+Otherwise, the resulting name would be the same as `D`,
+which could be a name in the current namespace.)
 The current namespace will implicitly be prepended to the resulting name.
 
 Examples:
@@ -69,6 +72,17 @@ instance : is_right_adjoint forgetful_functor := ...
 -- category_theory.category_theory.forgetful_functor.category_theory.is_right_adjoint
 
 end category_theory
+
+class lie_algebra (α : Type) : Type :=
+(bracket : α → α → α)
+
+namespace lie_algebra
+
+def gl : Type := unit
+instance : lie_algebra gl := ⟨λ _ _, ()⟩
+-- lie_algebra.gl.lie_algebra, not lie_algebra.gl (already used)
+
+end lie_algebra
 ```
 
 */
@@ -111,7 +125,9 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
             /* See the note "Naming instances" above. */
             name class_name = const_name(C);
             name arg_name = const_name(get_app_fn(app_arg(it)));
-            if (is_prefix_of(ns, class_name))
+            if (class_name == ns && class_name.is_string())
+                class_name = class_name.get_string();
+            else if (is_prefix_of(ns, class_name))
                 class_name = class_name.replace_prefix(ns, name());
             if (is_prefix_of(ns, arg_name))
                 arg_name = arg_name.replace_prefix(ns, name());
@@ -154,7 +170,9 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
             /* See the note "Naming instances" above. */
             name class_name = const_name(C);
             name arg_name = const_name(get_app_fn(app_arg(it)));
-            if (is_prefix_of(ns, class_name))
+            if (class_name == ns && class_name.is_string())
+                class_name = class_name.get_string();
+            else if (is_prefix_of(ns, class_name))
                 class_name = class_name.replace_prefix(ns, name());
             if (is_prefix_of(ns, arg_name))
                 arg_name = arg_name.replace_prefix(ns, name());
