@@ -142,6 +142,7 @@ inductive false : Prop
 
 inductive empty : Type
 
+/-- `not P`, with notation `¬ P`, is the Proposition which is true if and only if `P` is false. It is internally represented as `P → false`. -/
 def not (a : Prop) := a → false
 prefix `¬` := not
 
