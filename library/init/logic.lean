@@ -33,7 +33,7 @@ false.rec b (h₂ h₁)
 lemma not.intro {a : Prop} (h : a → false) : ¬ a :=
 h
 
-/-- Modus tollens.-/
+/-- Modus tollens. If an implication is true, then so is its contrapositive. -/
 lemma mt {a b : Prop} (h₁ : a → b) (h₂ : ¬b) : ¬a := assume ha : a, h₂ (h₁ ha)
 
 /- not -/
