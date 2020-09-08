@@ -55,6 +55,19 @@ Otherwise, the resulting name would be the same as `D`,
 which could be a name in the current namespace.)
 The current namespace will implicitly be prepended to the resulting name.
 
+For `instance [...] : C t u α`, where `α` is a variable
+(at parse time--it might turn into a coercion later, during typechecking)
+we generate the name `C`, stripping off the current namespace if possible.
+
+Further improvements to the heuristic are possible, for example:
+  instance : C (X.foo Y)     -- foo.C
+  instance : C (D : α → β)   -- D.C
+  instance : C (@D x y)      -- D.C
+  instance : C (Π i, F i)    -- Pi.C
+  instance : C (Type u)      -- Type.C
+but not yet implemented.
+The heuristic can also fail in the presence of parameters.
+
 Examples:
 
 ```
@@ -83,6 +96,13 @@ instance : lie_algebra gl := ⟨λ _ _, ()⟩
 -- lie_algebra.gl.lie_algebra, not lie_algebra.gl (already used)
 
 end lie_algebra
+
+class moo (α : Type*)
+class zoo (β : Type*)
+
+namespace zoo
+instance (β : Type*) [zoo β] : moo β := ⟨⟩  -- zoo.moo
+end zoo
 ```
 
 */
@@ -133,6 +153,11 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
                 arg_name = arg_name.replace_prefix(ns, name());
             c_name = arg_name + class_name;
             scope.set_name(c_name);
+        } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
+            name class_name = const_name(C);
+            if (is_prefix_of(ns, class_name))
+                class_name = class_name.replace_prefix(ns, name());
+            c_name = class_name;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
@@ -178,6 +203,11 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
                 arg_name = arg_name.replace_prefix(ns, name());
             c_name = arg_name + class_name;
             scope.set_name(c_name);
+        } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
+            name class_name = const_name(C);
+            if (is_prefix_of(ns, class_name))
+                class_name = class_name.replace_prefix(ns, name());
+            c_name = class_name;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
