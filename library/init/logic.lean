@@ -20,6 +20,7 @@ def flip {α : Sort u} {β : Sort v} {φ : Sort w} (f : α → β → φ) : β �
 
 def implies (a b : Prop) := a → b
 
+/-- Implication `→` is transitive. If `P → Q` and `Q → R` then `P → R`. -/
 @[trans] lemma implies.trans {p q r : Prop} (h₁ : implies p q) (h₂ : implies q r) : implies p r :=
 assume hp, h₂ (h₁ hp)
 
