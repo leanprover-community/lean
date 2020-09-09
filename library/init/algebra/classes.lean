@@ -87,7 +87,8 @@ class is_idempotent (α : Type u) (f : α → α) : Prop :=
 instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm α r] : is_symm_op α Prop r :=
 {symm_op := λ a b, propext $ iff.intro (is_symm.symm a b) (is_symm.symm b a)}
 
-/-- `is_asymm X r` means that the binary relation `r` on `X` is asymmetric, that is, `r a b → ¬ r b a`. -/
+/-- `is_asymm X r` means that the binary relation `r` on `X` is asymmetric, that is,
+`r a b → ¬ r b a`. -/
 @[algebra] class is_asymm (α : Type u) (r : α → α → Prop) : Prop :=
 (asymm : ∀ a b, r a b → ¬ r b a)
 
