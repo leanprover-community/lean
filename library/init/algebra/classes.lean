@@ -105,7 +105,8 @@ instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm �
 @[algebra] class is_total (α : Type u) (r : α → α → Prop) : Prop :=
 (total : ∀ a b, r a b ∨ r b a)
 
-/-- `is_preorder X r` means that the binary relation `r` on `X` is a pre-order, that is, reflexive and transitive. -/
+/-- `is_preorder X r` means that the binary relation `r` on `X` is a pre-order, that is, reflexive
+and transitive. -/
 @[algebra] class is_preorder (α : Type u) (r : α → α → Prop) extends is_refl α r, is_trans α r : Prop.
 
 /-- `is_total_preorder X r` means that the binary relation `r` on `X` is total and a preorder. -/
