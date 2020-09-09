@@ -30,9 +30,11 @@ class partial_order (α : Type u) extends preorder α :=
 class linear_order (α : Type u) extends partial_order α :=
 (le_total : ∀ a b : α, a ≤ b ∨ b ≤ a)
 
+/-- The relation `≤` on a preorder is reflexive. -/
 @[refl] lemma le_refl [preorder α] : ∀ a : α, a ≤ a :=
 preorder.le_refl
 
+/-- The relation `≤` on a preorder is transitive. -/
 @[trans] lemma le_trans [preorder α] : ∀ {a b c : α}, a ≤ b → b ≤ c → a ≤ c :=
 preorder.le_trans
 

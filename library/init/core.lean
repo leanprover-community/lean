@@ -10,7 +10,7 @@ prelude
 notation `Prop` := Sort 0
 notation f ` $ `:1 a:0 := f a
 
-/- Reserving notation. We do this sot that the precedence of all of the operators
+/- Reserving notation. We do this so that the precedence of all of the operators
 can be seen in one place and to prevent core notation being accidentally overloaded later.  -/
 
 /- Notation for logical operations and relations -/
@@ -142,6 +142,8 @@ inductive false : Prop
 
 inductive empty : Type
 
+/-- `not P`, with notation `¬ P`, is the `Prop` which is true if and only if `P` is false. It is
+internally represented as `P → false`. -/
 def not (a : Prop) := a → false
 prefix `¬` := not
 
@@ -183,6 +185,8 @@ structure prod (α : Type u) (β : Type v) :=
 structure pprod (α : Sort u) (β : Sort v) :=
 (fst : α) (snd : β)
 
+/-- `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
+both true. -/
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
@@ -246,6 +250,8 @@ inductive psum (α : Sort u) (β : Sort v)
 | inl (val : α) : psum
 | inr (val : β) : psum
 
+/-- `or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
+true. -/
 inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
