@@ -248,7 +248,8 @@ inductive psum (α : Sort u) (β : Sort v)
 | inl (val : α) : psum
 | inr (val : β) : psum
 
-/-- `or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is true. -/
+/-- `or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
+true. -/
 inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
