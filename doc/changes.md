@@ -1,3 +1,18 @@
+3.20.0c (9 September 2020)
+--------------------------
+
+Features:
+- Options are refreshed when the simplifier is entered. (#456)
+- JSON support for widgets (#453)
+- More definition and theorem docstrings (#463)
+
+Bug fixes:
+- Typeclass args for `monad_state_trans` were flipped. (#461)
+- `resolve_constant` now handles `parameters` correctly. (#462)
+
+Changes:
+- Remove `nat.pow` from the core library (#457)
+
 3.19.0c (27 August 2020)
 ------------------------
 
