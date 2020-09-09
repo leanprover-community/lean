@@ -71,7 +71,8 @@ class is_idempotent (α : Type u) (f : α → α) : Prop :=
 (idempotent : ∀ a, f (f a) = f a)
 -/
 
-/-- `is_irrefl X r` means the binary relation `r` on `X` is irreflexive (that is, `r x x` never holds). -/
+/-- `is_irrefl X r` means the binary relation `r` on `X` is irreflexive (that is, `r x x` never
+holds). -/
 @[algebra] class is_irrefl (α : Type u) (r : α → α → Prop) : Prop :=
 (irrefl : ∀ a, ¬ r a a)
 
