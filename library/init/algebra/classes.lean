@@ -101,7 +101,8 @@ instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm �
 @[algebra] class is_trans (α : Type u) (r : α → α → Prop) : Prop :=
 (trans  : ∀ a b c, r a b → r b c → r a c)
 
-/-- `is_total X r` means that the binary relation `r` on `X` is total, that is, that for any `x y : X` we have `r x y` or `r y x`.-/
+/-- `is_total X r` means that the binary relation `r` on `X` is total, that is, that for any
+`x y : X` we have `r x y` or `r y x`.-/
 @[algebra] class is_total (α : Type u) (r : α → α → Prop) : Prop :=
 (total : ∀ a b, r a b ∨ r b a)
 
