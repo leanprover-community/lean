@@ -184,7 +184,8 @@ structure prod (α : Type u) (β : Type v) :=
 structure pprod (α : Sort u) (β : Sort v) :=
 (fst : α) (snd : β)
 
-/-- `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are both true.-/
+/-- `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
+both true. -/
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
