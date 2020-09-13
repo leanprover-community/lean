@@ -9,14 +9,12 @@ import init.core
 | ff x y := y
 
 @[inline] def bor : bool → bool → bool
-| tt _  := tt
-| ff tt := tt
-| ff ff := ff
+| tt b := tt
+| ff b := b
 
 @[inline] def band : bool → bool → bool
-| ff _  := ff
-| tt ff := ff
-| tt tt := tt
+| tt b := b
+| ff b := ff
 
 @[inline] def bnot : bool → bool
 | tt := ff
