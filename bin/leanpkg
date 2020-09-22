@@ -1,6 +1,17 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-REALPATH=realpath
+if command -v realpath >/dev/null 2>&1; then
+     REALPATH=realpath
+else
+     unamestr=`uname`
+     # OS X
+     if [[ "$unamestr" == 'Darwin' ]]; then
+         echo "Cannot find 'realpath' command, please install 'realpath'. If you use 'brew', you can install 'greadlink' using 'brew install coreutils'"
+         exit 1
+     else
+         REALPATH="readlink -f"
+     fi
+fi
 
 leandir=$(dirname "$($REALPATH "$0")")/..
 leandir=$($REALPATH "$leandir")
