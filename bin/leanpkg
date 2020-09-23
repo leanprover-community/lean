@@ -6,7 +6,7 @@ else
      unamestr=`uname`
      # OS X
      if [[ "$unamestr" == 'Darwin' ]]; then
-         echo "Cannot find 'realpath' command, please install 'realpath'. If you use 'brew', you can install 'greadlink' using 'brew install coreutils'"
+         echo "Cannot find 'realpath' command, please install 'realpath'. If you use 'brew', you can install 'realpath' using 'brew install coreutils'"
          exit 1
      else
          REALPATH="readlink -f"
