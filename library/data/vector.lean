@@ -27,25 +27,23 @@ begin unfold vector, apply_instance end
 
 @[reducible] def length (v : vector α n) : ℕ := n
 
-notation a :: b := cons a b
-
 open nat
 
 def head : vector α (nat.succ n) → α
 | ⟨ [],    h ⟩ := by contradiction
 | ⟨ a :: v, h ⟩ := a
 
-theorem head_cons (a : α) : Π (v : vector α n), head (a :: v) = a
+theorem head_cons (a : α) : Π (v : vector α n), head (cons a v) = a
 | ⟨ l, h ⟩ := rfl
 
 def tail : vector α n → vector α (n - 1)
 | ⟨ [],     h ⟩ := ⟨ [], congr_arg pred h ⟩
 | ⟨ a :: v, h ⟩ := ⟨ v, congr_arg pred h ⟩
 
-theorem tail_cons (a : α) : Π (v : vector α n), tail (a :: v) = v
+theorem tail_cons (a : α) : Π (v : vector α n), tail (cons a v) = v
 | ⟨ l, h ⟩ := rfl
 
-@[simp] theorem cons_head_tail : ∀ v : vector α (succ n), (head v :: tail v) = v
+@[simp] theorem cons_head_tail : ∀ v : vector α (succ n), (cons (head v) (tail v)) = v
 | ⟨ [],     h ⟩ := by contradiction
 | ⟨ a :: v, h ⟩ := rfl
 
@@ -67,7 +65,7 @@ def map (f : α → β) : vector α n → vector β n
 
 @[simp] theorem map_nil (f : α → β) : map f nil = nil := rfl
 
-theorem map_cons (f : α → β) (a : α) : Π (v : vector α n), map f (a::v) = f a :: map f v
+theorem map_cons (f : α → β) (a : α) : Π (v : vector α n), map f (cons a v) = cons (f a) (map f v)
 | ⟨l,h⟩ := rfl
 
 def map₂ (f : α → β → φ) : vector α n → vector β n → vector φ n
@@ -87,7 +85,7 @@ def remove_nth (i : fin n) : vector α n → vector α (n - 1)
 
 def of_fn : Π {n}, (fin n → α) → vector α n
 | 0 f := nil
-| (n+1) f := f 0 :: of_fn (λi, f i.succ)
+| (n+1) f := cons (f 0) (of_fn (λi, f i.succ))
 
 section accum
   open prod
@@ -120,7 +118,7 @@ rfl
 
 @[simp] theorem to_list_length (v : vector α n) : (to_list v).length = n := v.2
 
-@[simp] theorem to_list_cons (a : α) (v : vector α n) : to_list (a :: v) = a :: to_list v :=
+@[simp] theorem to_list_cons (a : α) (v : vector α n) : to_list (cons a v) = a :: to_list v :=
 begin cases v, reflexivity end
 
 @[simp] theorem to_list_append {n m : nat} (v : vector α n) (w : vector α m) : to_list (append v w) = to_list v ++ to_list w :=
