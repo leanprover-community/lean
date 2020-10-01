@@ -482,7 +482,7 @@ meta constant mk_eq_mpr      : expr → expr → tactic expr
    Otherwise, try to find a local constant that has type of the form (t = t') or (t' = t).
    The tactic fails if the given expression is not a local constant. -/
 meta constant subst_core     : expr → tactic unit
-/-- Close the current goal using `e`. Fail is the type of `e` is not definitionally equal to
+/-- Close the current goal using `e`. Fail if the type of `e` is not definitionally equal to
     the target type. -/
 meta constant exact (e : expr) (md := semireducible) : tactic unit
 /-- Elaborate the given quoted expression with respect to the current main goal.
