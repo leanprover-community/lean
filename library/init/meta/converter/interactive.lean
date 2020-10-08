@@ -94,20 +94,37 @@ meta def for (p : parse parser.pexpr) (occs : parse (list_of small_nat)) (c : it
 do (r, lhs, _) ← tactic.target_lhs_rhs,
    pat ← tactic.pexpr_to_pattern p,
    s   ← simp_lemmas.mk_default, -- to be able to use congruence lemmas @[congr]
-   (found, new_lhs, pr) ←
-     tactic.ext_simplify_core 1 {zeta := ff, beta := ff, single_pass := tt, eta := ff,
-                                 proj := ff, fail_if_unchanged := ff, memoize := ff} s
-       (λ u, return u)
-       (λ i s r p e, do
-         matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
-         guard matched,
-         if i ∈ occs then do
-           ⟨new_e, pr⟩ ← c.convert e r,
-           return (i+1, new_e, some pr, tt)
-         else return (i+1, e, none, tt))
-       (λ a s r p e, tactic.failed)
-       r lhs,
-  update_lhs new_lhs pr
+   st ← tactic.read,
+   (found, new_lhs, pr) ← tactic.ext_simplify_core
+     (success 1 st)  -- loop counter, and whether the conversion tactic failed
+     {zeta := ff, beta := ff, single_pass := tt, eta := ff, proj := ff,
+      fail_if_unchanged := ff, memoize := ff}
+     s
+     (λ u, return u)
+     (λ i s r p e,
+       match i with
+       | (success n s') :=
+         do matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
+            guard matched,
+            if n ∈ occs then 
+              (λ s,
+                match (c.convert e r) s with
+                | (success r s')     := success (success (n+1) s',    r.fst, some r.snd, tt) s'
+                | (exception f p s') := success (exception f p s', e,     none,       tt) s'
+                end
+              )
+            else do
+              st ← tactic.read,
+              return (success (n+1) st, e, none, tt)
+       | (exception _ _ _) := tactic.failed
+       end)
+     (λ a s r p e, tactic.failed)
+     r lhs,
+  (λ s, match found with
+  | (success r s') :=  (success r s)
+  | (exception f p s') := (exception f p s)
+  end),
+  conv.update_lhs new_lhs pr
 
 meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (attr_names : parse with_ident_list)
               (cfg : tactic.simp_config_ext := {})
