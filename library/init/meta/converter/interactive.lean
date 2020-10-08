@@ -30,6 +30,7 @@ open lean
 open lean.parser
 open interactive
 open interactive.types
+open tactic_result
 
 meta def itactic : Type :=
 conv unit
@@ -109,7 +110,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
             if n ∈ occs then 
               (λ s,
                 match (c.convert e r) s with
-                | (success r s')     := success (success (n+1) s',    r.fst, some r.snd, tt) s'
+                | (success r s')     := success (success (n+1) s', r.fst, some r.snd, tt) s'
                 | (exception f p s') := success (exception f p s', e,     none,       tt) s'
                 end
               )
