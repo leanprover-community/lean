@@ -8,7 +8,6 @@ Converter monad for building simplifiers.
 prelude
 import init.meta.interactive
 import init.meta.converter.conv
-import init.meta.tactic
 
 namespace conv
 meta def save_info (p : pos) : conv unit :=
