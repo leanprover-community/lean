@@ -91,7 +91,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
          guard (not found),
          matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
          guard matched,
-         res ← capture (c.convert e r),
+         res ← tactic.capture (c.convert e r),
          -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
          -- propagate it.
          match res with
@@ -102,7 +102,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
        end)
      (λ a s r p e, tactic.failed)
      r lhs,
-  found ← unwrap found_result,
+  found ← tactic.unwrap found_result,
   when (not found) $ tactic.fail "find converter failed, pattern was not found",
   update_lhs new_lhs pr
 
@@ -124,7 +124,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
          do matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
             guard matched,
             if i ∈ occs then do
-              res ← capture (c.convert e r),
+              res ← tactic.capture (c.convert e r),
               -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
               -- propagate it.
               match res with
@@ -139,7 +139,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
      (λ a s r p e, tactic.failed)
      r lhs,
   -- Re-throw any error captured inside `ext_simplify_core`
-  unwrap found_result,
+  tactic.unwrap found_result,
   update_lhs new_lhs pr
 
 meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (attr_names : parse with_ident_list)
