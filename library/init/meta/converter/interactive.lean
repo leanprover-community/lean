@@ -7,7 +7,7 @@ Converter monad for building simplifiers.
 -/
 prelude
 import init.meta.interactive
-imoort init.meta.converter.conv
+import init.meta.converter.conv
 import init.meta.tactic
 
 namespace conv
