@@ -154,31 +154,6 @@ match t s with
 | (success _ s') := success () s'
 end
 
-/--
-`capture t` acts like `t`, but succeeds with a result containing either the returned value
-or the exception.
-
-The result can be used to inspect the error message, or passed to `unwrap` to rethrow the
-failure later.
--/
-meta def capture (t : tactic α) : tactic (tactic_result α) :=
-t <$> read
-
-/--
-`unwrap r` unwraps a result previously obtained using `capture`.
-
-If the previous result was a success, this produces its wrapped value.
-If the previous result was an exception, this "rethrows" the exception as if it came
-from where it originated.
-
-`do r ← capture t, unwrap r` is identical to `t`, but allows for intermediate tactics to be inserted.
--/
-meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
-match t with
-| (success r s') := return r
-| e := λ s, e
-end
-
 meta def try_lst : list (tactic unit) → tactic unit
 | []            := failed
 | (tac :: tacs) := λ s,
@@ -294,6 +269,31 @@ meta def decorate_ex (msg : format) (t : tactic α) : tactic α :=
 /-- Get the tactic_state. -/
 @[inline] meta def read : tactic tactic_state :=
 λ s, success s s
+
+/--
+`capture t` acts like `t`, but succeeds with a result containing either the returned value
+or the exception.
+
+The result can be used to inspect the error message, or passed to `unwrap` to rethrow the
+failure later.
+-/
+meta def capture (t : tactic α) : tactic (tactic_result α) :=
+t <$> read
+
+/--
+`unwrap r` unwraps a result previously obtained using `capture`.
+
+If the previous result was a success, this produces its wrapped value.
+If the previous result was an exception, this "rethrows" the exception as if it came
+from where it originated.
+
+`do r ← capture t, unwrap r` is identical to `t`, but allows for intermediate tactics to be inserted.
+-/
+meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
+match t with
+| (success r s') := return r
+| e := λ s, e
+end
 
 meta def get_options : tactic options :=
 do s ← read, return s.get_options
