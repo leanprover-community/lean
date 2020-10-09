@@ -171,7 +171,7 @@ If the previous result was a success, this produces its wrapped value.
 If the previous result was an exception, this "rethrows" the exception as if it came
 from where it originated.
 
-`do r ← t, unwrap r` is identical to `t`, but allows for intermediate tactics to be inserted.
+`do r ← capture t, unwrap r` is identical to `t`, but allows for intermediate tactics to be inserted.
 -/
 meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
 match t with
