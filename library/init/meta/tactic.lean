@@ -278,7 +278,10 @@ The result can be used to inspect the error message, or passed to `unwrap` to re
 failure later.
 -/
 meta def capture (t : tactic α) : tactic (tactic_result α) :=
-t <$> read
+λ s, match t s with
+| (success r s') := success (success r s') s'
+| (exception f p s') := success (exception f p s') s'
+end
 
 /--
 `unwrap r` unwraps a result previously obtained using `capture`.
