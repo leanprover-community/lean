@@ -6,7 +6,9 @@ Authors: Leonardo de Moura
 Converter monad for building simplifiers.
 -/
 prelude
-import init.meta.interactive init.meta.converter.conv
+import init.meta.interactive
+imoort init.meta.converter.conv
+import init.meta.tactic
 
 namespace conv
 meta def save_info (p : pos) : conv unit :=
@@ -103,12 +105,15 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
      s
      (λ u, return u)
      (λ i s r p e,
+       -- if a previous conversion failed, then skip all subsequent conversions
        match i with
        | (success n s') :=
          do matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
             guard matched,
             if n ∈ occs then 
               (λ s,
+                -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
+                -- propagate it.
                 match (c.convert e r) s with
                 | (success r s')     := success (success (n+1) s', r.fst, some r.snd, tt) s'
                 | (exception f p s') := success (exception f p s', e,     none,       tt) s'
@@ -121,9 +126,10 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
        end)
      (λ a s r p e, tactic.failed)
      r lhs,
+  -- Re-throw any error captured inside `ext_simplify_core`
   (λ s, match found with
   | (success r s') :=  (success r s)
-  | (exception f p s') := (exception f p s)
+  | (exception f p s') := (exception f p s')
   end),
   conv.update_lhs new_lhs pr
 
