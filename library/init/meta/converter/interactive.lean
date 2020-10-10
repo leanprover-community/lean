@@ -84,21 +84,18 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
       fail_if_unchanged := ff, memoize := ff}
      s
      (λ u, return u)
-     (λ found_result s r p e,
-       -- if a previous conversion failed, then skip all subsequent conversions
-       match found_result with
-       | (success found s') := do
-         guard (not found),
-         matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
-         guard matched,
-         res ← tactic.capture (c.convert e r),
-         -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
-         -- propagate it.
-         match res with
-         | (success r s')     := return (success tt s',    r.fst, some r.snd, ff)
-         | (exception f p s') := return (exception f p s', e,     none,       ff)
-         end
-       | (exception _ _ _) := tactic.failed
+     (λ found_result s r p e, do
+       -- if the previous conversion failed, then rethrow the failure immediately
+       found ← tactic.unwrap found_result,
+       guard (not found),
+       matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
+       guard matched,
+       res ← tactic.capture (c.convert e r),
+       -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
+       -- propagate it.
+       match res with
+       | (success r s')     := return (success tt s',    r.fst, some r.snd, ff)
+       | (exception f p s') := return (exception f p s', e,     none,       ff)
        end)
      (λ a s r p e, tactic.failed)
      r lhs,
@@ -117,25 +114,22 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
       fail_if_unchanged := ff, memoize := ff}
      s
      (λ u, return u)
-     (λ found_result s r p e,
-       -- if a previous conversion failed, then skip all subsequent conversions
-       match found_result with
-       | (success i s') :=
-         do matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
-            guard matched,
-            if i ∈ occs then do
-              res ← tactic.capture (c.convert e r),
-              -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
-              -- propagate it.
-              match res with
-              | (success r s')     := return (success (i+1) s', r.fst, some r.snd, tt)
-              | (exception f p s') := return (exception f p s', e,     none,       tt)
-              end
-            else do
-              st ← tactic.read,
-              return (success (i+1) st, e, none, tt)
-       | (exception _ _ _) := tactic.failed
-       end)
+     (λ found_result s r p e, do
+       -- if the previous conversion failed, then rethrow the failure immediately
+       i ← tactic.unwrap found_result,
+       matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
+       guard matched,
+       if i ∈ occs then do
+         res ← tactic.capture (c.convert e r),
+         -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
+         -- propagate it.
+         match res with
+         | (success r s')     := return (success (i+1) s', r.fst, some r.snd, tt)
+         | (exception f p s') := return (exception f p s', e,     none,       tt)
+         end
+       else do
+         st ← tactic.read,
+         return (success (i+1) st, e, none, tt))
      (λ a s r p e, tactic.failed)
      r lhs,
   -- Re-throw any error captured inside `ext_simplify_core`
