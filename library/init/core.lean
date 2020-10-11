@@ -152,7 +152,7 @@ which gives you a new hypothesis `h : P` and the goal `⊢ false`.
 A hypothesis `h : ¬ P` can be used in term mode as a function,
 so if `w : P` then `h w : false`.
 
-Related tactic: `contrapose`.
+Related mathlib tactic: `contrapose`.
 -/
 def not (a : Prop) := a → false
 prefix `¬` := not
@@ -210,7 +210,8 @@ To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
 which gives two separate goals `⊢ P` and `⊢ Q`.
 
 Given a hypothesis `h : P ∧ Q`, you can use the tactic `cases h with hP hQ`
-to obtain two new hypotheses `hP : P` and `hQ : Q`.
+to obtain two new hypotheses `hP : P` and `hQ : Q`. See also the `obtain` or `rcases` tactics in
+mathlib.
 -/
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
