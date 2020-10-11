@@ -854,7 +854,7 @@ static expr parse_infix_paren(parser & p, list<notation::accepting> const & accs
     return p.save_pos(mk_choice(cs.size(), cs.data()), pos);
 }
 
-static expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
+expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
     if (auto accs = is_infix_paren_notation(p))
         return parse_infix_paren(p, accs, pos);
     expr e = p.parse_expr();

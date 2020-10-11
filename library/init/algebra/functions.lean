@@ -10,7 +10,7 @@ import init.algebra.order init.meta
 universe u
 
 definition min {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then a else b
-definition max {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then b else a
+definition max {α : Type u} [decidable_linear_order α] (a b : α) : α := if b ≤ a then a else b
 
 section
 open decidable tactic
@@ -36,15 +36,16 @@ lemma le_min {a b c : α} (h₁ : c ≤ a) (h₂ : c ≤ b) : c ≤ min a b :=
 by min_tac a b
 
 lemma le_max_left (a b : α) : a ≤ max a b :=
-by min_tac a b
+by min_tac b a
 
 lemma le_max_right (a b : α) : b ≤ max a b :=
-by min_tac a b
+by min_tac b a
 
 lemma max_le {a b c : α} (h₁ : a ≤ c) (h₂ : b ≤ c) : max a b ≤ c :=
-by min_tac a b
+by min_tac b a
 
-lemma eq_min {a b c : α} (h₁ : c ≤ a) (h₂ : c ≤ b) (h₃ : ∀{d}, d ≤ a → d ≤ b → d ≤ c) :  c = min a b :=
+lemma eq_min {a b c : α} (h₁ : c ≤ a) (h₂ : c ≤ b) (h₃ : ∀{d}, d ≤ a → d ≤ b → d ≤ c) :
+  c = min a b :=
 le_antisymm (le_min h₁ h₂) (h₃ (min_le_left a b) (min_le_right a b))
 
 lemma min_comm (a b : α) : min a b = min b a :=
@@ -125,6 +126,6 @@ or.elim (le_or_gt b c)
 
 lemma max_lt {a b c : α} (h₁ : a < c) (h₂ : b < c) : max a b < c :=
 or.elim (le_or_gt a b)
-  (assume h : a ≤ b, by min_tac a b)
-  (assume h : a > b, by min_tac a b)
+  (assume h : a ≤ b, by min_tac b a)
+  (assume h : a > b, by min_tac b a)
 end

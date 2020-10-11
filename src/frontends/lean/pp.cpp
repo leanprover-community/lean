@@ -118,9 +118,14 @@ static optional<unsigned> to_unsigned(expr const & e) {
 }
 
 static name * g_pp_using_anonymous_constructor = nullptr;
+static name * g_pp_nodot = nullptr;
 
 bool pp_using_anonymous_constructor(environment const & env, name const & n) {
     return has_attribute(env, *g_pp_using_anonymous_constructor, n);
+}
+
+bool pp_nodot(environment const & env, name const & n) {
+    return has_attribute(env, *g_pp_nodot, n);
 }
 
 void initialize_pp() {
@@ -147,6 +152,7 @@ void initialize_pp() {
     g_nat_numeral_pp  = new nat_numeral_pp();
 
     g_pp_using_anonymous_constructor = new name("pp_using_anonymous_constructor");
+    g_pp_nodot = new name("pp_nodot");
 
     register_system_attribute(basic_attribute::with_check(
                                   *g_pp_using_anonymous_constructor,
@@ -158,9 +164,11 @@ void initialize_pp() {
                                               "invalid 'pp_using_anonymous_constructor' use, "
                                               "only structures can be marked with this attribute");
                                               }));
+    register_system_attribute(basic_attribute(*g_pp_nodot, "Do not pretty-print using dot-notation."));
 }
 
 void finalize_pp() {
+    delete g_pp_nodot;
     delete g_pp_using_anonymous_constructor;
     delete g_nat_numeral_pp;
     delete g_ellipsis_n_fmt;
@@ -327,6 +335,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_numerals_name(), false);
         o = o.update_if_undef(get_pp_strings_name(), false);
         o = o.update_if_undef(get_pp_binder_types_name(), true);
+        o = o.update_if_undef(get_pp_generalized_field_notation_name(), false);
     }
     m_options           = o;
     m_indent            = get_pp_indent(o);
@@ -629,7 +638,7 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     }
 }
 template<class T>
-auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> result {
+auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool below_implicit) -> result {
     if (is_app(e)) {
         if (auto r = pp_local_ref(e)){
             address_reset_scope ars(*this);
@@ -650,14 +659,25 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> re
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            return pp_child_at(f, bp, expr_address::fn(), ignore_hide);
+            if (below_implicit) {
+                address_scope _(*this, expr_address::fn());
+                return pp_child(f, bp, ignore_hide, true);
+            } else {
+              address_reset_scope ars(*this);
+              result r;
+              { address_scope _(*this, expr_address::fn());
+                r = pp_child(f, bp, ignore_hide, true);
+              }
+              return tag(ars.m_adr, e, r);
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, bp, ignore_hide);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, bp, ignore_hide);
         }
     }
-    return add_paren_if_needed(pp(e, ignore_hide), bp);
+    result r = below_implicit ? pp_core(e, ignore_hide) : pp(e, ignore_hide);
+    return add_paren_if_needed(r, bp);
 }
 template<class T>
 auto pretty_fn<T>::pp_var(expr const & e) -> result {
@@ -909,6 +929,7 @@ bool pretty_fn<T>::is_field_notation_candidate(expr const & e) {
     if (!is_constant(f)) return false;
     name const & fn = const_name(f);
     if (!fn.is_string()) return false;
+    if (pp_nodot(m_env, fn)) return false;
     name const & S = fn.get_prefix();
     /* The @ explicitness annotation cannot be combined with field notation, so fail on implicit args */
     if (m_implict && has_implicit_args(e)) return false;
@@ -1481,7 +1502,7 @@ static unsigned get_some_precedence(token_table const & t, name const & tk) {
         if (auto p = get_expr_precedence(t, tk.get_string()))
             return *p;
     } else {
-        if (auto p = get_expr_precedence(t, tk.to_string().c_str()))
+        if (auto p = get_expr_precedence(t, tk.to_string_unescaped().c_str()))
             return *p;
     }
     return 0;
@@ -1495,7 +1516,7 @@ auto pretty_fn<T>::tag(address const & a, expr const & e, result const & r) -> r
 }
 
 template<class T>
-auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp) -> result {
+auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit) -> result {
     if (is_app(e)) {
         if (m_numerals) {
             if (auto n = to_num(e)){
@@ -1509,15 +1530,25 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp)
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            address_scope s(*this, expr_address::fn());
-            return pp_notation_child(f, rbp, lbp);
+            if (below_implicit) {
+                address_scope s(*this, expr_address::fn());
+                return pp_notation_child(f, rbp, lbp, true);
+            } else {
+                address_reset_scope ars(*this);
+                result r;
+                { address_scope s(*this, expr_address::fn());
+                  r = pp_notation_child(f, rbp, lbp, true);
+                }
+                return r.with(tag(ars.m_adr, e, r.fmt()));
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, rbp);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, rbp);
         }
     }
-    result r = pp(e);
+    result r = below_implicit ? pp_core(e) : pp(e);
+
     /* see invariants of `pretty_fn::result`: Check that the surrounding notation would parse at least r
      * by the first invariant, and at most r (instead of the following token with binding power lbp) by the
      * second invariant. */
@@ -1539,7 +1570,7 @@ static bool is_atomic_notation(notation_entry const & entry) {
 
 template<class T>
 static T mk_tk_fmt(name const & tkn) {
-    auto tk = tkn.to_string();
+    auto tk = tkn.to_string_unescaped();
     if (!tk.empty() && tk.back() == ' ') {
         tk.pop_back();
         return T(tk) + line();
@@ -1552,7 +1583,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
     if (entry.is_numeral()) {
         return some(result(T(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token()));
+        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token().to_string_unescaped()));
         return some(result(fmt));
     } else {
         using notation::transition;
@@ -1571,7 +1602,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
             T curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token()));
+            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1638,11 +1669,11 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
                         std::reverse(rec_args.begin(), rec_args.end());
                     unsigned curr_lbp = token_lbp;
                     if (auto t = a.get_terminator()) {
-                        curr = T(*t);
+                        curr = T(t->to_string_unescaped());
                         curr_lbp = get_some_precedence(m_token_table, *t);
                     }
                     unsigned j       = rec_args.size();
-                    T sep_fmt   = T(a.get_sep());
+                    T sep_fmt   = T(a.get_sep().to_string_unescaped());
                     unsigned sep_lbp = get_some_precedence(m_token_table, a.get_sep());
                     while (j > 0) {
                         --j;

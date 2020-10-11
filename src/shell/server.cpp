@@ -331,7 +331,6 @@ server::server(unsigned num_threads, search_path const & path, environment const
 
 server::~server() {
     m_mod_mgr->cancel_all();
-    cancel(m_bg_task_ctok);
     m_tq->evacuate();
 }
 
@@ -463,6 +462,8 @@ void server::handle_request(server::cmd_req const & req) {
         taskq().wait_for_finish(this->m_lt.get_root().wait_for_finish());
     } else if (command == "widget_event") {
         handle_async_response(req, handle_widget_event(req));
+    } else if (command == "get_widget") {
+        handle_async_response(req, handle_get_widget(req));
     } else {
         send_msg(cmd_res(req.m_seq_num, std::string("unknown command")));
     }
@@ -578,9 +579,6 @@ json server::autocomplete(std::shared_ptr<module_info const> const & mod_info, b
 }
 
 task<server::cmd_res> server::handle_complete(cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
-
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
     bool skip_completions = false;
@@ -591,7 +589,6 @@ task<server::cmd_res> server::handle_complete(cmd_req const & req) {
 
     return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, autocomplete(mod_info, skip_completions, pos)); })
         .wrap(library_scopes(log_tree::node()))
-        .set_cancellation_token(m_bg_task_ctok)
         .build();
 }
 
@@ -629,44 +626,38 @@ json server::info(std::shared_ptr<module_info const> const & mod_info, pos_info 
     return j;
 }
 
-json server::widget_event(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos, json const & message) {
-    json j;
-    try {
-        parse_breaking_at_pos(mod_info->m_id, mod_info, pos);
-    } catch (break_at_pos_exception & e) {
-        auto opts = m_ios.get_options();
-        auto env = m_initial_env;
-        if (auto snap = get_closest_snapshot(mod_info, e.m_token_info.m_pos)) {
-            env = snap->m_snapshot_at_end->m_env;
-            opts = snap->m_snapshot_at_end->m_options;
-        }
-        update_widget(env, opts, m_ios, m_path, *mod_info, get_info_managers(m_lt), pos, e, j, message);
-    } catch (throwable & ex) {}
-
-    return j;
-}
-
 task<server::cmd_res> server::handle_widget_event(server::cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
     // [todo] Need some help on how multithreading works. Should all events happen synchronously?
     // what happens if it is processing an event and then a second event occurs? There needs to be an event queue.
     // there should at least be a thread lock on modifying a vdom object.
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+    unsigned id = req.m_payload.at("id");
 
     auto mod_info = m_mod_mgr->get_module(fn);
 
     return task_builder<cmd_res>([=] {
-        return cmd_res(req.m_seq_num, widget_event(mod_info, pos, req.m_payload));
-    }).wrap(library_scopes(log_tree::node()))
-      .set_cancellation_token(m_bg_task_ctok).build();
+        json j;
+        update_widget(*mod_info, get_info_managers(m_lt), pos, id, j, req.m_payload);
+        return cmd_res(req.m_seq_num, j);
+    }).wrap(library_scopes(log_tree::node())).build();
+}
+
+task<server::cmd_res> server::handle_get_widget(server::cmd_req const & req) {
+    std::string fn = req.m_payload.at("file_name");
+    pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
+    unsigned id = req.m_payload.at("id");
+
+    auto mod_info = m_mod_mgr->get_module(fn);
+
+    return task_builder<cmd_res>([=] {
+        json j;
+        get_widget(*mod_info, get_info_managers(m_lt), pos, id, j);
+        return cmd_res(req.m_seq_num, j);
+    }).wrap(library_scopes(log_tree::node())).build();
 }
 
 task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
-    cancel(m_bg_task_ctok);
-    m_bg_task_ctok = mk_cancellation_token();
-
     std::string fn = req.m_payload.at("file_name");
     pos_info pos = {req.m_payload.at("line"), req.m_payload.at("column")};
 
@@ -674,8 +665,7 @@ task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
 
     return task_builder<cmd_res>([=] {
         return cmd_res(req.m_seq_num, info(mod_info, pos));
-    }).wrap(library_scopes(log_tree::node()))
-      .set_cancellation_token(m_bg_task_ctok).build();
+    }).wrap(library_scopes(log_tree::node())).build();
 }
 
 json server::hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action,
@@ -687,7 +677,6 @@ json server::hole_command(std::shared_ptr<module_info const> const & mod_info, s
 }
 
 task<server::cmd_res> server::handle_hole(cmd_req const & req) {
-    auto ctok = mk_cancellation_token();
     std::string action = req.m_payload.at("action");
     std::string fn     = req.m_payload.at("file_name");
     pos_info pos       = {req.m_payload.at("line"), req.m_payload.at("column")};
@@ -695,7 +684,6 @@ task<server::cmd_res> server::handle_hole(cmd_req const & req) {
 
     return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, hole_command(mod_info, action, pos)); })
         .wrap(library_scopes(log_tree::node()))
-        .set_cancellation_token(ctok)
         .build();
 }
 

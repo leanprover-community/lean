@@ -10,7 +10,7 @@ prelude
 notation `Prop` := Sort 0
 notation f ` $ `:1 a:0 := f a
 
-/- Reserving notation. We do this sot that the precedence of all of the operators
+/- Reserving notation. We do this so that the precedence of all of the operators
 can be seen in one place and to prevent core notation being accidentally overloaded later.  -/
 
 /- Notation for logical operations and relations -/
@@ -145,12 +145,11 @@ inductive empty : Type
 /--
 Logical not.
 
-`¬ P` is defined as the function type `P → false`,
-so one way to prove a goal `⊢ ¬ P` is to use `intro h`,
+`not P`, with notation `¬ P`, is the `Prop` which is true if and only if `P` is false. It is
+internally represented as `P → false`, so one way to prove a goal `⊢ ¬ P` is to use `intro h`,
 which gives you a new hypothesis `h : P` and the goal `⊢ false`.
 
-A hypothesis `h : ¬ P` can be used in term mode as a function,
-so if `w : P` then `h w : false`.
+A hypothesis `h : ¬ P` can be used in term mode as a function, so if `w : P` then `h w : false`.
 
 Related mathlib tactic: `contrapose`.
 -/
@@ -205,6 +204,9 @@ structure pprod (α : Sort u) (β : Sort v) :=
 
 /--
 Logical and.
+
+`and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
+both true. 
 
 To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
 which gives two separate goals `⊢ P` and `⊢ Q`.
@@ -279,12 +281,15 @@ inductive psum (α : Sort u) (β : Sort v)
 /--
 Logical or.
 
-To prove a goal `⊢ P ∨ Q`, if you know which alternative you want to prove 
+`or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
+true.
+
+To prove a goal `⊢ P ∨ Q`, if you know which alternative you want to prove,
 you can use the tactics `left` (which gives the goal `⊢ P`)
 or `right` (which gives the goal `⊢ Q`).
 
 Given a hypothesis `h : P ∨ Q` and goal `⊢ R`,
-the tactic `cases h` will give you two copies of the goal `⊢ R`, 
+the tactic `cases h` will give you two copies of the goal `⊢ R`,
 with the hypothesis `h : P` in the first, and the hypothesis `h : Q` in the second.
 -/
 inductive or (a b : Prop) : Prop

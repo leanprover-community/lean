@@ -61,7 +61,7 @@ void report_completions(environment const & env, options const & opts, pos_info 
     g_context = e.m_token_info.m_context;
     unsigned offset = pos.second - e.m_token_info.m_pos.second;
     // TODO(gabriel): this is broken with french quotes
-    std::string prefix = e.m_token_info.m_token == name("") ? "" : e.m_token_info.m_token.to_string();
+    std::string prefix = e.m_token_info.m_token == name("") ? "" : e.m_token_info.m_token.to_string_unescaped();
     if (auto stop = utf8_char_pos(prefix.c_str(), offset))
         prefix = prefix.substr(0, *stop);
     switch (e.m_token_info.m_context) {
@@ -99,7 +99,7 @@ void report_completions(environment const & env, options const & opts, pos_info 
         case break_at_pos_exception::token_context::single_completion:
             if (!skip_completions) {
                 json completion;
-                completion["text"] = e.m_token_info.m_param.to_string();
+                completion["text"] = e.m_token_info.m_param.to_string_unescaped();
                 j["completions"] = std::vector<json>{completion};
             }
             break;
@@ -110,32 +110,32 @@ void report_completions(environment const & env, options const & opts, pos_info 
     j["prefix"] = prefix;
 }
 
-void update_widget(environment const & env, options const & opts, io_state const & ios,
-                 search_path const &, module_info const & m_mod_info,
-                 std::vector<info_manager> const & info_managers, pos_info const &,
-                 break_at_pos_exception const & e, json & j, json const & message) { // [hack] copied from `report_info` make dry.
-    json record;
+void update_widget(module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos, unsigned id,
+                 json & j, json const & message) { // [hack] copied from `report_info` make dry.
     for (info_manager const & infom : info_managers) {
         if (infom.get_file_name() == m_mod_info.m_id) {
-            json r1;
-            if (e.m_goal_pos && infom.update_widget(env, opts, ios, *e.m_goal_pos, r1, message)) {
-                record = r1;
-                record["debug"]["msg"] = "from m_goal_pos";
-                record["debug"]["line"] = e.m_goal_pos->first;
-                record["debug"]["column"] = e.m_goal_pos->second;
-                break;
-            }
-            json r2;
-            if (infom.update_widget(env, opts, ios, e.m_token_info.m_pos, r2, message)) {
-                record = r2;
-                record["debug"]["msg"] = "from e.m_token_info.m_pos";
-                record["debug"]["line"] = e.m_token_info.m_pos.first;
-                record["debug"]["column"] = e.m_token_info.m_pos.second;
-                break;
+            json r;
+            if (infom.update_widget(pos, id, r, message)) {
+                j["record"] = r;
+                return;
             }
         }
     }
-    j["record"] = record;
+    throw exception("could not find a widget at the given position");
+}
+
+void get_widget(module_info const & m_mod_info,
+                 std::vector<info_manager> const & info_managers, pos_info const & pos, unsigned id,
+                 json & j) { // [hack] copied from `update_widget`
+    for (info_manager const & infom : info_managers) {
+        if (infom.get_file_name() == m_mod_info.m_id) {
+            if (infom.get_widget(pos, id, j)) {
+                return;
+            }
+        }
+    }
+    throw exception("could not find a widget at the given position");
 }
 
 void report_info(environment const & env, options const & opts, io_state const & ios,
@@ -155,7 +155,7 @@ void report_info(environment const & env, options const & opts, io_state const &
                 add_source_info(env, tk, record);
                 break;
             case break_at_pos_exception::token_context::import: {
-                auto parsed = parse_import(tk.to_string());
+                auto parsed = parse_import(tk.to_string_unescaped());
                 try {
                     auto base_dir = dirname(m_mod_info.m_id);
                     auto f = find_file(path, base_dir, parsed.first, string_to_name(parsed.second),
@@ -163,7 +163,8 @@ void report_info(environment const & env, options const & opts, io_state const &
                     record["source"]["file"] = f;
                     record["source"]["line"] = 1;
                     record["source"]["column"] = 0;
-                } catch (file_not_found_exception &) {}
+                } catch (file_not_found_exception &) {
+                } catch (lean_file_not_found_exception &) {}
                 break;
             }
             case break_at_pos_exception::token_context::option:
@@ -181,9 +182,9 @@ void report_info(environment const & env, options const & opts, io_state const &
                 break;
             } case break_at_pos_exception::token_context::field: {
                 auto name = e.m_token_info.m_param + e.m_token_info.m_token;
-                record["full-id"] = name.to_string();
+                record["full-id"] = name.escape();
                 add_source_info(env, name, record);
-                if (auto doc = get_doc_string(env, name))
+                if (auto doc = get_doc_string_including_override(env, name))
                     record["doc"] = *doc;
                 interactive_report_type(env, opts, env.get(name).get_type(), record);
             } default:
@@ -196,7 +197,7 @@ void report_info(environment const & env, options const & opts, io_state const &
             if (e.m_goal_pos) {
                 // in the case that e has a goal pos, report that.
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
-                            return is_vm_obj_format_info(d) || is_widget_info(d);
+                            return is_vm_obj_format_info(d) || is_widget_goal_info(d);
                         });
             }
             // first check for field infos inside token
@@ -305,7 +306,7 @@ bool json_of_hole(hole_info_data const & hole, std::string const & file, json & 
     std::vector<json> ds;
     for (auto const & p : cmd_descrs) {
         json d;
-        d["name"] = p.first.to_string();
+        d["name"] = p.first.to_string_unescaped();
         d["description"] = p.second;
         ds.push_back(d);
     }

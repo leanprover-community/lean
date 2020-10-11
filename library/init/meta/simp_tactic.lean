@@ -453,10 +453,6 @@ else do
   s ← simp_lemmas.mk_default,
   join_user_simp_lemmas_core s attrs
 
-/-- Normalize numerical expression, returns a pair (n, pr) where n is the resultant numeral,
-   and pr is a proof that the input argument is equal to n. -/
-meta constant norm_num : expr → tactic (expr × expr)
-
 meta def simplify_top_down {α} (a : α) (pre : α → expr → tactic (α × expr × expr)) (e : expr) (cfg : simp_config := {}) : tactic (α × expr × expr) :=
 ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)
   (λ a _ _ _ e, do (new_a, new_e, pr) ← pre a e, guard (¬ new_e =ₐ e), return (new_a, new_e, some pr, tt))

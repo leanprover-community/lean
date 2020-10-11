@@ -1,4 +1,5 @@
-{"msgs":[{"caption":"trace output","file_name":"widget3.lean","pos_col":0,"pos_line":22,"severity":"information","text":"successfully rendered widget\n"}],"response":"all_messages"}
+{"msgs":[{"caption":"trace output","file_name":"widget3.lean","pos_col":0,"pos_line":20,"severity":"information","text":"successfully rendered widget\n"}],"response":"all_messages"}
 {"message":"file invalidated","response":"ok","seq_num":0}
-{"record":{"widget":{"html":{"c":["0",{"a":null,"c":["+"],"e":{"onClick":{"h":0,"r":[0]}},"t":"button"},{"c":[{"a":null,"c":["0[ *** ][0]"],"t":"div"},{"a":null,"c":["asdf"],"e":{"onClick":{"h":1,"r":[1,0]}},"t":"button"}]}]}}},"response":"ok","seq_num":46}
-{"record":{"debug":{"column":0,"line":22,"msg":"from e.m_token_info.m_pos"},"status":"success","widget":{"html":{"c":["1",{"a":null,"c":["+"],"e":{"onClick":{"h":2,"r":[0]}},"t":"button"},{"c":[{"a":null,"c":["1[ *** ][1, 0]"],"t":"div"},{"a":null,"c":["asdf"],"e":{"onClick":{"h":3,"r":[2,0]}},"t":"button"}]}]}}},"response":"ok","seq_num":47}
+{"record":{"widget":{"column":0,"id":100,"line":20}},"response":"ok","seq_num":45}
+{"response":"ok","seq_num":46,"widget":{"column":0,"html":{"c":["0",{"a":null,"c":["+"],"e":{"onClick":{"h":0,"r":[100]}},"t":"button"},{"c":[{"a":null,"c":["0[ *** ][0]"],"t":"div"},{"a":null,"c":["asdf"],"e":{"onClick":{"h":0,"r":[101,100]}},"t":"button"}]}]},"id":100,"line":20}}
+{"record":{"status":"success","widget":{"column":0,"html":{"c":["1",{"a":null,"c":["+"],"e":{"onClick":{"h":0,"r":[100]}},"t":"button"},{"c":[{"a":null,"c":["1[ *** ][1, 0]"],"t":"div"},{"a":null,"c":["asdf"],"e":{"onClick":{"h":0,"r":[101,100]}},"t":"button"}]}]},"id":100,"line":20}},"response":"ok","seq_num":47}

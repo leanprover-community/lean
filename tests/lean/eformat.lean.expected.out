@@ -1,8 +1,8 @@
 Type
 α
 [([app_fn, app_arg], 1): 1] = [([app_arg], 2): 2]
-[([app_fn], ite ↥ff true): [([app_fn, app_fn, app_fn], ite ↥ff): [([app_fn], ite): ite]
- [([app_arg], ↥ff): ↥[([app_arg], ff): ff]]]
+[([app_fn], ite ↥ff true): [([app_fn], ite ↥ff): [([app_fn, app_fn, app_fn], ite): ite]
+ [([app_fn, app_fn, app_arg], ↥ff): ↥[([app_arg], ff): ff]]]
  [([app_arg], true): true]]
  [([app_arg], false): false]
 [([app_fn, app_arg], x): x] ≠ [([app_arg], x): x]
@@ -17,6 +17,6 @@ Type
  [([app_arg], Prop): Prop]
 [([app_fn], set): set] [([app_arg], ℕ): ℕ]
 [([app_fn, app_arg], S): S] =
- [([app_arg], {3, 2, 1}): {[([app_arg, app_fn], 3): 3],
+ [([app_arg], {3, 2, 1}): {[([app_fn, app_arg], 3): 3],
    [([app_arg, app_fn, app_arg], 2): 2],
    [([app_arg, app_arg, app_arg], 1): 1]}]

@@ -26,15 +26,7 @@ format compose_many(std::initializer_list<format> const & fmts) {
 }
 
 static format pp_name(name n) {
-    bool last = true;
-    format fmt;
-    while (n) {
-        auto limb = n.is_numeral() ? format(n.get_numeral()) : format(n.get_string());
-        fmt = last ? limb : compose_many({limb, format("."), fmt});
-        last = false;
-        n = n.get_prefix();
-    }
-    return last ? format("[anonymous]") : fmt;
+    return format(n.escape());
 }
 
 struct simple_pp_fn {

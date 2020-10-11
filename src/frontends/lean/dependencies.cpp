@@ -50,7 +50,6 @@ bool display_deps(search_path const & path, environment const & env, std::ostrea
 
     while (true) {
         token_kind t = token_kind::Identifier;
-        pos_info p = s.get_pos_info();
         try {
             t = s.scan(env);
         } catch (exception &) {
@@ -70,7 +69,7 @@ bool display_deps(search_path const & path, environment const & env, std::ostrea
                 k = 0;
             else
                 k = *k + 1;
-        } else if ((import_prefix || import_args) && p.first != 0 && t == token_kind::Identifier) {
+        } else if ((import_prefix || import_args) && s.get_pos() != 0 && t == token_kind::Identifier) {
             display_dep(k, s.get_name_val());
             k = optional<unsigned>();
         } else {

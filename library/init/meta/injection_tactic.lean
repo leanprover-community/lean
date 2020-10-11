@@ -1,82 +1,114 @@
 /-
 Copyright (c) 2016 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Leonardo de Moura
+Authors: Leonardo de Moura, Jannis Limperg
 -/
 prelude
-import init.meta.tactic init.function
+import init.meta.tactic
 
 namespace tactic
-open nat tactic environment expr list
 
-private meta def at_end₂ (e₁ e₂ : expr) : ℕ → tactic (list (option expr))
-| 2 := return [some e₁, some e₂]
-| (n+3) :=  (λ xs, none :: xs) <$> at_end₂ (n+2)
-| _ := fail "at_end expected arity > 1"
+open expr
 
-private meta def mk_next_name : name → nat → tactic (name × nat)
-| n i := do
-  let n' := n.append_after i,
-  (get_local n' >> mk_next_name n (i+1))
-  <|>
-  (return (n', i+1))
+/- Given a local constant `H : C x₁ ... xₙ = D y₁ ... yₘ`, where `C` and `D` are
+fully applied constructors, `injection_with H ns base offset` does the
+following:
 
-/- Auxiliary function for introducing the new equalities produced by the
-   injection tactic. -/
-private meta def injection_intro : expr → nat → list name → tactic (list expr × list name)
-| (pi n bi b d) i ns := do
-  (hname, i) ← if ns.empty then mk_next_name `h i else return (head ns, i),
-  h ← intro hname,
-  (l, ns') ← injection_intro d i (tail ns),
-  return (h :: l, ns')
-| e  i ns            := return ([], ns)
+- If `C ≠ D`, it solves the goal (using the no-confusion rule).
+- If `C = D` (and thus `n = m`), it adds hypotheses
+  `h₁ : x₁ = y₁, ..., hₙ : xₙ = yₙ` to the local context. Names for the `hᵢ`
+  are taken from `ns`. If `ns` does not contain enough names, then the names
+  are derived from `base` and `offset` (by default `h_1`, `h_2` etc.; see
+  `intro_fresh`).
+- Special case: if `C = D` and `n = 0` (i.e. the constructors have no
+  arguments), the hypothesis `h : true` is added to the context.
 
-/- Tries to decompose the given expression by constructor injectivity.
-   Returns the list of new hypotheses, and the remaining names from the given list. -/
-meta def injection_with (h : expr) (ns : list name) : tactic (list expr × list name) :=
+`injection_with` returns the new hypotheses and the leftover names from `ns`
+(i.e. those names that were not used to name the new hypotheses). If (and only
+if) the goal was solved, the list of new hypotheses is empty.
+-/
+meta def injection_with (h : expr) (ns : list name)
+  (base := `h) (offset := some 1) : tactic (list expr × list name) :=
 do
-  ht ← infer_type h,
-  (lhs0, rhs0) ← match_eq ht,
-  env ← get_env,
-  lhs ← whnf_ginductive lhs0,
-  rhs ← whnf_ginductive rhs0,
-  let n_fl := const_name (get_app_fn lhs),
-  let n_fr := const_name (get_app_fn rhs),
-  if n_fl = n_fr then do
-    let n_inj := n_fl <.> "inj_arrow",
-    if env.contains n_inj then do
-      c_inj  ← mk_const n_inj,
-      arity  ← get_arity c_inj,
-      tgt ← target,
-      args   ← at_end₂ h tgt (arity - 1),
-      pr     ← mk_mapp n_inj args,
-      pr_type ← infer_type pr,
-      pr_type ← whnf pr_type,
-      eapply pr,
-      injection_intro (binding_domain pr_type) 1 ns
-    else fail "injection tactic failed, argument must be an equality proof where lhs and rhs are of the form (c ...), where c is a constructor"
+  H ← infer_type h,
+  (lhs, rhs, constructor_left, constructor_right, inj_name) ← do {
+    (lhs, rhs) ← match_eq H,
+    lhs ← whnf_ginductive lhs,
+    rhs ← whnf_ginductive rhs,
+    env ← get_env,
+    (const constructor_left _) ← pure $ get_app_fn lhs,
+    (const constructor_right _) ← pure $ get_app_fn rhs,
+    inj_name ← resolve_constant $ constructor_left ++ "inj_arrow",
+    pure (lhs, rhs, constructor_left, constructor_right, inj_name)
+  } <|> fail
+    "injection tactic failed, argument must be an equality proof where lhs and rhs are of the form (c ...), where c is a constructor",
+  if constructor_left = constructor_right then do
+    -- C.inj_arrow, for a given constructor C of datatype D, has type
+    --
+    --     ∀ (A₁ ... Aₙ) (x₁ ... xₘ) (y₁ ... yₘ), C x₁ ... xₘ = C y₁ ... yₘ
+    --       → ∀ ⦃P : Sort u⦄, (x₁ = y₁ → ... → yₖ = yₖ → P) → P
+    --
+    -- where the Aᵢ are parameters of D and the xᵢ/yᵢ are arguments of C.
+    -- Note that if xᵢ/yᵢ are propositions, no equation is generated, so the
+    -- number of equations is not necessarily the constructor arity.
+
+    -- First, we find out how many equations we need to intro later.
+    inj ← mk_const inj_name,
+    inj_type ← infer_type inj,
+    inj_arity ← get_pi_arity inj_type,
+    let num_equations :=
+      (inj_type.nth_binding_body (inj_arity - 1)).binding_domain.pi_arity,
+
+    -- Now we generate the actual proof of the target.
+    tgt ← target,
+    proof ← mk_mapp inj_name (list.repeat none (inj_arity - 3) ++ [some h, some tgt]),
+    eapply proof,
+    intron_with num_equations ns base offset
   else do
     tgt ← target,
-    let I_name := name.get_prefix n_fl,
-    pr ← mk_app (I_name <.> "no_confusion") [tgt, lhs, rhs, h],
+    let inductive_name := constructor_left.get_prefix,
+    pr ← mk_app (inductive_name <.> "no_confusion") [tgt, lhs, rhs, h],
     exact pr,
     return ([], ns)
 
-meta def injection (h : expr) : tactic (list expr) :=
-do (t, _) ← injection_with h [], return t
+/--
+Simplify the equation `h` using injectivity of constructors. See
+`injection_with`. Returns the hypotheses that were added to the context, or an
+empty list if the goal was solved by contradiction.
+-/
+meta def injection (h : expr) (base := `h) (offset := some 1)
+  : tactic (list expr) :=
+prod.fst <$> injection_with h [] base offset
 
-private meta def injections_with_inner : nat → list expr → list name → tactic unit
+private meta def injections_with_inner (base : name) (offset : option ℕ)
+  : ℕ → list expr → list name → tactic unit
 | 0     lc        ns := fail "recursion depth exceeded"
 | (n+1) []        ns := skip
-| (n+1) (h :: lc) ns :=
-  do o ← try_core (injection_with h ns), match o with
+| (n+1) (h :: lc) ns := do
+  o ← try_core (injection_with h ns base offset),
+  match o with
   | none          := injections_with_inner (n+1) lc ns
   | some ([], _)  := skip -- This means that the contradiction part was triggered and the goal is done
   | some (t, ns') := injections_with_inner n (t ++ lc) ns'
   end
 
-meta def injections_with (ns : list name) : tactic unit :=
+/--
+Simplifies equations in the context using injectivity of constructors. For
+each equation `h : C x₁ ... xₙ = D y₁ ... yₘ` in the context, where `C` and `D`
+are constructors of the same data type, `injections_with` does the following:
+
+- If `C = D`, it adds equations `x₁ = y₁`, ..., `xₙ = yₙ`.
+- If `C ≠ D`, it solves the goal by contradiction.
+
+See `injection_with` for details, including information about `base` and
+`offset`.
+
+`injections_with` also recurses into the new equations `xᵢ = yᵢ`. If it has to
+recurse more than five times, it fails.
+-/
+meta def injections_with (ns : list name) (base := `h) (offset := some 1)
+  : tactic unit :=
 do lc ← local_context,
-   injections_with_inner 5 lc ns
+   injections_with_inner base offset 5 lc ns
 
 end tactic

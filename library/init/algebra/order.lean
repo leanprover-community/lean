@@ -30,9 +30,11 @@ class partial_order (α : Type u) extends preorder α :=
 class linear_order (α : Type u) extends partial_order α :=
 (le_total : ∀ a b : α, a ≤ b ∨ b ≤ a)
 
+/-- The relation `≤` on a preorder is reflexive. -/
 @[refl] lemma le_refl [preorder α] : ∀ a : α, a ≤ a :=
 preorder.le_refl
 
+/-- The relation `≤` on a preorder is transitive. -/
 @[trans] lemma le_trans [preorder α] : ∀ {a b c : α}, a ≤ b → b ≤ c → a ≤ c :=
 preorder.le_trans
 
@@ -137,7 +139,7 @@ lemma le_iff_lt_or_eq [partial_order α] : ∀ {a b : α}, a ≤ b ↔ a < b ∨
 | a b := ⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
 
 lemma lt_of_le_of_ne [partial_order α] {a b : α} : a ≤ b → a ≠ b → a < b :=
-λ h₁ h₂, or.resolve_right (lt_or_eq_of_le h₁) h₂
+λ h₁ h₂, lt_of_le_not_le h₁ $ mt (le_antisymm h₁) h₂
 
 lemma lt_trichotomy [linear_order α] (a b : α) : a < b ∨ a = b ∨ b < a :=
 or.elim (le_total a b)
@@ -156,11 +158,7 @@ match lt_trichotomy a b with
 end
 
 lemma lt_of_not_ge [linear_order α] {a b : α} (h : ¬ a ≥ b) : a < b :=
-match lt_trichotomy a b with
-| or.inl hlt          := hlt
-| or.inr (or.inl heq) := absurd (heq ▸ le_refl a : a ≥ b) h
-| or.inr (or.inr hgt) := absurd (le_of_lt hgt) h
-end
+lt_of_le_not_le ((le_total _ _).resolve_right h) h
 
 lemma lt_or_ge [linear_order α] (a b : α) : a < b ∨ a ≥ b :=
 match lt_trichotomy a b with
@@ -187,6 +185,10 @@ lemma ne_iff_lt_or_gt [linear_order α] {a b : α} : a ≠ b ↔ a < b ∨ a > b
 
 lemma lt_iff_not_ge [linear_order α] (x y : α) : x < y ↔ ¬ x ≥ y :=
 ⟨not_le_of_gt, lt_of_not_ge⟩
+
+@[simp] lemma not_lt [linear_order α] {a b : α} : ¬ a < b ↔ b ≤ a := ⟨le_of_not_gt, not_lt_of_ge⟩
+
+@[simp] lemma not_le [linear_order α] {a b : α} : ¬ a ≤ b ↔ b < a := (lt_iff_not_ge _ _).symm
 
 instance decidable_lt_of_decidable_le [preorder α]
   [decidable_rel ((≤) : α → α → Prop)] :
@@ -241,3 +243,49 @@ is_strict_weak_order_of_is_total_preorder lt_iff_not_ge
 /- TODO(Leo): decide whether we should keep this instance or not -/
 instance is_strict_total_order_of_decidable_linear_order [decidable_linear_order α] : is_strict_total_order α (<) :=
 { trichotomous := lt_trichotomy }
+
+namespace decidable
+
+lemma lt_or_eq_of_le [partial_order α] [@decidable_rel α (≤)] {a b : α} (hab : a ≤ b) : a < b ∨ a = b :=
+if hba : b ≤ a then or.inr (le_antisymm hab hba)
+else or.inl (lt_of_le_not_le hab hba)
+
+lemma eq_or_lt_of_le [partial_order α] [@decidable_rel α (≤)] {a b : α} (hab : a ≤ b) : a = b ∨ a < b :=
+(lt_or_eq_of_le hab).swap
+
+lemma le_iff_lt_or_eq [partial_order α] [@decidable_rel α (≤)] {a b : α} : a ≤ b ↔ a < b ∨ a = b :=
+⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
+
+lemma le_of_not_lt [decidable_linear_order α] {a b : α} (h : ¬ b < a) : a ≤ b :=
+decidable.by_contradiction $ λ h', h $ lt_of_le_not_le ((le_total _ _).resolve_right h') h'
+
+lemma not_lt [decidable_linear_order α] {a b : α} : ¬ a < b ↔ b ≤ a :=
+⟨le_of_not_lt, not_lt_of_ge⟩
+
+lemma lt_or_le [decidable_linear_order α] (a b : α) : a < b ∨ b ≤ a :=
+if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
+
+lemma le_or_lt [decidable_linear_order α] (a b : α) : a ≤ b ∨ b < a :=
+(lt_or_le b a).swap
+
+lemma lt_trichotomy [decidable_linear_order α] (a b : α) : a < b ∨ a = b ∨ b < a :=
+(lt_or_le _ _).imp_right $ λ h, (eq_or_lt_of_le h).imp_left eq.symm
+
+lemma lt_or_gt_of_ne [decidable_linear_order α] {a b : α} (h : a ≠ b) : a < b ∨ b < a :=
+(lt_trichotomy a b).imp_right $ λ h', h'.resolve_left h
+
+/-- Perform a case-split on the ordering of `x` and `y` in a decidable linear order. -/
+def lt_by_cases [decidable_linear_order α] (x y : α) {P : Sort*}
+  (h₁ : x < y → P) (h₂ : x = y → P) (h₃ : y < x → P) : P :=
+if h : x < y then h₁ h else
+if h' : y < x then h₃ h' else
+h₂ (le_antisymm (le_of_not_gt h') (le_of_not_gt h))
+
+lemma ne_iff_lt_or_gt [decidable_linear_order α] {a b : α} : a ≠ b ↔ a < b ∨ b < a :=
+⟨lt_or_gt_of_ne, λo, o.elim ne_of_lt ne_of_gt⟩
+
+lemma le_imp_le_of_lt_imp_lt {β} [preorder α] [decidable_linear_order β]
+  {a b : α} {c d : β} (H : d < c → b < a) (h : a ≤ b) : c ≤ d :=
+le_of_not_lt $ λ h', not_le_of_gt (H h') h
+
+end decidable

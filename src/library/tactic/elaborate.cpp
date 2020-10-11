@@ -21,19 +21,19 @@ bool is_by(expr const & e) { return is_annotation(e, *g_by_name); }
 expr const & get_by_arg(expr const & e) { lean_assert(is_by(e)); return get_annotation_arg(e); }
 
 vm_obj tactic_to_expr(vm_obj const & qe, vm_obj const & allow_mvars, vm_obj const & subgoals, vm_obj const & _s) {
-    tactic_state const & s = tactic::to_state(_s);
+    tactic_state s = tactic::to_state(_s);
+    tactic_state_context_cache cache(s);
     optional<metavar_decl> g = s.get_main_goal_decl();
     if (!g) return mk_no_goals_exception(s);
-    metavar_context mctx = s.mctx();
     try {
         environment env = s.env();
         auto e = to_expr(qe);
         bool recover_from_errors = false;
-        elaborator elab(env, s.get_options(), s.decl_name(), mctx, g->get_context(), recover_from_errors);
+        elaborator elab(cache.mk_type_context(s, g->get_context()), s.get_options(), s.decl_name(), recover_from_errors);
         expr r = elab.elaborate(resolve_names(env, g->get_context(), e));
         if (!to_bool(allow_mvars))
             elab.ensure_no_unassigned_metavars(r);
-        mctx = elab.mctx();
+        auto mctx = elab.mctx();
         env  = elab.env();
         r = mctx.instantiate_mvars(r);
         if (to_bool(subgoals) && has_expr_metavar(r)) {

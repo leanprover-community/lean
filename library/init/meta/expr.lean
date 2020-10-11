@@ -472,25 +472,41 @@ meta def is_let : expr → bool
 | (elet _ _ _ _) := tt
 | e              := ff
 
+/-- The name of the bound variable in a pi, lambda or let expression. -/
 meta def binding_name : expr → name
-| (pi n _ _ _)  := n
-| (lam n _ _ _) := n
-| e             := name.anonymous
+| (pi n _ _ _)   := n
+| (lam n _ _ _)  := n
+| (elet n _ _ _) := n
+| e              := name.anonymous
 
+/-- The binder info of a pi or lambda expression. -/
 meta def binding_info : expr → binder_info
 | (pi _ bi _ _)  := bi
 | (lam _ bi _ _) := bi
 | e              := binder_info.default
 
+/-- The domain (type of bound variable) of a pi, lambda or let expression. -/
 meta def binding_domain : expr → expr
-| (pi _ _ d _)  := d
-| (lam _ _ d _) := d
-| e             := e
+| (pi _ _ d _)   := d
+| (lam _ _ d _)  := d
+| (elet _ d _ _) := d
+| e              := e
 
+/-- The body of a pi, lambda or let expression.
+  This definition doesn't instantiate bound variables, and therefore produces a term that is open.
+  See note [open expressions] in mathlib. -/
 meta def binding_body : expr → expr
-| (pi _ _ _ b)  := b
-| (lam _ _ _ b) := b
-| e             := e
+| (pi _ _ _ b)   := b
+| (lam _ _ _ b)  := b
+| (elet _ _ _ b) := b
+| e              := e
+
+/-- `nth_binding_body n e` iterates `binding_body` `n` times to an iterated pi expression `e`.
+  This definition doesn't instantiate bound variables, and therefore produces a term that is open.
+  See note [open expressions] in mathlib. -/
+meta def nth_binding_body : ℕ → expr → expr
+| (n + 1) (pi _ _ _ b) := nth_binding_body n b
+| _       e            := e
 
 meta def is_macro : expr → bool
 | (macro d a) := tt
@@ -502,6 +518,14 @@ meta def is_numeral : expr → bool
 | `(@bit0 %%α %%s %%v)       := is_numeral v
 | `(@bit1 %%α %%s₁ %%s₂ %%v) := is_numeral v
 | _                          := ff
+
+meta def pi_arity : expr → ℕ
+| (pi _ _ _ b) := pi_arity b + 1
+| _            := 0
+
+meta def lam_arity : expr → ℕ
+| (lam _ _ _ b) := lam_arity b + 1
+| _             := 0
 
 meta def imp (a b : expr) : expr :=
 pi `_ binder_info.default a b

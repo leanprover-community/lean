@@ -56,7 +56,6 @@ expr.subst
 false
 false.rec
 false_of_true_eq_false
-false_of_true_iff_false
 fin.mk
 fin.ne_of_vne
 forall_congr
@@ -70,19 +69,9 @@ has_andthen.andthen
 has_bind.and_then
 has_bind.seq
 has_coe_t
-has_div
 has_div.div
 has_emptyc.emptyc
 has_insert.insert
-has_inv
-has_inv.inv
-has_le
-has_le.le
-has_lt
-has_lt.lt
-has_mul
-has_mul.mul
-has_neg
 has_neg.neg
 has_one
 has_one.one
@@ -92,7 +81,6 @@ has_sep.sep
 has_singleton.singleton
 has_sizeof
 has_sizeof.mk
-has_sub
 has_sub.sub
 has_to_format
 has_well_founded
@@ -217,13 +205,10 @@ ne
 neq_of_not_iff
 not
 not_of_eq_false
-not_of_iff_false
 of_eq_true
-of_iff_true
 opt_param
 or
 out_param
-partial_order
 pprod
 pprod.fst
 pprod.mk
@@ -290,3 +275,4 @@ well_founded_tactics
 well_founded_tactics.dec_tac
 well_founded_tactics.default
 well_founded_tactics.rel_tac
+widget.term_goal_widget

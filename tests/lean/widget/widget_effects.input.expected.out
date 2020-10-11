@@ -1,0 +1,5 @@
+{"msgs":[{"caption":"trace output","file_name":"widget_effects.lean","pos_col":0,"pos_line":16,"severity":"information","text":"successfully rendered widget\n"}],"response":"all_messages"}
+{"message":"file invalidated","response":"ok","seq_num":0}
+{"record":{"widget":{"column":0,"id":75,"line":16}},"response":"ok","seq_num":45}
+{"response":"ok","seq_num":66,"widget":{"column":0,"html":{"c":["0",{"a":null,"c":["+"],"e":{"onClick":{"h":0,"r":[75]}},"t":"button"}]},"id":75,"line":16}}
+{"record":{"effects":[{"column":14,"file_name":null,"kind":"reveal_position","line":60},{"kind":"insert_text","text":"hello"},{"key":"hello","kind":"custom","value":"world"},{"column":4,"file_name":"hello/world.lean","kind":"highlight_position","line":3},{"kind":"clear_highlighting"},{"kind":"clear_highlighting"},{"kind":"clear_highlighting"}],"status":"success","widget":{"column":0,"html":{"c":["1",{"a":null,"c":["+"],"e":{"onClick":{"h":0,"r":[75]}},"t":"button"}]},"id":75,"line":16}},"response":"ok","seq_num":47}

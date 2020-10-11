@@ -130,7 +130,7 @@ private:
     bool match(level const & p, level const & l);
     bool match(expr const & p, subexpr const & e, buffer<optional<subexpr>> & args);
     /** \brief pretty-print e parsed with rbp, terminated by a token with lbp */
-    result pp_notation_child(expr const & e, unsigned rbp, unsigned lbp);
+    result pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit = false);
     optional<result> pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args);
     optional<result> pp_notation(subexpr const & e);
 
@@ -141,7 +141,7 @@ private:
 
     result pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide = false);
-    result pp_child(expr const & e, unsigned bp, bool ignore_hide = false);
+    result pp_child(expr const & e, unsigned bp, bool ignore_hide = false, bool below_implicit = false);
     result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false);
     result pp_subtype(expr const & e);
     result pp_sep(expr const & e);

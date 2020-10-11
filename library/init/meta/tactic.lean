@@ -8,6 +8,7 @@ import init.function init.data.option.basic init.util
 import init.control.combinators init.control.monad init.control.alternative init.control.monad_fail
 import init.data.nat.div init.meta.exceptional init.meta.format init.meta.environment
 import init.meta.pexpr init.data.repr init.data.string.basic init.meta.interaction_monad
+import init.classical
 
 open native
 
@@ -341,6 +342,8 @@ meta def get_decl (n : name) : tactic declaration :=
 do s ← read,
    (env s).get n
 
+meta constant get_trace_msg_pos : tactic pos
+
 meta def trace {α : Type u} [has_to_tactic_format α] (a : α) : tactic unit :=
 do fmt ← pp a,
    return $ _root_.trace_fmt fmt (λ u, ())
@@ -479,7 +482,7 @@ meta constant mk_eq_mpr      : expr → expr → tactic expr
    Otherwise, try to find a local constant that has type of the form (t = t') or (t' = t).
    The tactic fails if the given expression is not a local constant. -/
 meta constant subst_core     : expr → tactic unit
-/-- Close the current goal using `e`. Fail is the type of `e` is not definitionally equal to
+/-- Close the current goal using `e`. Fail if the type of `e` is not definitionally equal to
     the target type. -/
 meta constant exact (e : expr) (md := semireducible) : tactic unit
 /-- Elaborate the given quoted expression with respect to the current main goal.
@@ -582,7 +585,11 @@ meta constant induction (h : expr) (ns : list name := []) (rec : option name := 
    number of constructors. Some goals may be discarded when the indices to not match.
    See `induction` for information on the list of substitutions.
 
-   The `cases` tactic is implemented using this one, and it relaxes the restriction of `h`. -/
+   The `cases` tactic is implemented using this one, and it relaxes the restriction of `h`.
+
+   Note: There is one "new hypothesis" for every constructor argument. These are
+   usually local constants, but due to dependent pattern matching, they can also
+   be arbitrary terms. -/
 meta constant cases_core (h : expr) (ns : list name := []) (md := semireducible) : tactic (list (name × list expr × list (name × expr)))
 /-- Similar to cases tactic, but does not revert/intro/clear hypotheses. -/
 meta constant destruct (e : expr) (md := semireducible) : tactic unit
@@ -789,11 +796,28 @@ do t ← target,
    if expr.is_pi t ∨ expr.is_let t then intro_core n
    else whnf_target >> intro_core n
 
+/--
+A variant of `intro` which makes sure that the introduced hypothesis's name is
+unique in the context. If there is no hypothesis named `n` in the context yet,
+`intro_fresh n` is the same as `intro n`. If there is already a hypothesis named
+`n`, the new hypothesis is named `n_1` (or `n_2` if `n_1` already exists, etc.).
+If `offset` is given, the new names are `n_offset`, `n_offset+1` etc.
+
+If `n` is `_`, `intro_fresh n` is the same as `intro1`. The `offset` is ignored
+in this case.
+-/
+meta def intro_fresh (n : name) (offset : option nat := none) : tactic expr :=
+  if n = `_
+    then intro `_
+    else do
+      n ← get_unused_name n offset,
+      intro n
+
 /-- Like `intro` except the name is derived from the bound name in the Π. -/
 meta def intro1 : tactic expr :=
 intro `_
 
-/-- Repeatedly apply `intro1` and return the list of new local constants in order of introduction.-/
+/-- Repeatedly apply `intro1` and return the list of new local constants in order of introduction. -/
 meta def intros : tactic (list expr) :=
 do t ← target,
 match t with
@@ -803,9 +827,15 @@ match t with
 end
 
 /-- Same as `intros`, except with the given names for the new hypotheses. Use the name ```_``` to instead use the binder's name.-/
-meta def intro_lst : list name → tactic (list expr)
-| []      := return []
-| (n::ns) := do H ← intro n, Hs ← intro_lst ns, return (H :: Hs)
+meta def intro_lst (ns : list name) : tactic (list expr) :=
+ns.mmap intro
+
+/--
+A variant of `intro_lst` which makes sure that the introduced hypotheses' names
+are unique in the context. See `intro_fresh`.
+-/
+meta def intro_lst_fresh (ns : list name) : tactic (list expr) :=
+ns.mmap intro_fresh
 
 /-- Introduces new hypotheses with forward dependencies.  -/
 meta def intros_dep : tactic (list expr) :=
@@ -831,17 +861,49 @@ meta def introv : list name → tactic (list expr)
 constants. Fails if there are not at least `n` arguments to introduce. If you do
 not need the return value, use `intron`.
 -/
-meta def intron' : ℕ → tactic (list expr)
-| 0 := pure []
-| (n + 1) := do
-  h ← intro1,
-  hs ← intron' n,
-  pure $ h :: hs
+meta def intron' (n : ℕ) : tactic (list expr)
+:= iterate_exactly n intro1
+
+/--
+Like `intron'` but the introduced hypotheses' names are derived from `base`,
+i.e. `base`, `base_1` etc. The new names are unique in the context. If `offset`
+is given, the new names will be `base_offset`, `base_offset+1` etc.
+-/
+meta def intron_base (n : ℕ) (base : name) (offset : option nat := none)
+  : tactic (list expr)
+:= iterate_exactly n (intro_fresh base offset)
+
+/--
+`intron_with i ns base offset` introduces `i` hypotheses using the names from
+`ns`. If `ns` contains less than `i` names, the remaining hypotheses' names are
+derived from `base` and `offset` (as with `intron_base`). If `base` is `_`, the
+names are derived from the Π binder names.
+
+Returns the introduced local constants and the remaining names from `ns` (if
+`ns` contains more than `i` names).
+-/
+meta def intron_with
+  : ℕ → list name → opt_param name `_ → opt_param (option ℕ) none
+  → tactic (list expr × list name)
+| 0 ns _ _ := pure ([], ns)
+| (i + 1) [] base offset := do
+  hs ← intron_base (i + 1) base offset,
+  pure (hs, [])
+| (i + 1) (n :: ns) base offset := do
+  h ← intro n,
+  ⟨hs, rest⟩ ← intron_with i ns base offset,
+  pure (h :: hs, rest)
 
 /-- Returns n fully qualified if it refers to a constant, or else fails. -/
 meta def resolve_constant (n : name) : tactic name :=
-do (expr.const n _) ← resolve_name n,
-   pure n
+do e ← resolve_name n,
+   match e with
+   | expr.const n _ := pure n
+   | _ := do
+     e ← to_expr e tt ff,
+     expr.const n _ ← pure $ e.get_app_fn,
+     pure n
+   end
 
 meta def to_expr_strict (q : pexpr) : tactic expr :=
 to_expr q
@@ -1414,6 +1476,18 @@ kdependencies e md >>= revert_lst
 meta def revert_kdeps (e : expr) (md := reducible) :=
 revert_kdependencies e md
 
+/-- Postprocess the output of `cases_core`:
+
+- The third component of each tuple in the input list (the list of
+  substitutions) is dropped since we don't use it anywhere.
+- The second component (the list of new hypotheses) is filtered: any expression
+  that is not a local constant is dropped. We only use the new hypotheses for
+  the renaming functionality of `case`, so we want to keep only those
+  "new hypotheses" that are, in fact, local constants. -/
+private meta def cases_postprocess (hs : list (name × list expr × list (name × expr)))
+  : list (name × list expr) :=
+hs.map $ λ ⟨n, hs, _⟩, (n, hs.filter (λ h, h.is_local_constant))
+
 /-- Similar to `cases_core`, but `e` doesn't need to be a hypothesis.
     Remark, it reverts dependencies using `revert_kdeps`.
 
@@ -1421,11 +1495,13 @@ revert_kdependencies e md
     The mode `md` is used with `cases_core` and `dmd` with `generalize` and `revert_kdeps`.
 
     It returns the constructor names associated with each new goal and the newly
-    introduced hypotheses.
+    introduced hypotheses. Note that while `cases_core` may return "new
+    hypotheses" that are not local constants, this tactic only returns local
+    constants.
 -/
 meta def cases (e : expr) (ids : list name := []) (md := semireducible) (dmd := semireducible) : tactic (list (name × list expr)) :=
 if e.is_local_constant then
-  do r ← cases_core e ids md, return $ r.map (λ ⟨n, hs, _⟩, ⟨n, hs⟩)
+  do r ← cases_core e ids md, return $ cases_postprocess r
 else do
   n ← revert_kdependencies e dmd,
   x ← get_unused_name,
@@ -1439,19 +1515,31 @@ else do
   focus1 $ do
     r ← cases_core h ids md,
     hs' ← all_goals (intron' n),
-    return $ r.map₂ (λ ⟨n, hs, _⟩ hs', ⟨n, hs ++ hs'⟩) hs'
+    return $ cases_postprocess $ r.map₂ (λ ⟨n, hs, x⟩ hs', (n, hs ++ hs', x)) hs'
 
 /-- The same as `exact` except you can add proof holes. -/
 meta def refine (e : pexpr) : tactic unit :=
 do tgt : expr ← target,
    to_expr ``(%%e : %%tgt) tt >>= exact
 
-meta def by_cases (e : expr) (h : name) : tactic unit :=
-do dec_e ← (mk_app `decidable [e] <|> fail "by_cases tactic failed, type is not a proposition"),
-   inst  ← (mk_instance dec_e <|> fail "by_cases tactic failed, type of given expression is not decidable"),
-   t     ← target,
-   tm    ← mk_mapp `dite [some e, some inst, some t],
-   seq' (apply tm >> skip) (intro h >> skip)
+/--
+`by_cases p h` splits the main goal into two cases, assuming `h : p` in the
+first branch, and `h : ¬ p` in the second branch. The expression `p` needs to
+be a proposition.
+
+The produced proof term is `dite p ?m_1 ?m_2`.
+-/
+meta def by_cases (e : expr) (h : name) : tactic unit := do
+dec_e ← mk_app ``decidable [e] <|> fail "by_cases tactic failed, type is not a proposition",
+inst ← mk_instance dec_e <|> pure `(classical.prop_decidable %%e),
+tgt ← target,
+expr.sort tgt_u ← infer_type tgt >>= whnf,
+g1 ← mk_meta_var (e.imp tgt),
+g2 ← mk_meta_var (`(¬ %%e).imp tgt),
+focus1 $ do
+  exact $ expr.const ``dite [tgt_u] e inst tgt g1 g2,
+  set_goals [g1, g2],
+  all_goals' $ intro h >> skip
 
 meta def funext_core : list name → bool → tactic unit
 | []  tt       := return ()
@@ -1759,7 +1847,7 @@ do t ← target,
 meta def eval_pexpr (α) [reflected α] (e : pexpr) : tactic α :=
 to_expr ``(%%e : %%(reflect α)) ff ff >>= eval_expr α
 
-meta def tactic.run_simple {α} : tactic_state → tactic α → option α
+meta def run_simple {α} : tactic_state → tactic α → option α
 | ts t := match t ts with
           | (interaction_monad.result.success a ts') := some a
           | (interaction_monad.result.exception _ _ _) := none

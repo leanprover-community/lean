@@ -26,4 +26,6 @@ expr update_hole_args(expr const & e, expr const & new_args);
 
 void initialize_builtin_exprs();
 void finalize_builtin_exprs();
+
+expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos);
 }

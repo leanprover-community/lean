@@ -144,6 +144,15 @@ elaborator::elaborator(environment const & env, options const & opts, name const
     m_coercions = get_elaborator_coercions(opts);
 }
 
+elaborator::elaborator(type_context_old && ctx, options const & opts, name const & decl_name, bool recover_from_errors,
+                       bool in_pattern, bool in_quote):
+    m_env(ctx.env()), m_opts(opts), m_cache(), m_decl_name(decl_name),
+    m_ctx(std::move(ctx)),
+    m_recover_from_errors(recover_from_errors),
+    m_uses_infom(get_global_info_manager() != nullptr), m_in_pattern(in_pattern), m_in_quote(in_quote) {
+    m_coercions = get_elaborator_coercions(opts);
+}
+
 elaborator::~elaborator() {
     try {
         if (m_uses_infom && get_global_info_manager() && !in_thread_finalization()) {
@@ -1852,6 +1861,10 @@ expr elaborator::visit_no_confusion_app(expr const & fn, buffer<expr> const & ar
 expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<expr> const & expected_type,
                                 expr const & ref) {
     arg_mask amask = arg_mask::Default;
+
+    if (is_as_is(fn))
+        return visit_base_app(get_as_is_arg(fn), amask, args, expected_type, ref);
+
     if (is_explicit(fn)) {
         fn   = get_explicit_arg(fn);
         amask = arg_mask::AllExplicit;
@@ -3411,7 +3424,15 @@ expr elaborator::visit_let(expr const & e, optional<expr> const & expected_type)
 
 expr elaborator::visit_placeholder(expr const & e, optional<expr> const & expected_type) {
     expr const & ref = e;
-    return mk_metavar(expected_type, ref);
+    expr mvar = mk_metavar(expected_type, ref);
+    if (is_explicit_placeholder(e)) {
+        if (auto pip = get_pos_info_provider()) {
+            if (auto pos = pip->get_pos_info(e)) {
+                m_underscores.insert(mvar, *pos);
+            }
+        }
+    }
+    return mvar;
 }
 
 static bool is_have_expr(expr const & e) {
@@ -3773,6 +3794,13 @@ void elaborator::ensure_no_unassigned_metavars(expr & e) {
                         msg << "context:";
                         report_error(s, msg.str(), e);
                     }
+                    if (m_uses_infom) {
+                        if (auto pos = m_underscores.find(e)) {
+                            expr hole_args = mk_app(mk_constant(get_list_nil_name(), {mk_level_zero()}),
+                              mk_app(mk_constant(get_expr_name()), mk_constant(get_bool_ff_name())));
+                            m_info.add_hole_info(*pos, {pos->first, pos->second+1}, s, hole_args);
+                        }
+                    }
                     m_ctx.assign(e, copy_tag(e, mk_sorry(ty)));
                     ensure_no_unassigned_metavars(ty);
 
@@ -4022,8 +4050,10 @@ expr elaborator::finalize_theorem_proof(expr const & val, theorem_finalization_i
 pair<expr, level_param_names>
 elaborate(environment & env, options const & opts, name const & decl_name,
           metavar_context & mctx, local_context const & lctx, expr const & e,
-          bool check_unassigned, bool recover_from_errors) {
+          bool check_unassigned, bool recover_from_errors,
+          bool freeze_local_instances) {
     elaborator elab(env, opts, decl_name, mctx, lctx, recover_from_errors);
+    if (freeze_local_instances) elab.freeze_local_instances();
     expr r = elab.elaborate(e);
     auto p = elab.finalize(r, check_unassigned, true);
     mctx = elab.mctx();

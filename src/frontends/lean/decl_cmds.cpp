@@ -305,7 +305,7 @@ static environment variable_cmd_core(parser & p, variable_kind k, cmd_meta const
     }
     level_param_names new_ls;
     list<expr> ctx = p.locals_to_context();
-    std::tie(type, new_ls) = p.elaborate_type("_variable", ctx, type);
+    std::tie(type, new_ls) = p.elaborate_type("_variable", ctx, type, false);
     if (k == variable_kind::Variable || k == variable_kind::Parameter)
         update_local_levels(p, new_ls, k == variable_kind::Variable);
     return declare_var(p, p.env(), n, append(ls, new_ls), type, k, bi, pos, meta);
@@ -425,14 +425,13 @@ static environment variables_cmd_core(parser & p, variable_kind k, cmd_meta cons
     p.parse_close_binder_info(bi);
     environment env = p.env();
     level_param_names ls = to_level_param_names(collect_univ_params(type));
-    list<expr> ctx = p.locals_to_context();
     for (auto id : ids) {
         // Hack: to make sure we get different universe parameters for each parameter.
         // Alternative: elaborate once and copy types replacing universes in new_ls.
         level_param_names new_ls;
         expr new_type;
         check_command_period_open_binder_or_eof(p);
-        std::tie(new_type, new_ls) = p.elaborate_type("_variables", ctx, type);
+        std::tie(new_type, new_ls) = p.elaborate_type("_variables", p.locals_to_context(), type);
         if (k == variable_kind::Variable || k == variable_kind::Parameter)
             update_local_levels(p, new_ls, k == variable_kind::Variable);
         new_ls = append(ls, new_ls);

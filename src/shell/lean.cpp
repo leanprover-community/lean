@@ -639,24 +639,26 @@ int main(int argc, char ** argv) {
             if (!mod) throw exception(sstream() << "could not load " << *run_arg);
 
             auto main_env = get(get(mod->m_result).m_loaded_module->m_env);
-            auto main_opts = get(mod->m_result).m_opts;
             set_io_cmdline_args({argv + optind, argv + argc});
-            eval_helper fn(main_env, main_opts, "main");
+            eval_helper fn(main_env, opts, "main");
 
-            type_context_old tc(main_env, main_opts);
-            scope_trace_env scope2(main_env, main_opts, tc);
+            type_context_old tc(main_env, opts);
+            scope_trace_env scope2(main_env, opts, tc);
 
+            bool success = true;
             try {
-                if (fn.try_exec()) {
-                    return 0;
-                } else {
+                if (!fn.try_exec()) {
                     throw exception(sstream() << *run_arg << ": cannot execute main function with type "
-                                              << ios.get_formatter_factory()(main_env, main_opts, tc)(fn.get_type()));
+                                              << ios.get_formatter_factory()(main_env, opts, tc)(fn.get_type()));
                 }
             } catch (std::exception & ex) {
                 std::cerr << ex.what() << std::endl;
-                return 1;
+                success = false;
             }
+            if (fn.get_profiler().enabled()) {
+                fn.get_profiler().get_snapshots().display("main", opts, ios.get_regular_stream());
+            }
+            return success ? 0 : 1;
         }
 
         mod_mgr.set_save_olean(make_mode);

@@ -20,4 +20,3 @@ import init.meta.local_context init.meta.type_context
 import init.meta.module_info
 import init.meta.expr_address
 import init.meta.tagged_format
-import init.meta.widget

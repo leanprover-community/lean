@@ -52,6 +52,7 @@ private:
     list<expr>        m_numeral_types;
     list<expr_pair>   m_tactics;
     list<expr_pair>   m_holes;
+    rb_expr_map<pos_info> m_underscores;
 
     /* m_depth is only used for tracing */
     unsigned          m_depth{0};
@@ -297,6 +298,8 @@ public:
     elaborator(environment const & env, options const & opts, name const & decl_name,
                metavar_context const & mctx, local_context const & lctx,
                bool recover_from_errors = true, bool in_pattern = false, bool in_quote = false);
+    elaborator(type_context_old && ctx, options const & opts, name const & decl_name,
+        bool recover_from_errors = true, bool in_pattern = false, bool in_quote = false);
     ~elaborator();
     abstract_context_cache & get_cache() { return m_cache; }
     metavar_context const & mctx() const { return m_ctx.mctx(); }
@@ -316,6 +319,7 @@ public:
     expr infer_type(expr const & e) { return m_ctx.infer(e); }
     expr instantiate_mvars(expr const & e);
     void freeze_local_instances() { m_ctx.freeze_local_instances(); }
+    void unfreeze_local_instances() { m_ctx.unfreeze_local_instances(); }
     expr elaborate(expr const & e);
     expr elaborate_type(expr const & e);
     expr_pair elaborate_with_type(expr const & e, expr const & e_type);
@@ -364,7 +368,8 @@ expr elaborator::recover_expr_from_exception(optional<expr> const & expected_typ
 
 pair<expr, level_param_names> elaborate(environment & env, options const & opts, name const & decl_name,
                                         metavar_context & mctx, local_context const & lctx,
-                                        expr const & e, bool check_unassigned, bool recover_from_errors);
+                                        expr const & e, bool check_unassigned, bool recover_from_errors,
+                                        bool freeze_local_instances = true);
 
 /** \brief Translated local constants (and undefined constants) occurring in \c e into
     local constants provided by \c ctx.

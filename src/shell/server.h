@@ -81,8 +81,6 @@ class server : public module_vfs {
     std::unique_ptr<task_queue> m_tq;
     fs_module_vfs m_fs_vfs;
 
-    cancellation_token m_bg_task_ctok;
-
     template <class Msg>
     void send_msg(Msg const &);
 
@@ -98,6 +96,7 @@ class server : public module_vfs {
     task<cmd_res> handle_complete(cmd_req const & req);
     task<cmd_res> handle_info(cmd_req const & req);
     task<cmd_res> handle_widget_event(cmd_req const & req);
+    task<cmd_res> handle_get_widget(cmd_req const & req);
     task<cmd_res> handle_hole(cmd_req const & req);
     cmd_res handle_hole_commands(cmd_req const & req);
     cmd_res handle_all_hole_commands(cmd_req const & req);
@@ -107,7 +106,6 @@ class server : public module_vfs {
     json autocomplete(std::shared_ptr<module_info const> const & mod_info, bool skip_completions, pos_info const & pos);
     json hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action, pos_info const & pos);
     json info(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos);
-    json widget_event(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos, json const & message);
 
 public:
     server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,

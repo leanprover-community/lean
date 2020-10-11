@@ -92,21 +92,24 @@ jobs:
       matrix:
         # not enough disk space for debug build :-(
         build_type: [Release]
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
-      - run: mkdir -p ./build
-      - uses: eine/setup-msys2@v0
+      - uses: msys2/setup-msys2@v1
         with:
-          update: true
-          install: 'base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git'
+          # update: true
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
+      - run: mkdir -p ./build
       - name: Configure
         run: |
-          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Unix\ Makefiles
+          cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Unix\ Makefiles
         working-directory: ./build
       - name: Build
         run: |
-          msys2do make -j2
-          msys2do cpack
+          make -j2
+          cpack
         working-directory: ./build
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -122,7 +125,7 @@ jobs:
           path: ./build/lean-*
       - name: Test
         run: |
-          msys2do ctest -j2 --output-on-failure
+          ctest -j2 --output-on-failure
         working-directory: ./build
 
 

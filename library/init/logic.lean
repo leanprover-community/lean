@@ -20,6 +20,7 @@ def flip {α : Sort u} {β : Sort v} {φ : Sort w} (f : α → β → φ) : β �
 
 def implies (a b : Prop) := a → b
 
+/-- Implication `→` is transitive. If `P → Q` and `Q → R` then `P → R`. -/
 @[trans] lemma implies.trans {p q r : Prop} (h₁ : implies p q) (h₂ : implies q r) : implies p r :=
 assume hp, h₂ (h₁ hp)
 
@@ -32,7 +33,7 @@ false.rec b (h₂ h₁)
 lemma not.intro {a : Prop} (h : a → false) : ¬ a :=
 h
 
-/-- Modus tollens.-/
+/-- Modus tollens. If an implication is true, then so is its contrapositive. -/
 lemma mt {a b : Prop} (h₁ : a → b) (h₂ : ¬b) : ¬a := assume ha : a, h₂ (h₁ ha)
 
 /- not -/
@@ -221,7 +222,8 @@ def or.symm := @or.swap
 def xor (a b : Prop) := (a ∧ ¬ b) ∨ (b ∧ ¬ a)
 
 /- iff -/
-
+/-- `iff P Q`, with notation `P ↔ Q`, is the proposition asserting that `P` and `Q` are equivalent,
+that is, have the same truth value. -/
 structure iff (a b : Prop) : Prop :=
 intro :: (mp : a → b) (mpr : b → a)
 
@@ -933,6 +935,7 @@ match h with
 | (is_false hnc) := rfl
 end
 
+@[congr]
 lemma dif_ctx_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidable c]
                     {x : b → α} {u : c → α} {y : ¬b → α} {v : ¬c → α}
                     (h_c : b ↔ c)
