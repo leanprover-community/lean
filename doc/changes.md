@@ -1,3 +1,17 @@
+3.21.0c (12 October 2020)
+-------------------------
+
+Features:
+- Simplify definition of `band` and `bor` (#466)
+- More advice in docstrings for `Exists`, `not`, `and`, and `or` (#296)
+
+Bug fixes:
+- Fix typo in docstring for `tactic.exact` (#472)
+- Fix missing code block in [widget server docs](widget_server.md) (#473)
+
+Changes:
+- Remove global notation for `vector.cons` (#471)
+
 3.20.0c (9 September 2020)
 --------------------------
 
