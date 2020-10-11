@@ -523,8 +523,17 @@ iff.intro (λ h, trivial) (λ ha h, false.elim h)
 @[simp] theorem true_implies_iff (α : Prop) : (true → α) ↔ α :=
 iff.intro (λ h, h trivial) (λ h h', h)
 
-/- exists -/
+/--
+The existential quantifier.
 
+To prove a goal of the form `⊢ ∃ x, p x`, you can provide a witness `y` with the tactic `existsi y`.
+If you are working in a project that depends on mathlib, then we recommend the `use` tactic
+instead.
+You'll then be left with the goal `⊢ p y`.
+
+To extract a witness `x` and proof `hx : p x` from a hypothesis `h : ∃ x, p x`,
+use the tactic `cases h with x hx`. See also the mathlib tactics `obtain` and `rcases`.
+-/
 inductive Exists {α : Sort u} (p : α → Prop) : Prop
 | intro (w : α) (h : p w) : Exists
 

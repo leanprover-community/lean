@@ -142,8 +142,17 @@ inductive false : Prop
 
 inductive empty : Type
 
-/-- `not P`, with notation `¬ P`, is the `Prop` which is true if and only if `P` is false. It is
-internally represented as `P → false`. -/
+/--
+Logical not.
+
+`not P`, with notation `¬ P`, is the `Prop` which is true if and only if `P` is false. It is
+internally represented as `P → false`, so one way to prove a goal `⊢ ¬ P` is to use `intro h`,
+which gives you a new hypothesis `h : P` and the goal `⊢ false`.
+
+A hypothesis `h : ¬ P` can be used in term mode as a function, so if `w : P` then `h w : false`.
+
+Related mathlib tactic: `contrapose`.
+-/
 def not (a : Prop) := a → false
 prefix `¬` := not
 
@@ -170,10 +179,18 @@ quot.lift f _ (quot.mk a) ~~> f a
 -/
 init_quotient
 
-/-- Heterogeneous equality.
-It's purpose is to write down equalities between terms whose types are not definitionally equal.
+/--
+Heterogeneous equality.
+
+Its purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
- -/
+
+If you have a goal `⊢ x == y`, 
+your first instinct should be to ask (either yourself, or on [zulip](https://leanprover.zulipchat.com/))
+if something has gone wrong already.
+If you really do need to follow this route, 
+you may find the lemmas `eq_rec_heq` and `eq_mpr_heq` useful.
+-/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
 | refl [] : heq a
 
@@ -185,8 +202,19 @@ structure prod (α : Type u) (β : Type v) :=
 structure pprod (α : Sort u) (β : Sort v) :=
 (fst : α) (snd : β)
 
-/-- `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
-both true. -/
+/--
+Logical and.
+
+`and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
+both true. 
+
+To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
+which gives two separate goals `⊢ P` and `⊢ Q`.
+
+Given a hypothesis `h : P ∧ Q`, you can use the tactic `cases h with hP hQ`
+to obtain two new hypotheses `hP : P` and `hQ : Q`. See also the `obtain` or `rcases` tactics in
+mathlib.
+-/
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
@@ -250,8 +278,20 @@ inductive psum (α : Sort u) (β : Sort v)
 | inl (val : α) : psum
 | inr (val : β) : psum
 
-/-- `or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
-true. -/
+/--
+Logical or.
+
+`or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
+true.
+
+To prove a goal `⊢ P ∨ Q`, if you know which alternative you want to prove,
+you can use the tactics `left` (which gives the goal `⊢ P`)
+or `right` (which gives the goal `⊢ Q`).
+
+Given a hypothesis `h : P ∨ Q` and goal `⊢ R`,
+the tactic `cases h` will give you two copies of the goal `⊢ R`,
+with the hypothesis `h : P` in the first, and the hypothesis `h : Q` in the second.
+-/
 inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
