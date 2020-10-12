@@ -273,6 +273,7 @@ meta def decorate_ex (msg : format) (t : tactic α) : tactic α :=
 /--
 `capture t` acts like `t`, but succeeds with a result containing either the returned value
 or the exception.
+Changes made by `t` to the `tactic_state` are preserved in both cases.
 
 The result can be used to inspect the error message, or passed to `unwrap` to rethrow the
 failure later.
@@ -297,6 +298,14 @@ match t with
 | (success r s') := return r
 | e := λ s, e
 end
+
+/--
+`resume r` continues execution from a result previously obtained using `capture`.
+
+This is like `unwrap`, but the `tactic_state` is rolled back to point of capture even upon success. 
+-/
+meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
+λ s, t
 
 meta def get_options : tactic options :=
 do s ← read, return s.get_options
