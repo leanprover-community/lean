@@ -304,7 +304,7 @@ end
 
 This is like `unwrap`, but the `tactic_state` is rolled back to point of capture even upon success. 
 -/
-meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
+meta def resume {α : Type*} (t : tactic_result α) : tactic α :=
 λ s, t
 
 meta def get_options : tactic options :=
