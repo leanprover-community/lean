@@ -329,6 +329,12 @@ The method returns `(a,e,pr)` where
  - `e` is the new expression
  - `pr` is the proof that the given expression equals the input expression.
 
+Note that `ext_simplify_core` will succeed even if `pre` and `post` fail, as failures are used to indicate that the method should move on to the next subterm.
+If it is desirable to propagate errors from `pre`, they can be propagated through the "user data".
+An easy way to do this is to call `tactic.capture (do ...)` in the parts of `pre`/`post` where errors matter, and then use `tactic.unwrap a` on the result.
+
+Additionally, `ext_simplify_core` does not propagate changes made to the tactic state by `pre` and `post.
+If it is desirable to propagate changes to the tactic state in addition to errors, use `tactic.resume` instead of `tactic.unwrap`.
 -/
 meta constant ext_simplify_core
   {α : Type}

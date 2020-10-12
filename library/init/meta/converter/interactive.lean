@@ -6,7 +6,8 @@ Authors: Leonardo de Moura
 Converter monad for building simplifiers.
 -/
 prelude
-import init.meta.interactive init.meta.converter.conv
+import init.meta.interactive
+import init.meta.converter.conv
 
 namespace conv
 meta def save_info (p : pos) : conv unit :=
@@ -30,6 +31,7 @@ open lean
 open lean.parser
 open interactive
 open interactive.types
+open tactic_result
 
 meta def itactic : Type :=
 conv unit
@@ -75,18 +77,29 @@ meta def find (p : parse parser.pexpr) (c : itactic) : conv unit :=
 do (r, lhs, _) ← tactic.target_lhs_rhs,
    pat ← tactic.pexpr_to_pattern p,
    s   ← simp_lemmas.mk_default, -- to be able to use congruence lemmas @[congr]
-   (found, new_lhs, pr) ←
-     tactic.ext_simplify_core ff {zeta := ff, beta := ff, single_pass := tt, eta := ff,
-                                  proj := ff, fail_if_unchanged := ff, memoize := ff} s
-       (λ u, return u)
-       (λ found s r p e, do
-         guard (not found),
-         matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
-         guard matched,
-         ⟨new_e, pr⟩ ← c.convert e r,
-         return (tt, new_e, pr, ff))
-       (λ a s r p e, tactic.failed)
-       r lhs,
+   -- we have to thread the tactic state through `ext_simplify_core` manually
+   st ← tactic.read,
+   (found_result, new_lhs, pr) ← tactic.ext_simplify_core
+     (success ff st)  -- loop counter
+     {zeta := ff, beta := ff, single_pass := tt, eta := ff, proj := ff,
+      fail_if_unchanged := ff, memoize := ff}
+     s
+     (λ u, return u)
+     (λ found_result s r p e, do
+       found ← tactic.resume found_result,
+       guard (not found),
+       matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
+       guard matched,
+       res ← tactic.capture (c.convert e r),
+       -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
+       -- propagate it.
+       match res with
+       | (success r s')     := return (success tt s',    r.fst, some r.snd, ff)
+       | (exception f p s') := return (exception f p s', e,     none,       ff)
+       end)
+     (λ a s r p e, tactic.failed)
+     r lhs,
+  found ← tactic.resume found_result,
   when (not found) $ tactic.fail "find converter failed, pattern was not found",
   update_lhs new_lhs pr
 
@@ -94,19 +107,32 @@ meta def for (p : parse parser.pexpr) (occs : parse (list_of small_nat)) (c : it
 do (r, lhs, _) ← tactic.target_lhs_rhs,
    pat ← tactic.pexpr_to_pattern p,
    s   ← simp_lemmas.mk_default, -- to be able to use congruence lemmas @[congr]
-   (found, new_lhs, pr) ←
-     tactic.ext_simplify_core 1 {zeta := ff, beta := ff, single_pass := tt, eta := ff,
-                                 proj := ff, fail_if_unchanged := ff, memoize := ff} s
-       (λ u, return u)
-       (λ i s r p e, do
-         matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
-         guard matched,
-         if i ∈ occs then do
-           ⟨new_e, pr⟩ ← c.convert e r,
-           return (i+1, new_e, some pr, tt)
-         else return (i+1, e, none, tt))
-       (λ a s r p e, tactic.failed)
-       r lhs,
+   -- we have to thread the tactic state through `ext_simplify_core` manually
+   st ← tactic.read,
+   (found_result, new_lhs, pr) ← tactic.ext_simplify_core
+     (success 1 st)  -- loop counter, and whether the conversion tactic failed
+     {zeta := ff, beta := ff, single_pass := tt, eta := ff, proj := ff,
+      fail_if_unchanged := ff, memoize := ff}
+     s
+     (λ u, return u)
+     (λ found_result s r p e, do
+       i ← tactic.resume found_result,
+       matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
+       guard matched,
+       if i ∈ occs then do
+         res ← tactic.capture (c.convert e r),
+         -- If an error occurs in conversion, capture it; `ext_simplify_core` will not
+         -- propagate it.
+         match res with
+         | (success r s')     := return (success (i+1) s', r.fst, some r.snd, tt)
+         | (exception f p s') := return (exception f p s', e,     none,       tt)
+         end
+       else do
+         st ← tactic.read,
+         return (success (i+1) st, e, none, tt))
+     (λ a s r p e, tactic.failed)
+     r lhs,
+  tactic.resume found_result,
   update_lhs new_lhs pr
 
 meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (attr_names : parse with_ident_list)

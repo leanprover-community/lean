@@ -1,0 +1,12 @@
+conv_for_find.lean:4:4: error: unknown identifier 'does_not_exist'
+state:
+a b c : ℕ
+⊢ a * b * c = a * b * c = ?m_1
+conv_for_find.lean:11:6: error: unknown identifier 'does_not_exist'
+state:
+a b c : ℕ
+⊢ a * b * c = ?m_1
+conv_for_find.lean:19:6: error: unknown identifier 'does_not_exist'
+state:
+a b c : ℕ
+⊢ a * b * c = ?m_1
