@@ -77,16 +77,16 @@ meta def find (p : parse parser.pexpr) (c : itactic) : conv unit :=
 do (r, lhs, _) ← tactic.target_lhs_rhs,
    pat ← tactic.pexpr_to_pattern p,
    s   ← simp_lemmas.mk_default, -- to be able to use congruence lemmas @[congr]
+   -- we have to thread the tactic state through `ext_simplify_core` manually
    st ← tactic.read,
    (found_result, new_lhs, pr) ← tactic.ext_simplify_core
-     (success ff st)  -- loop counter, and whether the conversion tactic failed
+     (success ff st)  -- loop counter
      {zeta := ff, beta := ff, single_pass := tt, eta := ff, proj := ff,
       fail_if_unchanged := ff, memoize := ff}
      s
      (λ u, return u)
      (λ found_result s r p e, do
-       -- if the previous conversion failed, then rethrow the failure immediately
-       found ← tactic.unwrap found_result,
+       found ← tactic.resume found_result,
        guard (not found),
        matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
        guard matched,
@@ -99,7 +99,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
        end)
      (λ a s r p e, tactic.failed)
      r lhs,
-  found ← tactic.unwrap found_result,
+  found ← tactic.resume found_result,
   when (not found) $ tactic.fail "find converter failed, pattern was not found",
   update_lhs new_lhs pr
 
@@ -107,6 +107,7 @@ meta def for (p : parse parser.pexpr) (occs : parse (list_of small_nat)) (c : it
 do (r, lhs, _) ← tactic.target_lhs_rhs,
    pat ← tactic.pexpr_to_pattern p,
    s   ← simp_lemmas.mk_default, -- to be able to use congruence lemmas @[congr]
+   -- we have to thread the tactic state through `ext_simplify_core` manually
    st ← tactic.read,
    (found_result, new_lhs, pr) ← tactic.ext_simplify_core
      (success 1 st)  -- loop counter, and whether the conversion tactic failed
@@ -115,8 +116,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
      s
      (λ u, return u)
      (λ found_result s r p e, do
-       -- if the previous conversion failed, then rethrow the failure immediately
-       i ← tactic.unwrap found_result,
+       i ← tactic.resume found_result,
        matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
        guard matched,
        if i ∈ occs then do
@@ -132,8 +132,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
          return (success (i+1) st, e, none, tt))
      (λ a s r p e, tactic.failed)
      r lhs,
-  -- Re-throw any error captured inside `ext_simplify_core`
-  tactic.unwrap found_result,
+  tactic.resume found_result,
   update_lhs new_lhs pr
 
 meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (attr_names : parse with_ident_list)
