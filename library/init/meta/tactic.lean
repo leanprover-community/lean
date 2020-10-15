@@ -1156,11 +1156,11 @@ first $ map solve1 ts
 
 private meta def focus_aux {α} : list (tactic α) → list expr → list expr → tactic (list α)
 | []       []      rs := set_goals rs *> pure []
-| (t::ts)  []      rs := fail "focus' tactic failed, insufficient number of goals"
+| (t::ts)  []      rs := fail "focus tactic failed, insufficient number of goals"
 | tts      (g::gs) rs :=
   mcond (is_assigned g) (focus_aux tts gs rs) $
     do set_goals [g],
-       t::ts ← pure tts | fail "focus' tactic failed, insufficient number of tactics",
+       t::ts ← pure tts | fail "focus tactic failed, insufficient number of tactics",
        a ← t,
        rs' ← get_goals,
        as ← focus_aux ts gs (rs ++ rs'),
@@ -1175,11 +1175,11 @@ do gs ← get_goals, focus_aux ts gs []
 
 private meta def focus'_aux : list (tactic unit) → list expr → list expr → tactic unit
 | []       []      rs := set_goals rs
-| (t::ts)  []      rs := fail "focus tactic failed, insufficient number of goals"
+| (t::ts)  []      rs := fail "focus' tactic failed, insufficient number of goals"
 | tts      (g::gs) rs :=
   mcond (is_assigned g) (focus'_aux tts gs rs) $
     do set_goals [g],
-       t::ts ← pure tts | fail "focus tactic failed, insufficient number of tactics",
+       t::ts ← pure tts | fail "focus' tactic failed, insufficient number of tactics",
        t,
        rs' ← get_goals,
        focus'_aux ts gs (rs ++ rs')
