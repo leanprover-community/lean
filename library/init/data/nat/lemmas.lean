@@ -175,7 +175,10 @@ instance : linear_order ℕ :=
   le_antisymm := @nat.le_antisymm,
   le_total := @nat.le_total,
   lt := nat.lt,
-  lt_iff_le_not_le := @nat.lt_iff_le_not_le }
+  lt_iff_le_not_le := @nat.lt_iff_le_not_le,
+  decidable_lt               := nat.decidable_lt,
+  decidable_le               := nat.decidable_le,
+  decidable_eq               := nat.decidable_eq }
 
 lemma eq_zero_of_le_zero {n : nat} (h : n ≤ 0) : n = 0 :=
 le_antisymm h (zero_le _)
@@ -287,18 +290,6 @@ nat.lt_of_lt_of_le (nat.lt_add_of_pos_right hk) (mul_succ k n ▸ nat.mul_le_mul
 
 protected lemma mul_lt_mul_of_pos_right {n m k : ℕ} (h : n < m) (hk : k > 0) : n * k < m * k :=
 nat.mul_comm k m ▸ nat.mul_comm k n ▸ nat.mul_lt_mul_of_pos_left h hk
-
-instance : decidable_linear_order nat :=
-{ lt                         := nat.lt,
-  le                         := nat.le,
-  le_refl                    := nat.le_refl,
-  le_trans                   := @nat.le_trans,
-  le_antisymm                := @nat.le_antisymm,
-  le_total                   := @nat.le_total,
-  lt_iff_le_not_le           := @lt_iff_le_not_le _ _,
-  decidable_lt               := nat.decidable_lt,
-  decidable_le               := nat.decidable_le,
-  decidable_eq               := nat.decidable_eq }
 
 protected lemma le_of_mul_le_mul_left {a b c : ℕ} (h : c * a ≤ c * b) (hc : c > 0) : a ≤ b :=
 decidable.not_lt.1

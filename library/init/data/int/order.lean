@@ -187,7 +187,7 @@ simp [int.lt_iff_le_and_ne], split; intro h,
   { intro h, simp [*] at * } }
 end
 
-instance : decidable_linear_order int :=
+instance : linear_order int :=
 { le              := int.le,
   le_refl         := int.le_refl,
   le_trans        := @int.le_trans,
