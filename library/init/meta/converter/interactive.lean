@@ -86,7 +86,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
      s
      (λ u, return u)
      (λ found_result s r p e, do
-       found ← tactic.unpack found_result,
+       found ← tactic.unwrap found_result,
        guard (not found),
        matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
        guard matched,
@@ -99,7 +99,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
        end)
      (λ a s r p e, tactic.failed)
      r lhs,
-  found ← tactic.unpack found_result,
+  found ← tactic.unwrap found_result,
   when (not found) $ tactic.fail "find converter failed, pattern was not found",
   update_lhs new_lhs pr
 
@@ -116,7 +116,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
      s
      (λ u, return u)
      (λ found_result s r p e, do
-       i ← tactic.unpack found_result,
+       i ← tactic.unwrap found_result,
        matched ← (tactic.match_pattern pat e >> return tt) <|> return ff,
        guard matched,
        if i ∈ occs then do
@@ -132,7 +132,7 @@ do (r, lhs, _) ← tactic.target_lhs_rhs,
          return (success (i+1) st, e, none, tt))
      (λ a s r p e, tactic.failed)
      r lhs,
-  tactic.unpack found_result,
+  tactic.unwrap found_result,
   update_lhs new_lhs pr
 
 meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (attr_names : parse with_ident_list)
