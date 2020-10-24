@@ -29,6 +29,7 @@ example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
   },
 end
 
+-- but this unfortunately doesn't work for `find` and `for`
 example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
   existsi _,
   conv {
