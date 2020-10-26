@@ -47,3 +47,22 @@ example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
     },
   },
 end
+
+-- matching should work under binders
+example {ι} (p : ι → Prop) : (∀ i, p i) ↔ (∀ j, p j) :=
+begin
+  conv {
+    find (p _) {
+      trace_lhs,
+    },
+  },
+end
+
+example {ι} (p : ι → Prop) : (∀ i, p i) ↔ (∀ j, p j) :=
+begin
+  conv {
+    for (p _) [1, 2] {
+      trace_lhs,
+    },
+  },
+end
