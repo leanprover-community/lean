@@ -10,3 +10,14 @@ conv_for_find.lean:19:6: error: unknown identifier 'does_not_exist'
 state:
 a b c : ℕ
 ⊢ a * b * c = ?m_1
+conv_for_find.lean:40:0: error: tactic failed, there are unsolved goals
+state:
+a b : ℕ
+⊢ ℕ
+conv_for_find.lean:49:0: error: tactic failed, there are unsolved goals
+state:
+a b : ℕ
+⊢ ℕ
+p i
+p i
+p j

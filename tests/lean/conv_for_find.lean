@@ -29,6 +29,7 @@ example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
   },
 end
 
+-- but this unfortunately doesn't work for `find` and `for`
 example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
   existsi _,
   conv {
@@ -43,6 +44,25 @@ example {a b : ℕ} : ∃ x, x * a = a * x :=  begin
   conv {
     for (_ * _) [1] {
       rw nat.mul_comm b a,
+    },
+  },
+end
+
+-- matching should work under binders
+example {ι} (p : ι → Prop) : (∀ i, p i) ↔ (∀ j, p j) :=
+begin
+  conv {
+    find (p _) {
+      trace_lhs,
+    },
+  },
+end
+
+example {ι} (p : ι → Prop) : (∀ i, p i) ↔ (∀ j, p j) :=
+begin
+  conv {
+    for (p _) [1, 2] {
+      trace_lhs,
     },
   },
 end
