@@ -45,6 +45,91 @@ bool parse_univ_params(parser & p, buffer<name> & lp_names) {
     }
 }
 
+/*
+Naming instances.
+
+For `instance [...] : C t u (D x y)`, we generate the name `D.C`.
+However, we remove the current namespace if it is a prefix of `C` and/or `D`.
+(Exception: if `C` *equals* the current namespace, we keep the last component of `C`.
+Otherwise, the resulting name would be the same as `D`,
+which could be a name in the current namespace.)
+The current namespace will implicitly be prepended to the resulting name.
+
+For `instance [...] : C t u α`, where `α` is a variable
+(at parse time--it might turn into a coercion later, during typechecking)
+we generate the name `C`, stripping off the current namespace if possible.
+
+Further improvements to the heuristic are possible, for example:
+  instance : C (X.foo Y)     -- foo.C
+  instance : C (D : α → β)   -- D.C
+  instance : C (@D x y)      -- D.C
+  instance : C (Π i, F i)    -- Pi.C
+  instance : C (Type u)      -- Type.C
+but not yet implemented.
+The heuristic can also fail in the presence of parameters.
+
+Examples:
+
+```
+def foo := ℕ
+namespace foo
+instance : has_add foo := nat.has_add   -- foo.has_add, not foo.foo.has_add
+end
+
+namespace category_theory
+
+class is_right_adjoint := ...
+def forgetful_functor := ...
+instance : is_right_adjoint forgetful_functor := ...
+-- category_theory.forgetful_functor.is_right_adjoint, not
+-- category_theory.category_theory.forgetful_functor.category_theory.is_right_adjoint
+
+end category_theory
+
+class lie_algebra (α : Type) : Type :=
+(bracket : α → α → α)
+
+namespace lie_algebra
+
+def gl : Type := unit
+instance : lie_algebra gl := ⟨λ _ _, ()⟩
+-- lie_algebra.gl.lie_algebra, not lie_algebra.gl (already used)
+
+end lie_algebra
+
+class moo (α : Type*)
+class zoo (β : Type*)
+
+namespace zoo
+instance (β : Type*) [zoo β] : moo β := ⟨⟩  -- zoo.moo
+end zoo
+```
+
+*/
+optional<name> heuristic_inst_name(name const & ns, expr const & type) {
+    expr it = type;
+    while (is_pi(it)) it = binding_body(it);
+    expr const & C = get_app_fn(it);
+    if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
+        name class_name = const_name(C);
+        name arg_name = const_name(get_app_fn(app_arg(it)));
+        if (class_name == ns && class_name.is_string())
+            class_name = class_name.get_string();
+        else if (is_prefix_of(ns, class_name))
+            class_name = class_name.replace_prefix(ns, name());
+        if (is_prefix_of(ns, arg_name))
+            arg_name = arg_name.replace_prefix(ns, name());
+        return optional<name>(arg_name + class_name);
+    } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
+        name class_name = const_name(C);
+        if (is_prefix_of(ns, class_name))
+            class_name = class_name.replace_prefix(ns, name());
+        return optional<name>(class_name);
+    } else {
+        return {};
+    }
+}
+
 expr parse_single_header(parser & p, declaration_name_scope & scope,
                          buffer <name> & lp_names, buffer <expr> & params,
                          bool is_example, bool is_instance) {
@@ -75,20 +160,13 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
         if (used_match_idx())
             throw parser_error("invalid instance, pattern matching cannot be used in the type of anonymous instance declarations", c_pos);
         /* Try to synthesize name */
-        expr it = type;
-        while (is_pi(it)) it = binding_body(it);
-        expr const & C = get_app_fn(it);
-        name ns = get_namespace(p.env());
-        if (is_constant(C) && !ns.is_anonymous()) {
-            c_name = const_name(C);
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            c_name = const_name(get_app_fn(app_arg(it))) + const_name(C);
-            scope.set_name(c_name);
+        if (auto n = heuristic_inst_name(get_namespace(p.env()), type)) {
+            c_name = *n;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
         }
+        scope.set_name(c_name);
     }
     lean_assert(!c_name.is_anonymous());
     return p.save_pos(mk_local(c_name, type), c_pos);
@@ -114,20 +192,13 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
     if (is_instance && c_name.is_anonymous()) {
         if (used_match_idx())
             throw parser_error("invalid instance, pattern matching cannot be used in the type of anonymous instance declarations", c_pos);
-        expr it = type;
-        while (is_pi(it)) it = binding_body(it);
-        expr const & C = get_app_fn(it);
-        name ns = get_namespace(p.env());
-        if (is_constant(C) && !ns.is_anonymous()) {
-            c_name = const_name(C);
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            c_name = const_name(get_app_fn(app_arg(it))) + const_name(C);
-            scope.set_name(c_name);
+        if (auto n = heuristic_inst_name(get_namespace(p.env()), type)) {
+            c_name = *n;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
         }
+        scope.set_name(c_name);
     }
     lean_assert(!c_name.is_anonymous());
     return mk_local(c_name, type);

@@ -46,7 +46,7 @@ meta instance : has_to_format local_context := ⟨to_format⟩
 
 meta instance : has_le local_context := ⟨λ a b, local_context.is_subset a b⟩
 
-meta instance : decidable_rel ((≤) : local_context → local_context → Prop) := infer_instance
+meta instance decidable_rel : decidable_rel ((≤) : local_context → local_context → Prop) := infer_instance
 
 meta instance : has_emptyc local_context := ⟨empty⟩
 

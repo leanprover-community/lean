@@ -2623,6 +2623,8 @@ bool parser::parse_command_like() {
         return false;
     }
 
+    module::scope_pos_info scope2(pos());
+
     switch (curr()) {
         case token_kind::CommandKeyword:
             parse_command(cmd_meta());
