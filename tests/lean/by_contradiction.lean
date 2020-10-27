@@ -12,7 +12,7 @@ by do
 example (a b : nat) : ¬¬ a = b → a = b :=
 by do
   intros,
-  by_contradiction,
+  by_contradiction `H,
   trace_state,
   contradiction
 
