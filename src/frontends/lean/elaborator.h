@@ -319,6 +319,7 @@ public:
     expr infer_type(expr const & e) { return m_ctx.infer(e); }
     expr instantiate_mvars(expr const & e);
     void freeze_local_instances() { m_ctx.freeze_local_instances(); }
+    void unfreeze_local_instances() { m_ctx.unfreeze_local_instances(); }
     expr elaborate(expr const & e);
     expr elaborate_type(expr const & e);
     expr_pair elaborate_with_type(expr const & e, expr const & e_type);
@@ -367,7 +368,8 @@ expr elaborator::recover_expr_from_exception(optional<expr> const & expected_typ
 
 pair<expr, level_param_names> elaborate(environment & env, options const & opts, name const & decl_name,
                                         metavar_context & mctx, local_context const & lctx,
-                                        expr const & e, bool check_unassigned, bool recover_from_errors);
+                                        expr const & e, bool check_unassigned, bool recover_from_errors,
+                                        bool freeze_local_instances = true);
 
 /** \brief Translated local constants (and undefined constants) occurring in \c e into
     local constants provided by \c ctx.

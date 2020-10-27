@@ -1,0 +1,33 @@
+sorry_hash.lean:3:6: error: invalid expression
+sorry_hash.lean:4:0: error: sync
+sorry_hash.lean:3:0: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:6:29: error: invalid expression
+sorry_hash.lean:8:0: error: sync
+sorry_hash.lean:6:23: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:8:0: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:8:32: error: invalid expression
+sorry_hash.lean:8:36: error: sync
+sorry_hash.lean:10:0: error: sync
+sorry_hash.lean:8:26: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:8:36: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:10:0: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:10:0: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:11:0: error: invalid expression
+sorry_hash.lean:10:21: error: don't know how to synthesize placeholder
+context:
+⊢ Type ?
+sorry_hash.lean:11:0: error: command expected

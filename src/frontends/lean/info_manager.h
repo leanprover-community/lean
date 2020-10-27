@@ -77,7 +77,6 @@ protected:
     widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
 public:
     widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd): m_env(env), m_pos(pos), m_id(id), m_vdom(vd) {}
-    virtual void report(io_state_stream const & ios, json & record) const override;
     void get(json & record);
     /** Given a message of the form
      * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
@@ -89,9 +88,17 @@ public:
      */
     void update(json const & message, json & record);
     json to_json() const;
+    virtual void report(io_state_stream const &, json &) const {}
 
     bool has_widget() const { return m_vdom.raw(); }
     unsigned id() const { return m_id; }
+};
+
+class widget_goal_info : public widget_info {
+public:
+    widget_goal_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd) :
+        widget_info(env, pos, id, vd) {}
+    virtual void report(io_state_stream const & ios, json & record) const override;
 };
 
 class info_data {
@@ -120,7 +127,10 @@ hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
 vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
 widget_info const * is_widget_info(info_data const & d);
+widget_goal_info const * is_widget_goal_info(info_data const & d);
 bool is_term_goal(info_data const & d);
+
+optional<std::string> get_doc_string_including_override(environment const & env, name const & n);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
@@ -128,8 +138,8 @@ class info_manager : public log_entry_cell {
     std::string m_file_name;
     rb_map<unsigned, line_info_data_set, unsigned_cmp> m_line_data;
 
-    void add_info(pos_info pos, info_data data);
 public:
+    void add_info(pos_info pos, info_data data);
     info_manager() {}
     info_manager(std::string const & file_name) : m_file_name(file_name) {}
 
@@ -143,6 +153,7 @@ public:
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
     void add_widget_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
+    void add_widget_goal_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
     void add_term_goal(pos_info const & pos, tactic_state const & s);
 

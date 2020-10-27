@@ -18,4 +18,7 @@ vm_obj to_obj(optional<T> const & o) {
 
 inline bool is_none(vm_obj const & o) { return is_simple(o); }
 inline vm_obj get_some_value(vm_obj const & o) { lean_assert(!is_none(o)); return cfield(o, 0); }
+inline optional<vm_obj> get_optional(vm_obj const & o) {
+    return is_simple(o) ? optional<vm_obj>() : optional<vm_obj>(cfield(o, 0));
+}
 }

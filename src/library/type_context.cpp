@@ -91,6 +91,10 @@ void type_context_old::freeze_local_instances() {
     m_lctx.freeze_local_instances(m_local_instances);
 }
 
+void type_context_old::unfreeze_local_instances() {
+    m_lctx.unfreeze_local_instances();
+}
+
 void type_context_old::init_local_instances() {
     m_local_instances = local_instances();
     m_lctx.for_each([&](local_decl const & decl) {
@@ -185,7 +189,7 @@ void type_context_old::set_env(environment const & env) {
 }
 
 void type_context_old::update_local_instances(expr const & new_local, expr const & new_type) {
-    if (!m_cache->get_frozen_local_instances()) {
+    if (!lctx().get_frozen_local_instances()) {
         if (auto c_name = is_class(new_type)) {
             m_local_instances = local_instances(local_instance(*c_name, new_local), m_local_instances);
             flush_instance_cache();
@@ -206,7 +210,7 @@ expr type_context_old::push_let(name const & ppn, expr const & type, expr const 
 }
 
 void type_context_old::pop_local() {
-    if (!m_cache->get_frozen_local_instances() && m_local_instances) {
+    if (!lctx().get_frozen_local_instances() && m_local_instances) {
         optional<local_decl> decl = m_lctx.find_last_local_decl();
         if (decl && decl->get_name() == mlocal_name(head(m_local_instances).get_local())) {
             m_local_instances = tail(m_local_instances);
@@ -2370,11 +2374,20 @@ bool type_context_old::is_def_eq_binding(expr e1, expr e2) {
 }
 
 optional<expr> type_context_old::mk_class_instance_at(local_context const & lctx, expr const & type) {
-    if (m_cache->get_frozen_local_instances() &&
-        m_cache->get_frozen_local_instances() == lctx.get_frozen_local_instances() &&
-        equal_locals(m_lctx, lctx)) {
-        return mk_class_instance(type);
+    if (m_lctx.get_frozen_local_instances() &&
+            m_lctx.get_frozen_local_instances() == lctx.get_frozen_local_instances()) {
+        if (equal_locals(m_lctx, lctx)) {
+            // same local context, just synthesize instance here
+            return mk_class_instance(type);
+        } else {
+            // same frozen instances, reuse cache
+            type_context_old tmp_ctx(env(), m_mctx, lctx, *m_cache, m_transparency_mode);
+            auto r = tmp_ctx.mk_class_instance(type);
+            m_mctx = tmp_ctx.mctx();
+            return r;
+        }
     } else {
+        // TODO(gabriel): allow local caching
         context_cacheless tmp_cache(*m_cache, true);
         type_context_old tmp_ctx(env(), m_mctx, lctx, tmp_cache, m_transparency_mode);
         auto r = tmp_ctx.mk_class_instance(type);
@@ -2399,7 +2412,14 @@ bool type_context_old::mk_nested_instance(expr const & m, expr const & m_type) {
     } else {
         optional<metavar_decl> mdecl = m_mctx.find_metavar_decl(m);
         if (!mdecl) return false;
-        inst = mk_class_instance_at(mdecl->get_context(), m_type);
+
+        // HACK(gabriel): do not reuse type-class cache for nested resolution problems
+        // For one example that easily breaks, see the default field values in `init/control/lawful.lean`
+        // TODO(gabriel): allow local caching
+        context_cacheless tmp_cache(*m_cache, true);
+        type_context_old tmp_ctx(env(), m_mctx, mdecl->get_context(), tmp_cache, m_transparency_mode);
+        inst = tmp_ctx.mk_class_instance(m_type);
+        if (inst) m_mctx = tmp_ctx.mctx();
     }
     if (inst) {
         assign(m, *inst);
@@ -3102,8 +3122,6 @@ lbool type_context_old::try_numeral_eq_numeral(expr const & t, expr const & s) {
     if (!n1) return l_undef;
     optional<mpz> n2 = eval_num(s);
     if (!n2) return l_undef;
-    if (!is_nat_type(whnf(infer(t))))
-        return l_undef;
     if (*n1 != *n2)
         return l_false;
     else if (to_small_num(t) && to_small_num(s))
@@ -3117,6 +3135,9 @@ lbool type_context_old::try_nat_offset_cnstrs(expr const & t, expr const & s) {
     /* We should not use this feature when transparency_mode is none.
        See issue #1295 */
     if (m_transparency_mode == transparency_mode::None) return l_undef;
+    // Only special-case natural numbers, see https://github.com/leanprover-community/lean/issues/362
+    if (!is_nat_type(whnf(infer(t))) || !is_nat_type(whnf(infer(s))))
+        return l_undef;
     lbool r;
     r = try_offset_eq_offset(t, s);
     if (r != l_undef) return r;
@@ -3542,6 +3563,7 @@ struct instance_synthesizer {
     };
 
     type_context_old &        m_ctx;
+    local_instances       m_local_instances;
     expr                  m_main_mvar;
     state                 m_state;    // active state
     buffer<choice>        m_choices;
@@ -3551,6 +3573,8 @@ struct instance_synthesizer {
 
     instance_synthesizer(type_context_old & ctx):
         m_ctx(ctx),
+        m_local_instances(ctx.lctx().get_frozen_local_instances() ?
+            *ctx.lctx().get_frozen_local_instances() : ctx.m_local_instances),
         m_displayed_trace_header(false),
         m_old_transparency_mode(m_ctx.m_transparency_mode),
         m_old_zeta(m_ctx.m_zeta) {
@@ -3663,7 +3687,7 @@ struct instance_synthesizer {
 
     list<expr> get_local_instances(name const & cname) {
         buffer<expr> selected;
-        for (local_instance const & li : m_ctx.m_local_instances) {
+        for (local_instance const & li : m_local_instances) {
             if (li.get_class_name() == cname)
                 selected.push_back(li.get_local());
         }

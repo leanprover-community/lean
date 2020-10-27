@@ -638,7 +638,7 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     }
 }
 template<class T>
-auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> result {
+auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool below_implicit) -> result {
     if (is_app(e)) {
         if (auto r = pp_local_ref(e)){
             address_reset_scope ars(*this);
@@ -659,14 +659,25 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> re
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            return pp_child_at(f, bp, expr_address::fn(), ignore_hide);
+            if (below_implicit) {
+                address_scope _(*this, expr_address::fn());
+                return pp_child(f, bp, ignore_hide, true);
+            } else {
+              address_reset_scope ars(*this);
+              result r;
+              { address_scope _(*this, expr_address::fn());
+                r = pp_child(f, bp, ignore_hide, true);
+              }
+              return tag(ars.m_adr, e, r);
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, bp, ignore_hide);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, bp, ignore_hide);
         }
     }
-    return add_paren_if_needed(pp(e, ignore_hide), bp);
+    result r = below_implicit ? pp_core(e, ignore_hide) : pp(e, ignore_hide);
+    return add_paren_if_needed(r, bp);
 }
 template<class T>
 auto pretty_fn<T>::pp_var(expr const & e) -> result {
@@ -1505,7 +1516,7 @@ auto pretty_fn<T>::tag(address const & a, expr const & e, result const & r) -> r
 }
 
 template<class T>
-auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp) -> result {
+auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit) -> result {
     if (is_app(e)) {
         if (m_numerals) {
             if (auto n = to_num(e)){
@@ -1519,15 +1530,25 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp)
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            address_scope s(*this, expr_address::fn());
-            return pp_notation_child(f, rbp, lbp);
+            if (below_implicit) {
+                address_scope s(*this, expr_address::fn());
+                return pp_notation_child(f, rbp, lbp, true);
+            } else {
+                address_reset_scope ars(*this);
+                result r;
+                { address_scope s(*this, expr_address::fn());
+                  r = pp_notation_child(f, rbp, lbp, true);
+                }
+                return r.with(tag(ars.m_adr, e, r.fmt()));
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, rbp);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, rbp);
         }
     }
-    result r = pp(e);
+    result r = below_implicit ? pp_core(e) : pp(e);
+
     /* see invariants of `pretty_fn::result`: Check that the surrounding notation would parse at least r
      * by the first invariant, and at most r (instead of the following token with binding power lbp) by the
      * second invariant. */

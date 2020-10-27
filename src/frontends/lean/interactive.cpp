@@ -163,7 +163,8 @@ void report_info(environment const & env, options const & opts, io_state const &
                     record["source"]["file"] = f;
                     record["source"]["line"] = 1;
                     record["source"]["column"] = 0;
-                } catch (file_not_found_exception &) {}
+                } catch (file_not_found_exception &) {
+                } catch (lean_file_not_found_exception &) {}
                 break;
             }
             case break_at_pos_exception::token_context::option:
@@ -183,7 +184,7 @@ void report_info(environment const & env, options const & opts, io_state const &
                 auto name = e.m_token_info.m_param + e.m_token_info.m_token;
                 record["full-id"] = name.escape();
                 add_source_info(env, name, record);
-                if (auto doc = get_doc_string(env, name))
+                if (auto doc = get_doc_string_including_override(env, name))
                     record["doc"] = *doc;
                 interactive_report_type(env, opts, env.get(name).get_type(), record);
             } default:
@@ -196,7 +197,7 @@ void report_info(environment const & env, options const & opts, io_state const &
             if (e.m_goal_pos) {
                 // in the case that e has a goal pos, report that.
                 infom.get_info_record(env, opts, ios, *e.m_goal_pos, record, [](info_data const & d) {
-                            return is_vm_obj_format_info(d) || (is_widget_info(d) && !is_term_goal(d));
+                            return is_vm_obj_format_info(d) || is_widget_goal_info(d);
                         });
             }
             // first check for field infos inside token

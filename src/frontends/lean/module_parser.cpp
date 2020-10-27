@@ -77,6 +77,8 @@ module_parser::parse_next_command_like(optional<std::vector<gtask>> const & depe
     auto fn = [self, begin_pos] {
         scope_pos_info_provider scope_pip(self->m_parser); // for nested_elaborator_exception::pp
 
+        bool imports_were_already_parsed = self->m_parser.imports_parsed();
+
         bool done = false;
         try {
             check_system("module_parser::parse_next_command_like");
@@ -93,6 +95,12 @@ module_parser::parse_next_command_like(optional<std::vector<gtask>> const & depe
             done = true;
         }
         auto end_pos = self->m_parser.pos();
+        if (!done && end_pos == begin_pos && self->m_parser.imports_parsed() == imports_were_already_parsed) {
+            auto msg = self->m_parser.mk_message(begin_pos, ERROR);
+            msg << "parse_command_like did not consume any input";
+            msg.report();
+            done = true;
+        }
         if (done) end_pos = self->m_end_pos;
         lean_assert(end_pos >= begin_pos);
 

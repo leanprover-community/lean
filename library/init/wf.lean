@@ -21,15 +21,13 @@ end acc
 
 /-- A relation `r : α → α → Prop` is well-founded when `∀ x, (∀ y, r y x → P y → P x) → P x` for all predicates `P`.
 Once you know that a relation is well_founded, you can use it to define fixpoint functions on `α`.-/
-inductive well_founded {α : Sort u} (r : α → α → Prop) : Prop
-| intro (h : ∀ a, acc r a) : well_founded
+structure well_founded {α : Sort u} (r : α → α → Prop) : Prop :=
+intro :: (apply : ∀ a, acc r a)
 
 class has_well_founded (α : Sort u) : Type u :=
 (r : α → α → Prop) (wf : well_founded r)
 
 namespace well_founded
-def apply {α : Sort u} {r : α → α → Prop} (wf : well_founded r) : ∀ a, acc r a :=
-assume a, well_founded.rec_on wf (λ p, p) a
 
 section
 parameters {α : Sort u} {r : α → α → Prop}

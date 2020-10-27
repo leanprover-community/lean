@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura, Jannis Limperg
 -/
 prelude
-import init.meta.tactic init.meta.rewrite_tactic init.meta.simp_tactic
+import init.meta.tactic init.meta.type_context init.meta.rewrite_tactic init.meta.simp_tactic
 import init.meta.smt.congruence_closure init.control.combinators
 import init.meta.interactive_base init.meta.derive init.meta.match_tactic
 import init.meta.congr_tactic init.meta.case_tag
@@ -150,6 +150,7 @@ a b : ℕ,
 h : a = b
 ⊢ b = a
 ```
+
 ```
 example : ∀ a b : nat, a = b → ∀ c, b = c → a = c :=
 begin
@@ -1523,11 +1524,27 @@ meta def guard_target (p : parse texpr) : tactic unit :=
 do t ← target, guard_expr_eq t p
 
 /--
-`guard_hyp h := t` fails if the hypothesis `h` does not have type `t`.
+`guard_hyp h : t` fails if the hypothesis `h` does not have type `t`.
 We use this tactic for writing tests.
 -/
-meta def guard_hyp (n : parse ident) (p : parse $ tk ":=" *> texpr) : tactic unit :=
-do h ← get_local n >>= infer_type, guard_expr_eq h p
+meta def guard_hyp (n : parse ident)
+  (ty : parse (tk ":" *> texpr)?)
+  (val : parse (tk ":=" *> texpr)?) : tactic unit := do
+  h ← get_local n,
+  ldecl ← tactic.unsafe.type_context.run (do
+    lctx ← unsafe.type_context.get_local_context,
+    pure $ lctx.get_local_decl h.local_uniq_name),
+  ldecl ← ldecl | fail format!"hypothesis {h} not found",
+  match ty with
+  | some p := guard_expr_eq ldecl.type p
+  | none := skip
+  end,
+  match ldecl.value, val with
+  | none, some _ := fail format!"{h} is not a let binding"
+  | some _, none := fail format!"{h} is a let binding"
+  | some hval, some val := guard_expr_eq hval val
+  | none, none := skip
+  end
 
 /--
 `match_target t` fails if target does not match pattern `t`.
@@ -1536,9 +1553,9 @@ meta def match_target (t : parse texpr) (m := reducible) : tactic unit :=
 tactic.match_target t m >> skip
 
 /--
-`by_cases (h :)? p` splits the main goal into two cases, assuming `h : p` in the first branch, and `h : ¬ p` in the second branch.
-
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
+`by_cases p` splits the main goal into two cases, assuming `h : p` in the first branch, and
+`h : ¬ p` in the second branch. You can specify the name of the new hypothesis using the syntax
+`by_cases h : p`.
 -/
 meta def by_cases : parse cases_arg_p → tactic unit
 | (n, q) := concat_tags $ do

@@ -352,7 +352,9 @@ void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<exp
     for (unsigned i = 0; i < params.size(); i++) {
         expr const & param = params[i];
         expr type          = replace_locals_preserving_pos_info(mlocal_type(param), i, params.data(), new_params.data());
+        elab.freeze_local_instances();
         expr new_type      = elab.elaborate_type(type);
+        elab.unfreeze_local_instances();
         expr new_param     = elab.push_local(mlocal_pp_name(param), new_type, local_info(param));
         new_params.push_back(new_param);
     }

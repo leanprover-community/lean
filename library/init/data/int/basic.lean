@@ -58,11 +58,11 @@ match (n - m : nat) with
 | (succ k) := -[1+ k]         -- m < n, and n - m = succ k
 end
 
-private lemma sub_nat_nat_of_sub_eq_zero {m n : ℕ} (h : n - m = 0) :
+lemma sub_nat_nat_of_sub_eq_zero {m n : ℕ} (h : n - m = 0) :
   sub_nat_nat m n = of_nat (m - n) :=
 begin unfold sub_nat_nat, rw h, unfold sub_nat_nat._match_1 end
 
-private lemma sub_nat_nat_of_sub_eq_succ {m n k : ℕ} (h : n - m = succ k) :
+lemma sub_nat_nat_of_sub_eq_succ {m n k : ℕ} (h : n - m = succ k) :
   sub_nat_nat m n = -[1+ k] :=
 begin unfold sub_nat_nat, rw h, unfold sub_nat_nat._match_1 end
 
@@ -117,20 +117,20 @@ protected lemma coe_nat_add_one_out (n : ℕ) : ↑n + (1 : ℤ) = ↑(succ n) :
 
 /- these are only for internal use -/
 
-private lemma of_nat_add_of_nat (m n : nat) : of_nat m + of_nat n = of_nat (m + n) := rfl
-private lemma of_nat_add_neg_succ_of_nat (m n : nat) :
+lemma of_nat_add_of_nat (m n : nat) : of_nat m + of_nat n = of_nat (m + n) := rfl
+lemma of_nat_add_neg_succ_of_nat (m n : nat) :
                 of_nat m + -[1+ n] = sub_nat_nat m (succ n) := rfl
-private lemma neg_succ_of_nat_add_of_nat (m n : nat) :
+lemma neg_succ_of_nat_add_of_nat (m n : nat) :
                 -[1+ m] + of_nat n = sub_nat_nat n (succ m) := rfl
-private lemma neg_succ_of_nat_add_neg_succ_of_nat (m n : nat) :
+lemma neg_succ_of_nat_add_neg_succ_of_nat (m n : nat) :
                 -[1+ m] + -[1+ n] = -[1+ succ (m + n)] := rfl
 
-private lemma of_nat_mul_of_nat (m n : nat) : of_nat m * of_nat n = of_nat (m * n) := rfl
-private lemma of_nat_mul_neg_succ_of_nat (m n : nat) :
+lemma of_nat_mul_of_nat (m n : nat) : of_nat m * of_nat n = of_nat (m * n) := rfl
+lemma of_nat_mul_neg_succ_of_nat (m n : nat) :
                 of_nat m * -[1+ n] = neg_of_nat (m * succ n) := rfl
-private lemma neg_succ_of_nat_of_nat (m n : nat) :
+lemma neg_succ_of_nat_of_nat (m n : nat) :
                 -[1+ m] * of_nat n = neg_of_nat (succ m * n) := rfl
-private lemma mul_neg_succ_of_nat_neg_succ_of_nat (m n : nat) :
+lemma mul_neg_succ_of_nat_neg_succ_of_nat (m n : nat) :
                -[1+ m] * -[1+ n] = of_nat (succ m * succ n) := rfl
 
 local attribute [simp] of_nat_add_of_nat of_nat_mul_of_nat neg_of_nat_zero neg_of_nat_of_succ
@@ -189,7 +189,7 @@ begin
   exact H _ rfl
 end
 
-private lemma sub_nat_nat_add_left {m n : ℕ} :
+lemma sub_nat_nat_add_left {m n : ℕ} :
   sub_nat_nat (m + n) m = of_nat n :=
 begin
   dunfold sub_nat_nat,
@@ -199,24 +199,24 @@ begin
   apply nat.le_add_right
 end
 
-private lemma sub_nat_nat_add_right {m n : ℕ} :
+lemma sub_nat_nat_add_right {m n : ℕ} :
   sub_nat_nat m (m + n + 1) = neg_succ_of_nat n :=
 calc sub_nat_nat._match_1 m (m + n + 1) (m + n + 1 - m) =
         sub_nat_nat._match_1 m (m + n + 1) (m + (n + 1) - m) : by rw [nat.add_assoc]
   ... = sub_nat_nat._match_1 m (m + n + 1) (n + 1) : by rw [nat.add_sub_cancel_left]
   ... = neg_succ_of_nat n : rfl
 
-private lemma sub_nat_nat_add_add (m n k : ℕ) : sub_nat_nat (m + k) (n + k) = sub_nat_nat m n :=
+lemma sub_nat_nat_add_add (m n k : ℕ) : sub_nat_nat (m + k) (n + k) = sub_nat_nat m n :=
 sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
   (assume i n, have n + i + k = (n + k) + i, by simp [nat.add_comm, nat.add_left_comm],
     begin rw [this], exact sub_nat_nat_add_left end)
   (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp [nat.add_comm, nat.add_left_comm],
     begin rw [this], exact sub_nat_nat_add_right end)
 
-private lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m - n) :=
+lemma sub_nat_nat_of_ge {m n : ℕ} (h : m ≥ n) : sub_nat_nat m n = of_nat (m - n) :=
 sub_nat_nat_of_sub_eq_zero (sub_eq_zero_of_le h)
 
-private lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
+lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
 have n - m = succ (pred (n - m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
 by rewrite sub_nat_nat_of_sub_eq_succ this
 
@@ -337,15 +337,15 @@ protected lemma add_zero : ∀ a : ℤ, a + 0 = a
 protected lemma zero_add (a : ℤ) : 0 + a = a :=
 int.add_comm a 0 ▸ int.add_zero a
 
-private lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
+lemma sub_nat_nat_sub {m n : ℕ} (h : m ≥ n) (k : ℕ) :
   sub_nat_nat (m - n) k = sub_nat_nat m (k + n) :=
 calc
   sub_nat_nat (m - n) k = sub_nat_nat (m - n + n) (k + n) : by rewrite [sub_nat_nat_add_add]
                     ... = sub_nat_nat m (k + n)           : by rewrite [nat.sub_add_cancel h]
 
-private lemma sub_nat_nat_add (m n k : ℕ) : sub_nat_nat (m + n) k = of_nat m + sub_nat_nat n k :=
+lemma sub_nat_nat_add (m n k : ℕ) : sub_nat_nat (m + n) k = of_nat m + sub_nat_nat n k :=
 begin
-  have h := le_or_gt k n,
+  have h := decidable.le_or_lt k n,
   cases h with h' h',
   { rw [sub_nat_nat_of_ge h'],
     have h₂ : k ≤ m + n, exact (le_trans h' (le_add_left _ _)),
@@ -356,10 +356,10 @@ begin
   apply sub_nat_nat_add_add
 end
 
-private lemma sub_nat_nat_add_neg_succ_of_nat (m n k : ℕ) :
+lemma sub_nat_nat_add_neg_succ_of_nat (m n k : ℕ) :
     sub_nat_nat m n + -[1+ k] = sub_nat_nat m (n + succ k) :=
 begin
-  have h := le_or_gt n m,
+  have h := decidable.le_or_lt n m,
   cases h with h' h',
   { rw [sub_nat_nat_of_ge h'], simp, rw [sub_nat_nat_sub h', nat.add_comm] },
   have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (le_add_right _ _),
@@ -369,12 +369,12 @@ begin
   rw [nat.add_comm n, nat.add_sub_assoc (le_of_lt h')]
 end
 
-private lemma add_assoc_aux1 (m n : ℕ) :
+lemma add_assoc_aux1 (m n : ℕ) :
     ∀ c : ℤ, of_nat m + of_nat n + c = of_nat m + (of_nat n + c)
 | (of_nat k) := by simp [nat.add_assoc]
 | -[1+ k]    := by simp [sub_nat_nat_add]
 
-private lemma add_assoc_aux2 (m n k : ℕ) :
+lemma add_assoc_aux2 (m n k : ℕ) :
   -[1+ m] + -[1+ n] + of_nat k = -[1+ m] + (-[1+ n] + of_nat k) :=
 begin
   simp [add_succ], rw [int.add_comm, sub_nat_nat_add_neg_succ_of_nat], simp [add_succ, succ_add, nat.add_comm]
@@ -396,7 +396,7 @@ protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
 
 /- negation -/
 
-private lemma sub_nat_self : ∀ n, sub_nat_nat n n = 0
+lemma sub_nat_self : ∀ n, sub_nat_nat n n = 0
 | 0        := rfl
 | (succ m) := begin rw [sub_nat_nat_of_sub_eq_zero, nat.sub_self, of_nat_zero], rw nat.sub_self end
 
@@ -418,21 +418,21 @@ protected lemma mul_comm : ∀ a b : ℤ, a * b = b * a
 | -[1+ m]    (of_nat n) := by simp [nat.mul_comm]
 | -[1+ m]    -[1+ n]    := by simp [nat.mul_comm]
 
-private lemma of_nat_mul_neg_of_nat (m : ℕ) :
+lemma of_nat_mul_neg_of_nat (m : ℕ) :
    ∀ n, of_nat m * neg_of_nat n = neg_of_nat (m * n)
 | 0        := rfl
 | (succ n) := begin unfold neg_of_nat, simp end
 
-private lemma neg_of_nat_mul_of_nat (m n : ℕ) :
+lemma neg_of_nat_mul_of_nat (m n : ℕ) :
     neg_of_nat m * of_nat n = neg_of_nat (m * n) :=
 begin rw int.mul_comm, simp [of_nat_mul_neg_of_nat, nat.mul_comm] end
 
-private lemma neg_succ_of_nat_mul_neg_of_nat (m : ℕ) :
+lemma neg_succ_of_nat_mul_neg_of_nat (m : ℕ) :
   ∀ n, -[1+ m] * neg_of_nat n = of_nat (succ m * n)
 | 0        := rfl
 | (succ n) := begin unfold neg_of_nat, simp end
 
-private lemma neg_of_nat_mul_neg_succ_of_nat (m n : ℕ) :
+lemma neg_of_nat_mul_neg_succ_of_nat (m n : ℕ) :
   neg_of_nat n * -[1+ m] = of_nat (n * succ m) :=
 begin rw int.mul_comm, simp [neg_succ_of_nat_mul_neg_of_nat, nat.mul_comm] end
 
@@ -456,15 +456,15 @@ protected lemma mul_zero : ∀ (a : ℤ), a * 0 = 0
 protected lemma zero_mul (a : ℤ) : 0 * a = 0 :=
 int.mul_comm a 0 ▸ int.mul_zero a
 
-private lemma neg_of_nat_eq_sub_nat_nat_zero : ∀ n, neg_of_nat n = sub_nat_nat 0 n
+lemma neg_of_nat_eq_sub_nat_nat_zero : ∀ n, neg_of_nat n = sub_nat_nat 0 n
 | 0        := rfl
 | (succ n) := rfl
 
-private lemma of_nat_mul_sub_nat_nat (m n k : ℕ) :
+lemma of_nat_mul_sub_nat_nat (m n k : ℕ) :
   of_nat m * sub_nat_nat n k = sub_nat_nat (m * n) (m * k) :=
 begin
   have h₀ : m > 0 ∨ 0 = m,
-    exact lt_or_eq_of_le (zero_le _),
+    exact decidable.lt_or_eq_of_le (zero_le _),
   cases h₀ with h₀ h₀,
   { have h := nat.lt_or_ge n k,
     cases h with h h,
@@ -483,7 +483,7 @@ begin
   subst h₀, simp [h₂, int.zero_mul, nat.zero_mul]
 end
 
-private lemma neg_of_nat_add (m n : ℕ) :
+lemma neg_of_nat_add (m n : ℕ) :
   neg_of_nat m + neg_of_nat n = neg_of_nat (m + n) :=
 begin
   cases m,
@@ -495,7 +495,7 @@ begin
   simp [nat.succ_add], reflexivity
 end
 
-private lemma neg_succ_of_nat_mul_sub_nat_nat (m n k : ℕ) :
+lemma neg_succ_of_nat_mul_sub_nat_nat (m n k : ℕ) :
   -[1+ m] * sub_nat_nat n k = sub_nat_nat (succ m * k) (succ m * n) :=
 begin
   have h := nat.lt_or_ge n k,
@@ -505,7 +505,7 @@ begin
     rw [sub_nat_nat_of_lt h, sub_nat_nat_of_ge (le_of_lt h')],
     simp [succ_pred_eq_of_pos (nat.sub_pos_of_lt h), nat.mul_sub_left_distrib]},
   have h' : n > k ∨ k = n,
-    exact lt_or_eq_of_le h,
+    exact decidable.lt_or_eq_of_le h,
   cases h' with h' h',
   { have h₁ : succ m * n > succ m * k,
       exact nat.mul_lt_mul_of_pos_left h' (nat.succ_pos m),

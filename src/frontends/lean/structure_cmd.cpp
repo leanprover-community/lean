@@ -65,7 +65,14 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_STRUCTURE_INTRO "mk"
 #endif
 
+#ifndef LEAN_DEFAULT_EXTENDS_PRIORITY
+#define LEAN_DEFAULT_EXTENDS_PRIORITY 100
+#endif
+
 namespace lean {
+// configuration option: priority used for instances produced by `extends`
+static name * g_extends_priority = nullptr;
+
 /** \brief Return the universe parameters, number of parameters and introduction rule for the given parent structure
 
     \pre is_structure_like(env, S) */
@@ -298,7 +305,7 @@ struct structure_cmd_fn {
         m_infer_result_universe    = false;
         m_inductive_predicate      = false;
         m_subobjects               = !p.get_options().get_bool("old_structure_cmd", false);
-        m_prio                     = get_default_priority(p.get_options());
+        m_prio                     = p.get_options().get_unsigned(*g_extends_priority, LEAN_DEFAULT_EXTENDS_PRIORITY);
         if (!meta.m_attrs.ok_for_inductive_type())
             throw exception("only attribute [class] accepted for structures");
     }
@@ -541,7 +548,7 @@ struct structure_cmd_fn {
                 return elaborate_for_each<expr>(ctx, tmp, std::bind(&structure_cmd_fn::elaborate_local, this, false, _1, _2, _3, _4), [&](expr tmp) {
                     level_param_names new_ls;
                     expr new_tmp;
-                    std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, list<expr>(), tmp);
+                    std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, list<expr>(), tmp, false);
                     levels new_meta_ls = map2<level>(new_ls, [&](name const &) { return m_ctx.mk_univ_metavar_decl(); });
                     return instantiate_univ_params(new_tmp, new_ls, new_meta_ls);
                 });
@@ -944,7 +951,7 @@ struct structure_cmd_fn {
                             level_param_names new_ls;
                             expr new_tmp;
                             metavar_context mctx = m_ctx.mctx();
-                            std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, mctx, tmp);
+                            std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, mctx, tmp, false);
                             m_ctx.set_mctx(mctx);
                             for (auto new_l : new_ls)
                                 m_level_names.push_back(new_l);
@@ -1361,5 +1368,7 @@ void register_structure_cmd(cmd_table & r) {
     add_cmd(r, cmd_info("structure",   "declare a new structure/record type", structure_cmd, false));
     add_cmd(r, cmd_info("class",       "declare a new class", class_cmd, false));
     register_bool_option("old_structure_cmd", false, "use old structures compilation strategy");
+    g_extends_priority = new name{"extends_priority"};
+    register_unsigned_option(*g_extends_priority, LEAN_DEFAULT_EXTENDS_PRIORITY, "priority for `extends` instances");
 }
 }

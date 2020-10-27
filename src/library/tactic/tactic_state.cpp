@@ -1013,6 +1013,12 @@ vm_obj tactic_get_tag(vm_obj const & g, vm_obj const & s0) {
     }
 }
 
+vm_obj tactic_get_trace_msg_pos(vm_obj const & s0) {
+    tactic_state s = tactic::to_state(s0);
+    auto pos = get_trace_msg_pos();
+    return tactic::mk_success(mk_vm_pair(mk_vm_simple(pos.first), mk_vm_simple(pos.second)), s);
+}
+
 static tactic_state change_temperature_of_local_instances(tactic_state s, bool freeze) {
     optional<metavar_decl> g   = s.get_main_goal_decl();
     if (!g) return s;
@@ -1118,6 +1124,7 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "tags_enabled"}),         tactic_tags_enabled);
     DECLARE_VM_BUILTIN(name({"tactic", "set_tag"}),              tactic_set_tag);
     DECLARE_VM_BUILTIN(name({"tactic", "get_tag"}),              tactic_get_tag);
+    DECLARE_VM_BUILTIN(name({"tactic", "get_trace_msg_pos"}),    tactic_get_trace_msg_pos);
     DECLARE_VM_BUILTIN(name({"tactic", "unfreeze_local_instances"}), tactic_unfreeze_local_instances);
     DECLARE_VM_BUILTIN(name({"tactic", "freeze_local_instances"}),   tactic_freeze_local_instances);
     DECLARE_VM_BUILTIN(name({"tactic", "frozen_local_instances"}),   tactic_frozen_local_instances);

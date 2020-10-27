@@ -807,41 +807,46 @@ level parser::parse_level(unsigned rbp) {
 
 pair<expr, level_param_names> parser::elaborate(name const & decl_name,
                                                 metavar_context & mctx, local_context_adapter const & adapter,
-                                                expr const & e, bool check_unassigned) {
+                                                expr const & e, bool check_unassigned, bool freeze_instances) {
     expr tmp_e  = adapter.translate_to(e);
     pair<expr, level_param_names> r =
-        ::lean::elaborate(m_env, get_options(), decl_name, mctx, adapter.lctx(), tmp_e, check_unassigned, m_error_recovery);
+        ::lean::elaborate(m_env, get_options(), decl_name, mctx, adapter.lctx(), tmp_e,
+            check_unassigned, m_error_recovery, freeze_instances);
     expr new_e = r.first;
     new_e      = adapter.translate_from(new_e);
     return mk_pair(new_e, r.second);
 }
 
-pair<expr, level_param_names> parser::elaborate(name const & decl_name, metavar_context & mctx, list<expr> const & lctx, expr const & e, bool check_unassigned) {
+pair<expr, level_param_names> parser::elaborate(name const & decl_name, metavar_context & mctx, list<expr> const & lctx, expr const & e,
+        bool check_unassigned, bool freeze_instances) {
     local_context_adapter adapter(lctx);
-    return elaborate(decl_name, mctx, adapter, e, check_unassigned);
+    return elaborate(decl_name, mctx, adapter, e, check_unassigned, freeze_instances);
 }
 
-pair<expr, level_param_names> parser::elaborate(name const & decl_name, metavar_context & mctx, expr const & e, bool check_unassigned) {
+pair<expr, level_param_names> parser::elaborate(name const & decl_name, metavar_context & mctx, expr const & e,
+        bool check_unassigned, bool freeze_instances) {
     local_context_adapter adapter(m_local_decls);
-    return elaborate(decl_name, mctx, adapter, e, check_unassigned);
+    return elaborate(decl_name, mctx, adapter, e, check_unassigned, freeze_instances);
 }
 
 pair<expr, level_param_names> parser::elaborate(name const & decl_name, list<expr> const & ctx, expr const & e) {
     metavar_context mctx;
-    return elaborate(decl_name, mctx, ctx, e, true);
+    return elaborate(decl_name, mctx, ctx, e, true, true);
 }
 
-pair<expr, level_param_names> parser::elaborate_type(name const & decl_name, list<expr> const & ctx, expr const & e) {
+pair<expr, level_param_names> parser::elaborate_type(name const & decl_name, list<expr> const & ctx, expr const & e,
+        bool freeze_instances) {
     metavar_context mctx;
     expr Type  = copy_tag(e, mk_sort(mk_level_placeholder()));
     expr new_e = copy_tag(e, mk_typed_expr(Type, e));
-    return elaborate(decl_name, mctx, ctx, new_e, true);
+    return elaborate(decl_name, mctx, ctx, new_e, true, freeze_instances);
 }
 
-pair<expr, level_param_names> parser::elaborate_type(name const & decl_name, metavar_context & mctx, expr const & e) {
+pair<expr, level_param_names> parser::elaborate_type(name const & decl_name, metavar_context & mctx, expr const & e,
+        bool freeze_instances) {
     expr Type  = copy_tag(e, mk_sort(mk_level_placeholder()));
     expr new_e = copy_tag(e, mk_typed_expr(Type, e));
-    return elaborate(decl_name, mctx, new_e, true);
+    return elaborate(decl_name, mctx, new_e, true, freeze_instances);
 }
 
 void parser::throw_invalid_open_binder(pos_info const & pos) {
@@ -1933,6 +1938,10 @@ public:
 
 expr parser::patexpr_to_expr(expr const & pat_or_expr) {
     error_if_undef_scope scope(*this);
+    return patexpr_to_expr_core(pat_or_expr);
+}
+
+expr parser::patexpr_to_expr_core(expr const & pat_or_expr) {
     return patexpr_to_expr_fn(*this)(pat_or_expr);
 }
 

@@ -1,3 +1,162 @@
+3.22.0c (27 October 2020)
+-------------------------
+
+Features:
+- Improve error handling of `for` and `find` in `conv` mode (#482, #485)
+
+Bug fixes:
+- Fix typos in docstrings for `tactic.focus` and `tactic.focus'` (#483)
+
+Changes:
+- Remove `lean --doc` (which never actually did anything) (#480)
+- Add `decidable_*` assumptions to `linear_order` and remove `decidable_linear_order` (#484)
+
+3.21.0c (12 October 2020)
+-------------------------
+
+Features:
+- Simplify definition of `band` and `bor` (#466)
+- More advice in docstrings for `Exists`, `not`, `and`, and `or` (#296)
+
+Bug fixes:
+- Fix typo in docstring for `tactic.exact` (#472)
+- Fix missing code block in [widget server docs](widget_server.md) (#473)
+
+Changes:
+- Remove global notation for `vector.cons` (#471)
+
+3.20.0c (9 September 2020)
+--------------------------
+
+Features:
+- Options are refreshed when the simplifier is entered. (#456)
+- JSON support for widgets (#453)
+- More definition and theorem docstrings (#463)
+
+Bug fixes:
+- Typeclass args for `monad_state_trans` were flipped. (#461)
+- `resolve_constant` now handles `parameters` correctly. (#462)
+
+Changes:
+- Remove `nat.pow` from the core library (#457)
+
+3.19.0c (27 August 2020)
+------------------------
+
+Features:
+- There is a new option `extends_priority` which controls the priority of instances produced by `extends`. It is set to 100 by default. (#440)
+- Add [docs for the Lean server API](widget_server.md) (#443)
+
+Bug fixes:
+- Fix name generation by `injection_with` (#430)
+- Fix bug in `in_current_file` (#432)
+- Fix docstring in `introv` (#434)
+- Fix parse precedence for `#html` (#444)
+- Add `\fl` and `\fr` to `lstlean.tex` (#448)
+
+Changes:
+- Avoid `classical.choice` in `lt_of_le_of_ne` (#428)
+- Remove usage of the axiom of choice from basic `nat` and `int` lemmas, remove `private` from internal lemmas about `int` and move the `decidable.*` order theorems from mathlib (#446)
+- Change syntax of `guard_hyp` from `guard_hyp h := t` to `guard_hyp h : t` and support `guard_hyp h : t := val` for checking `let` bindings (#445, #449)
+- Make `fin` a subtype (#452)
+
+3.18.4c (30 July 2020)
+----------------------
+
+Features:
+- Ensure `@max (order_dual α) = @min α` (#425)
+
+Bug fixes:
+- Description for `small_nat` (#424)
+- More set replacement fixes (#426, fixes #422 and #423)
+
+3.18.3c (29 July 2020)
+----------------------
+
+Features:
+- Show VM overrides in info request (#417)
+
+Bug fixes:
+- Support `{(1 : α)}` and `{(∘), (∘)}` (#420, fixes #419 and #418)
+
+3.18.2c (28 July 2020)
+----------------------
+
+Bug fixes:
+- Fix `{(0,1)}` (#415)
+
+3.18.1c (28 July 2020)
+----------------------
+
+Bug fixes:
+- Update local instances (#412, fixes #411)
+
+3.18.0c (28 July 2020)
+----------------------
+
+Features:
+- Notation for set replacement (#402)
+
+Bug fixes:
+- Drop non-local-constant exprs from `cases` output (#390)
+- Freeze local instances for definition parameters (#403, fixes #397)
+- Freeze local instances in `#check` (#404, fixes #398)
+- Honor `as_is` attribute for functions (#399)
+- Fix VM environment issue (#405)
+- Remove `tactic.norm_num` (#406)
+- Fix injection introducing too many hyps (#407, fixes #400)
+- Handle corner cases in `by_cases` (#409)
+
+Changes:
+- Use a structure for `well_founded` (#408)
+
+3.17.1c (8 July 2020)
+---------------------
+
+Features:
+- Reuse type-class cache (#383)
+
+Bug fixes:
+- Info error for commands directly after imports (#386, fixes #382)
+
+3.17.0c (6 July 2020)
+---------------------
+
+Features:
+- Refactor widgets to use hooks (#363, #369)
+- `component.with_effects` (#370)
+- Add "copy text" effect. (#375)
+
+Bug fixes:
+- Add margin to local const names in tactic state (#365)
+- Prevent segfault in `apply` (#373, fixes #372)
+- Fix address incorrect issue in `pp_tagged` (#371)
+- Abort if no input consumed in `module_parser` (#377, fixes #374)
+- Do not unify `(1 : ℕ)` with `(1 : ℤ)` (#376, fixes #362)
+
+Changes:
+- Fix vacuous assumptions in nat lemmas (#366)
+- Remove `has_neg` instance for `set` (#367)
+- Mark `dif_ctx_congr` as `@[congr]` (#378)
+
+Server protocol changes:
+- The response of the `widget_event` request may now contain effects.
+
+3.16.5c (25 June 2020)
+----------------------
+
+Features:
+- Add comment-like string blocks (#352)
+- Add widgets to trace messages (#355)
+- Show case tags in goal widget (#357)
+
+Bug fixes:
+- Handle exceptions in `ts_clone` (#350)
+- Support `sorry #` (#356)
+
+Server protocol changes:
+- The (Lean error) messages returned by the server may now contain an additional `"widget"` field.
+
 3.16.4c (22 June 2020)
 ----------------------
 

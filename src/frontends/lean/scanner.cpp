@@ -384,6 +384,42 @@ auto scanner::read_mod_doc_block() -> token_kind {
     return token_kind::ModDocBlock;
 }
 
+token_kind scanner::read_string_block() {
+    m_buffer.clear();
+    unsigned nesting = 0;
+    while (true) {
+        uchar c = curr();
+        check_not_eof("unexpected end of string block");
+        next();
+        if (c == '/') {
+            if (curr() == '-') {
+                m_buffer += '/';
+                c = '-';
+                next();
+                nesting++;
+            }
+        } else if (c == '-') {
+            if (curr() == '/') {
+                m_buffer += '-';
+                c = '/';
+                next();
+                if (nesting) nesting--;
+            }
+        } else if (c == '"' && nesting == 0) {
+            if (curr() == '-') {
+                c = '-';
+                next();
+                if (curr() == '/') {
+                    next();
+                    return token_kind::String;
+                }
+                m_buffer += '"';
+            }
+        }
+        m_buffer += c;
+    }
+}
+
 void scanner::read_comment_block() {
     unsigned nesting = 1;
     while (true) {
@@ -653,6 +689,7 @@ static name * g_begin_comment_tk        = nullptr;
 static name * g_begin_comment_block_tk  = nullptr;
 static name * g_begin_doc_block_tk      = nullptr;
 static name * g_begin_mod_doc_block_tk  = nullptr;
+static name * g_begin_string_block_tk   = nullptr;
 static name * g_tick_tk                 = nullptr;
 
 void initialize_scanner() {
@@ -660,6 +697,7 @@ void initialize_scanner() {
     g_begin_comment_block_tk = new name("/-");
     g_begin_doc_block_tk     = new name("/--");
     g_begin_mod_doc_block_tk = new name("/-!");
+    g_begin_string_block_tk  = new name("/-\"");
     g_tick_tk                = new name("'");
 }
 
@@ -668,6 +706,7 @@ void finalize_scanner() {
     delete g_begin_comment_block_tk;
     delete g_begin_doc_block_tk;
     delete g_begin_mod_doc_block_tk;
+    delete g_begin_string_block_tk;
     delete g_tick_tk;
 }
 
@@ -703,6 +742,8 @@ auto scanner::scan(environment const & env) -> token_kind {
                         read_single_line_comment();
                     else if (n == *g_begin_comment_block_tk)
                         read_comment_block();
+                    else if (n == *g_begin_string_block_tk)
+                        return read_string_block();
                     else if (n == *g_begin_doc_block_tk)
                         return read_doc_block();
                     else if (n == *g_begin_mod_doc_block_tk)
