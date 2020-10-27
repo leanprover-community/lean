@@ -1,6 +1,6 @@
 var_of.equations._eqn_1 : ∀ (n : ℕ), var_of (term.var n) = some n
-var_of.equations._eqn_2 : ∀ (_x : list term), var_of (term.app _x) = none
-var_of.equations._eqn_3 : ∀ (_x : string), var_of (term.cnst _x) = none
-list_of.equations._eqn_1 : ∀ (_x : ℕ), list_of (term.var _x) = list.nil
+var_of.equations._eqn_2 : ∀ (ᾰ : list term), var_of (term.app ᾰ) = none
+var_of.equations._eqn_3 : ∀ (ᾰ : string), var_of (term.cnst ᾰ) = none
+list_of.equations._eqn_1 : ∀ (ᾰ : ℕ), list_of (term.var ᾰ) = list.nil
 list_of.equations._eqn_2 : ∀ (ts : list term), list_of (term.app ts) = ts
-list_of.equations._eqn_3 : ∀ (_x : string), list_of (term.cnst _x) = list.nil
+list_of.equations._eqn_3 : ∀ (ᾰ : string), list_of (term.cnst ᾰ) = list.nil

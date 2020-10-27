@@ -1,11 +1,11 @@
 a b c : ℕ,
-_x : a = b,
-_x_1 : p (f a) (f b),
+ᾰ : a = b,
+ᾰ_1 : p (f a) (f b),
 h : p (f a) (f a)
 facts: {p (f a) (f a), p (f a) (f b), a = b}
 equalities: {{b, a}, {f a, f b}}
 ⊢ p a b
 a c : ℕ,
-_x h₁ : p (f a) (f a)
+ᾰ h₁ : p (f a) (f a)
 facts: {p (f a) (f a)}
 ⊢ p a a

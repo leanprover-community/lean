@@ -1126,7 +1126,7 @@ void initialize_builtin_exprs() {
     g_end_hole = new name("end_hole");
     register_annotation(*g_end_hole);
 
-    g_arrow_binder = new name("_x");
+    g_arrow_binder = new name("ᾰ");
 
     g_not               = new expr(mk_constant(get_not_name()));
     g_nud_table         = new parse_table();

@@ -1,5 +1,5 @@
 def n._main : bool → bool :=
-λ (_x : bool), _x.cases_on (id_rhs bool tt) (id_rhs bool ff)
+λ (ᾰ : bool), ᾰ.cases_on (id_rhs bool tt) (id_rhs bool ff)
 n : bool → bool → bool → bool
 n._main : bool → bool
 n._main.equations._eqn_1 : n._main ff = tt
@@ -8,7 +8,7 @@ n._sunfold : bool → bool → bool → bool
 n.equations._eqn_1 : ∀ (a b : bool), n a b ff = tt
 n.equations._eqn_2 : ∀ (a b : bool), n a b tt = ff
 meta def m : bool → bool :=
-λ (_x : bool), _x.cases_on (id_rhs bool tt) (id_rhs bool ff)
+λ (ᾰ : bool), ᾰ.cases_on (id_rhs bool tt) (id_rhs bool ff)
 m : bool → bool
 ff
 add_defn_eqns.lean:27:0: error: failed to prove recursive application is decreasing, well founded relation
@@ -77,11 +77,11 @@ def vec.map._main : Π {α : Type u} {β : Type v}, (α → β) → Π (n : ℕ)
                  _
                  «_»
                  _F)
-            (λ {n_1 : ℕ} (_x : α) (_x_1 : vec α n_1) (H_1 : n = n_1.succ),
+            (λ {n_1 : ℕ} (ᾰ : α) (ᾰ_1 : vec α n_1) (H_1 : n = n_1.succ),
                eq.rec
                  (λ («_» : vec α n_1.succ) (_F : nat.below (λ (n : ℕ), vec α n → vec β n) n_1.succ)
-                  (H_2 : «_» == vec.cons _x _x_1),
-                    eq.rec (id_rhs (vec β n_1.succ) (vec.cons (f _x) (_F.fst.fst _x_1))) _)
+                  (H_2 : «_» == vec.cons ᾰ ᾰ_1),
+                    eq.rec (id_rhs (vec β n_1.succ) (vec.cons (f ᾰ) (_F.fst.fst ᾰ_1))) _)
                  _
                  «_»
                  _F)
@@ -115,11 +115,11 @@ def vec.map'._main : Π {α : Type u} {β : Type v}, (α → β) → Π {n : ℕ
                  _
                  «_»
                  _F)
-            (λ {n_1 : ℕ} (_x : α) (_x_1 : vec α n_1) (H_1 : n = n_1.succ),
+            (λ {n_1 : ℕ} (ᾰ : α) (ᾰ_1 : vec α n_1) (H_1 : n = n_1.succ),
                eq.rec
                  (λ («_» : vec α n_1.succ) (_F : nat.below (λ {n : ℕ}, vec α n → vec β n) n_1.succ)
-                  (H_2 : «_» == vec.cons _x _x_1),
-                    eq.rec (id_rhs (vec β n_1.succ) (vec.cons (f _x) (_F.fst.fst _x_1))) _)
+                  (H_2 : «_» == vec.cons ᾰ ᾰ_1),
+                    eq.rec (id_rhs (vec β n_1.succ) (vec.cons (f ᾰ) (_F.fst.fst ᾰ_1))) _)
                  _
                  «_»
                  _F)

@@ -1,6 +1,6 @@
-λ {α : Type ?} [c : has_add α] (_x _x_1 : α), @has_add.add α c _x _x_1
+λ {α : Type ?} [c : has_add α] (ᾰ ᾰ_1 : α), @has_add.add α c ᾰ ᾰ_1
 λ (n : nat), n.succ
-λ (_x : nat), @has_add.add nat nat.has_add a _x
-λ (x _x : nat), @has_add.add nat nat.has_add x _x
+λ (ᾰ : nat), @has_add.add nat nat.has_add a ᾰ
+λ (x ᾰ : nat), @has_add.add nat nat.has_add x ᾰ
 @has_add.add nat nat.has_add
 @has_add.add nat nat.has_add a

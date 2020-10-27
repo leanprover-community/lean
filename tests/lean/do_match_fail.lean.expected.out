@@ -1,8 +1,8 @@
 do_match_fail.lean:8:2: error: match failed
 state:
 p q : Prop,
-_x : p,
-_x_1 : q
+ᾰ : p,
+ᾰ_1 : q
 ⊢ p
 do_match_fail.lean:20:3: error: non-exhaustive match, the following cases are missing:
 _example._match_1 list.nil

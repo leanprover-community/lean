@@ -10,7 +10,7 @@ eqT t1 t2 ->
 t1 = t2 :=
 begin
 intros,
-simp [eqT] at _x,
+simp [eqT] at ᾰ,
 assumption
 end
 

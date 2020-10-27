@@ -55,13 +55,13 @@ set_option trace.smt.ematch true
 lemma aval_asimp_const (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
 begin [smt]
  induction a,
- all_goals {destruct (asimp_const a__x_1), all_goals {destruct (asimp_const a__x), eblast}}
+ all_goals {destruct (asimp_const a_ᾰ_1), all_goals {destruct (asimp_const a_ᾰ), eblast}}
 end
 
 lemma ex2 (a : aexp) (s : state) : aval (asimp_const a) s = aval a s :=
 begin [smt]
  induction a,
- all_goals {destruct (asimp_const a__x_1), all_goals {destruct (asimp_const a__x), eblast_using [asimp_const, aval]}}
+ all_goals {destruct (asimp_const a_ᾰ_1), all_goals {destruct (asimp_const a_ᾰ), eblast_using [asimp_const, aval]}}
 end
 
 end imp

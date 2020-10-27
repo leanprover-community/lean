@@ -15,7 +15,7 @@ def value_2 (x : option nat) (H : is_some x)
 begin
    destruct x; intros,
    {destruct H,
-    intros, rw a at _x},
+    intros, rw a at ᾰ},
    {refl}
 end
 
@@ -27,6 +27,6 @@ def value_3 (x : option nat) (H : is_some' x)
 begin
    destruct x; intros,
    {destruct H,
-    intros, clear a_1, rw a at _x, contradiction},
+    intros, clear a_1, rw a at ᾰ, contradiction},
    {assumption}
 end
