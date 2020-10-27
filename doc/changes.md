@@ -1,3 +1,16 @@
+3.22.0c (27 October 2020)
+-------------------------
+
+Features:
+- Improve error handling of `for` and `find` in `conv` mode (#482, #485)
+
+Bug fixes:
+- Fix typos in docstrings for `tactic.focus` and `tactic.focus'` (#483)
+
+Changes:
+- Remove `lean --doc` (which never actually did anything) (#480)
+- Add `decidable_*` assumptions to `linear_order` and remove `decidable_linear_order` (#484)
+
 3.21.0c (12 October 2020)
 -------------------------
 
