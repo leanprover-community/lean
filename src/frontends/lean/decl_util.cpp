@@ -106,6 +106,29 @@ end zoo
 ```
 
 */
+optional<name> heuristic_inst_name(name const & ns, expr const & type) {
+    expr it = type;
+    while (is_pi(it)) it = binding_body(it);
+    expr const & C = get_app_fn(it);
+    if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
+        name class_name = const_name(C);
+        name arg_name = const_name(get_app_fn(app_arg(it)));
+        if (class_name == ns && class_name.is_string())
+            class_name = class_name.get_string();
+        else if (is_prefix_of(ns, class_name))
+            class_name = class_name.replace_prefix(ns, name());
+        if (is_prefix_of(ns, arg_name))
+            arg_name = arg_name.replace_prefix(ns, name());
+        return optional<name>(arg_name + class_name);
+    } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
+        name class_name = const_name(C);
+        if (is_prefix_of(ns, class_name))
+            class_name = class_name.replace_prefix(ns, name());
+        return optional<name>(class_name);
+    } else {
+        return {};
+    }
+}
 
 expr parse_single_header(parser & p, declaration_name_scope & scope,
                          buffer <name> & lp_names, buffer <expr> & params,
@@ -137,31 +160,13 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
         if (used_match_idx())
             throw parser_error("invalid instance, pattern matching cannot be used in the type of anonymous instance declarations", c_pos);
         /* Try to synthesize name */
-        expr it = type;
-        while (is_pi(it)) it = binding_body(it);
-        expr const & C = get_app_fn(it);
-        name ns = get_namespace(p.env());
-        if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            /* See the note "Naming instances" above. */
-            name class_name = const_name(C);
-            name arg_name = const_name(get_app_fn(app_arg(it)));
-            if (class_name == ns && class_name.is_string())
-                class_name = class_name.get_string();
-            else if (is_prefix_of(ns, class_name))
-                class_name = class_name.replace_prefix(ns, name());
-            if (is_prefix_of(ns, arg_name))
-                arg_name = arg_name.replace_prefix(ns, name());
-            c_name = arg_name + class_name;
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
-            name class_name = const_name(C);
-            if (is_prefix_of(ns, class_name))
-                class_name = class_name.replace_prefix(ns, name());
-            c_name = class_name;
+        if (auto n = heuristic_inst_name(get_namespace(p.env()), type)) {
+            c_name = *n;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
         }
+        scope.set_name(c_name);
     }
     lean_assert(!c_name.is_anonymous());
     return p.save_pos(mk_local(c_name, type), c_pos);
@@ -187,31 +192,13 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
     if (is_instance && c_name.is_anonymous()) {
         if (used_match_idx())
             throw parser_error("invalid instance, pattern matching cannot be used in the type of anonymous instance declarations", c_pos);
-        expr it = type;
-        while (is_pi(it)) it = binding_body(it);
-        expr const & C = get_app_fn(it);
-        name ns = get_namespace(p.env());
-        if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-            /* See the note "Naming instances" above. */
-            name class_name = const_name(C);
-            name arg_name = const_name(get_app_fn(app_arg(it)));
-            if (class_name == ns && class_name.is_string())
-                class_name = class_name.get_string();
-            else if (is_prefix_of(ns, class_name))
-                class_name = class_name.replace_prefix(ns, name());
-            if (is_prefix_of(ns, arg_name))
-                arg_name = arg_name.replace_prefix(ns, name());
-            c_name = arg_name + class_name;
-            scope.set_name(c_name);
-        } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
-            name class_name = const_name(C);
-            if (is_prefix_of(ns, class_name))
-                class_name = class_name.replace_prefix(ns, name());
-            c_name = class_name;
+        if (auto n = heuristic_inst_name(get_namespace(p.env()), type)) {
+            c_name = *n;
         } else {
             p.maybe_throw_error({"failed to synthesize instance name, name should be provided explicitly", c_pos});
             c_name = mk_unused_name(p.env(), "_inst");
         }
+        scope.set_name(c_name);
     }
     lean_assert(!c_name.is_anonymous());
     return mk_local(c_name, type);
