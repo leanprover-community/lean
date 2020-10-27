@@ -94,6 +94,7 @@ class module_mgr {
     bool m_server_mode = false;
     bool m_save_olean = false;
     bool m_use_old_oleans = false;
+    bool m_report_widgets = true;
 
     search_path m_path;
     environment m_initial_env;
@@ -138,6 +139,8 @@ public:
 
     void set_use_old_oleans(bool use_old_oleans) { m_use_old_oleans = use_old_oleans; }
     bool get_use_old_oleans() const { return m_use_old_oleans; }
+    void set_report_widgets(bool report_widgets) { m_report_widgets = report_widgets; }
+    bool get_report_widgets() const { return m_report_widgets; }
 
     environment get_initial_env() const { return m_initial_env; }
     options get_options() const { return m_ios.get_options(); }

@@ -11,6 +11,15 @@ universes u v
 inductive format.color
 | red | green | orange | blue | pink | cyan | grey
 
+def format.color.to_string : format.color → string
+| format.color.red    := "red"
+| format.color.green  := "green"
+| format.color.orange := "orange"
+| format.color.blue   := "blue"
+| format.color.pink   := "pink"
+| format.color.cyan   := "cyan"
+| format.color.grey   := "grey"
+
 /-- Format is a rich string with highlighting and information about how tabs should be put in if linebreaks are needed. A 'pretty string'. -/
 meta constant format : Type
 /-- Indicate that it is ok to put a linebreak in here if the line is too long. -/

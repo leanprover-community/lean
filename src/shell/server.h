@@ -81,8 +81,6 @@ class server : public module_vfs {
     std::unique_ptr<task_queue> m_tq;
     fs_module_vfs m_fs_vfs;
 
-    cancellation_token m_bg_task_ctok;
-
     template <class Msg>
     void send_msg(Msg const &);
 
@@ -97,6 +95,8 @@ class server : public module_vfs {
     cmd_res handle_sync(cmd_req const & req);
     task<cmd_res> handle_complete(cmd_req const & req);
     task<cmd_res> handle_info(cmd_req const & req);
+    task<cmd_res> handle_widget_event(cmd_req const & req);
+    task<cmd_res> handle_get_widget(cmd_req const & req);
     task<cmd_res> handle_hole(cmd_req const & req);
     cmd_res handle_hole_commands(cmd_req const & req);
     cmd_res handle_all_hole_commands(cmd_req const & req);
@@ -109,7 +109,8 @@ class server : public module_vfs {
 
 public:
     server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,
-        bool use_old_oleans = false);
+        bool use_old_oleans = false,
+        bool report_widgets = true);
     ~server();
 
     std::shared_ptr<module_info> load_module(module_id const & id, bool can_use_olean) override;

@@ -54,7 +54,7 @@ begin
   existsi hlt, cases hin, assumption
 end
 
-@[simp] lemma fin.mk_eq {n : nat} {i j : nat} (h₁ : i < n) (h₂ : j < n) (h₃ : i ≠ j) : fin.mk i h₁ ≠ fin.mk j h₂ :=
+@[simp] lemma fin.mk_eq {n : nat} {i j : nat} (h₁ : i < n) (h₂ : j < n) (h₃ : i ≠ j) : (⟨i, h₁⟩ : fin n) ≠ ⟨j, h₂⟩ :=
 fin.ne_of_vne h₃
 
 lemma in_heap_write_of_in_heap {α β : Type} {h : heap} {r₁ : ref β} {r₂ : ref α} (a : α) : ∀ (hin₁ : in_heap r₁ h) (hin₂ : in_heap r₂ h), in_heap r₁ (write h r₂ hin₂ a) :=

@@ -199,17 +199,4 @@ protected lemma bit1_ne_zero (n : ℕ) : bit1 n ≠ 0 :=
 show succ (n + n) ≠ 0, from
 λ h, nat.no_confusion h
 
-/- Exponentiation -/
-
-protected def pow (b : ℕ) : ℕ → ℕ
-| 0        := 1
-| (succ n) := pow n * b
-
-instance : has_pow nat nat :=
-⟨nat.pow⟩
-
-lemma pow_succ (b n : ℕ) : b^(succ n) = b^n * b := rfl
-
-@[simp] lemma pow_zero (b : ℕ) : b^0 = 1 := rfl
-
 end nat

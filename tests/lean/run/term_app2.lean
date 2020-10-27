@@ -10,7 +10,7 @@ end
 lemma nat.lt_one_add_of_lt {a b : nat} : a < b → a < 1 + b :=
 begin
   intro h,
-  have aux := lt.trans h (nat.lt_succ_self _),
+  have aux := lt_trans h (nat.lt_succ_self _),
   rwa [<- nat.add_one, nat.add_comm] at aux
 end
 

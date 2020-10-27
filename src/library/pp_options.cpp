@@ -323,6 +323,7 @@ name const & get_pp_numerals_name() { return *g_pp_numerals; }
 name const & get_pp_strings_name() { return *g_pp_strings; }
 name const & get_pp_use_holes_name() { return *g_pp_use_holes; }
 name const & get_pp_binder_types_name() { return *g_pp_binder_types; }
+name const & get_pp_generalized_field_notation_name() { return *g_pp_generalized_field_notation; }
 
 unsigned get_pp_max_depth(options const & opts)         { return opts.get_unsigned(*g_pp_max_depth, LEAN_DEFAULT_PP_MAX_DEPTH); }
 unsigned get_pp_max_steps(options const & opts)         { return opts.get_unsigned(*g_pp_max_steps, LEAN_DEFAULT_PP_MAX_STEPS); }

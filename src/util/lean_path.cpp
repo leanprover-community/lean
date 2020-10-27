@@ -223,7 +223,7 @@ std::string find_file(search_path const & paths, std::string const & base, optio
             if (auto r = check_file(path, fname.to_string(get_dir_sep()), ext))
                 return *r;
         }
-        throw lean_file_not_found_exception(fname.to_string());
+        throw lean_file_not_found_exception(fname.to_string(get_dir_sep()));
     }
 }
 

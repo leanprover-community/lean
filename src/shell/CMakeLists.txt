@@ -1,15 +1,15 @@
-add_executable(lean lean.cpp server.cpp leandoc.cpp)
+add_executable(lean lean.cpp server.cpp)
 target_link_libraries(lean leanstatic)
 install(TARGETS lean DESTINATION bin)
 
-add_executable(lean_js lean_js.cpp lean_js_main.cpp server.cpp leandoc.cpp)
+add_executable(lean_js lean_js.cpp lean_js_main.cpp server.cpp)
 if(${EMSCRIPTEN})
     # This currently fails to build in the docker container
     # skip it for now so that tests can proceed
     set_target_properties(lean_js PROPERTIES EXCLUDE_FROM_ALL 1)
 endif()
 target_link_libraries(lean_js leanstatic)
-add_library(shell_js OBJECT lean_js.cpp server.cpp leandoc.cpp)
+add_library(shell_js OBJECT lean_js.cpp server.cpp)
 
 if(${EMSCRIPTEN})
     add_dependencies(shell_js gmp)
@@ -42,11 +42,11 @@ if(${EMSCRIPTEN})
 
     set(LEAN_JS_OPTS "-s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"FS\"]'")
 
-    add_executable(lean_js_wasm lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
+    add_executable(lean_js_wasm lean_js.cpp lean_js_new.cpp server.cpp)
     target_link_libraries(lean_js_wasm leanstatic)
     set_target_properties(lean_js_wasm PROPERTIES LINK_FLAGS "-s WASM=1 ${LEAN_JS_OPTS}")
 
-    add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp leandoc.cpp)
+    add_executable(lean_js_js lean_js.cpp lean_js_new.cpp server.cpp)
     target_link_libraries(lean_js_js leanstatic)
     set_target_properties(lean_js_js PROPERTIES LINK_FLAGS "-s WASM=0 ${LEAN_JS_OPTS}")
 else()
@@ -246,6 +246,17 @@ FOREACH(T ${LEANITTESTS})
 ENDFOREACH(T)
 endif()
 
+if("${MULTI_THREAD}" MATCHES "ON")
+# LEAN WIDGET TESTS
+file(GLOB LEANWIDGETTESTS "${LEAN_SOURCE_DIR}/../tests/lean/widget/*.input")
+FOREACH(T ${LEANWIDGETTESTS})
+  GET_FILENAME_COMPONENT(T_NAME ${T} NAME)
+  add_test(NAME "leanwidgettest_${T_NAME}"
+           WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../tests/lean/widget"
+           COMMAND bash "./test_single.sh" "${CMAKE_CURRENT_BINARY_DIR}/lean" ${T_NAME})
+ENDFOREACH(T)
+endif()
+
 # LEAN SLOW TESTS
 file(GLOB LEANSLOWTESTS "${LEAN_SOURCE_DIR}/../tests/lean/slow/*.lean")
 FOREACH(T ${LEANSLOWTESTS})
@@ -262,15 +273,6 @@ ENDFOREACH(T)
 #   add_test(NAME "leannativetest_${T_NAME}"
 #            WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../tests/lean/native_run"
 #            COMMAND bash "./test_single.sh" "${CMAKE_CURRENT_BINARY_DIR}/lean" ${T_NAME})
-# ENDFOREACH(T)
-
-# # LEAN DOCS
-# file(GLOB LEANDOCS "${LEAN_SOURCE_DIR}/../doc/lean/*.org")
-# FOREACH(T ${LEANDOCS})
-#   GET_FILENAME_COMPONENT(T_NAME ${T} NAME)
-#   add_test(NAME "leandoc_${T_NAME}"
-#            WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../doc/lean"
-#            COMMAND bash "./test_single.sh" "${CMAKE_CURRENT_BINARY_DIR}/lean" ${T})
 # ENDFOREACH(T)
 
 # # Create the script lean.sh

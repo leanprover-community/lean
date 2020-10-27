@@ -1,7 +1,12 @@
 1859.lean:7:0: warning: declaration 'X' uses sorry
-1859.lean:8:35: error: type mismatch at field 'x'
+1859.lean:8:0: error: type mismatch at field 'x'
   A.x
 has type
   T1.O ?m_1
 but is expected to have type
   T1.O α
+1859.lean:8:35: error: don't know how to synthesize placeholder (?x)
+context:
+α : Type,
+_inst_1 : T3 α
+⊢ T1.O α

@@ -1,0 +1,4 @@
+{"msgs":[{"caption":"trace output","file_name":"widget5.lean","pos_col":0,"pos_line":3,"severity":"information","text":"successfully rendered widget\n"}],"response":"all_messages"}
+{"message":"file invalidated","response":"ok","seq_num":0}
+{"record":{"widget":{"column":0,"id":15,"line":3}},"response":"ok","seq_num":45}
+{"response":"ok","seq_num":1,"widget":{"column":0,"html":{"c":[{"a":{"style":{"color":"blue"}},"c":["hi"],"t":"p"}]},"id":15,"line":3}}

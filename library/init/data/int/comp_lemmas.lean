@@ -39,9 +39,6 @@ protected lemma ne_neg_of_pos {a b : ℤ} : a > 0 → b > 0 → a ≠ -b :=
 
 /- 2. Lemmas for proving that positive int numerals are nonneg and positive -/
 
-protected lemma int.zero_lt_one : (0:ℤ) < 1 :=
-dec_trivial
-
 protected lemma one_pos : (1:int) > 0 :=
 int.zero_lt_one
 

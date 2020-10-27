@@ -453,7 +453,9 @@ struct ts_vm_obj::to_ts_vm_obj_fn {
         case vm_obj_kind::External:      r = visit_external(o); break;
         case vm_obj_kind::NativeClosure: r = visit_native_closure(o); break;
         }
-        m_objs.push_back(r.raw());
+        // Leak r so that the vm_obj destructor is never called.
+        // We use a different allocator here so it needs to be deallocated in ts_vm_obj::data::~data
+        m_objs.push_back(vm_obj(r).steal_ptr());
         m_cache.insert(mk_pair(o.raw(), r));
         return r;
     }
@@ -1081,12 +1083,12 @@ vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, vm_cfun
 
 vm_decl_cell::vm_decl_cell(name const & n, unsigned idx, unsigned arity, unsigned code_sz, vm_instr const * code,
                            list<vm_local_info> const & args_info, optional<pos_info> const & pos,
-                           optional<unsigned> const & overridden,
+                           optional<unsigned> const & overridden_idx,
                            optional<std::string> const & olean):
        m_rc(0), m_kind(vm_decl_kind::Bytecode), m_name(n), m_idx(idx), m_arity(arity),
        m_args_info(args_info), m_pos(pos),
        m_olean(olean),
-       m_overridden(overridden),
+       m_overridden_idx(overridden_idx),
        m_code_size(code_sz) {
     m_code = new vm_instr[code_sz];
     for (unsigned i = 0; i < code_sz; i++)
@@ -1230,6 +1232,11 @@ struct vm_decls : public environment_extension {
                 } else { return optional<expr>(); } });
     }
 
+    optional<vm_decl> get_decl_no_override(name const & n) {
+        vm_decl const * d = m_decls.find(get_vm_index(n));
+        return !d ? optional<vm_decl>() : some<vm_decl>(*d);
+    }
+
     void add_override(name const & n, name const & n_override) {
         auto idx = get_vm_index(n);
         auto idx_override = get_vm_index(n_override);
@@ -1298,40 +1305,7 @@ struct vm_type_checker {
     }
 };
 
-environment add_override(environment const & env, name const & n, name const & n_ovr, optional<name> const & ns) {
-    auto ext = get_extension(env);
-    vm_type_checker checker(env, ext);
-    auto t = env.get(n).get_type();
-    checker(n, n_ovr);
-    ext.add_override(n, n_ovr);
-    optional<inductive::inductive_decl> decl = inductive::is_inductive_decl(env, n);
-    if (is_type(t)) {
-        if (!decl && !env.get(n).is_constant_assumption()) {
-            throw exception(sstream() << "overridden type '" << n << "' is neither an inductive type nor a constant.");
-        }
-        if (decl) {
-            if (!ns) {
-                throw exception(sstream() << "overridden inductive type '" << n <<
-                                "' must specify a namespace which contains overrides for its recursor and constructors.");
-            }
-            for (auto intro : decl->m_intro_rules) {
-                name n = mlocal_pp_name(intro);
-                name n_ovr(*ns + n.drop_prefix());
-                checker(n, n_ovr);
-                ext.add_override(n, n_ovr);
-            }
-            name rec = inductive::get_elim_name(n);
-            name rec_ovr(*ns, "rec");
-            checker(rec, rec_ovr);
-            ext.add_override(rec, rec_ovr);
-            name destr = inductive::get_cases_on_name(n);
-            name destr_ovr(*ns, "cases_on");
-            checker(destr, destr_ovr);
-            ext.add_override(destr, destr_ovr);
-        }
-    }
-    return update(env, ext);
-}
+
 
 static environment add_native(environment const & env, name const & n, unsigned arity, vm_cfunction fn) {
     auto ext = get_extension(env);
@@ -1443,7 +1417,8 @@ struct vm_code_modification : public modification {
 
     void serialize(serializer & s) const override {
         unsigned code_sz = m_decl.get_code_size();
-        s << m_decl.get_name() << m_decl.get_arity() << code_sz << m_decl.get_pos_info() << m_decl.get_overridden();
+        optional<name> overridden_name = m_decl.is_overridden() ? optional<name>(get_vm_name(*m_decl.get_overridden_idx())) : optional<name>();
+        s << m_decl.get_name() << m_decl.get_arity() << code_sz << m_decl.get_pos_info() << overridden_name;
         write_list(s, m_decl.get_args_info());
         auto c = m_decl.get_code();
         for (unsigned i = 0; i < code_sz; i++)
@@ -1451,15 +1426,16 @@ struct vm_code_modification : public modification {
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
-        name fn; unsigned arity; unsigned code_sz; optional<pos_info> pos; optional<unsigned> overridden;
-        d >> fn >> arity >> code_sz >> pos >> overridden;
+        name fn; unsigned arity; unsigned code_sz; optional<pos_info> pos; optional<name> overridden_name;
+        d >> fn >> arity >> code_sz >> pos >> overridden_name;
+        optional<unsigned int> overridden_idx = overridden_name.has_value() ? optional<unsigned>(get_vm_index(*overridden_name)) : optional<unsigned>();
         auto args_info = read_list<vm_local_info>(d);
         buffer<vm_instr> code;
         for (unsigned i = 0; i < code_sz; i++)
             code.emplace_back(read_vm_instr(d));
         optional<std::string> file_name; // TODO(gabriel)
         return std::make_shared<vm_code_modification>(
-                vm_decl(fn, get_vm_index(fn), arity, code_sz, code.data(), args_info, pos, overridden, file_name));
+                vm_decl(fn, get_vm_index(fn), arity, code_sz, code.data(), args_info, pos, overridden_idx, file_name));
     }
 };
 
@@ -1527,20 +1503,54 @@ environment add_vm_code(environment const & env, name const & fn, unsigned arity
     return update_vm_code(new_env, fn, code_sz, code, args_info, pos, enable_overrides);
 }
 
+environment add_override(environment const & env, name const & n, name const & n_ovr, optional<name> const & ns) {
+    auto ext = get_extension(env);
+    vm_type_checker checker(env, ext);
+    auto t = env.get(n).get_type();
+    checker(n, n_ovr);
+    ext.add_override(n, n_ovr);
+    optional<inductive::inductive_decl> decl = inductive::is_inductive_decl(env, n);
+    if (is_type(t)) {
+        if (!decl && !env.get(n).is_constant_assumption()) {
+            throw exception(sstream() << "overridden type '" << n << "' is neither an inductive type nor a constant.");
+        }
+        if (decl) {
+            if (!ns) {
+                throw exception(sstream() << "overridden inductive type '" << n <<
+                                "' must specify a namespace which contains overrides for its recursor and constructors.");
+            }
+            for (auto intro : decl->m_intro_rules) {
+                name n = mlocal_pp_name(intro);
+                name n_ovr(*ns + n.drop_prefix());
+                checker(n, n_ovr);
+                ext.add_override(n, n_ovr);
+            }
+            name rec = inductive::get_elim_name(n);
+            name rec_ovr(*ns, "rec");
+            checker(rec, rec_ovr);
+            ext.add_override(rec, rec_ovr);
+            name destr = inductive::get_cases_on_name(n);
+            name destr_ovr(*ns, "cases_on");
+            checker(destr, destr_ovr);
+            ext.add_override(destr, destr_ovr);
+        }
+    }
+    environment new_env = update(env, ext);
+    optional<vm_decl> d = ext.get_decl_no_override(n);
+    if (!d) {return new_env; }
+    return module::add_and_perform(new_env, std::make_shared<vm_code_modification>(*d));
+}
+
 optional<vm_decl> get_vm_override_decl(environment const & env, vm_decl const & decl,
                                        bool enable_overrides) {
     vm_decls const & ext = get_extension(env);
-    if (!enable_overrides)
+    if (!enable_overrides || !decl.is_overridden())
         return optional<vm_decl>();
     auto d = decl;
-    if (auto idx = d.get_overridden()) {
+    while (auto idx = d.get_overridden_idx()) {
         d = *ext.m_decls.find(*idx);
-        while (auto idx = d.get_overridden()) {
-            d = *ext.m_decls.find(*idx);
-        }
-        return optional<vm_decl>(d);
     }
-    return optional<vm_decl>();
+    return optional<vm_decl>(d);
 }
 
 optional<vm_decl> get_vm_decl_no_override(environment const & env, name const & decl_name) {
@@ -1632,12 +1642,10 @@ vm_decl const & vm_state::get_decl_no_override(unsigned idx) const {
 
 vm_decl const & vm_state::get_decl(unsigned idx) const {
     vm_decl const & d = get_decl_no_override(idx);
-    optional<unsigned> o = d.get_overridden();
-    if (o && get_options().get_bool(*g_vm_override_enabled, true)) {
-        return get_decl(o.value());
-    } else {
-        return d;
-    }
+    if (!d.is_overridden() || !get_options().get_bool(*g_vm_override_enabled, true)) { return d; }
+    optional<unsigned> o_idx = d.get_overridden_idx();
+    lean_assert(o_idx);
+    return get_decl(o_idx.value());
 }
 
 vm_cases_function const & vm_state::get_builtin_cases(unsigned idx) const {

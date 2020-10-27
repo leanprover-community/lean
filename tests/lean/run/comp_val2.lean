@@ -9,8 +9,12 @@ example : "abc" ≠ "cde" := by comp_val
 example : "abc" ≠ "" := by comp_val
 example : "" ≠ "cde" := by comp_val
 
-example : @fin.mk 5 3 dec_trivial ≠ @fin.mk 5 4 dec_trivial :=
+example : (⟨3, dec_trivial⟩ : fin 5) ≠ ⟨4, dec_trivial⟩ :=
 by comp_val
 
-example : @fin.mk 5 4 dec_trivial ≠ @fin.mk 5 1 dec_trivial :=
+example : (⟨4, dec_trivial⟩ : fin 5) ≠ ⟨1, dec_trivial⟩ :=
+by comp_val
+
+example {P : ℕ → Prop} {h1 : P 1} {h5 : P 5} :
+  (⟨1, h1⟩ : {n // P n}) ≠ ⟨5, h5⟩ :=
 by comp_val

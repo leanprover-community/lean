@@ -53,7 +53,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/parser_config.h"
 #include "frontends/lean/scanner.h"
 #include "frontends/lean/tokens.h"
-
+#include "library/vm/vm_eformat.h"
 #include "library/trace.h"
 
 namespace lean {
@@ -118,9 +118,14 @@ static optional<unsigned> to_unsigned(expr const & e) {
 }
 
 static name * g_pp_using_anonymous_constructor = nullptr;
+static name * g_pp_nodot = nullptr;
 
 bool pp_using_anonymous_constructor(environment const & env, name const & n) {
     return has_attribute(env, *g_pp_using_anonymous_constructor, n);
+}
+
+bool pp_nodot(environment const & env, name const & n) {
+    return has_attribute(env, *g_pp_nodot, n);
 }
 
 void initialize_pp() {
@@ -147,6 +152,7 @@ void initialize_pp() {
     g_nat_numeral_pp  = new nat_numeral_pp();
 
     g_pp_using_anonymous_constructor = new name("pp_using_anonymous_constructor");
+    g_pp_nodot = new name("pp_nodot");
 
     register_system_attribute(basic_attribute::with_check(
                                   *g_pp_using_anonymous_constructor,
@@ -158,9 +164,11 @@ void initialize_pp() {
                                               "invalid 'pp_using_anonymous_constructor' use, "
                                               "only structures can be marked with this attribute");
                                               }));
+    register_system_attribute(basic_attribute(*g_pp_nodot, "Do not pretty-print using dot-notation."));
 }
 
 void finalize_pp() {
+    delete g_pp_nodot;
     delete g_pp_using_anonymous_constructor;
     delete g_nat_numeral_pp;
     delete g_ellipsis_n_fmt;
@@ -213,8 +221,8 @@ static name extract_suggestion(name const & m) {
     lean_assert(!r.is_anonymous());
     return r;
 }
-
-name pretty_fn::mk_metavar_name(name const & m, optional<name> const & prefix) {
+template<class T>
+name pretty_fn<T>::mk_metavar_name(name const & m, optional<name> const & prefix) {
     if (auto it = m_purify_meta_table.find(m))
         return *it;
     if (has_embedded_suggestion(m)) {
@@ -239,8 +247,8 @@ name pretty_fn::mk_metavar_name(name const & m, optional<name> const & prefix) {
         return new_m;
     }
 }
-
-name pretty_fn::mk_local_name(name const & n, name const & suggested) {
+template<class T>
+name pretty_fn<T>::mk_local_name(name const & n, name const & suggested) {
     if (!m_purify_locals)
         return suggested;
     if (auto it = m_purify_local_table.find(n))
@@ -255,8 +263,8 @@ name pretty_fn::mk_local_name(name const & n, name const & suggested) {
     m_purify_local_table.insert(n, r);
     return r;
 }
-
-level pretty_fn::purify(level const & l) {
+template<class T>
+level pretty_fn<T>::purify(level const & l) {
     if (!m_universes || !m_purify_metavars || !has_meta(l))
         return l;
     return replace(l, [&](level const & l) {
@@ -269,8 +277,8 @@ level pretty_fn::purify(level const & l) {
             return none_level();
         });
 }
-
-expr pretty_fn::infer_type(expr const & e) {
+template<class T>
+expr pretty_fn<T>::infer_type(expr const & e) {
     try {
         return m_ctx.infer(e);
     } catch (exception &) {
@@ -289,7 +297,8 @@ expr pretty_fn::infer_type(expr const & e) {
     We use the test (mlocal_name(e) == mlocal_pp_name(e)) to decide whether
     the user provided the name or not.
 */
-expr pretty_fn::purify(expr const & e) {
+template<class T>
+expr pretty_fn<T>::purify(expr const & e) {
     if (!has_expr_metavar(e) && !has_local(e) && (!m_universes || !has_univ_metavar(e)))
         return e;
     return replace(e, [&](expr const & e, unsigned) {
@@ -311,8 +320,8 @@ expr pretty_fn::purify(expr const & e) {
             }
         });
 }
-
-void pretty_fn::set_options_core(options const & _o) {
+template<class T>
+void pretty_fn<T>::set_options_core(options const & _o) {
     options o = _o;
     bool all          = get_pp_all(o);
     if (all) {
@@ -326,6 +335,7 @@ void pretty_fn::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_numerals_name(), false);
         o = o.update_if_undef(get_pp_strings_name(), false);
         o = o.update_if_undef(get_pp_binder_types_name(), true);
+        o = o.update_if_undef(get_pp_generalized_field_notation_name(), false);
     }
     m_options           = o;
     m_indent            = get_pp_indent(o);
@@ -359,22 +369,22 @@ void pretty_fn::set_options_core(options const & _o) {
     m_generalized_field_notation = get_pp_generalized_field_notation(o);
     m_links             = get_pp_links(o);
 }
-
-void pretty_fn::set_options(options const & o) {
+template<class T>
+void pretty_fn<T>::set_options(options const & o) {
     if (is_eqp(o, m_options))
         return;
     set_options_core(o);
 }
-
-format pretty_fn::pp_child(level const & l) {
+template<class T>
+format pretty_fn<T>::pp_child(level const & l) {
     if (is_explicit(l) || is_param(l) || is_meta(l)) {
         return pp_level(l);
     } else {
         return paren(pp_level(l));
     }
 }
-
-format pretty_fn::pp_max(level l) {
+template<class T>
+format pretty_fn<T>::pp_max(level l) {
     lean_assert(is_max(l) || is_imax(l));
     format r  = format(is_max(l) ? "max" : "imax");
     level lhs = is_max(l) ? max_lhs(l) : imax_lhs(l);
@@ -389,8 +399,8 @@ format pretty_fn::pp_max(level l) {
     r += nest(m_indent, compose(line(), pp_child(rhs)));
     return group(r);
 }
-
-format pretty_fn::pp_meta(level const & l) {
+template<class T>
+format pretty_fn<T>::pp_meta(level const & l) {
     if (m_universes) {
         if (is_idx_metauniv(l)) {
             return format((sstream() << "?u_" << to_meta_idx(l)).str());
@@ -403,8 +413,8 @@ format pretty_fn::pp_meta(level const & l) {
         return format("?");
     }
 }
-
-format pretty_fn::pp_level(level const & l) {
+template<class T>
+format pretty_fn<T>::pp_level(level const & l) {
     if (is_explicit(l)) {
         lean_assert(get_depth(l) > 0);
         return format(get_depth(l) - 1);
@@ -426,8 +436,8 @@ format pretty_fn::pp_level(level const & l) {
         lean_unreachable(); // LCOV_EXCL_LINE
     }
 }
-
-bool pretty_fn::is_implicit(expr const & f) {
+template<class T>
+bool pretty_fn<T>::is_implicit(expr const & f) {
     // Remark: we assume preterms do not have implicit arguments,
     // since they have not been elaborated yet.
     // Moreover, the type checker will probably produce an error
@@ -450,8 +460,8 @@ bool pretty_fn::is_implicit(expr const & f) {
         return false;
     }
 }
-
-bool pretty_fn::is_default_arg_app(expr const & e) {
+template<class T>
+bool pretty_fn<T>::is_default_arg_app(expr const & e) {
     if (m_implict || m_preterm)
         return false; // showing default arguments
     if (!closed(app_fn(e))) {
@@ -471,8 +481,8 @@ bool pretty_fn::is_default_arg_app(expr const & e) {
     } catch (exception &) { }
     return false;
 }
-
-bool pretty_fn::is_prop(expr const & e) {
+template<class T>
+bool pretty_fn<T>::is_prop(expr const & e) {
     try {
         expr t = m_ctx.relaxed_whnf(m_ctx.infer(e));
         return t == mk_Prop();
@@ -480,17 +490,13 @@ bool pretty_fn::is_prop(expr const & e) {
         return false;
     }
 }
-
-auto pretty_fn::add_paren_if_needed(result const & r, unsigned bp) -> result {
+template<class T>
+auto pretty_fn<T>::add_paren_if_needed(result const & r, unsigned bp) -> result {
     if (r.rbp() < bp) {
         return result(paren(r.fmt()));
     } else {
         return r;
     }
-}
-
-auto pretty_fn::pp_child_core(expr const & e, unsigned bp, bool ignore_hide) -> result {
-    return add_paren_if_needed(pp(e, ignore_hide), bp);
 }
 
 static expr consume_ref_annotations(expr const & e) {
@@ -546,26 +552,29 @@ static bool is_local_ref(environment const & env, expr const & e) {
     unsigned num_ref_univ_params;
     return check_local_ref(env, e, num_ref_univ_params) == LocalRef;
 }
-
-auto pretty_fn::pp_overriden_local_ref(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_overriden_local_ref(expr const & e) -> result {
     buffer<expr> args;
     expr const & fn = get_app_args(e, args);
     result res_fn;
     {
         flet<bool> set1(m_full_names, true);
+        address_scope scope(*this, expr_address::fn(args.size()));
         res_fn = pp_const(fn, some(0u));
     }
-    format fn_fmt    = res_fn.fmt();
-    if (const_name(fn).is_atomic())
-        fn_fmt = compose(format("_root_."), fn_fmt);
-    if (m_implict && has_implicit_args(fn))
-        fn_fmt = compose(*g_explicit_fmt, fn_fmt);
-    format r_fmt = mk_link(const_name(fn), fn_fmt);
+    T fn_fmt    = res_fn.fmt();
+    if (const_name(fn).is_atomic()){
+        fn_fmt = T("_root_.") + fn_fmt;
+    }
+    if (m_implict && has_implicit_args(fn)) {
+        fn_fmt = *g_explicit_fmt + fn_fmt;
+    }
+    T r_fmt = mk_link(const_name(fn), fn_fmt);
     expr curr_fn = fn;
     for (unsigned i = 0; i < args.size(); i++) {
         expr const & arg = args[i];
         if (m_implict || !is_implicit(curr_fn)) {
-            result res_arg   = pp_child(arg, max_bp());
+            result res_arg   = pp_child_at(arg, max_bp(), expr_address::app(args.size(), i));
             r_fmt = group(compose(r_fmt, nest(m_indent, compose(line(), res_arg.fmt()))));
         }
         curr_fn = mk_app(curr_fn, arg);
@@ -575,7 +584,8 @@ auto pretty_fn::pp_overriden_local_ref(expr const & e) -> result {
 
 // Return some result if \c e is of the form (c p_1 ... p_n) where
 // c is a constant, and p_i's are parameters fixed in a section.
-auto pretty_fn::pp_local_ref(expr const & e) -> optional<result> {
+template<class T>
+auto pretty_fn<T>::pp_local_ref(expr const & e) -> optional<result> {
     unsigned num_ref_univ_params;
     switch (check_local_ref(m_env, e, num_ref_univ_params)) {
     case NotLocalRef:
@@ -596,72 +606,99 @@ static bool is_coercion_fn(expr const & e) {
     return is_app_of(e, get_coe_fn_name()) && get_app_num_args(e) >= 3;
 }
 
-auto pretty_fn::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide) -> result {
+template<class T>
+auto pretty_fn<T>::pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide) -> result {
     lean_assert(is_coercion(e));
     buffer<expr> args;
     get_app_args(e, args);
-    if (args.size() == 4) {
-        return pp_child(args[3], bp, ignore_hide);
+    if (args.size() == 4) { // e = @has_coe.coe _ _ _ x
+        return pp_child_at(args[3], bp, expr_address::app(args.size(), 3), ignore_hide);
     } else {
+        // e = (@has_coe.coe _ _ _ f) x y z
         expr new_e = mk_app(args.size() - 3, args.data() + 3);
+        // new_e = f x y z
+        // [todo] pp_child needs to know that `f` now has a different address.
+        // Currently this will calculate the wrong address and cause bugs so we should give up for now.
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
-
-auto pretty_fn::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide) -> result {
+template<class T>
+auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide) -> result {
     lean_assert(is_coercion_fn(e));
     buffer<expr> args;
     get_app_args(e, args);
     if (args.size() == 3) {
-        return pp_child(args[2], bp, ignore_hide);
+        return pp_child_at(args[2], bp, expr_address::app(args.size(), 2), ignore_hide);
     } else {
         expr new_e = mk_app(args.size() - 2, args.data() + 2);
+        // [todo] pp_child needs to know that `f` now has a different address. (see above)
+        address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);
     }
 }
-
-auto pretty_fn::pp_child(expr const & e, unsigned bp, bool ignore_hide) -> result {
+template<class T>
+auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool below_implicit) -> result {
     if (is_app(e)) {
-        if (auto r = pp_local_ref(e))
-            return add_paren_if_needed(*r, bp);
+        if (auto r = pp_local_ref(e)){
+            address_reset_scope ars(*this);
+            return tag(ars.m_adr, e, add_paren_if_needed(*r, bp));
+        }
         if (m_numerals) {
-            if (auto n = to_num(e)) return pp_num(*n, bp);
+            if (auto n = to_num(e)) {
+                return tag(m_address, e, pp_num(*n, bp));
+            }
         }
         if (m_strings) {
-            if (auto r = to_string(e)) return pp_string_literal(*r);
-            if (auto r = to_char(m_ctx, e)) return pp_char_literal(*r);
+            if (auto r = to_string(e)) {
+                return tag(m_address, e, T(pp_string_literal(*r)));
+            }
+            if (auto r = to_char(m_ctx, e)) {
+                return tag(m_address, e, T(pp_char_literal(*r)));
+            }
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            return pp_child(f, bp, ignore_hide);
+            if (below_implicit) {
+                address_scope _(*this, expr_address::fn());
+                return pp_child(f, bp, ignore_hide, true);
+            } else {
+              address_reset_scope ars(*this);
+              result r;
+              { address_scope _(*this, expr_address::fn());
+                r = pp_child(f, bp, ignore_hide, true);
+              }
+              return tag(ars.m_adr, e, r);
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, bp, ignore_hide);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, bp, ignore_hide);
         }
     }
-    return pp_child_core(e, bp, ignore_hide);
+    result r = below_implicit ? pp_core(e, ignore_hide) : pp(e, ignore_hide);
+    return add_paren_if_needed(r, bp);
 }
-
-auto pretty_fn::pp_var(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_var(expr const & e) -> result {
     unsigned vidx = var_idx(e);
-    return result(compose(format("#"), format(vidx)));
+    return result(T("#") + T(vidx));
 }
-
-auto pretty_fn::pp_sort(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_sort(expr const & e) -> result {
     level u = sort_level(e);
     if (u == mk_level_zero()) {
-        return result(format("Prop"));
+        return result(T("Prop"));
     } else if (u == mk_level_one()) {
-        return result(format("Type"));
+        return result(T("Type"));
     } else if (optional<level> u1 = dec_level(u)) {
-        return result(max_bp()-1, group(format("Type") + space() + nest(5, pp_child(*u1))));
+        return result(max_bp()-1, group(T("Type") + space() + nest(5, pp_child(*u1))));
     } else {
-        return result(max_bp()-1, group(format("Sort") + space() + nest(5, pp_child(u))));
+        return result(max_bp()-1, group(T("Sort") + space() + nest(5, pp_child(u))));
     }
 }
-
-optional<name> pretty_fn::is_aliased(name const & n) const {
+template<class T>
+optional<name> pretty_fn<T>::is_aliased(name const & n) const {
     if (auto it = is_expr_aliased(m_env, n)) {
         // must check if we are not shadow by current namespace
         for (name const & ns : get_namespaces(m_env)) {
@@ -673,32 +710,32 @@ optional<name> pretty_fn::is_aliased(name const & n) const {
         return optional<name>();
     }
 }
-
-format pretty_fn::escape(name const & n) {
+template<class T>
+T pretty_fn<T>::escape(name const & n) {
     // also escape keyword-like names
     if (n.is_atomic() && n.is_string() && find(m_token_table, n.get_string())) {
         sstream ss;
         ss << "«" << n.get_string() << "»";
-        return format(ss.str());
+        return T(ss.str());
     }
-    return format(n.escape());
+    return T(n.escape());
 }
-
-format pretty_fn::mk_link(name const & dest, format const & body) {
+template<class T>
+T pretty_fn<T>::mk_link(name const & dest, T const & body) {
     if (m_links) {
-        return format((sstream() << "\xee\x80\x80" << dest << "\xee\x80\x81").str()) +
-            body + format("\xee\x80\x82");
+        return T((sstream() << "\xee\x80\x80" << dest << "\xee\x80\x81").str()) +
+            body + T("\xee\x80\x82");
     } else {
         return body;
     }
 }
-
-pretty_fn::result pretty_fn::mk_link(name const & dest, result const & body) {
+template<class T>
+auto pretty_fn<T>::mk_link(name const & dest, result const & body) -> result {
     if (!m_links) return body;
     return result(body.lbp(), body.rbp(), mk_link(dest, body.fmt()));
 }
-
-format pretty_fn::mk_link(expr const & dest, format const & body) {
+template<class T>
+T pretty_fn<T>::mk_link(expr const & dest, T const & body) {
     if (!m_links) return body;
     auto & fn = get_app_fn(dest);
     if (is_constant(fn)) {
@@ -707,15 +744,15 @@ format pretty_fn::mk_link(expr const & dest, format const & body) {
         return body;
     }
 }
-
-auto pretty_fn::pp_const(expr const & e, optional<unsigned> const & num_ref_univ_params) -> result {
+template<class T>
+auto pretty_fn<T>::pp_const(expr const & e, optional<unsigned> const & num_ref_univ_params) -> result {
     if (is_neutral_expr(e) && m_unicode)
-        return format("◾");
+        return T("◾");
     if (is_unreachable_expr(e) && m_unicode)
-        return format("⊥");
+        return T("⊥");
     name n = const_name(e);
     if (m_notation && n == get_unit_star_name())
-        return format("()");
+        return T("()");
     if (!num_ref_univ_params) {
         if (auto r = pp_local_ref(e))
             return *r;
@@ -763,11 +800,11 @@ auto pretty_fn::pp_const(expr const & e, optional<unsigned> const & num_ref_univ
             else
                 first_idx = *num_ref_univ_params;
         }
-        format r = compose(escape(n), format(".{"));
+        T r = compose(escape(n), T(".{"));
         bool first = true;
         for (unsigned i = first_idx; i < ls.size(); i++) {
             level const & l = ls[i];
-            format l_fmt = pp_level(l);
+            T l_fmt = pp_level(l);
             if (is_max(l) || is_imax(l))
                 l_fmt = paren(l_fmt);
             if (first)
@@ -776,7 +813,7 @@ auto pretty_fn::pp_const(expr const & e, optional<unsigned> const & num_ref_univ
                 r += nest(m_indent, compose(line(), l_fmt));
             first = false;
         }
-        r += format("}");
+        r += T("}");
         return result(group(r));
     } else {
         return result(escape(n));
@@ -784,33 +821,33 @@ auto pretty_fn::pp_const(expr const & e, optional<unsigned> const & num_ref_univ
 }
 
 static format pp_hole() { return format("{! !}"); }
-
-auto pretty_fn::pp_meta(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_meta(expr const & e) -> result {
     if (m_use_holes) {
-        return pp_hole();
+        return T(pp_hole());
     } else if (mlocal_name(e) != mlocal_pp_name(e)) {
-        return result(format(mlocal_pp_name(e)));
+        return result(T(mlocal_pp_name(e)));
     } else if (is_idx_metavar(e)) {
-        return result(format((sstream() << "?x_" << to_meta_idx(e)).str()));
+        return result(T((sstream() << "?x_" << to_meta_idx(e)).str()));
     } else if (is_metavar_decl_ref(e) && !m_purify_metavars) {
-        return result(format((sstream() << "?m_" << get_metavar_decl_ref_suffix(e)).str()));
+        return result(T((sstream() << "?m_" << get_metavar_decl_ref_suffix(e)).str()));
     } else if (m_purify_metavars) {
-        return result(compose(format("?"), format(mlocal_name(e))));
+        return result(compose(T("?"), T(mlocal_name(e))));
     } else {
-        return result(compose(format("?M."), format(mlocal_name(e))));
+        return result(compose(T("?M."), T(mlocal_name(e))));
     }
 }
-
-auto pretty_fn::pp_local(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_local(expr const & e) -> result {
     name n = sanitize_if_fresh(mlocal_pp_name(e));
     n = sanitize_name_generator_name(n);
     if (m_locals_full_names)
-        return result(format("<") + format(n + mlocal_name(e)) + format(">"));
+        return result(T("<") + T(n + mlocal_name(e)) + T(">"));
     else
-        return format(escape(n));
+        return T(escape(n));
 }
-
-bool pretty_fn::has_implicit_args(expr const & f) {
+template<class T>
+bool pretty_fn<T>::has_implicit_args(expr const & f) {
     if (!closed(f) || m_preterm) {
         // The Lean type checker assumes expressions are closed.
         // If preterms are being processed, then we assume
@@ -847,48 +884,52 @@ static bool is_structure_instance(environment const & env, expr const & e, bool 
     if (get_app_num_args(e) != get_arity(env.get(mk_name).get_type())) return false;
     return true;
 }
-
-auto pretty_fn::pp_structure_instance(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_structure_instance(expr const & e) -> result {
     lean_assert(is_structure_instance(m_env, e, m_implict));
     buffer<expr> args;
     expr const & mk = get_app_args(e, args);
     name const & S  = const_name(mk).get_prefix();
     unsigned num_params = *inductive::get_num_params(m_env, S);
     if (pp_using_anonymous_constructor(m_env, S)) {
-        format r;
+        T r;
         for (unsigned i = num_params; i < args.size(); i++) {
             if (i > num_params) r += line();
-            format fval_fmt     = pp(args[i]).fmt();
+            address_scope scope(*this, expr_address::app(args.size(), i));
+            T fval_fmt     = pp(args[i]).fmt();
             if (i < args.size() - 1) fval_fmt += comma();
             r += fval_fmt;
         }
-        r = group(nest(1, mk_link(const_name(mk), format("⟨")) + r + format("⟩")));
+        r = group(nest(1, mk_link(const_name(mk), T("⟨")) + r + T("⟩")));
         return result(r);
     } else {
         auto fields = get_structure_fields(m_env, S);
         lean_assert(args.size() == num_params + fields.size());
-        format r;
+        T r;
         if (m_structure_instances_qualifier)
-            r += format(S) + space() + format(".");
+            r += T(S) + space() + T(".");
         for (unsigned i = 0; i < fields.size(); i++) {
             if (i > 0 || m_structure_instances_qualifier) r += line();
             name fname          = fields[i];
             unsigned field_size = fname.utf8_size();
-            format fval_fmt     = pp(args[i + num_params]).fmt();
+            unsigned arg_idx = i + num_params;
+            address_scope scope(*this, expr_address::app(args.size(), arg_idx));
+            T fval_fmt     = pp(args[arg_idx]).fmt();
             if (i < fields.size() - 1) fval_fmt += comma();
-            r                  += mk_link(S + fname, format(fname)) + space() + *g_assign_fmt + space() + nest(field_size + 4, fval_fmt);
+            r                  += mk_link(S + fname, T(fname)) + space() + *g_assign_fmt + space() + nest(field_size + 4, fval_fmt);
         }
-        r = group(nest(1, mk_link(const_name(mk), format("{")) + r + format("}")));
+        r = group(nest(1, mk_link(const_name(mk), T("{")) + r + T("}")));
         return result(r);
     }
 }
-
-bool pretty_fn::is_field_notation_candidate(expr const & e) {
+template<class T>
+bool pretty_fn<T>::is_field_notation_candidate(expr const & e) {
     if (!is_app(e)) return false;
     expr const & f = get_app_fn(e);
     if (!is_constant(f)) return false;
     name const & fn = const_name(f);
     if (!fn.is_string()) return false;
+    if (pp_nodot(m_env, fn)) return false;
     name const & S = fn.get_prefix();
     /* The @ explicitness annotation cannot be combined with field notation, so fail on implicit args */
     if (m_implict && has_implicit_args(e)) return false;
@@ -906,96 +947,110 @@ bool pretty_fn::is_field_notation_candidate(expr const & e) {
     if (m_generalized_field_notation) {
         if (!closed(e) || m_preterm) return false;
 
-        auto arg_ty_fn = get_app_fn(infer_type(app_arg(e)));
-        if (!is_constant(arg_ty_fn)) return false;
-        if (S != const_name(arg_ty_fn)) return false;
-        if (is_implicit(app_fn(e))) return false;
+        if (!is_app_of(infer_type(app_arg(e)), S)) return false;
 
-        // check whether all previous arguments are implicit
-        for (auto partial_app = app_fn(e); is_app(partial_app); partial_app = app_fn(partial_app)) {
-            if (!is_implicit(app_fn(partial_app))) {
-                // previous explicit argument
-                return false;
-            }
+        auto fn_type = infer_type(f);
+        auto num_args = get_app_num_args(e);
+        for (unsigned i = 0; i + 1 < num_args; i++) {
+            if (!is_pi(fn_type)) return false;
+            if (is_explicit(binding_info(fn_type))) return false;
+            fn_type = binding_body(fn_type);
         }
+
+        if (!is_pi(fn_type)) return false;
+        if (!is_explicit(binding_info(fn_type))) return false;
+        if (!is_app_of(binding_domain(fn_type), S)) return false;
 
         return true;
     }
     return false;
 }
-
-auto pretty_fn::pp_field_notation(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_field_notation(expr const & e) -> result {
     buffer<expr> args;
     expr const & f   = get_app_args(e, args);
     bool ignore_hide = true;
-    format s_fmt     = pp_child(args.back(), max_bp(), ignore_hide).fmt();
-    return result(max_bp()+1, s_fmt + format(".") + mk_link(const_name(f), format(const_name(f).get_string())));
+    T s_fmt     = pp_child_at(args.back(), max_bp(), expr_address::app(args.size(), args.size() - 1), ignore_hide).fmt();
+    return result(max_bp()+1, s_fmt + T(".") + mk_link(const_name(f), T(const_name(f).get_string())));
 }
-
-auto pretty_fn::pp_app(expr const & e) -> result {
-    if (auto r = pp_local_ref(e))
+template<class T>
+auto pretty_fn<T>::pp_app(expr const & e) -> result {
+    if (auto r = pp_local_ref(e)) {
         return *r;
-    if (is_default_arg_app(e))
-        return pp_child(app_fn(e), max_bp());
+    }
+    if (is_default_arg_app(e)) {
+        return pp_child_at(app_fn(e), max_bp(), expr_address::fn());
+    }
     expr const & fn = app_fn(e);
-    if (m_structure_instances && is_structure_instance(m_env, e, m_implict))
+    if (m_structure_instances && is_structure_instance(m_env, e, m_implict)) {
         return pp_structure_instance(e);
-    if (m_structure_projections && is_field_notation_candidate(e))
+    }
+    if (m_structure_projections && is_field_notation_candidate(e)) {
         return pp_field_notation(e);
+    }
     // If the application contains a metavariable, then we want to
     // show the function, otherwise it would be hard to understand the
     // context where the metavariable occurs. This is hack to implement
     // formatter.hide_full_terms
     bool ignore_hide = true;
-    result res_fn    = pp_child(fn, max_bp()-1, ignore_hide);
-    format fn_fmt    = res_fn.fmt();
-    if (m_implict && (!is_app(fn) || (is_local_ref(m_env, fn))) && has_implicit_args(fn))
+    result res_fn    = pp_child_at(fn, max_bp()-1, expr_address::fn(), ignore_hide);
+    T fn_fmt    = res_fn.fmt();
+    if (m_implict && (!is_app(fn) || (is_local_ref(m_env, fn))) && has_implicit_args(fn)) {
         fn_fmt = compose(*g_explicit_fmt, fn_fmt);
-    result res_arg = pp_child(app_arg(e), max_bp());
+    }
+    result res_arg = pp_child_at(app_arg(e), max_bp(), expr_address::arg());
     return result(max_bp()-1, group(compose(fn_fmt, nest(m_indent, compose(line(), res_arg.fmt())))));
 }
-
-format pretty_fn::pp_binder(expr const & local) {
-    format r;
+template<class T>
+T pretty_fn<T>::pp_binder(expr const & local) {
+    // [note] address is already set here
+    T r;
     auto bi = local_info(local);
-    if (bi != binder_info())
-        r += format(open_binder_string(bi, m_unicode));
+    if (bi != binder_info()) {
+        r += T(open_binder_string(bi, m_unicode));
+    }
     r += escape(mlocal_pp_name(local));
     if (m_binder_types) {
         r += space();
         r += compose(colon(), nest(m_indent, compose(line(), pp_child(mlocal_type(local), 0).fmt())));
     }
-    if (bi != binder_info())
-        r += format(close_binder_string(bi, m_unicode));
+    if (bi != binder_info()) {
+        r += T(close_binder_string(bi, m_unicode));
+    }
     return r;
 }
-
-format pretty_fn::pp_binder_block(buffer<name> const & names, expr const & type, binder_info const & bi) {
-    format r;
+template<class T>
+T pretty_fn<T>::pp_binder_block(buffer<name> const & names, expr const & type, binder_info const & bi) {
+    T r;
     if (m_binder_types || bi != binder_info())
-        r += format(open_binder_string(bi, m_unicode));
+        r += T(open_binder_string(bi, m_unicode));
     for (name const & n : names) {
         r += escape(n);
+        r += space();
     }
     if (m_binder_types) {
-        r += space();
         r += compose(colon(), nest(m_indent, compose(line(), pp_child(type, 0).fmt())));
     }
     if (m_binder_types || bi != binder_info())
-        r += format(close_binder_string(bi, m_unicode));
+        r += T(close_binder_string(bi, m_unicode));
     return group(r);
 }
 
-format pretty_fn::pp_binders(buffer<expr> const & locals) {
+template<class T>
+T pretty_fn<T>::pp_binders(buffer<subexpr> const & locals) {
     unsigned num     = locals.size();
     buffer<name> names;
-    expr local       = locals[0];
+    expr local = locals[0].first;
+    address la = locals[0].second;
+    // [note] la points to the binder var type that made the local.
     expr   type      = mlocal_type(local);
     binder_info bi   = local_info(local);
     names.push_back(mlocal_pp_name(local));
-    format r;
+    T r;
     for (unsigned i = 1; i < num; i++) {
-        expr local = locals[i];
+        expr local = locals[i].first;
+        address la = locals[i].second;
+        address_scope scope(*this, la);
         if (!bi.is_inst_implicit() && mlocal_type(local) == type && local_info(local) == bi) {
             names.push_back(mlocal_pp_name(local));
         } else {
@@ -1006,21 +1061,24 @@ format pretty_fn::pp_binders(buffer<expr> const & locals) {
             names.push_back(mlocal_pp_name(local));
         }
     }
+    address_scope scope(*this, la);
     r += group(compose(line(), pp_binder_block(names, type, bi)));
     return r;
 }
-
-auto pretty_fn::pp_lambda(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_lambda(expr const & e) -> result {
     expr b = e;
-    buffer<expr> locals;
+    address adr;
+    buffer<subexpr> locals;
     while (is_lambda(b)) {
         auto p = binding_body_fresh(b, true);
-        locals.push_back(p.second);
+        locals.push_back(mk_pair(p.second, cons(expr_coord::lam_var_type, adr)));
         b = p.first;
+        adr = cons(expr_coord::lam_body, adr);
     }
-    format r = m_unicode ? *g_lambda_n_fmt : *g_lambda_fmt;
+    T r = m_unicode ? *g_lambda_n_fmt : *g_lambda_fmt;
     r += pp_binders(locals);
-    r += group(compose(comma(), nest(m_indent, compose(line(), pp_child(b, 0).fmt()))));
+    r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
     return result(0, r);
 }
 
@@ -1030,29 +1088,32 @@ auto pretty_fn::pp_lambda(expr const & e) -> result {
 static bool is_default_arrow(expr const & e) {
     return is_arrow(e) && binding_info(e) == binder_info();
 }
-
-auto pretty_fn::pp_pi(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_pi(expr const & e) -> result {
     if (is_default_arrow(e)) {
-        result lhs = pp_child(binding_domain(e), get_arrow_prec());
+        result lhs = pp_child_at(binding_domain(e), get_arrow_prec(), expr_address::binding_type(e));
         expr   b   = lift_free_vars(binding_body(e), 1);
-        result rhs = is_pi(b) ? pp(b) : pp_child(b, get_arrow_prec()-1);
-        format r   = group(lhs.fmt() + space() + (m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
+        address pb = expr_address::pi_body();
+        result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
+        T r   = group(lhs.fmt() + space() + (m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
         return result(get_arrow_prec(), get_arrow_prec()-1, r);
     } else {
         expr b = e;
-        buffer<expr> locals;
+        address adr;
+        buffer<subexpr> locals;
         while (is_pi(b) && !is_default_arrow(b)) {
             auto p = binding_body_fresh(b, true);
-            locals.push_back(p.second);
+            locals.push_back(mk_pair(p.second, cons(expr_coord::pi_var_type, adr)));
             b = p.first;
+            adr = cons(expr_coord::pi_body, adr);
         }
-        format r;
+        T r;
         if (is_prop(b))
             r = m_unicode ? *g_forall_n_fmt : *g_forall_fmt;
         else
             r = m_unicode ? *g_pi_n_fmt : *g_pi_fmt;
         r += pp_binders(locals);
-        r += group(compose(comma(), nest(m_indent, compose(line(), pp_child(b, 0).fmt()))));
+        r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
         return result(0, r);
     }
 }
@@ -1064,19 +1125,20 @@ static bool is_show(expr const & e) {
     return is_show_annotation(e) && is_app(get_annotation_arg(e)) &&
         is_lambda(app_fn(get_annotation_arg(e)));
 }
-
-auto pretty_fn::pp_have(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_have(expr const & e) -> result {
+    // e = ( ANNOTATION { \la x : A, body  } ) $ ( proof ) = have x : A, from proof, body
     expr proof   = app_arg(e);
     expr binding = get_annotation_arg(app_fn(e));
     auto p       = binding_body_fresh(binding, true);
     expr local   = p.second;
     expr body    = p.first;
     name const & n = mlocal_pp_name(local);
-    format type_fmt  = pp_child(mlocal_type(local), 0).fmt();
-    format proof_fmt = pp_child(proof, 0).fmt();
-    format body_fmt  = pp_child(body, 0).fmt();
-    format head_fmt  = *g_have_fmt;
-    format r = head_fmt + space() + escape(n) + space();
+    T type_fmt  = pp_child_at(mlocal_type(local), 0, expr_address::mlocal_type(local)).fmt();
+    T proof_fmt = pp_child_at(proof, 0, expr_address::arg()).fmt();
+    T body_fmt  = pp_child_at(body, 0, expr_address::lam_body()).fmt();
+    T head_fmt  = *g_have_fmt;
+    T r = head_fmt + space() + escape(n) + space();
     r += colon() + nest(m_indent, line() + type_fmt + comma() + space() + *g_from_fmt);
     r = group(r);
     r += nest(m_indent, line() + proof_fmt + comma());
@@ -1084,49 +1146,53 @@ auto pretty_fn::pp_have(expr const & e) -> result {
     r += line() + body_fmt;
     return result(0, r);
 }
-
-auto pretty_fn::pp_show(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_show(expr const & e) -> result {
     lean_assert(is_show(e));
+    // e = annotation { (\la x, type) $ proof }
     expr s           = get_annotation_arg(e);
     expr proof       = app_arg(s);
     expr type        = binding_domain(app_fn(s));
-    format type_fmt  = pp_child(type, 0).fmt();
-    format proof_fmt = pp_child(proof, 0).fmt();
-    format r = *g_show_fmt + space() + nest(5, type_fmt) + comma() + space() + *g_from_fmt;
+    T type_fmt = pp_child_at(type, 0, append(expr_address::binding_type(app_fn(s)), expr_address::fn())).fmt();
+    T proof_fmt = pp_child_at(proof, 0, expr_address::arg()).fmt();
+    T r = *g_show_fmt + space() + nest(5, type_fmt) + comma() + space() + *g_from_fmt;
     r = group(r);
     r += nest(m_indent, compose(line(), proof_fmt));
     return result(0, group(r));
 }
-
-auto pretty_fn::pp_explicit(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_explicit(expr const & e) -> result {
     result res_arg = pp_child(get_explicit_arg(e), max_bp());
     return result(max_bp(), compose(*g_explicit_fmt, res_arg.fmt()));
 }
-
-auto pretty_fn::pp_delayed_abstraction(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_delayed_abstraction(expr const & e) -> result {
+    address_give_up_scope s(*this);
     if (m_use_holes) {
-        return pp_hole();
+        return T(pp_hole());
     } else if (m_delayed_abstraction) {
-        format r;
-        r += format("[");
+        T r;
+        r += T("[");
         buffer<name> ns; buffer<expr> es;
         get_delayed_abstraction_info(e, ns, es);
         for (unsigned i = 0; i < ns.size(); i++) {
-            format r2;
-            if (i) r2 += format(",") + line();
+            T r2;
+            if (i) r2 += T(",") + line();
             r2 += pp(es[i]).fmt();
             r += group(r2);
         }
-        r += format("]");
+        r += T("]");
         return result(pp(get_delayed_abstraction_expr(e)).fmt() + nest(m_indent, r));
     } else {
         return pp(get_delayed_abstraction_expr(e));
     }
 }
-
-auto pretty_fn::pp_equation(expr const & e) -> format {
+template<class T>
+auto pretty_fn<T>::pp_equation(expr const & e) -> T {
     lean_assert(is_equation(e));
-    format r = format("|");
+    // [todo] adding expression address information not implemented
+    address_give_up_scope s(*this);
+    T r = T("|");
     buffer<expr> args;
     get_app_args(equation_lhs(e), args);
     for (expr const & arg : args) {
@@ -1135,8 +1201,10 @@ auto pretty_fn::pp_equation(expr const & e) -> format {
     r += space() + *g_assign_fmt + space() + pp_child(equation_rhs(e), 0).fmt();
     return r;
 }
-
-auto pretty_fn::pp_equations(expr const & e) -> optional<result> {
+template<class T>
+auto pretty_fn<T>::pp_equations(expr const & e) -> optional<result> {
+    // [todo] adding expression address information for equations not implemented
+    address_give_up_scope s(*this);
     buffer<expr> eqns;
     unsigned num_fns = equations_num_fns(e);
     to_equations(e, eqns);
@@ -1149,22 +1217,22 @@ auto pretty_fn::pp_equations(expr const & e) -> optional<result> {
         fns.push_back(p.second);
         eqn = p.first;
     }
-    format r;
+    T r;
     if (num_fns > 1) {
-        r = format("mutual_def") + space();
+        r = T("mutual_def") + space();
         for (unsigned i = 0; i < num_fns; i++) {
-            if (i > 0) r += format(", ");
+            if (i > 0) r += T(", ");
             r += pp(fns[i]).fmt();
         }
         r += line();
     } else {
-        r = format("def") + space() + pp(fns[0]).fmt() + space() + colon() + space() + pp(mlocal_type(fns[0])).fmt();
+        r = T("def") + space() + pp(fns[0]).fmt() + space() + colon() + space() + pp(mlocal_type(fns[0])).fmt();
     }
     unsigned eqnidx = 0;
     for (unsigned fidx = 0; fidx < num_fns; fidx++) {
         if (num_fns > 1) {
             if (fidx > 0) r += line();
-            r += format("with") + space() + pp(fns[fidx]).fmt() + space() + colon() +
+            r += T("with") + space() + pp(fns[fidx]).fmt() + space() + colon() +
                 space() + pp(mlocal_type(fns[fidx])).fmt();
         }
         if (eqnidx >= eqns.size()) return optional<result>();
@@ -1190,47 +1258,51 @@ auto pretty_fn::pp_equations(expr const & e) -> optional<result> {
             }
         } else {
             /* noequation */
-            r += line() + format("[none]");
+            r += line() + T("[none]");
         }
     }
     if (eqns.size() != eqnidx) return optional<result>();
     return optional<result>(r);
 }
-
-auto pretty_fn::pp_macro_default(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_macro_default(expr const & e) -> result {
     // TODO(Leo): have macro annotations
     // fix macro<->pp interface
+    // [note] address information not supported for macros.
+    address_give_up_scope s(*this);
     if (is_prenum(e)) {
-        return format(prenum_value(e).to_string());
+        return T(prenum_value(e).to_string());
     }
-    format r = compose(format("["), format(macro_def(e).get_name()));
+    T r = compose(T("["), T(macro_def(e).get_name()));
     for (unsigned i = 0; i < macro_num_args(e); i++)
         r += nest(m_indent, compose(line(), pp_child(macro_arg(e, i), max_bp()).fmt()));
-    r += format("]");
+    r += T("]");
     return result(group(r));
 }
-
-auto pretty_fn::pp_macro(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_macro(expr const & e) -> result {
+    // [note] address information not supported for macros.
+    address_give_up_scope s(*this);
     if (is_explicit(e)) {
         return pp_explicit(e);
     } else if (is_expr_quote(e)) {
-        return result(format("`(") + nest(4, pp(get_expr_quote_value(e)).fmt()) + format(")"));
+        return result(T("`(") + nest(4, pp(get_expr_quote_value(e)).fmt()) + T(")"));
     } else if (is_pexpr_quote(e)) {
-        return result(format("``(") + nest(2, pp(get_pexpr_quote_value(e)).fmt()) + format(")"));
+        return result(T("``(") + nest(2, pp(get_pexpr_quote_value(e)).fmt()) + T(")"));
     } else if (is_delayed_abstraction(e)) {
         return pp_delayed_abstraction(e);
     } else if (is_inaccessible(e)) {
-        format r = format(".") + pp_child(get_annotation_arg(e), max_bp()).fmt();
+        T r = T(".") + pp_child(get_annotation_arg(e), max_bp()).fmt();
         return result(r);
     } else if (is_as_pattern(e)) {
         auto lhs_fmt = pp_child(get_as_pattern_lhs(e), max_bp()).fmt();
         auto rhs_fmt = pp_child(get_as_pattern_rhs(e), max_bp()).fmt();
-        return result(lhs_fmt + format("@") + rhs_fmt);
+        return result(lhs_fmt + T("@") + rhs_fmt);
     } else if (is_pattern_hint(e)) {
-        return result(group(nest(2, format("(:") + pp(get_pattern_hint_arg(e)).fmt() + format(":)"))));
+        return result(group(nest(2, T("(:") + pp(get_pattern_hint_arg(e)).fmt() + T(":)"))));
     } else if (is_marked_as_comp_irrelevant(e)) {
         if (m_hide_comp_irrel)
-            return m_unicode ? format("◾") : format("irrel");
+            return m_unicode ? T("◾") : T("irrel");
         else
             return pp(get_annotation_arg(e));
     } else if (!m_strings && to_string(e)) {
@@ -1243,27 +1315,27 @@ auto pretty_fn::pp_macro(expr const & e) -> result {
             return pp_macro_default(e);
     } else if (is_annotation(e)) {
         if (m_annotations)
-            return format("[") + format(get_annotation_kind(e)) + space() + pp(get_annotation_arg(e)).fmt() + format("]");
+            return T("[") + T(get_annotation_kind(e)) + space() + pp(get_annotation_arg(e)).fmt() + T("]");
         else
             return pp(get_annotation_arg(e));
     } else if (is_rec_fn_macro(e)) {
-        return format("[") + format(get_rec_fn_name(e)) + format("]");
+        return T("[") + T(get_rec_fn_name(e)) + T("]");
     } else if (is_synthetic_sorry(e)) {
         if (m_use_holes)
-            return pp_hole();
+            return T(pp_hole());
         else
-            return m_unicode ? format("⁇") : format("??");
+            return m_unicode ? T("⁇") : T("??");
     } else if (is_sorry(e)) {
         if (m_use_holes)
-            return pp_hole();
+            return T(pp_hole());
         else
-            return format("sorry");
+            return T("sorry");
     } else {
         return pp_macro_default(e);
     }
 }
-
-auto pretty_fn::pp_let(expr e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_let(expr e) -> result {
     buffer<std::tuple<expr, expr, expr>> decls;
     while (true) {
         expr t   = let_type(e);
@@ -1276,37 +1348,38 @@ auto pretty_fn::pp_let(expr e) -> result {
             break;
     }
     lean_assert(!decls.empty());
-    format r    = *g_let_fmt;
+    T r    = *g_let_fmt;
     unsigned sz = decls.size();
     for (unsigned i = 0; i < sz; i++) {
         expr l, t, v;
         std::tie(l, t, v) = decls[i];
+        address base = expr_address::repeat(address(expr_coord::elet_body), i);
         name const & n = mlocal_pp_name(l);
-        format beg     = i == 0 ? space() : line();
-        format sep     = i < sz - 1 ? comma() : format();
-        format entry   = format(n);
-        format v_fmt   = pp_child(v, 0).fmt();
+        T beg     = i == 0 ? space() : line();
+        T sep     = i < sz - 1 ? comma() : T();
+        T entry   = T(n);
+        T v_fmt   = pp_child_at(v, 0, cons(expr_coord::elet_assignment, base)).fmt();
         if (is_neutral_expr(t)) {
             entry += space() + *g_assign_fmt + nest(m_indent, line() + v_fmt + sep);
         } else {
-            format t_fmt   = pp_child(t, 0).fmt();
+            T t_fmt   = pp_child_at(t, 0, cons(expr_coord::elet_var_type, base)).fmt();
             entry += space() + colon() + space() + t_fmt + space() + *g_assign_fmt + nest(m_indent, line() + v_fmt + sep);
         }
         r += nest(3 + 1, beg + group(entry));
     }
-    format b = pp_child(e, 0).fmt();
+    T b = pp_child_at(e, 0, expr_address::repeat(address(expr_coord::elet_body), sz)).fmt();
     r += line() + *g_in_fmt + space() + nest(2 + 1, b);
     return result(0, r);
 }
-
-auto pretty_fn::pp_num(mpz const & n, unsigned bp) -> result {
+template<class T>
+auto pretty_fn<T>::pp_num(mpz const & n, unsigned bp) -> result {
     if (n.is_neg()) {
         auto prec = get_expr_precedence(m_token_table, "-");
         if (!prec || bp > *prec) {
-            return result(paren(format(n.to_string())));
+            return result(paren(T(n.to_string())));
         }
     }
-    return result(format(n.to_string()));
+    return result(T(n.to_string()));
 }
 
 // Return the number of parameters in a notation declaration.
@@ -1331,8 +1404,8 @@ static unsigned get_num_parameters(notation_entry const & entry) {
     }
     return r;
 }
-
-bool pretty_fn::match(level const & p, level const & l) {
+template<class T>
+bool pretty_fn<T>::match(level const & p, level const & l) {
     if (p == l)
         return true;
     if (m_universes)
@@ -1343,8 +1416,8 @@ bool pretty_fn::match(level const & p, level const & l) {
         return match(succ_of(p), succ_of(l));
     return false;
 }
-
-bool pretty_fn::match(expr const & p, expr const & e, buffer<optional<expr>> & args) {
+template<class T>
+bool pretty_fn<T>::match(expr const & p, subexpr const & e, buffer<optional<subexpr>> & args) {
     if (is_explicit(p)) {
         return match(get_explicit_arg(p), e, args);
     } else if (is_as_atomic(p)) {
@@ -1360,11 +1433,11 @@ bool pretty_fn::match(expr const & p, expr const & e, buffer<optional<expr>> & a
         return true;
     } else if (is_placeholder(p)) {
         return true;
-    } else if (is_constant(p) && is_constant(e)) {
-        if (const_name(p) != const_name(e))
+    } else if (is_constant(p) && is_constant(e.first)) {
+        if (const_name(p) != const_name(e.first))
             return false;
         levels p_ls = const_levels(p);
-        levels e_ls = const_levels(p);
+        levels e_ls = const_levels(p); // [note] is this a bug!?
         while (!is_nil(p_ls)) {
             if (is_nil(e_ls))
                 return false; // e must have at least as many arguments as p
@@ -1375,20 +1448,22 @@ bool pretty_fn::match(expr const & p, expr const & e, buffer<optional<expr>> & a
         }
         return true;
     } else if (is_sort(p)) {
-        if (!is_sort(e))
+        if (!is_sort(e.first))
             return false;
-        return match(sort_level(p), sort_level(e));
-    } else if (is_app(e)) {
+        return match(sort_level(p), sort_level(e.first));
+    } else if (is_app(e.first)) {
         buffer<expr> p_args, e_args;
         expr p_fn    = get_app_args(p, p_args);
-        expr e_fn    = get_app_args(e, e_args);
-        if (!match(p_fn, e_fn, args))
+        expr e_fn    = get_app_args(e.first, e_args);
+        address e_fn_adr = append(expr_address::fn(e_args.size()), e.second);
+        if (!match(p_fn, mk_pair(e_fn, e_fn_adr), args))
             return false;
         if (is_explicit(p)) {
             if (p_args.size() != e_args.size())
                 return false;
             for (unsigned i = 0; i < p_args.size(); i++) {
-                if (!match(p_args[i], e_args[i], args))
+                auto ea = mk_pair(e_args[i], append(expr_address::app(e_args.size(), i), e.second));
+                if (!match(p_args[i], ea, args))
                     return false;
             }
             return true;
@@ -1405,7 +1480,8 @@ bool pretty_fn::match(expr const & p, expr const & e, buffer<optional<expr>> & a
                     if (is_explicit(info)) {
                         if (j >= p_args.size())
                             return false;
-                        if (!match(p_args[j], e_args[i], args))
+                        auto ea = mk_pair(e_args[i], append(expr_address::app(e_args.size(), i), e.second));
+                        if (!match(p_args[j], ea, args))
                             return false;
                         j++;
                     }
@@ -1426,31 +1502,53 @@ static unsigned get_some_precedence(token_table const & t, name const & tk) {
         if (auto p = get_expr_precedence(t, tk.get_string()))
             return *p;
     } else {
-        if (auto p = get_expr_precedence(t, tk.to_string().c_str()))
+        if (auto p = get_expr_precedence(t, tk.to_string_unescaped().c_str()))
             return *p;
     }
     return 0;
 }
 
-auto pretty_fn::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp) -> result {
+template<class T>
+auto pretty_fn<T>::tag(address const & a, expr const & e, result const & r) -> result {
+    T t = r.fmt();
+    t = tag(a, e, t);
+    return r.with(t);
+}
+
+template<class T>
+auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit) -> result {
     if (is_app(e)) {
         if (m_numerals) {
-            if (auto n = to_num(e)) return pp_num(*n, lbp);
+            if (auto n = to_num(e)){
+                address_reset_scope ars(*this);
+                return tag(ars.m_adr, e, pp_num(*n, lbp));
+            }
         }
         if (m_strings) {
-            if (auto r = to_string(e)) return pp_string_literal(*r);
-            if (auto r = to_char(m_ctx, e))   return pp_char_literal(*r);
+            if (auto r = to_string(e))      return tag(m_address, e, T(pp_string_literal(*r)));
+            if (auto r = to_char(m_ctx, e)) return tag(m_address, e, T(pp_char_literal(*r)));
         }
         expr const & f = app_fn(e);
         if (is_implicit(f)) {
-            return pp_notation_child(f, rbp, lbp);
+            if (below_implicit) {
+                address_scope s(*this, expr_address::fn());
+                return pp_notation_child(f, rbp, lbp, true);
+            } else {
+                address_reset_scope ars(*this);
+                result r;
+                { address_scope s(*this, expr_address::fn());
+                  r = pp_notation_child(f, rbp, lbp, true);
+                }
+                return r.with(tag(ars.m_adr, e, r.fmt()));
+            }
         } else if (!m_coercion && is_coercion(e)) {
             return pp_hide_coercion(e, rbp);
         } else if (!m_coercion && is_coercion_fn(e)) {
             return pp_hide_coercion_fn(e, rbp);
         }
     }
-    result r = pp(e);
+    result r = below_implicit ? pp_core(e) : pp(e);
+
     /* see invariants of `pretty_fn::result`: Check that the surrounding notation would parse at least r
      * by the first invariant, and at most r (instead of the following token with binding power lbp) by the
      * second invariant. */
@@ -1470,28 +1568,29 @@ static bool is_atomic_notation(notation_entry const & entry) {
     return head(ts).get_action().kind() == notation::action_kind::Skip;
 }
 
-static format mk_tk_fmt(name const & tkn) {
-    auto tk = tkn.to_string();
+template<class T>
+static T mk_tk_fmt(name const & tkn) {
+    auto tk = tkn.to_string_unescaped();
     if (!tk.empty() && tk.back() == ' ') {
         tk.pop_back();
-        return format(tk) + line();
+        return T(tk) + line();
     } else {
-        return format(tk);
+        return T(tk);
     }
 }
-
-auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>> & args) -> optional<result> {
+template<class T>
+auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args) -> optional<result> {
     if (entry.is_numeral()) {
-        return some(result(format(entry.get_num().to_string())));
+        return some(result(T(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        format fmt   = mk_link(entry.get_expr(), format(head(entry.get_transitions()).get_token()));
+        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token().to_string_unescaped()));
         return some(result(fmt));
     } else {
         using notation::transition;
         buffer<transition> ts;
-        buffer<expr> locals; // from scoped_expr
+        buffer<subexpr> locals; // from scoped_expr
         to_buffer(entry.get_transitions(), ts);
-        format fmt;
+        T fmt;
         unsigned i         = ts.size();
         // bp of the last action
         unsigned last_rbp  = inf_bp()-1;
@@ -1500,10 +1599,10 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
         bool last          = true;
         while (i > 0) {
             --i;
-            format curr;
+            T curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            format tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt(ts[i].get_pp_token()));
+            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1515,8 +1614,11 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                 if (args.empty() || !args.back()) {
                     return optional<result>();
                 } else {
-                    expr e = *args.back();
+                    auto ea = *args.back();
+                    expr e = ea.first;
+                    address e_adr = ea.second;
                     args.pop_back();
+                    address_scope s(*this, e_adr);
                     result e_r   = pp_notation_child(e, a.rbp(), token_lbp);
                     curr = tk_fmt + e_r.fmt();
                     if (last)
@@ -1532,11 +1634,11 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                 if (args.empty() || !args.back()) {
                     return optional<result>();
                 } else {
-                    expr e = *args.back();
+                    auto e = *args.back();
                     args.pop_back();
                     expr const & rec = a.get_rec();
                     optional<expr> const & ini = a.get_initial();
-                    buffer<expr> rec_args;
+                    buffer<subexpr> rec_args;
                     bool matched_once = false;
                     while (true) {
                         args.resize(args.size() + 2);
@@ -1545,9 +1647,9 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                             args.pop_back();
                             break;
                         }
-                        optional<expr> new_e = args.back();
+                        optional<subexpr> new_e = args.back();
                         args.pop_back();
-                        optional<expr> rec_arg = args.back();
+                        optional<subexpr> rec_arg = args.back();
                         args.pop_back();
                         if (!new_e || !rec_arg)
                             return optional<result>();
@@ -1567,15 +1669,17 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                         std::reverse(rec_args.begin(), rec_args.end());
                     unsigned curr_lbp = token_lbp;
                     if (auto t = a.get_terminator()) {
-                        curr = format(*t);
+                        curr = T(t->to_string_unescaped());
                         curr_lbp = get_some_precedence(m_token_table, *t);
                     }
                     unsigned j       = rec_args.size();
-                    format sep_fmt   = format(a.get_sep());
+                    T sep_fmt   = T(a.get_sep().to_string_unescaped());
                     unsigned sep_lbp = get_some_precedence(m_token_table, a.get_sep());
                     while (j > 0) {
                         --j;
-                        result arg_res = pp_notation_child(rec_args[j], a.rbp(), curr_lbp);
+                        auto ra = rec_args[j];
+                        address_scope s(*this, ra.second);
+                        result arg_res = pp_notation_child(ra.first, a.rbp(), curr_lbp);
                         if (j == 0) {
                             curr = tk_fmt + arg_res.fmt() + curr;
                         } else {
@@ -1585,11 +1689,12 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                     }
                     break;
                 }
-            case notation::action_kind::Binder:
+            case notation::action_kind::Binder: {
                 if (locals.size() != 1)
                     return optional<result>();
-                curr = tk_fmt + pp_binder(locals[0]);
-                break;
+                subexpr l = locals[0];
+                curr = tk_fmt + pp_binder_at(l.first, l.second);
+                break; }
             case notation::action_kind::Binders:
                 curr = tk_fmt + pp_binders(locals);
                 break;
@@ -1597,7 +1702,7 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                 if (args.empty() || !args.back()) {
                     return optional<result>();
                 } else {
-                    expr e            = *args.back();
+                    auto e            = *args.back();
                     bool first_scoped = locals.empty();
                     unsigned i = 0;
                     args.pop_back();
@@ -1608,25 +1713,27 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
                             args.pop_back();
                             break;
                         }
-                        expr b = *args.back();
+                        auto b = *args.back();
                         args.pop_back();
-                        if (!((is_lambda(b) && a.use_lambda_abstraction()) ||
-                              (is_pi(b) && !a.use_lambda_abstraction()))) {
+                        if (!((is_lambda(b.first) && a.use_lambda_abstraction()) ||
+                              (is_pi(b.first) && !a.use_lambda_abstraction()))) {
                             break;
                         }
-                        auto p = binding_body_fresh(b, true);
+                        expr_pair p = binding_body_fresh(b.first, true);
                         if (first_scoped) {
-                            locals.push_back(p.second);
+                            locals.push_back(mk_pair(p.second, append(expr_address::binding_type(b.first), b.second)));
                         } else {
-                            if (i >= locals.size() || locals[i] != p.second)
+                            if (i >= locals.size() || locals[i].first != p.second)
                                 return optional<result>();
                         }
-                        e = p.first;
+                        e.first = p.first;
+                        e.second = append(expr_address::binding_body(b.first), b.second);
                         i++;
                     }
                     if (locals.empty())
                         return optional<result>();
-                    result e_r   = pp_notation_child(e, a.rbp(), token_lbp);
+                    address_scope s(*this, e.second);
+                    result e_r   = pp_notation_child(e.first, a.rbp(), token_lbp);
                     curr = tk_fmt + e_r.fmt();
                     if (last)
                         // see Expr action
@@ -1650,16 +1757,18 @@ auto pretty_fn::pp_notation(notation_entry const & entry, buffer<optional<expr>>
             lean_assert(!last);
             if (args.size() != 1 || !args.back())
                 return optional<result>();
-            expr e = *args.back();
+            auto e = *args.back();
             args.pop_back();
-            format e_fmt = pp_notation_child(e, 0, token_lbp).fmt();
+            address_scope s(*this, e.second);
+            T e_fmt = pp_notation_child(e.first, 0, token_lbp).fmt();
             fmt = e_fmt + fmt;
         }
         return optional<result>(result(first_lbp, last_rbp, group(nest(m_indent, fmt))));
     }
 }
-
-auto pretty_fn::pp_notation(expr const & e) -> optional<result> {
+template<class T>
+auto pretty_fn<T>::pp_notation(subexpr const & ep) -> optional<result> {
+    expr e = ep.first;
     if (!m_notation || is_var(e))
         return optional<result>();
     for (notation_entry const & entry : get_notation_entries(m_env, head_index(e))) {
@@ -1668,9 +1777,9 @@ auto pretty_fn::pp_notation(expr const & e) -> optional<result> {
         if (!m_unicode && !entry.is_safe_ascii())
             continue; // ignore this notation declaration since unicode support is not enabled
         unsigned num_params = get_num_parameters(entry);
-        buffer<optional<expr>> args;
+        buffer<optional<subexpr>> args;
         args.resize(num_params);
-        if (match(entry.get_expr(), e, args)) {
+        if (match(entry.get_expr(), ep, args)) {
             if (auto r = pp_notation(entry, args))
                 return r;
         }
@@ -1696,15 +1805,16 @@ static bool is_subtype(expr const & e) {
         get_app_num_args(e) == 2 &&
         is_lambda(app_arg(e));
 }
-
-auto pretty_fn::pp_subtype(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_subtype(expr const & e) -> result {
     lean_assert(is_subtype(e));
     expr pred = app_arg(e);
     lean_assert(is_lambda(pred));
     auto p     = binding_body_fresh(pred, true);
     expr body  = p.first;
     expr local = p.second;
-    format r   = bracket("{", format(mlocal_pp_name(local)) + space() + format("//") + space() + pp_child(body, 0).fmt(), "}");
+    T f_body = pp_child_at(body, 0, {expr_coord::lam_body, expr_coord::app_arg}).fmt();
+    T r   = bracket("{", T(mlocal_pp_name(local)) + space() + T("//") + space() + f_body, "}");
     return result(r);
 }
 
@@ -1728,28 +1838,35 @@ static bool is_insert(expr const & e) {
 
 /* Return true iff 'e' encodes a nonempty finite collection,
    and stores its elements at elems. */
-static bool is_explicit_collection(expr const & e, buffer<expr> & elems) {
-    if (is_emptyc(e)) {
-        return true;
-    } else if (is_singleton(e)) {
-        elems.push_back(app_arg(e));
-        return true;
-    } else if (is_insert(e) && is_explicit_collection(app_arg(e), elems)) {
-        elems.push_back(app_arg(app_fn(e)));
-        return true;
-    } else {
-        return false;
+static bool is_explicit_collection(expr const & ex, buffer<subexpr> & elems) {
+    expr e = ex;
+    address adr;
+    while (true) {
+        if (is_emptyc(e)) {
+            return true;
+        } else if (is_singleton(e)) {
+            elems.push_back(mk_pair(app_arg(e), cons(expr_coord::app_arg, adr)));
+            return true;
+        } else if (is_insert(e)) {
+            elems.push_back(mk_pair(app_arg(app_fn(e)), cons(expr_coord::app_arg, cons(expr_coord::app_fn, adr))));
+            e = app_arg(e);
+            adr = cons(expr_coord::app_arg, adr);
+        } else {
+            return false;
+        }
     }
 }
-
-auto pretty_fn::pp_explicit_collection(buffer<expr> const & elems) -> result {
+template<class T>
+auto pretty_fn<T>::pp_explicit_collection(buffer<subexpr> const & elems) -> result {
     if (elems.empty()) {
-        return result(format(m_unicode ? "∅" : "{}"));
+        return result(T(m_unicode ? "∅" : "{}"));
     } else {
-        format r= pp_child(elems[elems.size() - 1], 0).fmt();
+        subexpr elem = elems[elems.size() - 1];
+        T r = pp_child_at(elem.first, 0, elem.second).fmt();
         for (unsigned i = elems.size() - 1; i > 0;) {
             --i;
-            r += nest(m_indent, comma() + line() + pp_child(elems[i], 0).fmt());
+            elem = elems[i];
+            r += nest(m_indent, comma() + line() + pp_child_at(elem.first, 0, elem.second).fmt());
         }
         r = group(bracket("{", r, "}"));
         return result(r);
@@ -1762,17 +1879,18 @@ bool is_set_of(expr const & e) {
         get_app_num_args(e) == 2 &&
         is_lambda(app_arg(e));
 }
-
-auto pretty_fn::pp_set_of(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_set_of(expr const & e) -> result {
     lean_assert(is_set_of(e));
     expr pred = app_arg(e);
     lean_assert(is_lambda(pred));
     auto p     = binding_body_fresh(pred, true);
     expr body  = p.first;
     expr local = p.second;
-    format r   = bracket("{",
-                         pp_binder(local) + space() + format("|") + space() +
-                         pp_child(body, 0).fmt(), "}");
+    T ppb = pp_binder_at(local, {expr_coord::lam_var_type, expr_coord::app_arg});
+    T r   = bracket("{",
+                         ppb + space() + T("|") + space() +
+                         pp_child_at(body, 0, {expr_coord::lam_body, expr_coord::app_arg}).fmt(), "}");
     return result(r);
 }
 
@@ -1782,37 +1900,62 @@ static bool is_sep(expr const & e) {
         get_app_num_args(e) == 5 &&
         is_lambda(app_arg(app_fn(e)));
 }
-
-auto pretty_fn::pp_sep(expr const & e) -> result {
+template<class T>
+auto pretty_fn<T>::pp_sep(expr const & e) -> result {
     lean_assert(is_sep(e));
     expr s    = app_arg(e);
+    T pps = pp_child_at(s, 0, address(expr_coord::app_arg)).fmt();
     expr pred = app_arg(app_fn(e));
     lean_assert(is_lambda(pred));
     auto p     = binding_body_fresh(pred, true);
     expr body  = p.first;
+    T ppbody = pp_child_at(body, 0, {expr_coord::lam_body, expr_coord::app_arg, expr_coord::app_fn}).fmt();
     expr local = p.second;
-    format in  = format(m_unicode ? "∈" : "in");
-    format r   = bracket("{",
-                         format(mlocal_pp_name(local)) + space() + in + space() +
-                         pp_child(s, 0).fmt() + space() + format("|") + space() +
-                         pp_child(body, 0).fmt(), "}");
+    T in  = T(m_unicode ? "∈" : "in");
+    T r   = bracket("{",
+                         T(mlocal_pp_name(local)) + space() + in + space() +
+                         pps + space() + T("|") + space() + ppbody, "}");
     return result(r);
 }
-
-auto pretty_fn::pp_prod(expr const & e) -> result {
-    format r = pp(app_arg(app_fn(e))).fmt();
+template<class T>
+auto pretty_fn<T>::pp_prod(expr const & e) -> result {
+    T r = pp_at(app_arg(app_fn(e)), {expr_coord::app_arg, expr_coord::app_fn}).fmt();
     auto it = app_arg(e);
+    address adr;
+    adr = cons(expr_coord::app_arg, adr);
     while (is_app_of(it, get_prod_mk_name(), 4)) {
         r += comma() + line();
-        r += pp(app_arg(app_fn(it))).fmt();
+        r += pp_at(app_arg(app_fn(it)), append({expr_coord::app_arg, expr_coord::app_fn}, adr)).fmt();
         it = app_arg(it);
+        adr = cons(expr_coord::app_arg, adr);
     }
     r += comma() + line();
-    r += pp(it).fmt();
+    r += pp_at(it, adr).fmt();
     return result(paren(group(r)));
 }
-
-auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
+template<class T>
+auto pretty_fn<T>::pp_at(expr const & e, address local_address, bool ignore_hide) -> result {
+    address_scope scope(*this, local_address);
+    return  pp(e, ignore_hide);
+}
+template<class T>
+auto pretty_fn<T>::pp_child_at(expr const & e, unsigned bp, address local_address, bool ignore_hide) -> result {
+     address_scope scope(*this, local_address);
+     return pp_child(e, bp, ignore_hide);
+}
+template<class T>
+T pretty_fn<T>::pp_binder_at(expr const & local, address local_address) {
+     address_scope scope(*this, local_address);
+     return pp_binder(local);
+}
+template<class T>
+auto pretty_fn<T>::pp(expr const & e, bool ignore_hide) -> result {
+    address_reset_scope ars(*this);
+    result r = tag(ars.m_adr, e, pp_core(e, ignore_hide));
+    return r;
+}
+template<class T>
+auto pretty_fn<T>::pp_core(expr const & e, bool ignore_hide) -> result {
     check_system("pretty printer");
     if ((m_depth >= m_max_depth ||
          m_num_steps > m_max_steps ||
@@ -1827,16 +1970,16 @@ auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
         if (auto n = to_num(e)) return pp_num(*n, 0);
     }
     if (m_strings) {
-        if (auto r = to_string(e))      return pp_string_literal(*r);
-        if (auto r = to_char(m_ctx, e)) return pp_char_literal(*r);
+        if (auto r = to_string(e))      return T(pp_string_literal(*r));
+        if (auto r = to_char(m_ctx, e)) return T(pp_char_literal(*r));
     }
     try {
         if (!m_proofs && !is_constant(e) && !is_mlocal(e) && closed(e) && is_prop(m_ctx.infer(e))) {
-            return result(format("_"));
+            return result(T("_"));
         }
     } catch (exception &) {}
 
-    if (auto r = pp_notation(e))
+    if (auto r = pp_notation(mk_pair(e, address())))
         return *r;
 
     if (m_notation) {
@@ -1846,9 +1989,12 @@ auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
             return pp_sep(e);
         if (is_set_of(e))
             return pp_set_of(e);
-        buffer<expr> elems;
-        if (is_explicit_collection(e, elems))
+        buffer<subexpr> elems;
+        if (is_explicit_collection(e, elems)) {
+            std::reverse(elems.begin(), elems.end());
             return pp_explicit_collection(elems);
+        }
+
         if (is_app_of(e, get_prod_mk_name(), 4))
             return pp_prod(e);
     }
@@ -1859,7 +2005,7 @@ auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
     if (is_typed_expr(e))   return pp(get_typed_expr_expr(e));
     if (m_num_nat_coe)
         if (auto k = to_unsigned(e))
-            return format(*k);
+            return T(format(*k));
     switch (e.kind()) {
     case expr_kind::Var:       return pp_var(e);
     case expr_kind::Sort:      return pp_sort(e);
@@ -1874,13 +2020,15 @@ auto pretty_fn::pp(expr const & e, bool ignore_hide) -> result {
     }
     lean_unreachable(); // LCOV_EXCL_LINE
 }
-
-pretty_fn::pretty_fn(environment const & env, options const & o, abstract_type_context & ctx):
+template<class T>
+pretty_fn<T>::pretty_fn(environment const & env, options const & o, abstract_type_context & ctx):
     m_env(env), m_ctx(ctx), m_token_table(get_token_table(env)) {
     set_options_core(o);
     m_meta_prefix   = "M";
     m_next_meta_idx = 1;
+    m_address_give_up = false;
 }
+template lean::pretty_fn<lean::eformat>::pretty_fn(lean::environment const&, lean::options const&, lean::abstract_type_context&);
 
 // Custom beta reduction procedure for the pretty printer.
 // We don't want to reduce application in show annotations.
@@ -1918,7 +2066,8 @@ std::string sexpr_to_string(sexpr const & s) {
 
 // check whether a space must be inserted between the strings so that lexing them would
 // produce separate tokens
-std::pair<bool, token_table const *> pretty_fn::needs_space_sep(token_table const * last, std::string const & s1, std::string const & s2) const {
+template<class T>
+std::pair<bool, token_table const *> pretty_fn<T>::needs_space_sep(token_table const * last, std::string const & s1, std::string const & s2) const {
     if (s1.empty() || (is_id_rest(get_utf8_last_char(s1.data()), s1.data() + s1.size()) && is_id_rest(s2.data(), s2.data() + s2.size())))
         return mk_pair(true, nullptr); // would be lexed as a single identifier without space
 
@@ -1955,8 +2104,8 @@ std::pair<bool, token_table const *> pretty_fn::needs_space_sep(token_table cons
     // the next identifier may expand s1 + s2 to a token, defer decision
     return mk_pair(false, t);
 }
-
-format pretty_fn::operator()(expr const & e) {
+template<class T>
+T pretty_fn<T>::operator()(expr const & e) {
     auto purified = purify(m_beta ? pp_beta_reduce_fn()(e) : e);
 
     if (!m_options.contains(get_pp_proofs_name()) && !get_pp_all(m_options)) {
@@ -1970,23 +2119,26 @@ format pretty_fn::operator()(expr const & e) {
     m_depth = 0; m_num_steps = 0;
     result r = pp_child(purified, 0);
 
-    // insert spaces so that lexing the result round-trips
-    std::function<bool(sexpr const &, sexpr const &)> sep; // NOLINT
-    token_table const * last = nullptr;
-    sep = [&](sexpr const & s1, sexpr const & s2) {
-        bool b;
-        std::tie(b, last) = needs_space_sep(last, sexpr_to_string(s1), sexpr_to_string(s2));
-        return b;
-    };
-    return r.fmt().separate_tokens(sep);
+    return r.fmt();
 }
+template eformat lean::pretty_fn<lean::eformat>::operator()(lean::expr const&);
+
 
 formatter_factory mk_pretty_formatter_factory() {
     return [](environment const & env, options const & o, abstract_type_context & ctx) { // NOLINT
-        auto fn_ptr = std::make_shared<pretty_fn>(env, o, ctx);
+        auto fn_ptr = std::make_shared<plain_pretty_fn>(env, o, ctx);
         return formatter(o, [=](expr const & e, options const & new_o) {
                 fn_ptr->set_options(new_o);
-                return (*fn_ptr)(e);
+                auto res = (*fn_ptr)(e);
+                // insert spaces so that lexing the result round-trips
+                std::function<bool(sexpr const &, sexpr const &)> sep; // NOLINT
+                token_table const * last = nullptr;
+                sep = [&](sexpr const & s1, sexpr const & s2) {
+                    auto p = fn_ptr->needs_space_sep(last, sexpr_to_string(s1), sexpr_to_string(s2));
+                    last = p.second;
+                    return p.first;
+                };
+                return res.separate_tokens(sep);
             });
     };
 }
@@ -2005,8 +2157,8 @@ static void pp_core(environment const & env, expr const & e, bool detail) {
     io_state ios(mk_pretty_formatter_factory(), mk_options(detail));
     regular(env, ios, tc) << e << "\n";
 }
-
 }
+
 // for debugging purposes
 void pp(lean::environment const & env, lean::expr const & e) { lean::pp_core(env, e, false); }
 void pp_detail(lean::environment const & env, lean::expr const & e) { lean::pp_core(env, e, true); }

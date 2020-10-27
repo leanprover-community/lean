@@ -27,6 +27,6 @@ if [[ "$f" == *.lean ]]; then
 else
     INPUT="$(cat "$f")"
 fi
-OUTPUT="$(echo "$INPUT" | "$LEAN" -j0 -D pp.unicode=true --server 2>&1)"
+OUTPUT="$(echo "$INPUT" | "$LEAN" -j0 -D pp.unicode=true --server --no-widgets 2>&1)"
 # make paths system-independent
 echo "$OUTPUT" | grep -v '"response":"current_tasks"' | sed "s|$ROOT_PATH_NORMALIZED||g" | sed 's|\\\\|/|g' | sed 's/\("source":\){[^}]*}/\1/'

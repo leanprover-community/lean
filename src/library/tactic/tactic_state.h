@@ -137,6 +137,9 @@ inline tactic_state set_dcs(tactic_state const & s, defeq_can_state const & dcs)
 tactic_state set_user_state(tactic_state const & s, tactic_user_state const & us);
 tactic_state set_context_cache_id(tactic_state const & s, context_cache_id const & cid);
 
+tactic_state unfreeze_local_instances(tactic_state const & s);
+tactic_state freeze_local_instances(tactic_state const & s);
+
 /* Auxiliary function that returns an updated tactic_state such s' s.t. the metavariable context is mctx and
    the main goal is of the form
 

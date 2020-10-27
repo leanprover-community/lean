@@ -71,7 +71,7 @@ have h₁ : 1 > 0, from dec_trivial,
 nat.sub_lt h h₁
 
 lemma lt_aux_3 {n i} (h : i + 1 < n) : n - 2 - i < n  :=
-have n > 0,     from lt.trans (nat.zero_lt_succ i) h,
+have n > 0,     from lt_trans (nat.zero_lt_succ i) h,
 have n - 2 < n, from nat.sub_lt this (dec_trivial),
 lt_of_le_of_lt (nat.sub_le _ _) this
 

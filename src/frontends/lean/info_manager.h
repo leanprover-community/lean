@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm.h"
 #include "library/tactic/tactic_state.h"
 #include "frontends/lean/json.h"
+#include "frontends/lean/widget.h"
 
 namespace lean {
 class info_data;
@@ -32,12 +33,16 @@ public:
 #endif
 };
 
+/** A format thunk, as is generated through `tactic.save_info_thunk : pos -> (unit -> format) -> tactic unit`.  */
 class vm_obj_format_info : public info_data_cell {
+    /** The environment of the tactic state at the moment that save_info_thunk was called */
     environment      m_env;
+    /** The thunk provided from `save_info_thunk` */
     ts_vm_obj        m_thunk;
+    /** A memoised format from the thunk */
     optional<format> m_cache;
 public:
-    vm_obj_format_info(environment const & env, vm_obj const & thunk):m_env(env), m_thunk(thunk) {}
+    vm_obj_format_info(environment const & env, vm_obj const & thunk): m_env(env), m_thunk(thunk) {}
 #ifdef LEAN_JSON
     virtual void report(io_state_stream const & ios, json & record) const;
 #endif
@@ -60,6 +65,40 @@ public:
     expr const & get_args() const { return m_args; }
     pos_info const & get_begin_pos() const { return m_begin_pos; }
     pos_info const & get_end_pos() const { return m_end_pos; }
+};
+
+class widget_info : public info_data_cell {
+protected:
+    environment  m_env;
+    pos_info     m_pos;
+    unsigned     m_id = 0;
+    vdom         m_vdom;
+    mutex        m_mutex;
+    widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
+public:
+    widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd): m_env(env), m_pos(pos), m_id(id), m_vdom(vd) {}
+    void get(json & record);
+    /** Given a message of the form
+     * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
+     * runs the event handler and updates the state.
+     * The record is updated to have `{status : "success", widget : {html : _}}` on success.
+     * If the widget update event yields an action then the record will be of type `{status: "edit", action: string, widget:_}`
+     * If the handler given does not correspond to a component on the widget, then the record is set to `{status: "invalid_handler"}`.
+     * It will throw is the json message has the wrong format.
+     */
+    void update(json const & message, json & record);
+    json to_json() const;
+    virtual void report(io_state_stream const &, json &) const {}
+
+    bool has_widget() const { return m_vdom.raw(); }
+    unsigned id() const { return m_id; }
+};
+
+class widget_goal_info : public widget_info {
+public:
+    widget_goal_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd) :
+        widget_info(env, pos, id, vd) {}
+    virtual void report(io_state_stream const & ios, json & record) const override;
 };
 
 class info_data {
@@ -86,6 +125,12 @@ public:
 
 hole_info_data const * is_hole_info_data(info_data const & d);
 hole_info_data const & to_hole_info_data(info_data const & d);
+vm_obj_format_info const * is_vm_obj_format_info(info_data const & d);
+widget_info const * is_widget_info(info_data const & d);
+widget_goal_info const * is_widget_goal_info(info_data const & d);
+bool is_term_goal(info_data const & d);
+
+optional<std::string> get_doc_string_including_override(environment const & env, name const & n);
 
 typedef rb_map<unsigned, list<info_data>, unsigned_cmp> line_info_data_set;
 
@@ -93,8 +138,8 @@ class info_manager : public log_entry_cell {
     std::string m_file_name;
     rb_map<unsigned, line_info_data_set, unsigned_cmp> m_line_data;
 
-    void add_info(pos_info pos, info_data data);
 public:
+    void add_info(pos_info pos, info_data data);
     info_manager() {}
     info_manager(std::string const & file_name) : m_file_name(file_name) {}
 
@@ -107,7 +152,10 @@ public:
     /* Takes type info from global declaration with the given name. */
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
+    void add_widget_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
+    void add_widget_goal_info(pos_info pos, vm_obj const & ts, vm_obj const & widget);
     void add_hole_info(pos_info const & begin_pos, pos_info const & end_pos, tactic_state const & s, expr const & hole_args);
+    void add_term_goal(pos_info const & pos, tactic_state const & s);
 
     line_info_data_set get_line_info_set(unsigned l) const;
     rb_map<unsigned, line_info_data_set, unsigned_cmp> const & get_line_info_sets() const { return m_line_data; }
@@ -119,6 +167,12 @@ public:
     void get_info_record(environment const & env, options const & o, io_state const & ios, pos_info pos,
                          json & record, std::function<bool (info_data const &)> pred = {}) const;
 #endif
+    optional<list<info_data>> get_info(pos_info pos) const;
+    /** Mutate the widget's state according to the widget's VM update function, expecting message to have the type;
+     *  Returns true when the widget was successfully updated.
+     */
+    bool update_widget(pos_info pos, unsigned id, json & record, json const & message) const;
+    bool get_widget(pos_info pos, unsigned id, json & record) const;
 };
 
 info_manager * get_global_info_manager();

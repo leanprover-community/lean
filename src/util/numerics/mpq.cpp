@@ -7,32 +7,8 @@ Author: Leonardo de Moura
 #include "util/sstream.h"
 #include "util/thread.h"
 #include "util/numerics/mpq.h"
-#include "util/numerics/mpbq.h"
 
 namespace lean {
-mpq * numeric_traits<mpq>::pi_l = nullptr;
-mpq * numeric_traits<mpq>::pi_n = nullptr;
-mpq * numeric_traits<mpq>::pi_u = nullptr;
-
-void numeric_traits<mpq>::initialize() {
-    pi_l = new mpq((3373259426.0 + 273688.0 / (1<<21)) / (1<<30));
-    pi_n = new mpq((3373259426.0 + 273688.0 / (1<<21)) / (1<<30));
-    pi_u = new mpq((3373259426.0 + 273688.0 / (1<<21)) / (1<<30));
-}
-
-void numeric_traits<mpq>::finalize() {
-    delete pi_l;
-    delete pi_n;
-    delete pi_u;
-}
-
-mpq & mpq::operator=(mpbq const & b) {
-    *this = 2;
-    power(*this, *this, b.get_k());
-    inv();
-    *this *= b.get_numerator();
-    return *this;
-}
 
 MK_THREAD_LOCAL_GET_DEF(mpz, get_tlocal1);
 int cmp(mpq const & a, mpz const & b) {
@@ -130,35 +106,11 @@ void display_decimal(std::ostream & out, mpq const & a, unsigned prec) {
     out << "?";
 }
 
-static mpq * g_zero = nullptr;
-
-mpq const & numeric_traits<mpq>::zero() {
-    lean_assert(is_zero(*g_zero));
-    return *g_zero;
-}
-
-static mpq * g_one = nullptr;
-mpq const & numeric_traits<mpq>::one() {
-    return *g_one;
-}
-
 serializer & operator<<(serializer & s, mpq const & n) {
     std::ostringstream out;
     out << n;
     s << out.str();
     return s;
-}
-
-void initialize_mpq() {
-    g_zero = new mpq();
-    g_one  = new mpq(1);
-    numeric_traits<mpq>::initialize();
-}
-
-void finalize_mpq() {
-    numeric_traits<mpq>::finalize();
-    delete g_zero;
-    delete g_one;
 }
 
 mpq read_mpq(deserializer & d) {

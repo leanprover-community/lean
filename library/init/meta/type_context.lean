@@ -1,5 +1,5 @@
 prelude
-import init.control init.meta.local_context init.meta.tactic init.meta.fun_info
+import init.control.monad init.meta.local_context init.meta.tactic init.meta.fun_info
 namespace tactic.unsafe
 /-- A monad that exposes the functionality of the C++ class `type_context_old`.
 The idea is that the methods to `type_context` are more powerful but _unsafe_ in the

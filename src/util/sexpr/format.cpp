@@ -458,7 +458,7 @@ bool format_pp_eq(format const & f1, format const & f2, options const & o) {
 }
 
 format pp(name const & n) {
-    return format(n.to_string());
+    return format(n.escape());
 }
 
 struct sexpr_pp_fn {

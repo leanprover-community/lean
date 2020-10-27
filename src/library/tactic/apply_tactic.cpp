@@ -188,6 +188,13 @@ static optional<tactic_state> apply(type_context_old & ctx, expr e, apply_cfg co
     buffer<bool> is_instance;
     for (unsigned i = 0; i < num_e_t; i++) {
         e_type    = ctx.relaxed_whnf(e_type);
+        if (!is_binding(e_type)) {
+            // Sometimes the type context can reduce terms when they're
+            // instantiated with local constants, but not when they're
+            // instantiated with metavariables:
+            // https://github.com/leanprover-community/lean/issues/372
+            break;
+        }
         expr meta = ctx.mk_metavar_decl(lctx, binding_domain(e_type));
         is_instance.push_back(binding_info(e_type).is_inst_implicit());
         metas.push_back(meta);

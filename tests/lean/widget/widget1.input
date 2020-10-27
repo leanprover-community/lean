@@ -1,0 +1,6 @@
+{"seq_num": 0, "command": "sync", "file_name": "widget1.lean"}
+{"seq_num": 45, "command": "info", "file_name": "widget1.lean", "line": 66, "column": 2}
+{"seq_num": 66, "command": "get_widget", "file_name": "widget1.lean", "line": 66, "column": 0, "id": 453}
+{"seq_num": 47, "command" : "widget_event", "handler" : {"h":0, "r" : [454, 453]}, "file_name": "widget1.lean", "line": 66, "column": 0, "id": 453, "args" : { "type" : "string", "value" : "hello world"}}
+{"seq_num": 48, "command" : "widget_event", "handler" : {"h":1, "r" : [454, 453]}, "file_name": "widget1.lean", "line": 66, "column": 0, "id": 453, "args" : { "type" : "unit", "value" : {}}}
+{"seq_num": 49, "command" : "widget_event", "handler" : {"h":1, "r" : [453]}, "file_name": "widget1.lean", "line": 66, "column": 0, "id": 453, "args" : { "type" : "unit", "value" : {}}}

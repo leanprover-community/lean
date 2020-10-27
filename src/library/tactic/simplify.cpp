@@ -1244,7 +1244,10 @@ meta constant simplify
 */
 vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, vm_obj const & c, vm_obj const & rel,
                        vm_obj const & prove, vm_obj const & _s) {
-    tactic_state s = tactic::to_state(_s);
+    tactic_state s0 = tactic::to_state(_s);
+    scope_trace_env env(s0.get_options());
+    auto s = freeze_local_instances(s0);
+    bool was_frozen = is_eqp(s, s0);
     try {
         simp_config cfg(c);
         tactic_state_context_cache cache(s);
@@ -1255,6 +1258,7 @@ vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, 
         if (!cfg.m_fail_if_unchanged || result.get_new() != to_expr(e)) {
             result = finalize(ctx, to_name(rel), result);
             tactic_state new_s = set_dcs(s, dcs);
+            if (!was_frozen) new_s = unfreeze_local_instances(new_s);
             return tactic::mk_success(mk_vm_pair(to_obj(result.get_new()), to_obj(result.get_proof())), new_s);
         } else {
             return tactic::mk_exception("simplify tactic failed to simplify", s);

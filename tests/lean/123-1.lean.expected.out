@@ -2,5 +2,7 @@
 context:
 G : Type,
 _inst_1 : has_mul G,
-V : Type
-⊢ G → V → Ring
+V : Type,
+g : G,
+v : V
+⊢ Ring

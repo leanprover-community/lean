@@ -1,0 +1,3 @@
+tactic.save_info_with_widgets : pos → tactic unit
+hello
+hello

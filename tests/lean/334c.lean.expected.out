@@ -1,0 +1,6 @@
+structure foo.bar : Π {H : Type}, foo H → (H → Prop) → Prop
+fields:
+foo.bar.bar : ∀ {H : Type} {G : foo H} {P : H → Prop}, @foo.bar H G P → P (@foo.foo H G)
+structure foo.bar' : Π {H : Type}, foo H → (H → Prop) → Prop
+fields:
+foo.bar'.bar : ∀ {H : Type} {G : foo H} {P : H → Prop}, @foo.bar' H G P → P (@foo.foo H G)
