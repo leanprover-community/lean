@@ -15,6 +15,8 @@
 #include "library/tactic/fun_info_tactics.h"
 #include "library/idx_metavar.h"
 #include "library/tactic/vm_local_context.h"
+#include "library/tactic/kabstract.h"
+
 namespace lean {
 /* [NOTE] this is a reference to a **mutable** type_context_old object.
 The Lean user should never be able to access this object directly.
@@ -266,6 +268,26 @@ vm_obj tco_fold_mvars(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_o
     });
     return r0;
 }
+
+vm_obj tco_kdepends_on(vm_obj const & e, vm_obj const & t, vm_obj const & s) {
+    try {
+        type_context_old & ctx = to_type_context_old(s);
+        return mk_succ(mk_vm_bool(kdepends_on(ctx, to_expr(e), to_expr(t))));
+    } catch (exception & ex) {
+        return mk_fail(ex.what());
+    }
+}
+
+vm_obj tco_kabstract(vm_obj const & e, vm_obj const & t, vm_obj const & u, vm_obj const & s0) {
+    try {
+        type_context_old & ctx = to_type_context_old(s0);
+        auto a = kabstract(ctx, to_expr(e), to_expr(t), occurrences(), to_bool(u));
+        return mk_succ(to_obj(a));
+    } catch (exception & ex) {
+        return mk_fail(ex.what());
+    }
+}
+
 void initialize_vm_type_context() {
     DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "pure"}), tco_pure);
     DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "bind"}), tco_bind);
@@ -301,6 +323,8 @@ void initialize_vm_type_context() {
     DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "to_tmp_mvars"}), tco_to_tmp_mvars);
     DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "get_fun_info"}), tco_get_fun_info);
     DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "try"}), tco_try);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "kabstract"}), tco_kabstract);
+    DECLARE_VM_BUILTIN(name({"tactic", "unsafe", "type_context", "kdepends_on"}), tco_kdepends_on);
 }
 void finalize_vm_type_context() {
 }
