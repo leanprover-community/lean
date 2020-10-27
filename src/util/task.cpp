@@ -91,8 +91,4 @@ task_queue & taskq() {
     return *g_taskq;
 }
 
-task_queue * taskq_ptr() {
-    return g_taskq;
-}
-
 }

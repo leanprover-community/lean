@@ -153,11 +153,10 @@ public:
 
 void set_task_queue(task_queue *); // NOLINT
 task_queue & taskq();
-task_queue * taskq_ptr();
 
 template <class Res>
 Res const & get(task<Res> const & t) {
-    return taskq_ptr()->get(t);
+    return taskq().get(t);
 }
 
 template <class Res>
