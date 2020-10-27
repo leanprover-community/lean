@@ -17,4 +17,5 @@ example : linear_order unit := {
     le_trans := λ _ _ _ _ _, trivial,
     le_antisymm := by intros a b; intros; cases a; cases b; refl,
     le_total := λ _ _, or.inl trivial,
+    decidable_le := infer_instance
 }

@@ -71,34 +71,49 @@ class is_idempotent (α : Type u) (f : α → α) : Prop :=
 (idempotent : ∀ a, f (f a) = f a)
 -/
 
+/-- `is_irrefl X r` means the binary relation `r` on `X` is irreflexive (that is, `r x x` never
+holds). -/
 @[algebra] class is_irrefl (α : Type u) (r : α → α → Prop) : Prop :=
 (irrefl : ∀ a, ¬ r a a)
 
+/-- `is_refl X r` means the binary relation `r` on `X` is reflexive. -/
 @[algebra] class is_refl (α : Type u) (r : α → α → Prop) : Prop :=
 (refl : ∀ a, r a a)
 
+/-- `is_symm X r` means the binary relation `r` on `X` is symmetric. -/
 @[algebra] class is_symm (α : Type u) (r : α → α → Prop) : Prop :=
 (symm : ∀ a b, r a b → r b a)
 
+/-- The opposite of a symmetric relation is symmetric. -/
 instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm α r] : is_symm_op α Prop r :=
 {symm_op := λ a b, propext $ iff.intro (is_symm.symm a b) (is_symm.symm b a)}
 
+/-- `is_asymm X r` means that the binary relation `r` on `X` is asymmetric, that is,
+`r a b → ¬ r b a`. -/
 @[algebra] class is_asymm (α : Type u) (r : α → α → Prop) : Prop :=
 (asymm : ∀ a b, r a b → ¬ r b a)
 
+/-- `is_antisymm X r` means the binary relation `r` on `X` is antisymmetric. -/
 @[algebra] class is_antisymm (α : Type u) (r : α → α → Prop) : Prop :=
 (antisymm : ∀ a b, r a b → r b a → a = b)
 
+/-- `is_trans X r` means the binary relation `r` on `X` is transitive. -/
 @[algebra] class is_trans (α : Type u) (r : α → α → Prop) : Prop :=
 (trans  : ∀ a b c, r a b → r b c → r a c)
 
+/-- `is_total X r` means that the binary relation `r` on `X` is total, that is, that for any
+`x y : X` we have `r x y` or `r y x`.-/
 @[algebra] class is_total (α : Type u) (r : α → α → Prop) : Prop :=
 (total : ∀ a b, r a b ∨ r b a)
 
+/-- `is_preorder X r` means that the binary relation `r` on `X` is a pre-order, that is, reflexive
+and transitive. -/
 @[algebra] class is_preorder (α : Type u) (r : α → α → Prop) extends is_refl α r, is_trans α r : Prop.
 
+/-- `is_total_preorder X r` means that the binary relation `r` on `X` is total and a preorder. -/
 @[algebra] class is_total_preorder (α : Type u) (r : α → α → Prop) extends is_trans α r, is_total α r : Prop.
 
+/-- Every total pre-order is a pre-order. -/
 instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s : is_total_preorder α r] : is_preorder α r :=
 {trans := s.trans,
  refl  := λ a, or.elim (@is_total.total _ r _ a a) id id}
@@ -217,7 +232,7 @@ lemma not_lt_of_equiv {a b : α} : a ≈ b → ¬ a ≺ b :=
 lemma not_lt_of_equiv' {a b : α} : a ≈ b → ¬ b ≺ a :=
 λ h, h.2
 
-instance : is_equiv α equiv :=
+instance is_equiv : is_equiv α equiv :=
 {refl := erefl, trans := @etrans, symm := @esymm}
 end
 

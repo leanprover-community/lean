@@ -99,7 +99,7 @@ variables {σ : Type u} {m : Type u → Type v}
 
 -- NOTE: The ordering of the following two instances determines that the top-most `state_t` monad layer
 -- will be picked first
-instance monad_state_trans {n : Type u → Type w} [has_monad_lift m n] [monad_state σ m] : monad_state σ n :=
+instance monad_state_trans {n : Type u → Type w} [monad_state σ m] [has_monad_lift m n] : monad_state σ n :=
 ⟨λ α x, monad_lift (monad_state.lift x : m α)⟩
 
 instance [monad m] : monad_state σ (state_t σ m) :=

@@ -1,5 +1,5 @@
 prelude
-import init.control init.meta.local_context init.meta.tactic init.meta.fun_info
+import init.control.monad init.meta.local_context init.meta.tactic init.meta.fun_info
 namespace tactic.unsafe
 /-- A monad that exposes the functionality of the C++ class `type_context_old`.
 The idea is that the methods to `type_context` are more powerful but _unsafe_ in the
@@ -82,6 +82,19 @@ meta constant level.tmp_get_assignment : nat → type_context level
 meta constant to_tmp_mvars : expr → type_context (expr × list level × list expr)
 meta constant mk_tmp_mvar (index : nat) (type : expr): expr
 meta constant level.mk_tmp_mvar (index : nat) : level
+/-- Return tt iff `t` "occurs" in `e`. The occurrence checking is performed using
+    keyed matching with the given transparency setting.
+
+    We say `t` occurs in `e` by keyed matching iff there is a subterm `s`
+    s.t. `t` and `s` have the same head, and `is_def_eq t s md`
+
+    The main idea is to minimize the number of `is_def_eq` checks
+    performed. -/
+meta constant kdepends_on (e t : expr) : type_context bool
+/-- Abstracts all occurrences of the term `t` in `e` using keyed matching.
+    If `unify` is `ff`, then matching is used instead of unification.
+    That is, metavariables occurring in `e` are not assigned. -/
+meta constant kabstract (e t : expr) (unify := tt) : type_context expr
 
 /-- Run the provided type_context within a backtracking scope.
 This means that any changes to the metavariable context will not be committed if the inner monad fails.

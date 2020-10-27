@@ -57,9 +57,10 @@ do t ← target >>= instantiate_mvars,
        exact pr)
    <|>
    (do type   ← whnf type,
-       guard (is_napp_of type `fin 1),
-       (a, b) ← is_ne t,
-       pr     ← mk_fin_val_ne_proof a b,
+       guard (type.app_fn = `(@subtype nat)),
+       applyc `subtype.ne_of_val_ne,
+       (`(subtype.mk %%a %%ha), `(subtype.mk %%b %%hb)) ← is_ne t,
+       pr     ← mk_nat_val_ne_proof a b,
        exact pr)
    <|>
    (do (a, b) ← is_eq t,
@@ -68,9 +69,10 @@ end tactic
 
 namespace tactic
 namespace interactive
-/-- Close goals of the form `n ≠ m` when `n` and `m` have type `nat`, `char`, `string`, `int` or `fin sz`,
-    and they are literals. It also closes goals of the form `n < m`, `n > m`, `n ≤ m` and `n ≥ m` for `nat`.
-    If the foal is of the form `n = m`, then it tries to close it using reflexivity. -/
+/-- Close goals of the form `n ≠ m` when `n` and `m` have type `nat`, `char`, `string`, `int` or
+    subtypes `{i : ℕ // p i}`, and they are literals.
+    It also closes goals of the form `n < m`, `n > m`, `n ≤ m` and `n ≥ m` for `nat`.
+    If the goal is of the form `n = m`, then it tries to close it using reflexivity. -/
 meta def comp_val := tactic.comp_val
 end interactive
 end tactic

@@ -1,0 +1,2 @@
+0. [simplify.rewrite] [eq_self_iff_true]: true = true ==> true
+0. [simplify.rewrite] [eq_self_iff_true]: @eq.{1} Prop true true ==> true

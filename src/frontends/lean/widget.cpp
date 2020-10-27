@@ -13,6 +13,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
 #include "library/vm/vm_pos_info.h"
+#include "library/vm/vm_json.h"
 #include "util/list.h"
 #include "frontends/lean/widget.h"
 #include "frontends/lean/json.h"
@@ -425,7 +426,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
         switch (cidx(attr)) {
             case attr_idx::val: { // val {\a} : string -> string -> attr
                 std::string key = to_string(cfield(attr, 0));
-                std::string value = to_string(cfield(attr, 1));
+                json value = to_json(cfield(attr, 1));
                 // [note] className fields should be merged.
                 if (key == "className" && attributes.find(key) != attributes.end()) {
                     std::string cn = attributes[key];

@@ -6,11 +6,14 @@ Author: Leonardo de Moura
 prelude
 import init.data.nat.basic
 open nat
-structure fin (n : nat) := (val : nat) (is_lt : val < n)
 
-attribute [pp_using_anonymous_constructor] fin
+/-- `fin n` is the subtype of `ℕ` consisting of natural numbers strictly smaller than `n`. -/
+def fin (n : ℕ) := {i : ℕ // i < n}
 
 namespace fin
+
+/-- Backwards-compatible constructor for `fin n`. -/
+def mk {n : ℕ} (i) (h) : fin n := ⟨i, h⟩
 
 protected def lt {n} (a b : fin n) : Prop :=
 a.val < b.val
@@ -27,21 +30,21 @@ nat.decidable_lt _ _
 instance decidable_le {n} (a b : fin n) : decidable (a ≤ b) :=
 nat.decidable_le _ _
 
-def {u} elim0 {α : Sort u} : fin 0 → α
+def {u} elim0 {α : fin 0 → Sort u} : Π (x : fin 0), α x
 | ⟨_, h⟩ := absurd h (not_lt_zero _)
 
 variable {n : nat}
 
-lemma eq_of_veq : ∀ {i j : fin n}, (val i) = (val j) → i = j
+lemma eq_of_veq : ∀ {i j : fin n}, i.val = j.val → i = j
 | ⟨iv, ilt₁⟩ ⟨.(iv), ilt₂⟩ rfl := rfl
 
-lemma veq_of_eq : ∀ {i j : fin n}, i = j → (val i) = (val j)
+lemma veq_of_eq : ∀ {i j : fin n}, i = j → i.val = j.val
 | ⟨iv, ilt⟩ .(_) rfl := rfl
 
-lemma ne_of_vne {i j : fin n} (h : val i ≠ val j) : i ≠ j :=
+lemma ne_of_vne {i j : fin n} (h : i.val ≠ j.val) : i ≠ j :=
 λ h', absurd (veq_of_eq h') h
 
-lemma vne_of_ne {i j : fin n} (h : i ≠ j) : val i ≠ val j :=
+lemma vne_of_ne {i j : fin n} (h : i ≠ j) : i.val ≠ j.val :=
 λ h', absurd (eq_of_veq h') h
 
 end fin
