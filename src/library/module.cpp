@@ -144,19 +144,12 @@ optional<std::string> get_decl_olean(environment const & env, name const & decl_
         return optional<std::string>();
 }
 
-LEAN_THREAD_VALUE(bool, g_has_pos, false);
-LEAN_THREAD_VALUE(unsigned, g_curr_line, 0);
-LEAN_THREAD_VALUE(unsigned, g_curr_column, 0);
+LEAN_THREAD_VALUE(pos_info, g_curr_pos, pos_info(0, 0));
 
-module::scope_pos_info::scope_pos_info(pos_info const & pos_info) {
-    g_has_pos     = true;
-    g_curr_line   = pos_info.first;
-    g_curr_column = pos_info.second;
-}
+module::scope_pos_info::scope_pos_info(pos_info const & pos_info) :
+    flet(g_curr_pos, pos_info) {}
 
-module::scope_pos_info::~scope_pos_info() {
-    g_has_pos = false;
-}
+module::scope_pos_info::~scope_pos_info() {}
 
 struct pos_info_mod : public modification {
     LEAN_MODIFICATION("PInfo")
@@ -185,9 +178,9 @@ struct pos_info_mod : public modification {
 };
 
 static environment add_decl_pos_info(environment const & env, name const & decl_name) {
-    if (!g_has_pos)
+    if (g_curr_pos.first == 0)
         return env;
-    return module::add_and_perform(env, std::make_shared<pos_info_mod>(decl_name, pos_info {g_curr_line, g_curr_column}));
+    return module::add_and_perform(env, std::make_shared<pos_info_mod>(decl_name, g_curr_pos));
 }
 
 optional<pos_info> get_decl_pos_info(environment const & env, name const & decl_name) {

@@ -172,7 +172,7 @@ optional<declaration> is_decl_modification(modification const & mod);
 
 /* Auxiliary object for setting position information for module declarations.
    It affects module::add and module::add_inductive methods. */
-class scope_pos_info {
+class scope_pos_info : private flet<pos_info> {
 public:
     scope_pos_info(pos_info const & pos_info);
     ~scope_pos_info();
