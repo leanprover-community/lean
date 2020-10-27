@@ -144,7 +144,7 @@ optional<std::string> get_decl_olean(environment const & env, name const & decl_
         return optional<std::string>();
 }
 
-LEAN_THREAD_VALUE(pos_info, g_curr_pos, pos_info(0, 0));
+LEAN_THREAD_VALUE(pos_info, g_curr_pos, (pos_info {0, 0}));
 
 module::scope_pos_info::scope_pos_info(pos_info const & pos_info) :
     flet(g_curr_pos, pos_info) {}
