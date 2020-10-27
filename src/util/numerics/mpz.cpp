@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include "util/thread.h"
 #include "util/numerics/mpz.h"
 #include <string>
+#include <vector>
 
 namespace lean {
 mpz::mpz(uint64 v):
@@ -68,15 +69,9 @@ bool root(mpz & root, mpz const & a, unsigned k) {
 
 void display(std::ostream & out, __mpz_struct const * v) {
     size_t sz = mpz_sizeinbase(v, 10) + 2;
-    if (sz < 1024) {
-        char buffer[1024];
-        mpz_get_str(buffer, 10, v);
-        out << buffer;
-    } else {
-        std::unique_ptr<char> buffer(new char[sz]);
-        mpz_get_str(buffer.get(), 10, v);
-        out << buffer.get();
-    }
+    std::vector<char> buffer(sz);
+    mpz_get_str(&buffer[0], 10, v);
+    out << &buffer[0];
 }
 
 std::ostream & operator<<(std::ostream & out, mpz const & v) {

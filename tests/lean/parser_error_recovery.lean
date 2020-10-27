@@ -1,24 +1,24 @@
 /- unknown identifiers -/
 
 def f1 : ℕ → ℕ
-| 42 := 9000
+| 42 := 1234
 | arg := ag
 
-#eval f1 42 -- OK (prints 9000)
+#eval f1 42 -- OK (prints 1234)
 
 /- incomplete structure instances -/
 
-def f2 : ℕ × ℕ := { fst := 9000, sn}
+def f2 : ℕ × ℕ := { fst := 1234, sn}
 
-#reduce f2.fst -- OK (prints 9000)
+#reduce f2.fst -- OK (prints 1234)
 
 /- incomplete if-then-else -/
 
 def f3 (x : ℕ) : ℕ :=
-(if x ≥ 42 then 9000)
+(if x ≥ 42 then 1234)
                  -- ^ missing else reported here
 
-#eval f3 42 -- OK (prints 9000)
+#eval f3 42 -- OK (prints 1234)
 
 /- η-expanded syntax errors -/
 
