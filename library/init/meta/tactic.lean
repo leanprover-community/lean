@@ -270,6 +270,43 @@ meta def decorate_ex (msg : format) (t : tactic α) : tactic α :=
 @[inline] meta def read : tactic tactic_state :=
 λ s, success s s
 
+/--
+`capture t` acts like `t`, but succeeds with a result containing either the returned value
+or the exception.
+Changes made by `t` to the `tactic_state` are preserved in both cases.
+
+The result can be used to inspect the error message, or passed to `unwrap` to rethrow the
+failure later.
+-/
+meta def capture (t : tactic α) : tactic (tactic_result α) :=
+λ s, match t s with
+| (success r s') := success (success r s') s'
+| (exception f p s') := success (exception f p s') s'
+end
+
+/--
+`unwrap r` unwraps a result previously obtained using `capture`.
+
+If the previous result was a success, this produces its wrapped value.
+If the previous result was an exception, this "rethrows" the exception as if it came
+from where it originated.
+
+`do r ← capture t, unwrap r` is identical to `t`, but allows for intermediate tactics to be inserted.
+-/
+meta def unwrap {α : Type*} (t : tactic_result α) : tactic α :=
+match t with
+| (success r s') := return r
+| e := λ s, e
+end
+
+/--
+`resume r` continues execution from a result previously obtained using `capture`.
+
+This is like `unwrap`, but the `tactic_state` is rolled back to point of capture even upon success. 
+-/
+meta def resume {α : Type*} (t : tactic_result α) : tactic α :=
+λ s, t
+
 meta def get_options : tactic options :=
 do s ← read, return s.get_options
 
@@ -482,7 +519,7 @@ meta constant mk_eq_mpr      : expr → expr → tactic expr
    Otherwise, try to find a local constant that has type of the form (t = t') or (t' = t).
    The tactic fails if the given expression is not a local constant. -/
 meta constant subst_core     : expr → tactic unit
-/-- Close the current goal using `e`. Fail is the type of `e` is not definitionally equal to
+/-- Close the current goal using `e`. Fail if the type of `e` is not definitionally equal to
     the target type. -/
 meta constant exact (e : expr) (md := semireducible) : tactic unit
 /-- Elaborate the given quoted expression with respect to the current main goal.
@@ -896,8 +933,14 @@ meta def intron_with
 
 /-- Returns n fully qualified if it refers to a constant, or else fails. -/
 meta def resolve_constant (n : name) : tactic name :=
-do (expr.const n _) ← resolve_name n,
-   pure n
+do e ← resolve_name n,
+   match e with
+   | expr.const n _ := pure n
+   | _ := do
+     e ← to_expr e tt ff,
+     expr.const n _ ← pure $ e.get_app_fn,
+     pure n
+   end
 
 meta def to_expr_strict (q : pexpr) : tactic expr :=
 to_expr q
@@ -1113,11 +1156,11 @@ first $ map solve1 ts
 
 private meta def focus_aux {α} : list (tactic α) → list expr → list expr → tactic (list α)
 | []       []      rs := set_goals rs *> pure []
-| (t::ts)  []      rs := fail "focus' tactic failed, insufficient number of goals"
+| (t::ts)  []      rs := fail "focus tactic failed, insufficient number of goals"
 | tts      (g::gs) rs :=
   mcond (is_assigned g) (focus_aux tts gs rs) $
     do set_goals [g],
-       t::ts ← pure tts | fail "focus' tactic failed, insufficient number of tactics",
+       t::ts ← pure tts | fail "focus tactic failed, insufficient number of tactics",
        a ← t,
        rs' ← get_goals,
        as ← focus_aux ts gs (rs ++ rs'),
@@ -1132,11 +1175,11 @@ do gs ← get_goals, focus_aux ts gs []
 
 private meta def focus'_aux : list (tactic unit) → list expr → list expr → tactic unit
 | []       []      rs := set_goals rs
-| (t::ts)  []      rs := fail "focus tactic failed, insufficient number of goals"
+| (t::ts)  []      rs := fail "focus' tactic failed, insufficient number of goals"
 | tts      (g::gs) rs :=
   mcond (is_assigned g) (focus'_aux tts gs rs) $
     do set_goals [g],
-       t::ts ← pure tts | fail "focus tactic failed, insufficient number of tactics",
+       t::ts ← pure tts | fail "focus' tactic failed, insufficient number of tactics",
        t,
        rs' ← get_goals,
        focus'_aux ts gs (rs ++ rs')

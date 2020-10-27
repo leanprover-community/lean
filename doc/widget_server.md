@@ -163,6 +163,7 @@ interface GetWidgetResponse extends CommandResponse {
 ← {response: "ok", seq_num: 1, record: {..., widget: {line: 25, column: 0, id: 51}}}
 → {command: "get_widget", seq_num: 2, file_name: "my_file.lean", line: 25, column: 0, id: 51}
 ← {response: "ok", seq_num: 2, widget: {line: 25, column: 0, id: 51, html: {...}}}
+```
 
 ## Rendering a widget
 

@@ -1,3 +1,45 @@
+3.22.0c (27 October 2020)
+-------------------------
+
+Features:
+- Improve error handling of `for` and `find` in `conv` mode (#482, #485)
+
+Bug fixes:
+- Fix typos in docstrings for `tactic.focus` and `tactic.focus'` (#483)
+
+Changes:
+- Remove `lean --doc` (which never actually did anything) (#480)
+- Add `decidable_*` assumptions to `linear_order` and remove `decidable_linear_order` (#484)
+
+3.21.0c (12 October 2020)
+-------------------------
+
+Features:
+- Simplify definition of `band` and `bor` (#466)
+- More advice in docstrings for `Exists`, `not`, `and`, and `or` (#296)
+
+Bug fixes:
+- Fix typo in docstring for `tactic.exact` (#472)
+- Fix missing code block in [widget server docs](widget_server.md) (#473)
+
+Changes:
+- Remove global notation for `vector.cons` (#471)
+
+3.20.0c (9 September 2020)
+--------------------------
+
+Features:
+- Options are refreshed when the simplifier is entered. (#456)
+- JSON support for widgets (#453)
+- More definition and theorem docstrings (#463)
+
+Bug fixes:
+- Typeclass args for `monad_state_trans` were flipped. (#461)
+- `resolve_constant` now handles `parameters` correctly. (#462)
+
+Changes:
+- Remove `nat.pow` from the core library (#457)
+
 3.19.0c (27 August 2020)
 ------------------------
 

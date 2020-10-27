@@ -48,7 +48,6 @@ Author: Leonardo de Moura
 #include "library/trace.h"
 #include "init/init.h"
 #include "shell/simple_pos_info_provider.h"
-#include "shell/leandoc.h"
 #ifdef _MSC_VER
 #include <io.h>
 #define STDOUT_FILENO 1
@@ -189,7 +188,6 @@ static void display_help(std::ostream & out) {
     std::cout << "  --version -v       display version number\n";
     std::cout << "  --githash          display the git commit hash number used to build this binary\n";
     std::cout << "  --run              executes the 'main' definition\n";
-    std::cout << "  --doc=file -r      generate module documentation based on module doc strings\n";
     std::cout << "  --make             create olean files\n";
     std::cout << "  --recursive        recursively find *.lean files in directory arguments\n";
     std::cout << "  --trust=num -t     trust level (default: max) 0 means do not trust any macro,\n"
@@ -246,7 +244,6 @@ static struct option g_long_options[] = {
     {"server",       optional_argument, 0, 'S'},
     {"no-widgets",   no_argument,       0, 'W'},
 #endif
-    {"doc",          required_argument, 0, 'r'},
 #if defined(LEAN_MULTI_THREAD)
     {"tstack",       required_argument, 0, 's'},
 #endif
@@ -490,9 +487,6 @@ int main(int argc, char ** argv) {
             break;
         case 'n':
             native_output         = optarg;
-            break;
-        case 'r':
-            doc = optarg;
             break;
         case 'M':
             opts = opts.update(get_max_memory_opt_name(), atoi(optarg));
@@ -763,12 +757,6 @@ int main(int argc, char ** argv) {
                 decls = to_list(only_export);
             }
             export_as_lowtext(out, combined_env, decls);
-        }
-
-        if (doc) {
-            exclusive_file_lock export_lock(*doc);
-            std::ofstream out(*doc);
-            gen_doc(env, opts, out);
         }
 
         return ((ok && !get(has_errors(lt.get_root()))) || test_suite) ? 0 : 1;

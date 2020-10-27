@@ -9,12 +9,12 @@ import init.algebra.order init.meta
 
 universe u
 
-definition min {α : Type u} [decidable_linear_order α] (a b : α) : α := if a ≤ b then a else b
-definition max {α : Type u} [decidable_linear_order α] (a b : α) : α := if b ≤ a then a else b
+definition min {α : Type u} [linear_order α] (a b : α) : α := if a ≤ b then a else b
+definition max {α : Type u} [linear_order α] (a b : α) : α := if b ≤ a then a else b
 
 section
 open decidable tactic
-variables {α : Type u} [decidable_linear_order α]
+variables {α : Type u} [linear_order α]
 
 private meta def min_tac_step : tactic unit :=
 solve1 $ intros
