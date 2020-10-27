@@ -154,7 +154,7 @@ set_tests_properties(leanruntest_clear_all PROPERTIES FIXTURES_SETUP AllFiles)
 file(GLOB LEANRUNTESTS "${LEAN_SOURCE_DIR}/../tests/lean/run/*.lean")
 add_test(NAME leanruntest_all
         WORKING_DIRECTORY "${LEAN_SOURCE_DIR}/../tests/lean/run"
-        COMMAND bash "true" "${CMAKE_CURRENT_BINARY_DIR}/lean")
+        COMMAND bash "./test_all.sh" "${CMAKE_CURRENT_BINARY_DIR}/lean")
 set_tests_properties(leanruntest_all PROPERTIES DEPENDS leanruntest_clear_all # for cmake < 3.7
                                                 FIXTURES_REQUIRED AllFiles
                                                 RUN_SERIAL 1)
