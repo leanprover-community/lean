@@ -60,7 +60,31 @@ namespace boo
 -- Instance naming for variable arguments works (generating `boo.moo`)
 -- even if the variable is actually being implicitly coerced to something else.
 instance (b : boo) : moo b := ⟨⟩
+
+-- Instance naming works for projections
+instance (b : boo) : moo b.β := ⟨⟩
+example := boo.β.moo
 end boo
+
+-- Instance naming works for explicit type ascriptions
+instance : moo (@set ℕ : Type) := ⟨⟩
+example := set.moo
+
+-- also for sorts
+instance : moo Type := ⟨⟩
+example := sort.moo
+
+-- and pis
+instance : moo (ℕ → ℕ) := ⟨⟩
+example := pi.moo
+
+section
+parameter (n : ℕ)
+def cow := fin n
+-- and parameters
+instance : moo cow := ⟨⟩
+example := cow.moo
+end
 
 example := category_theory.forgetful_functor.is_right_adjoint
 example := category_theory.nat.zero.is_right_adjoint

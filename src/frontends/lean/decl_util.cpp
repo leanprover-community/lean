@@ -20,12 +20,15 @@ Author: Leonardo de Moura
 #include "library/reducible.h"
 #include "library/scoped_ext.h"
 #include "library/tactic/elaborate.h"
+#include "library/typed_expr.h"
+#include "library/annotation.h"
 #include "frontends/lean/util.h"
 #include "frontends/lean/decl_util.h"
 #include "frontends/lean/tokens.h"
 #include "frontends/lean/decl_attributes.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/elaborator.h"
+#include "frontends/lean/builtin_exprs.h"
 
 namespace lean {
 bool parse_univ_params(parser & p, buffer<name> & lp_names) {
@@ -58,15 +61,7 @@ The current namespace will implicitly be prepended to the resulting name.
 For `instance [...] : C t u α`, where `α` is a variable
 (at parse time--it might turn into a coercion later, during typechecking)
 we generate the name `C`, stripping off the current namespace if possible.
-
-Further improvements to the heuristic are possible, for example:
-  instance : C (X.foo Y)     -- foo.C
-  instance : C (D : α → β)   -- D.C
-  instance : C (@D x y)      -- D.C
-  instance : C (Π i, F i)    -- Pi.C
-  instance : C (Type u)      -- Type.C
-but not yet implemented.
-The heuristic can also fail in the presence of parameters.
+The heuristic can fail in the presence of parameters.
 
 Examples:
 
@@ -109,24 +104,72 @@ end zoo
 optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     expr it = type;
     while (is_pi(it)) it = binding_body(it);
+
+    // Extract type class name.
     expr const & C = get_app_fn(it);
-    if (is_constant(C) && is_app(it) && is_constant(get_app_fn(app_arg(it)))) {
-        name class_name = const_name(C);
-        name arg_name = const_name(get_app_fn(app_arg(it)));
-        if (class_name == ns && class_name.is_string())
-            class_name = class_name.get_string();
-        else if (is_prefix_of(ns, class_name))
-            class_name = class_name.replace_prefix(ns, name());
-        if (is_prefix_of(ns, arg_name))
-            arg_name = arg_name.replace_prefix(ns, name());
-        return optional<name>(arg_name + class_name);
-    } else if (is_constant(C) && is_app(it) && is_local(app_arg(it))) {
-        name class_name = const_name(C);
-        if (is_prefix_of(ns, class_name))
-            class_name = class_name.replace_prefix(ns, name());
-        return optional<name>(class_name);
+    if (!is_constant(C)) return {};
+    name class_name = const_name(C);
+
+    // Look at head symbol of last argument.
+    if (!is_app(it)) return {};
+    expr arg_head = app_arg(it);
+    while (true) {
+        if (is_app(arg_head)) {
+            arg_head = app_fn(arg_head);
+        } else if (is_typed_expr(arg_head)) {
+            arg_head = get_typed_expr_expr(arg_head);
+        } else if (is_explicit_or_partial_explicit(arg_head)) {
+            arg_head = get_explicit_or_partial_explicit_arg(arg_head);
+        } else if (is_annotation(arg_head)) {
+            arg_head = get_annotation_arg(arg_head);
+        } else {
+            break;
+        }
+    }
+
+    // Generate name for argument.
+    name arg_name;
+    if (is_constant(arg_head)) {
+        arg_name = const_name(arg_head);
+    } else if (is_sort(arg_head) || is_sort_wo_universe(arg_head)) {
+        arg_name = "sort";
+    } else if (is_pi(arg_head)) {
+        arg_name = "pi";
+    } else if (is_field_notation(arg_head)) {
+        expr lhs = macro_arg(arg_head, 0);
+        arg_name = get_field_notation_field_name(arg_head);
+
+        // The field projection does not have the full name.
+        // If we can guess the type of the lhs, prepend it.
+        if (is_local(lhs)) {
+            expr type = get_app_fn(mlocal_type(lhs));
+            if (is_constant(type))
+                arg_name = const_name(type) + arg_name;
+        }
+    } else if (is_local(arg_head)) {
+        // only class name
     } else {
         return {};
+    }
+
+    // Strip namespace prefix of class.
+    if (class_name == ns && class_name.is_string()) {
+        class_name = class_name.get_string();
+    } else if (ns && is_prefix_of(ns, class_name)) {
+        class_name = class_name.replace_prefix(ns, name());
+    }
+
+    name inst_name = arg_name + class_name;
+
+    // Strip namespace prefix to prevent duplicate namespace.
+    if (ns && is_prefix_of(ns, inst_name)) {
+        inst_name = inst_name.replace_prefix(ns, name());
+    }
+
+    if (!inst_name) {
+        return {};
+    } else {
+        return optional<name>(inst_name);
     }
 }
 
