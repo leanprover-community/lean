@@ -1577,15 +1577,17 @@ meta def funext : parse ident_* → tactic unit
 | hs := funext_lst hs >> skip
 
 /--
-If the target of the main goal is a proposition `p`, `by_contradiction h` reduces the goal to proving `false` using the additional hypothesis `h : ¬ p`. If `h` is omitted, a name is generated automatically.
+If the target of the main goal is a proposition `p`, `by_contradiction` reduces the goal to proving `false` using the additional hypothesis `h : ¬ p`. `by_contradiction h` can be used to name the hypothesis `h : ¬ p`.
 
-This tactic requires that `p` is decidable. To ensure that all propositions are decidable via classical reasoning, use  `local attribute [instance] classical.prop_decidable`.
+This tactic will attempt to use decidability of `p` if available, and will otherwise fall back on classical reasoning.
 -/
 meta def by_contradiction (n : parse ident?) : tactic unit :=
-tactic.by_contradiction n >> return ()
+tactic.by_contradiction (n.get_or_else `h) $> ()
 
 /--
-An abbreviation for `by_contradiction`.
+If the target of the main goal is a proposition `p`, `by_contra` reduces the goal to proving `false` using the additional hypothesis `h : ¬ p`. `by_contra h` can be used to name the hypothesis `h : ¬ p`.
+
+This tactic will attempt to use decidability of `p` if available, and will otherwise fall back on classical reasoning.
 -/
 meta def by_contra (n : parse ident?) : tactic unit :=
 by_contradiction n
