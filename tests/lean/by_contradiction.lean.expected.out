@@ -1,14 +1,14 @@
 a b : ℕ,
-a_1 : a ≠ b,
+ᾰ : a ≠ b,
 H : a = b
 ⊢ false
 -------
 a b : ℕ,
-a_1 : ¬¬a = b,
+ᾰ : ¬¬a = b,
 H : ¬a = b
 ⊢ false
 -------
 p q : Prop,
-a : ¬¬p,
+ᾰ : ¬¬p,
 H : ¬p
 ⊢ false
