@@ -78,6 +78,14 @@ example := sort.moo
 instance : moo (ℕ → ℕ) := ⟨⟩
 example := pi.moo
 
+section
+parameter (n : ℕ)
+def cow := fin n
+-- and parameters
+instance : moo cow := ⟨⟩
+example := cow.moo
+end
+
 example := category_theory.forgetful_functor.is_right_adjoint
 example := category_theory.nat.zero.is_right_adjoint
 example := category_theory.functor.inhabited

@@ -21,6 +21,7 @@ Author: Leonardo de Moura
 #include "library/scoped_ext.h"
 #include "library/tactic/elaborate.h"
 #include "library/typed_expr.h"
+#include "library/annotation.h"
 #include "frontends/lean/util.h"
 #include "frontends/lean/decl_util.h"
 #include "frontends/lean/tokens.h"
@@ -119,6 +120,8 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
             arg_head = get_typed_expr_expr(arg_head);
         } else if (is_explicit_or_partial_explicit(arg_head)) {
             arg_head = get_explicit_or_partial_explicit_arg(arg_head);
+        } else if (is_annotation(arg_head)) {
+            arg_head = get_annotation_arg(arg_head);
         } else {
             break;
         }
