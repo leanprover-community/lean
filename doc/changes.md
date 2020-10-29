@@ -1,3 +1,17 @@
+3.23.0c (29 October 2020)
+-------------------------
+
+Features:
+- Expose `kabstract` in `type_context` to the VM (#391)
+- Add position information to declarations added in user commands (#488)
+
+Bug fixes:
+- The `a` bug is replaced by the `ᾰ` bug (#490)
+
+Changes:
+- New instance naming heuristic (#458, #493)
+- `by_contradiction` uses classical logic and the name `h` (#491)
+
 3.22.0c (27 October 2020)
 -------------------------
 
