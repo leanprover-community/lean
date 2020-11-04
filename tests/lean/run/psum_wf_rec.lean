@@ -1,9 +1,9 @@
-def psum.alt.sizeof {α β} [has_sizeof α] [has_sizeof β] : psum α β → nat
+def psum.alt'.sizeof {α β} [has_sizeof α] [has_sizeof β] : psum α β → nat
 | (psum.inl a) := 2*sizeof a + 2
 | (psum.inr b) := 2*sizeof b + 1
 
 def sum_has_sizeof_2 {α β} [has_sizeof α] [has_sizeof β] : has_sizeof (psum α β) :=
-⟨psum.alt.sizeof⟩
+⟨psum.alt'.sizeof⟩
 
 local attribute [instance] sum_has_sizeof_2
 local attribute [simp] nat.add_comm nat.add_left_comm nat.add_assoc nat.mul_assoc nat.mul_comm nat.one_mul
