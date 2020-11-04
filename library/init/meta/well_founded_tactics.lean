@@ -170,7 +170,8 @@ do `(%%lhs < %%rhs) ← target,
      target_pr  ← to_expr ``(congr (congr_arg (<) %%lhs_pr) %%rhs_pr),
      new_target ← to_expr ``(%%new_lhs < %%new_rhs),
      replace_target new_target target_pr,
-     `[apply nat.add_lt_add_left] <|> `[apply nat.lt_add_of_zero_lt_left]
+     `[apply nat.add_lt_add_left] <|> `[apply nat.lt_add_of_zero_lt_left] <|>
+     fail "cancel_nat_add_lt failed"
 
 meta def check_target_is_value_lt : tactic unit :=
 do `(%%lhs < %%rhs) ← target,
