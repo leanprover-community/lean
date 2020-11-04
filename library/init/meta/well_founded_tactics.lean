@@ -170,8 +170,7 @@ do `(%%lhs < %%rhs) ← target,
      target_pr  ← to_expr ``(congr (congr_arg (<) %%lhs_pr) %%rhs_pr),
      new_target ← to_expr ``(%%new_lhs < %%new_rhs),
      replace_target new_target target_pr,
-     `[apply nat.add_lt_add_left] <|> `[apply nat.lt_add_of_zero_lt_left] <|>
-     fail "cancel_nat_add_lt failed"
+     `[apply nat.add_lt_add_left] <|> `[apply nat.lt_add_of_zero_lt_left]
 
 meta def check_target_is_value_lt : tactic unit :=
 do `(%%lhs < %%rhs) ← target,
@@ -199,7 +198,9 @@ do clear_internals,
    -- The next line was adapted from code in mathlib by Scott Morrison.
    -- Because `unfold_sizeof` could actually discharge the goal, add a test
    -- using `done` to detect this.
-   process_lex (unfold_sizeof >> (done <|> (cancel_nat_add_lt >> trivial_nat_lt)))
+   process_lex (unfold_sizeof >> (done <|> (cancel_nat_add_lt >> trivial_nat_lt))) <|>
+   -- Clean up the goal state but not too much before printing the error
+   (unfold_sizeof >> fail "default_dec_tac failed")
 
 end well_founded_tactics
 
