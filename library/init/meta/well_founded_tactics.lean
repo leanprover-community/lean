@@ -25,8 +25,32 @@ lemma nat.lt_add_right (a b c : nat) : a < b → a < b + c :=
 lemma nat.lt_add_left (a b c : nat) : a < b → a < c + b :=
 λ h, lt_of_lt_of_le h (nat.le_add_left _ _)
 
+protected def {u v} psum.alt.sizeof
+  {α : Type u} {β : Type v} [has_sizeof α] [has_sizeof β] : psum α β → ℕ
+| (psum.inl a) := sizeof a
+| (psum.inr b) := sizeof b
+
+@[reducible]
+protected def {u v} psum.has_sizeof_alt
+  (α : Type u) (β : Type v) [has_sizeof α] [has_sizeof β] : has_sizeof (psum α β) :=
+⟨psum.alt.sizeof⟩
+
 namespace well_founded_tactics
 open tactic
+
+meta def mk_alt_sizeof : expr → expr
+| (expr.app (expr.app (expr.app (expr.app (expr.const ``psum.has_sizeof l) α) β) iα) iβ) :=
+  (expr.const ``psum.has_sizeof_alt l : expr) α β iα (mk_alt_sizeof iβ)
+| e := e
+
+meta def default_rel_tac (e : expr) (eqns : list expr) : tactic unit :=
+do tgt ← target,
+  rel ← mk_instance tgt,
+  exact $ match e, rel with
+    expr.local_const _ (name.mk_string "_mutual" _) _ _,
+    expr.app e@`(@has_well_founded_of_has_sizeof _) sz := e (mk_alt_sizeof sz)
+  | _, _ := rel
+  end
 
 private meta def clear_wf_rec_goal_aux : list expr → tactic unit
 | []      := return ()
@@ -188,7 +212,7 @@ end well_founded_tactics
   The tactic `dec_tac` has to synthesize decreasing proofs.
 -/
 meta structure well_founded_tactics :=
-(rel_tac : expr → list expr → tactic unit := λ _ _, tactic.apply_instance)
+(rel_tac : expr → list expr → tactic unit := well_founded_tactics.default_rel_tac)
 (dec_tac : tactic unit := well_founded_tactics.default_dec_tac)
 
 meta def well_founded_tactics.default : well_founded_tactics :=
