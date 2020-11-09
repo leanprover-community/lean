@@ -1228,7 +1228,7 @@ end mk_simp_set
 namespace interactive
 open interactive interactive.types expr
 
-meta def simp_core_aux (cfg : simp_config) (discharger : tactic unit) (s : simp_lemmas) (u : list name) (hs : list expr) (tgt : bool) : tactic unit :=
+meta def simp_core_aux (cfg : simp_config) (discharger : tactic unit) (s : simp_lemmas) (u : list name) (hs : list expr) (tgt : bool) : tactic name_set :=
 do to_remove ← hs.mfilter $ λ h, do {
          h_type ← infer_type h,
          (do (new_h_type, pr, lms) ← simplify s u h_type cfg `eq discharger,
@@ -1236,22 +1236,26 @@ do to_remove ← hs.mfilter $ λ h, do {
              mk_eq_mp pr h >>= tactic.exact >> return tt)
          <|>
          (return ff) },
-   goal_simplified ← if tgt then (simp_target s u cfg discharger >> return tt) <|> (return ff) else return ff,
+   (lms, success) ← (simp_target s u cfg discharger >>= λ ns, return (ns, tt)) <|> (return (name_set.of_list [], ff)),
+   let goal_simplified := tgt && success,
    guard (cfg.fail_if_unchanged = ff ∨ to_remove.length > 0 ∨ goal_simplified) <|> fail "simplify tactic failed to simplify",
-   to_remove.mmap' (λ h, try (clear h))
+   to_remove.mmap' (λ h, try (clear h)),
+   return lms
 
 meta def simp_core (cfg : simp_config) (discharger : tactic unit)
                    (no_dflt : bool) (hs : list simp_arg_type) (attr_names : list name)
-                   (locat : loc) : tactic unit :=
-match locat with
-| loc.wildcard := do (all_hyps, s, u) ← mk_simp_set_core no_dflt attr_names hs tt,
-                     if all_hyps then tactic.simp_all s u cfg discharger
-                     else do hyps ← non_dep_prop_hyps, simp_core_aux cfg discharger s u hyps tt
-| _            := do (s, u) ← mk_simp_set no_dflt attr_names hs,
-                     ns ← locat.get_locals,
-                     simp_core_aux cfg discharger s u ns locat.include_goal
-end
->> try tactic.triv >> try (tactic.reflexivity reducible)
+                   (locat : loc) : tactic name_set :=
+do lms ← match locat with
+  | loc.wildcard := do (all_hyps, s, u) ← mk_simp_set_core no_dflt attr_names hs tt,
+                      if all_hyps then tactic.simp_all s u cfg discharger
+                      else do hyps ← non_dep_prop_hyps, simp_core_aux cfg discharger s u hyps tt
+  | _            := do (s, u) ← mk_simp_set no_dflt attr_names hs,
+                      ns ← locat.get_locals,
+                      simp_core_aux cfg discharger s u ns locat.include_goal
+  end,
+  try tactic.triv,
+  try (tactic.reflexivity reducible),
+  return lms
 
 /--
 The `simp` tactic uses lemmas and hypotheses to simplify the main goal target or non-dependent hypotheses. It has many variants.
@@ -1276,10 +1280,17 @@ The `simp` tactic uses lemmas and hypotheses to simplify the main goal target or
 
 `simp with attr₁ ... attrₙ` simplifies the main goal target using the lemmas tagged with any of the attributes `[attr₁]`, ..., `[attrₙ]` or `[simp]`.
 -/
-meta def simp (use_iota_eqn : parse $ (tk "!")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list) (attr_names : parse with_ident_list)
+meta def simp (use_iota_eqn : parse $ (tk "!")?) (trace_lemmas : parse $ (tk "?")?) (no_dflt : parse only_flag) (hs : parse simp_arg_list) (attr_names : parse with_ident_list)
               (locat : parse location) (cfg : simp_config_ext := {}) : tactic unit :=
-let cfg := if use_iota_eqn.is_none then cfg else {iota_eqn := tt, ..cfg} in
-propagate_tags (simp_core cfg.to_simp_config cfg.discharger no_dflt hs attr_names locat)
+let cfg := match use_iota_eqn, trace_lemmas with
+| none    , none     := cfg
+| (some _), none     := {iota_eqn := tt, ..cfg}
+| none    , (some _) := {trace_lemmas := tt, ..cfg}
+| (some _), (some _) := {iota_eqn := tt, trace_lemmas := tt, ..cfg}
+end in
+propagate_tags $
+do lms ← simp_core cfg.to_simp_config cfg.discharger no_dflt hs attr_names locat,
+  if cfg.trace_lemmas then trace lms else skip
 
 /--
 Just construct the simp set and trace it. Used for debugging.
@@ -1481,7 +1492,8 @@ As with `simp`, the `at` modifier can be used to specify locations for the unfol
 meta def unfold (cs : parse ident*) (locat : parse location) (cfg : unfold_config := {}) : tactic unit :=
 do es ← ids_to_simp_arg_list "unfold" cs,
    let no_dflt := tt,
-   simp_core cfg.to_simp_config failed no_dflt es [] locat
+   simp_core cfg.to_simp_config failed no_dflt es [] locat,
+   skip
 
 /--
 Similar to `unfold`, but does not iterate the unfolding.

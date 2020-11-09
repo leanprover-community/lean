@@ -276,6 +276,7 @@ structure simp_config :=
 (single_pass : bool        := ff)
 (fail_if_unchanged         := tt)
 (memoize                   := tt)
+(trace_lemmas              := ff)
 
 /--
   `simplify s e cfg r prove` simplify `e` using `s` using bottom-up traversal.
@@ -288,16 +289,18 @@ structure simp_config :=
 meta constant simplify (s : simp_lemmas) (to_unfold : list name := []) (e : expr) (cfg : simp_config := {}) (r : name := `eq)
                        (discharger : tactic unit := failed) : tactic (expr × expr × name_set)
 
-meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
+meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic name_set :=
 do t ← target >>= instantiate_mvars,
    (new_t, pr, lms) ← simplify s to_unfold t cfg `eq discharger,
-   replace_target new_t pr
+   replace_target new_t pr,
+   return lms
 
-meta def simp_hyp (s : simp_lemmas) (to_unfold : list name := []) (h : expr) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic expr :=
+meta def simp_hyp (s : simp_lemmas) (to_unfold : list name := []) (h : expr) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic (expr × name_set) :=
 do when (expr.is_local_constant h = ff) (fail "tactic simp_at failed, the given expression is not a hypothesis"),
    htype ← infer_type h,
    (h_new_type, pr, lms) ← simplify s to_unfold htype cfg `eq discharger,
-   replace_hyp h h_new_type pr
+   new_hyp ← replace_hyp h h_new_type pr,
+   return (new_hyp, lms)
 
 /--
 `ext_simplify_core a c s discharger pre post r e`:
@@ -544,24 +547,29 @@ private meta def join_pr : option expr → expr → tactic expr
 | (some pr₁) pr₂ := mk_eq_trans pr₁ pr₂
 
 private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold : list name)
-                      : list simp_all_entry → list simp_all_entry → simp_lemmas → bool → tactic unit
+                      : list simp_all_entry → list simp_all_entry → simp_lemmas → bool → tactic name_set
 | []      r  s m :=
   if m then loop r [] s ff
   else do
     add_new_hyps r,
-    target_changed ← (simp_target s to_unfold cfg discharger >> return tt) <|> return ff,
+    (lms, target_changed) ← (simp_target s to_unfold cfg discharger >>= λ ns, return (ns, tt)) <|>
+                            (return (name_set.of_list [], ff)),
     guard (cfg.fail_if_unchanged = ff ∨ target_changed ∨ r.any (λ e, e.pr ≠ none)) <|> fail "simp_all tactic failed to simplify",
-    clear_old_hyps r
+    clear_old_hyps r,
+    return lms
 | (e::es) r  s m := do
    let ⟨h, h_type, h_pr, s'⟩ := e,
    (new_h_type, new_pr, lms) ← simplify s' to_unfold h_type {fail_if_unchanged := ff, ..cfg} `eq discharger,
-   if h_type =ₐ new_h_type then loop es (e::r) s m
+   if h_type =ₐ new_h_type then do
+     new_lms ← loop es (e::r) s m,
+     return (new_lms.fold lms (λ n ns, name_set.insert ns n))
    else do
      new_pr      ← join_pr h_pr new_pr,
      new_fact_pr ← mk_eq_mp new_pr h,
      if new_h_type = `(false) then do
        tgt         ← target,
-       to_expr ``(@false.rec %%tgt %%new_fact_pr) >>= exact
+       to_expr ``(@false.rec %%tgt %%new_fact_pr) >>= exact,
+       return (name_set.of_list [])
      else do
        h0_type     ← infer_type h,
        let new_fact_pr := mk_id_proof new_h_type new_fact_pr,
@@ -569,9 +577,10 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
        new_r       ← update_simp_lemmas r new_fact_pr,
        let new_r := {new_type := new_h_type, pr := new_pr, ..e} :: new_r,
        new_s       ← s.add new_fact_pr ff,
-       loop new_es new_r new_s tt
+       new_lms ← loop new_es new_r new_s tt,
+       return (new_lms.fold lms (λ n ns, name_set.insert ns n))
 
-meta def simp_all (s : simp_lemmas) (to_unfold : list name) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
+meta def simp_all (s : simp_lemmas) (to_unfold : list name) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic name_set :=
 do hs      ← non_dep_prop_hyps,
    (s, es) ← init s hs,
    loop cfg discharger to_unfold es [] s ff
