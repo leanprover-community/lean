@@ -140,7 +140,8 @@ bool simplify_core_fn::instantiate_emetas(tmp_type_context & tmp_ctx, list <expr
 simp_result simplify_core_fn::lift_from_eq(simp_result const & r_eq) {
     if (!r_eq.has_proof()) return r_eq;
     expr new_pr = ::lean::lift_from_eq(m_ctx, m_rel, r_eq.get_proof());
-    return simp_result(r_eq.get_new(), new_pr);
+    buffer<name> lms = r_eq.get_lemmas();
+    return simp_result(r_eq.get_new(), new_pr, lms);
 }
 
 simp_lemmas simplify_core_fn::add_to_slss(simp_lemmas const & _slss, buffer<expr> const & ls) {
@@ -437,7 +438,9 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
 }
 
 simp_result simplify_core_fn::congr_fun_arg(simp_result const & r_f, simp_result const & r_arg) {
-    if (!r_f.has_proof() && !r_arg.has_proof()) return simp_result(mk_app(r_f.get_new(), r_arg.get_new()));
+    buffer<name> lms = r_f.get_lemmas();
+    lms.append(r_arg.get_lemmas());
+    if (!r_f.has_proof() && !r_arg.has_proof()) return simp_result(mk_app(r_f.get_new(), r_arg.get_new()), lms);
     else if (!r_f.has_proof()) return congr_arg(r_f.get_new(), r_arg);
     else if (!r_arg.has_proof()) return congr_fun(r_f, r_arg.get_new());
     else return congr(r_f, r_arg);
@@ -448,7 +451,9 @@ simp_result simplify_core_fn::congr(simp_result const & r_f, simp_result const &
     // theorem congr {A B : Type} {f₁ f₂ : A → B} {a₁ a₂ : A} (H₁ : f₁ = f₂) (H₂ : a₁ = a₂) : f₁ a₁ = f₂ a₂
     expr e  = mk_app(r_f.get_new(), r_arg.get_new());
     expr pf = mk_congr(m_ctx, r_f.get_proof(), r_arg.get_proof());
-    return simp_result(e, pf);
+    buffer<name> lms = r_f.get_lemmas();
+    lms.append(r_arg.get_lemmas());
+    return simp_result(e, pf, lms);
 }
 
 simp_result simplify_core_fn::congr_fun(simp_result const & r_f, expr const & arg) {
@@ -469,16 +474,17 @@ simp_result simplify_core_fn::congr_arg(expr const & f, simp_result const & r_ar
 
 simp_result simplify_core_fn::congr_funs(simp_result const & r_f, buffer<expr> const & args) {
     expr e = r_f.get_new();
+    buffer<name> lms = r_f.get_lemmas();
     for (unsigned i = 0; i < args.size(); ++i) {
         e  = mk_app(e, args[i]);
     }
     if (!r_f.has_proof())
-        return simp_result(e);
+        return simp_result(e, lms);
     expr pf = r_f.get_proof();
     for (unsigned i = 0; i < args.size(); ++i) {
         pf = mk_congr_fun(m_ctx, pf, args[i]);
     }
-    return simp_result(e, pf);
+    return simp_result(e, pf, lms);
 }
 
 simp_result simplify_core_fn::rewrite(expr const & e) {
@@ -497,6 +503,7 @@ simp_result simplify_core_fn::rewrite(expr const & e) {
                 lean_simp_trace_d(m_ctx, name({"simplify", "rewrite"}),
                                 tout() << "[" << lemma.get_id() << "]: "
                                 << e << " ==> " << r.get_new() << "\n";);
+                r.push_lemma(lemma.get_id());
                 return r;
             }
         } catch (ext_exception & ex) {
@@ -622,7 +629,8 @@ simp_result simplify_core_fn::propext_rewrite(expr const & e) {
     simp_result r = rewrite(e);
     if (!r.has_proof()) return r;
     expr new_pr = mk_app(m_ctx, get_propext_name(), r.get_proof());
-    return simp_result(r.get_new(), new_pr);
+    buffer<name> lms = r.get_lemmas();
+    return simp_result(r.get_new(), new_pr, lms);
 }
 
 simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & parent) {
@@ -1239,8 +1247,8 @@ meta constant simplify
   (e : expr)
   (c : simp_config)
   (r : name)
-  (prove : tactic unit)
-  : tactic (expr × expr)
+  (prove : tactic unit) :
+  tactic (expr × expr × (list name))
 */
 vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, vm_obj const & c, vm_obj const & rel,
                        vm_obj const & prove, vm_obj const & _s) {
@@ -1259,7 +1267,8 @@ vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, 
             result = finalize(ctx, to_name(rel), result);
             tactic_state new_s = set_dcs(s, dcs);
             if (!was_frozen) new_s = unfreeze_local_instances(new_s);
-            return tactic::mk_success(mk_vm_pair(to_obj(result.get_new()), to_obj(result.get_proof())), new_s);
+            return tactic::mk_success(mk_vm_pair(to_obj(result.get_new()),
+                mk_vm_pair(to_obj(result.get_proof()), to_obj(result.get_lemmas()))), new_s);
         } else {
             return tactic::mk_exception("simplify tactic failed to simplify", s);
         }

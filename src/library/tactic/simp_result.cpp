@@ -12,7 +12,8 @@ namespace lean {
 simp_result finalize(type_context_old & tctx, name const & rel, simp_result const & r) {
     if (r.has_proof()) return r;
     expr pf = mk_refl(tctx, rel, r.get_new());
-    return simp_result(r.get_new(), pf);
+    buffer<name> lms = r.get_lemmas();
+    return simp_result(r.get_new(), pf, lms);
 }
 
 simp_result join(type_context_old & tctx, name const & rel, simp_result const & r1, simp_result const & r2) {
@@ -21,19 +22,24 @@ simp_result join(type_context_old & tctx, name const & rel, simp_result const & 
         return r2;
     } else if (!r2.has_proof()) {
         lean_assert(r1.has_proof());
-        return simp_result(r2.get_new(), r1.get_proof());
+        buffer<name> lms = r1.get_lemmas();
+        lms.append(r2.get_lemmas());
+        return simp_result(r2.get_new(), r1.get_proof(), lms);
     } else {
         /* If they both have proofs, we need to glue them together with transitivity. */
         lean_assert(r1.has_proof() && r2.has_proof());
         expr trans = mk_trans(tctx, rel, r1.get_proof(), r2.get_proof());
-        return simp_result(r2.get_new(), trans);
+        buffer<name> lms = r1.get_lemmas();
+        lms.append(r2.get_lemmas());
+        return simp_result(r2.get_new(), trans, lms);
     }
 }
 
 simp_result finalize_eq(abstract_type_context & tctx, simp_result const & r) {
     if (r.has_proof()) return r;
     expr pf = mk_eq_refl(tctx, r.get_new());
-    return simp_result(r.get_new(), pf);
+    buffer<name> lms = r.get_lemmas();
+    return simp_result(r.get_new(), pf, lms);
 }
 
 simp_result join_eq(abstract_type_context & tctx, simp_result const & r1, simp_result const & r2) {
@@ -41,11 +47,15 @@ simp_result join_eq(abstract_type_context & tctx, simp_result const & r1, simp_r
         return r2;
     } else if (!r2.has_proof()) {
         lean_assert(r1.has_proof());
-        return simp_result(r2.get_new(), r1.get_proof());
+        buffer<name> lms = r1.get_lemmas();
+        lms.append(r2.get_lemmas());
+        return simp_result(r2.get_new(), r1.get_proof(), lms);
     } else {
         lean_assert(r1.has_proof() && r2.has_proof());
         expr trans = mk_eq_trans(tctx, r1.get_proof(), r2.get_proof());
-        return simp_result(r2.get_new(), trans);
+        buffer<name> lms = r1.get_lemmas();
+        lms.append(r2.get_lemmas());
+        return simp_result(r2.get_new(), trans, lms);
     }
 }
 

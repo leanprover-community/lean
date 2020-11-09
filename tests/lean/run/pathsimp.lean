@@ -22,9 +22,14 @@ by intro; induction h; assumption
 
 open tactic expr
 
+-- ↓↓ remove this
+set_option trace.simplify.rewrite true
+
 meta def path_simp_target (sls : simp_lemmas) := do
 tgt ← target,
-(tgt', prf) ← simplify sls [] tgt {lift_eq:=ff} `path,
+(tgt', prf, lms) ← simplify sls [] tgt {lift_eq:=ff} `path,
+-- ↓↓  remove this
+trace lms,
 prf ← mk_mapp `path.symm [none, tgt, tgt', prf],
 mk_mapp `path.mp [tgt', tgt, prf] >>= apply
 

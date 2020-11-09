@@ -286,17 +286,17 @@ structure simp_config :=
    and projection applications that should be unfolded.
 -/
 meta constant simplify (s : simp_lemmas) (to_unfold : list name := []) (e : expr) (cfg : simp_config := {}) (r : name := `eq)
-                       (discharger : tactic unit := failed) : tactic (expr × expr)
+                       (discharger : tactic unit := failed) : tactic (expr × expr × (list name))
 
 meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
 do t ← target >>= instantiate_mvars,
-   (new_t, pr) ← simplify s to_unfold t cfg `eq discharger,
+   (new_t, pr, lms) ← simplify s to_unfold t cfg `eq discharger,
    replace_target new_t pr
 
 meta def simp_hyp (s : simp_lemmas) (to_unfold : list name := []) (h : expr) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic expr :=
 do when (expr.is_local_constant h = ff) (fail "tactic simp_at failed, the given expression is not a hypothesis"),
    htype ← infer_type h,
-   (h_new_type, pr) ← simplify s to_unfold htype cfg `eq discharger,
+   (h_new_type, pr, lms) ← simplify s to_unfold htype cfg `eq discharger,
    replace_hyp h h_new_type pr
 
 /--
@@ -373,7 +373,7 @@ meta def simp_intros_aux (cfg : simp_config) (use_hyps : bool) (to_unfold : list
   else if t.is_arrow then
     do {
       d ← return t.binding_domain,
-      (new_d, h_d_eq_new_d) ← simplify S to_unfold d cfg,
+      (new_d, h_d_eq_new_d, lms) ← simplify S to_unfold d cfg,
       h_d ← intro1_aux use_ns ns,
       h_new_d ← mk_eq_mp h_d_eq_new_d h_d,
       assertv_core h_d.local_pp_name new_d h_new_d,
@@ -554,7 +554,7 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
     clear_old_hyps r
 | (e::es) r  s m := do
    let ⟨h, h_type, h_pr, s'⟩ := e,
-   (new_h_type, new_pr) ← simplify s' to_unfold h_type {fail_if_unchanged := ff, ..cfg} `eq discharger,
+   (new_h_type, new_pr, lms) ← simplify s' to_unfold h_type {fail_if_unchanged := ff, ..cfg} `eq discharger,
    if h_type =ₐ new_h_type then loop es (e::r) s m
    else do
      new_pr      ← join_pr h_pr new_pr,

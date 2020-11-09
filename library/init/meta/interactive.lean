@@ -1231,7 +1231,7 @@ open interactive interactive.types expr
 meta def simp_core_aux (cfg : simp_config) (discharger : tactic unit) (s : simp_lemmas) (u : list name) (hs : list expr) (tgt : bool) : tactic unit :=
 do to_remove ← hs.mfilter $ λ h, do {
          h_type ← infer_type h,
-         (do (new_h_type, pr) ← simplify s u h_type cfg `eq discharger,
+         (do (new_h_type, pr, lms) ← simplify s u h_type cfg `eq discharger,
              assert h.local_pp_name new_h_type,
              mk_eq_mp pr h >>= tactic.exact >> return tt)
          <|>
