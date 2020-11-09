@@ -13,6 +13,7 @@ open lean
 open lean.parser
 open native
 
+precedence `?` : max
 local postfix `?`:9001 := optional
 local postfix *:9001 := many
 
@@ -1229,18 +1230,20 @@ namespace interactive
 open interactive interactive.types expr
 
 meta def simp_core_aux (cfg : simp_config) (discharger : tactic unit) (s : simp_lemmas) (u : list name) (hs : list expr) (tgt : bool) : tactic name_set :=
-do to_remove ← hs.mfilter $ λ h, do {
-         h_type ← infer_type h,
-         (do (new_h_type, pr, lms) ← simplify s u h_type cfg `eq discharger,
+do (to_remove, lmss) ← @list.mfoldl tactic _ (list expr × name_set) _ (λ ⟨hs, lms⟩ h,
+  do h_type ← infer_type h,
+    (do (new_h_type, pr, new_lms) ← simplify s u h_type cfg `eq discharger,
              assert h.local_pp_name new_h_type,
-             mk_eq_mp pr h >>= tactic.exact >> return tt)
+             mk_eq_mp pr h >>= tactic.exact >> return (h::hs, lms.union new_lms))
          <|>
-         (return ff) },
-   (lms, success) ← (simp_target s u cfg discharger >>= λ ns, return (ns, tt)) <|> (return (name_set.of_list [], ff)),
-   let goal_simplified := tgt && success,
+         (return (hs, lms)))
+      ([], mk_name_set) hs,
+   (lms, goal_simplified) ← if tgt
+     then (simp_target s u cfg discharger >>= λ ns, return (ns, tt)) <|> (return (mk_name_set, ff))
+     else (return (mk_name_set, ff)),
    guard (cfg.fail_if_unchanged = ff ∨ to_remove.length > 0 ∨ goal_simplified) <|> fail "simplify tactic failed to simplify",
-   to_remove.mmap' (λ h, try (clear h)),
-   return lms
+   to_remove.reverse.mmap' (λ h, try (clear h)),
+   return (lmss.union lms)
 
 meta def simp_core (cfg : simp_config) (discharger : tactic unit)
                    (no_dflt : bool) (hs : list simp_arg_type) (attr_names : list name)
@@ -1290,7 +1293,7 @@ let cfg := match use_iota_eqn, trace_lemmas with
 end in
 propagate_tags $
 do lms ← simp_core cfg.to_simp_config cfg.discharger no_dflt hs attr_names locat,
-  if cfg.trace_lemmas then trace lms else skip
+  if cfg.trace_lemmas then trace (↑"Try this: simp only " ++ to_fmt lms.to_list) else skip
 
 /--
 Just construct the simp set and trace it. Used for debugging.

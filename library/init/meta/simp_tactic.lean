@@ -553,7 +553,7 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
   else do
     add_new_hyps r,
     (lms, target_changed) ← (simp_target s to_unfold cfg discharger >>= λ ns, return (ns, tt)) <|>
-                            (return (name_set.of_list [], ff)),
+                            (return (mk_name_set, ff)),
     guard (cfg.fail_if_unchanged = ff ∨ target_changed ∨ r.any (λ e, e.pr ≠ none)) <|> fail "simp_all tactic failed to simplify",
     clear_old_hyps r,
     return lms
@@ -569,7 +569,7 @@ private meta def loop (cfg : simp_config) (discharger : tactic unit) (to_unfold 
      if new_h_type = `(false) then do
        tgt         ← target,
        to_expr ``(@false.rec %%tgt %%new_fact_pr) >>= exact,
-       return (name_set.of_list [])
+       return (mk_name_set)
      else do
        h0_type     ← infer_type h,
        let new_fact_pr := mk_id_proof new_h_type new_fact_pr,
