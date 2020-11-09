@@ -18,11 +18,15 @@ simp_result finalize(type_context_old & tctx, name const & rel, simp_result cons
 simp_result join(type_context_old & tctx, name const & rel, simp_result const & r1, simp_result const & r2) {
     /* Assumes that both simp_results are with respect to the same relation */
     if (!r1.has_proof()) {
-        return r2;
+        name_set lms = r1.get_lemmas();
+        tout() << "Ja" << lms.size() << r2.get_lemmas().size();
+        lms.merge(r2.get_lemmas());
+        return r2; // simp_result(r2.get_new(), r2.get_proof(), lms);
     } else if (!r2.has_proof()) {
         lean_assert(r1.has_proof());
         name_set lms = r1.get_lemmas();
         lms.merge(r2.get_lemmas());
+        tout() << "Jb" << lms.size();
         return simp_result(r2.get_new(), r1.get_proof(), lms);
     } else {
         /* If they both have proofs, we need to glue them together with transitivity. */
@@ -30,6 +34,7 @@ simp_result join(type_context_old & tctx, name const & rel, simp_result const & 
         expr trans = mk_trans(tctx, rel, r1.get_proof(), r2.get_proof());
         name_set lms = r1.get_lemmas();
         lms.merge(r2.get_lemmas());
+        tout() << "Jc" << lms.size();
         return simp_result(r2.get_new(), trans, lms);
     }
 }
