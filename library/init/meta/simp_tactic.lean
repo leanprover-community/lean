@@ -286,7 +286,7 @@ structure simp_config :=
    and projection applications that should be unfolded.
 -/
 meta constant simplify (s : simp_lemmas) (to_unfold : list name := []) (e : expr) (cfg : simp_config := {}) (r : name := `eq)
-                       (discharger : tactic unit := failed) : tactic (expr × expr × (list name))
+                       (discharger : tactic unit := failed) : tactic (expr × expr × name_set)
 
 meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic unit :=
 do t ← target >>= instantiate_mvars,
