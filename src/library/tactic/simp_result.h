@@ -5,7 +5,6 @@ Author: Daniel Selsam
 */
 #pragma once
 #include "library/type_context.h"
-#include "library/trace.h"
 
 namespace lean {
 
@@ -22,18 +21,18 @@ struct simp_result {
     bool m_done{false};
 public:
     simp_result() {}
-    simp_result(expr const & e): m_new(e) { tout() << "A"; }
-    simp_result(expr const & e, expr const & proof, bool done = false): m_new(e), m_proof(proof), m_done(done) { tout() << "B"; }
-    simp_result(expr const & e, optional<expr> const & proof): m_new(e), m_proof(proof) { tout() << "C"; }
-    simp_result(pair<expr, optional<expr>> const & r): m_new(r.first), m_proof(r.second) { tout() << "D"; }
+    simp_result(expr const & e): m_new(e) {}
+    simp_result(expr const & e, expr const & proof, bool done = false): m_new(e), m_proof(proof), m_done(done) {}
+    simp_result(expr const & e, optional<expr> const & proof): m_new(e), m_proof(proof) {}
+    simp_result(pair<expr, optional<expr>> const & r): m_new(r.first), m_proof(r.second) {}
     simp_result(expr const & e, name_set const & lemmas, bool done = false):
-      m_new(e), m_lemmas(lemmas), m_done(done) { tout() << "E" << lemmas.size() << "!\n"; }
+      m_new(e), m_lemmas(lemmas), m_done(done) {}
     simp_result(expr const & e, expr const & proof, name_set const & lemmas, bool done = false):
-      m_new(e), m_proof(proof), m_lemmas(lemmas), m_done(done) { tout() << "F" << lemmas.size() << "!\n"; }
+      m_new(e), m_proof(proof), m_lemmas(lemmas), m_done(done) {}
     simp_result(expr const & e, expr const & proof, name const & lem, bool done = false):
-      m_new(e), m_proof(proof), m_done(done) { m_lemmas.insert(lem); tout() << "G!\n"; }
+      m_new(e), m_proof(proof), m_done(done) { m_lemmas.insert(lem); }
     simp_result(expr const & e, name const & lem, bool done = false):
-      m_new(e), m_done(done) { m_lemmas.insert(lem); tout() << "H!\n"; }
+      m_new(e), m_done(done) { m_lemmas.insert(lem); }
 
     bool has_proof() const { return static_cast<bool>(m_proof); }
 

@@ -1534,7 +1534,7 @@ static simp_result simp_lemma_rewrite_core(type_context_old & ctx, simp_lemma co
     }
 
     for (unsigned i = 0; i < sl.get_num_umeta(); i++) {
-        if (!tmp_ctx.is_uassigned(i)) { tout() << "\nBOO!!\n"; return simp_result(e); }
+        if (!tmp_ctx.is_uassigned(i)) { return simp_result(e); }
     }
 
     expr new_lhs = tmp_ctx.instantiate_mvars(sl.get_lhs());
