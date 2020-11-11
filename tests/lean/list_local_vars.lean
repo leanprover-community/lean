@@ -44,7 +44,7 @@ do (n,t) ← brackets "(" ")" (prod.mk <$> (ident <* tk ":") <*> texpr),
    include_var v.local_pp_name,
    omit_var v.local_pp_name,
    ls ← lean.parser.list_include_var_names,
-   trace ls,
+   --  trace ls,
    trace_state
 
 end tactic.interactive
