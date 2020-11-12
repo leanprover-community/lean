@@ -12,7 +12,6 @@ context:
 a b : ℕ
 ⊢ Sort ?
 x : ℕ → ℕ → ⁇
-[β, b, a]
 ⊢ true
 list_local_vars.lean:64:11: error: unknown identifier 'β'
 list_local_vars.lean:64:4: error: don't know how to synthesize placeholder
