@@ -172,10 +172,17 @@ inductive mouse_event_kind
 | on_mouse_enter
 | on_mouse_leave
 
+inductive position_type
+| relative : int → position_type
+| absolute : nat → position_type
+
+instance : inhabited position_type :=
+⟨position_type.relative 0⟩
+
 /-- An effect is an action at the root of the widget component hierarchy
 and can give instructions to the editor to perform some task. -/
 meta inductive effect : Type
-| insert_text (text : string)
+| insert_text (insert_position : position_type) (text : string)
 | reveal_position (file_name : option string) (p : pos)
 | highlight_position (file_name : option string) (p : pos)
 | clear_highlighting

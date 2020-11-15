@@ -12,6 +12,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_int.h"
 #include "library/vm/vm_pos_info.h"
 #include "library/vm/vm_json.h"
 #include "util/list.h"
@@ -524,9 +525,13 @@ void get_effects(vm_obj const & o_effects, json & result) {
     for (auto e : effects) {
         switch (cidx(e)) {
             case effect_idx::insert_text: {
+                auto l = cfield(e, 0);
+                int line = to_int(cfield(l, 0));
                 result.push_back({
                     {"kind", "insert_text"},
-                    {"text", to_string(cfield(e, 0))}
+                    {"line", line},
+                    {"line_type", cidx(l) == 0 ? "relative" : "absolute" },
+                    {"text", to_string(cfield(e, 1))}
                 });
                 break;
             } case effect_idx::reveal_position: {
