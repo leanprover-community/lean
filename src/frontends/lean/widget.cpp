@@ -539,8 +539,8 @@ void get_effects(vm_obj const & o_effects, json & result) {
             } case effect_idx::insert_text_relative: {
                 result.push_back({
                     {"kind", "insert_text"},
-                    {"line", to_int(cfield(e,0))},
-                    {"text", to_string(cfield(e,1))},
+                    {"line", to_int(cfield(e, 0))},
+                    {"text", to_string(cfield(e, 1))},
                     {"insert_type", "relative"}
                 });
                 break;
