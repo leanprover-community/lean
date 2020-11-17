@@ -3465,6 +3465,10 @@ optional<name> type_context_old::constant_is_class(expr const & e) {
 }
 
 optional<name> type_context_old::is_full_class(expr type) {
+    if (!is_sort(whnf(infer(type)))) {
+        // Only types can be classes
+        return {};
+    }
     expr new_type = whnf(type);
     if (is_pi(new_type)) {
         type = new_type;
