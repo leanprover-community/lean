@@ -16,6 +16,9 @@ context_cache::context_cache(options const & o):
     context_cacheless(o) {
 }
 
+context_cache::context_cache(abstract_context_cache const & c, bool) :
+    context_cacheless(c, true) {}
+
 context_cache::~context_cache() {
 }
 
