@@ -372,6 +372,9 @@ meta def with_cn : string → html α → html α
 meta def with_key {β} [has_to_string β] : β → html α → html α
 | s h := with_attr (key s) h
 
+meta def effect.insert_text : string → effect :=
+effect.insert_text_relative 0
+
 end widget
 
 namespace tactic
