@@ -20,7 +20,7 @@ simp_result join(type_context_old & tctx, name const & rel, simp_result const & 
     if (!r1.has_proof()) {
         name_set lms = r1.get_lemmas();
         lms.merge(r2.get_lemmas());
-        return r2; // simp_result(r2.get_new(), r2.get_proof(), lms);
+        return r2;
     } else if (!r2.has_proof()) {
         lean_assert(r1.has_proof());
         name_set lms = r1.get_lemmas();
