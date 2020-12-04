@@ -2,7 +2,7 @@ open tactic
 
 def g : nat → nat := λ x, x + 5
 
--- set_option pp.all true
+set_option pp.all true
 
 example (a b : nat) (p : nat → Prop) (h : p (g (nat.succ (nat.succ a)))) : p (g (a + 2)) :=
 begin
