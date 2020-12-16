@@ -626,4 +626,4 @@ attribute [elab_simple] bin_tree.node bin_tree.leaf
   constraints := [z ≟ x + y] }
 
 /-- Like `by apply_instance`, but not dependent on the tactic framework. -/
-@[reducible] def infer_instance {α : Type u} [i : α] : α := i
+@[reducible] def infer_instance {α : Sort u} [i : α] : α := i
