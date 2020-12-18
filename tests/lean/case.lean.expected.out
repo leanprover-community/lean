@@ -1,30 +1,30 @@
-case.lean:4:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:4:2: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ,
 xs_ih : ℕ
 ⊢ ℕ
-case.lean:10:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:10:2: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ
 ⊢ ℕ
-case.lean:18:4: error: solve1 tactic failed, focused goal has not been solved
+case.lean:18:4: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons, list.cons
 x xs_ih x : ℕ,
 xs : list ℕ
 ⊢ ℕ
-case.lean:26:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:26:2: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ,
 xs_ih : ℕ
 ⊢ ℕ
-case.lean:32:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:32:2: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons
 xs : list ℕ,
@@ -42,7 +42,7 @@ case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ
 ⊢ ℕ
-case.lean:44:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:44:2: error: case tactic failed, focused goals have not been solved
 state:
 case list.cons
 xs_hd : ℕ,
@@ -108,7 +108,7 @@ xs_hd : ℕ,
 xs_tl : list ℕ,
 xs_ih : ℕ
 ⊢ ℕ
-case.lean:68:2: error: solve1 tactic failed, focused goal has not been solved
+case.lean:68:2: error: case tactic failed, focused goals have not been solved
 state:
 x : ℕ,
 xs : list ℕ,
