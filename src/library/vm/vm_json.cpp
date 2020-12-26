@@ -83,15 +83,13 @@ vm_obj to_obj(json const & j) {
         return mk_vm_constructor(json_idx::vstring, to_obj(s));
     } else if (j.is_array()) {
         vm_obj o = mk_vm_nil();
-        json jj = j;
-        for (json & v : jj) {
-            o = mk_vm_cons(to_obj(v), o);
+        for (auto i = j.crbegin(); i != j.crend(); i++) {
+          o = mk_vm_cons(to_obj(*i), o);
         }
         return mk_vm_constructor(json_idx::varray, o);
     } else if (j.is_object()) {
         vm_obj o = mk_vm_nil();
-        json jj = j;
-        for (json::iterator el = jj.begin(); el != jj.end(); ++el) {
+        for (auto el = j.crbegin(); el != j.crend(); el++) {
             o = mk_vm_cons(mk_vm_pair(
                     to_obj(el.key()),
                     to_obj(el.value())), o);
