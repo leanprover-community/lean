@@ -426,10 +426,27 @@ static vm_obj vm_parser_of_tactic(vm_obj const &, vm_obj const & tac, vm_obj con
     }
 }
 
+/** α:Type → parser α → string → tactic_state → result tactic_state α */
+static vm_obj vm_parser_run(vm_obj const & /*α*/, vm_obj const & vm_p, vm_obj const & str, vm_obj const & vm_ts) {
+    tactic_state s = tactic::to_state(vm_ts);
+    io_state const & ios = get_global_ios();
+    std::string input = to_string(str);
+    std::istringstream input_stream(input);
+    parser p = parser(s.env(), get_global_ios(), mk_dummy_loader(), input_stream, "dummy file");
+    lean_parser_state lps = {&p};
+    vm_obj result = invoke(vm_p, interaction_monad<lean_parser_state>::to_obj(lps));
+    if (lean_parser::is_result_success(result)) {
+        return tactic::mk_success(lean_parser::get_success_value(result), s);
+    } else {
+        return tactic::update_exception_state(result, s);
+    }
+}
+
 void initialize_vm_parser() {
     DECLARE_VM_BUILTIN(name({"lean", "parser_state", "env"}),         vm_parser_state_env);
     DECLARE_VM_BUILTIN(name({"lean", "parser_state", "options"}),     vm_parser_state_options);
     DECLARE_VM_BUILTIN(name({"lean", "parser_state", "cur_pos"}),     vm_parser_state_cur_pos);
+    DECLARE_VM_BUILTIN(name({"lean", "parser", "run"}),               vm_parser_run);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "ident"}),             vm_parser_ident);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "command_like"}),      vm_parser_command_like);
     DECLARE_VM_BUILTIN(name({"lean", "parser", "push_local_scope"}),  vm_parser_push_local_scope);
