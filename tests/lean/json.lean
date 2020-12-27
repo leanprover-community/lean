@@ -41,7 +41,7 @@ meta def test_parse_unparse : tactic unit := do {
   guard (obj.compare obj') <|> tactic.trace format!"FAILED:\n{obj}\n{obj'}",
 
   let obj_msg' := json.unparse obj',
-  guard (obj_msg = obj_msg') <|> tactic.trace "FAILED:\n{obj_msg}\n{obj_msg'}"
+  guard (obj_msg = obj_msg') <|> tactic.trace format!"FAILED:\n{obj_msg}\n{obj_msg'}"
 }
 
 run_cmd test_parse_unparse
