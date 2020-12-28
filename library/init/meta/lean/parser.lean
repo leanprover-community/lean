@@ -24,7 +24,7 @@ namespace parser
 
 variable {α : Type}
 
-meta def get_state : parser parser_state := λ σ, success σ σ
+private meta def get_state : parser parser_state := λ σ, success σ σ
 
 meta def val (p : lean.parser (reflected_value α)) : lean.parser α :=
 reflected_value.val <$> p
@@ -158,7 +158,7 @@ meta def run' {α} : parser α → string → tactic α := λ p s,
 prod.fst <$> (run (with_input p s) "")
 
 meta def mk_parser_state : tactic lean.parser_state :=
-lean.parser.run' lean.parser.get_state ""
+lean.parser.run' get_state ""
 
 end parser
 end lean
