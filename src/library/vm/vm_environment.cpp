@@ -33,6 +33,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_rb_map.h"
 #include "frontends/lean/structure_cmd.h"
 #include "frontends/lean/definition_cmds.h"
+#include "frontends/lean/builtin_cmds.h"
 
 namespace lean {
 struct vm_environment : public vm_external {
@@ -279,6 +280,23 @@ vm_obj environment_add_namespace(vm_obj const & env, vm_obj const & n) {
     return to_obj(add_namespace(to_env(env), to_name(n)));
 }
 
+vm_obj environment_mark_namespace_as_open (vm_obj const & env, vm_obj const & n) {
+    return to_obj(mark_namespace_as_open(to_env(env), to_name(n)));
+}
+
+vm_obj environment_execute_open (vm_obj const & env, vm_obj const & n) {
+    auto ns = to_name(n);
+    name as; bool found_explicit = false;
+    buffer<name> exception_names; buffer<pair<name, name>> renames;
+    export_decl edecl (ns, as, found_explicit, renames, exception_names);
+    auto env_ = mark_namespace_as_open(to_env(env), ns);
+    return to_obj(execute_open(env_, get_global_ios(), edecl));
+}
+
+vm_obj environment_get_namespaces (vm_obj const & env) {
+  return to_obj(get_namespaces(to_env(env)));
+}
+
 vm_obj environment_is_namespace(vm_obj const & env, vm_obj const & n) {
     return mk_vm_bool(is_namespace(to_env(env), to_name(n)));
 }
@@ -344,6 +362,9 @@ void initialize_vm_environment() {
     DECLARE_VM_BUILTIN(name({"environment", "inductive_num_indices"}), environment_inductive_num_indices);
     DECLARE_VM_BUILTIN(name({"environment", "inductive_dep_elim"}),    environment_inductive_dep_elim);
     DECLARE_VM_BUILTIN(name({"environment", "add_namespace"}),         environment_add_namespace);
+    DECLARE_VM_BUILTIN(name({"environment", "mark_namespace_as_open"}),environment_mark_namespace_as_open);
+    DECLARE_VM_BUILTIN(name({"environment", "execute_open"}),          environment_execute_open);
+    DECLARE_VM_BUILTIN(name({"environment", "get_namespaces"}),        environment_get_namespaces);
     DECLARE_VM_BUILTIN(name({"environment", "is_namespace"}),          environment_is_namespace);
     DECLARE_VM_BUILTIN(name({"environment", "is_ginductive"}),         environment_is_ginductive);
     DECLARE_VM_BUILTIN(name({"environment", "is_projection"}),         environment_is_projection);
