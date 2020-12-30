@@ -14,5 +14,7 @@ class monad_fail (m : Type u → Type v) :=
 def match_failed {α : Type u} {m : Type u → Type v} [monad_fail m] : m α :=
 monad_fail.fail "match failed"
 
-instance monad_fail_lift (m n : Type u → Type v) [monad n] [monad_fail m] [has_monad_lift m n] : monad_fail n :=
+@[priority 100]
+instance monad_fail_lift (m n : Type u → Type v) [monad n] [monad_fail m] [has_monad_lift m n] :
+  monad_fail n :=
 { fail := λ α s, monad_lift (monad_fail.fail s : m α) }

@@ -218,9 +218,9 @@ mathlib.
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
-def and.elim_left {a b : Prop} (h : and a b) : a := h.1
+lemma and.elim_left {a b : Prop} (h : and a b) : a := h.1
 
-def and.elim_right {a b : Prop} (h : and a b) : b := h.2
+lemma and.elim_right {a b : Prop} (h : and a b) : b := h.2
 
 /- eq basic support -/
 
@@ -228,7 +228,7 @@ infix = := eq
 
 attribute [refl] eq.refl
 
-@[pattern] def rfl {α : Sort u} {a : α} : a = a := eq.refl a
+@[pattern] lemma rfl {α : Sort u} {a : α} : a = a := eq.refl a
 
 @[elab_as_eliminator, subst]
 lemma eq.subst {α : Sort u} {P : α → Prop} {a b : α} (h₁ : a = b) (h₂ : P a) : P b :=
@@ -244,7 +244,7 @@ h ▸ rfl
 
 infix == := heq
 
-@[pattern] def heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
+@[pattern] lemma heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
 
 lemma eq_of_heq {α : Sort u} {a a' : α} (h : a == a') : a = a' :=
 have ∀ (α' : Sort u) (a' : α') (h₁ : @heq α a α' a') (h₂ : α = α'), (eq.rec_on h₂ a : α') = a', from
@@ -296,10 +296,10 @@ inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
 
-def or.intro_left {a : Prop} (b : Prop) (ha : a) : or a b :=
+lemma or.intro_left {a : Prop} (b : Prop) (ha : a) : or a b :=
 or.inl ha
 
-def or.intro_right (a : Prop) {b : Prop} (hb : b) : or a b :=
+lemma or.intro_right (a : Prop) {b : Prop} (hb : b) : or a b :=
 or.inr hb
 
 structure sigma {α : Type u} (β : α → Type v) :=

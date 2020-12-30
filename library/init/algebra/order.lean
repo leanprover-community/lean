@@ -74,7 +74,7 @@ lt_irrefl
 lemma ne_of_lt {a b : α} (h : a < b) : a ≠ b :=
 λ he, absurd h (he ▸ lt_irrefl a)
 
-lemma ne_of_gt {a b : α} (h : a > b) : a ≠ b :=
+lemma ne_of_gt {a b : α} (h : b < a) : a ≠ b :=
 λ he, absurd h (he ▸ lt_irrefl a)
 
 lemma lt_asymm {a b : α} (h : a < b) : ¬ b < a :=

@@ -95,7 +95,7 @@ quot.mk setoid.r a
 
 notation `⟦`:max a `⟧`:0 := quotient.mk a
 
-def sound {α : Sort u} [s : setoid α] {a b : α} : a ≈ b → ⟦a⟧ = ⟦b⟧ :=
+lemma sound {α : Sort u} [s : setoid α] {a b : α} : a ≈ b → ⟦a⟧ = ⟦b⟧ :=
 quot.sound
 
 attribute [reducible, elab_as_eliminator]

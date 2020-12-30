@@ -14,7 +14,7 @@ inductive acc {α : Sort u} (r : α → α → Prop) : α → Prop
 namespace acc
 variables {α : Sort u} {r : α → α → Prop}
 
-def inv {x y : α} (h₁ : acc r x) (h₂ : r y x) : acc r y :=
+lemma inv {x y : α} (h₁ : acc r x) (h₂ : r y x) : acc r y :=
 acc.rec_on h₁ (λ x₁ ac₁ ih h₂, ac₁ y h₂) h₂
 
 end acc
@@ -67,7 +67,7 @@ end well_founded
 open well_founded
 
 /-- Empty relation is well-founded -/
-def empty_wf {α : Sort u} : well_founded empty_relation :=
+lemma empty_wf {α : Sort u} : well_founded (@empty_relation α) :=
 well_founded.intro (λ (a : α),
   acc.intro a (λ (b : α) (lt : false), false.rec _ lt))
 
@@ -78,11 +78,11 @@ section
   parameters (h₁ : subrelation Q r)
   parameters (h₂ : well_founded r)
 
-  def accessible {a : α} (ac : acc r a) : acc Q a :=
+  lemma accessible {a : α} (ac : acc r a) : acc Q a :=
   acc.rec_on ac (λ x ax ih,
     acc.intro x (λ (y : α) (lt : Q y x), ih y (h₁ lt)))
 
-  def wf : well_founded Q :=
+  lemma wf : well_founded Q :=
   ⟨λ a, accessible (apply h₂ a)⟩
 end
 end subrelation
@@ -98,10 +98,10 @@ section
   acc.rec_on ac (λ x acx ih z e,
     acc.intro z (λ y lt, eq.rec_on e (λ acx ih, ih (f y) lt y rfl) acx ih))
 
-  def accessible {a : α} (ac : acc r (f a)) : acc (inv_image r f) a :=
+  lemma accessible {a : α} (ac : acc r (f a)) : acc (inv_image r f) a :=
   acc_aux ac a rfl
 
-  def wf : well_founded (inv_image r f) :=
+  lemma wf : well_founded (inv_image r f) :=
   ⟨λ a, accessible (apply h (f a))⟩
 end
 end inv_image
@@ -112,7 +112,7 @@ section
   parameters {α : Sort u} {r : α → α → Prop}
   local notation `r⁺` := tc r
 
-  def accessible {z : α} (ac : acc r z) : acc (tc r) z :=
+  lemma accessible {z : α} (ac : acc r z) : acc (tc r) z :=
   acc.rec_on ac (λ x acx ih,
     acc.intro x (λ y rel,
       tc.rec_on rel
@@ -120,13 +120,13 @@ section
         (λ a b c rab rbc ih₁ ih₂ acx ih, acc.inv (ih₂ acx ih) rab)
         acx ih))
 
-  def wf (h : well_founded r) : well_founded r⁺ :=
+  lemma wf (h : well_founded r) : well_founded r⁺ :=
   ⟨λ a, accessible (apply h a)⟩
 end
 end tc
 
 /-- less-than is well-founded -/
-def nat.lt_wf : well_founded nat.lt :=
+lemma nat.lt_wf : well_founded nat.lt :=
 ⟨nat.rec
   (acc.intro 0 (λ n h, absurd h (nat.not_lt_zero n)))
   (λ n ih, acc.intro (nat.succ n) (λ m h,
@@ -136,13 +136,13 @@ def nat.lt_wf : well_founded nat.lt :=
 def measure {α : Sort u} : (α → ℕ) → α → α → Prop :=
 inv_image (<)
 
-def measure_wf {α : Sort u} (f : α → ℕ) : well_founded (measure f) :=
+lemma measure_wf {α : Sort u} (f : α → ℕ) : well_founded (measure f) :=
 inv_image.wf f nat.lt_wf
 
 def sizeof_measure (α : Sort u) [has_sizeof α] : α → α → Prop :=
 measure sizeof
 
-def sizeof_measure_wf (α : Sort u) [has_sizeof α] : well_founded (sizeof_measure α) :=
+lemma sizeof_measure_wf (α : Sort u) [has_sizeof α] : well_founded (sizeof_measure α) :=
 measure_wf sizeof
 
 instance has_well_founded_of_has_sizeof (α : Sort u) [has_sizeof α] : has_well_founded α :=
@@ -171,7 +171,7 @@ section
   parameters {ra  : α → α → Prop} {rb  : β → β → Prop}
   local infix `≺`:50 := lex ra rb
 
-  def lex_accessible {a} (aca : acc ra a) (acb : ∀ b, acc rb b): ∀ b, acc (lex ra rb) (a, b) :=
+  lemma lex_accessible {a} (aca : acc ra a) (acb : ∀ b, acc rb b): ∀ b, acc (lex ra rb) (a, b) :=
   acc.rec_on aca (λ xa aca iha b,
     acc.rec_on (acb b) (λ xb acb ihb,
       acc.intro (xa, xb) (λ p lt,
@@ -183,19 +183,20 @@ section
         aux rfl rfl)))
 
   -- The lexicographical order of well founded relations is well-founded
-  def lex_wf (ha : well_founded ra) (hb : well_founded rb) : well_founded (lex ra rb) :=
+  lemma lex_wf (ha : well_founded ra) (hb : well_founded rb) : well_founded (lex ra rb) :=
   ⟨λ p, cases_on p (λ a b, lex_accessible (apply ha a) (well_founded.apply hb) b)⟩
 
   -- relational product is a subrelation of the lex
-  def rprod_sub_lex : ∀ a b, rprod ra rb a b → lex ra rb a b :=
+  lemma rprod_sub_lex : ∀ a b, rprod ra rb a b → lex ra rb a b :=
   λ a b h, prod.rprod.rec_on h (λ a₁ b₁ a₂ b₂ h₁ h₂, lex.left b₁ b₂ h₁)
 
   -- The relational product of well founded relations is well-founded
-  def rprod_wf (ha : well_founded ra) (hb : well_founded rb) : well_founded (rprod ra rb) :=
+  lemma rprod_wf (ha : well_founded ra) (hb : well_founded rb) : well_founded (rprod ra rb) :=
   subrelation.wf (rprod_sub_lex) (lex_wf ha hb)
 end
 
-instance has_well_founded {α : Type u} {β : Type v} [s₁ : has_well_founded α] [s₂ : has_well_founded β] : has_well_founded (α × β) :=
+instance has_well_founded {α : Type u} {β : Type v} [s₁ : has_well_founded α]
+  [s₂ : has_well_founded β] : has_well_founded (α × β) :=
 {r := lex s₁.r s₂.r, wf := lex_wf s₁.wf s₂.wf}
 
 end prod

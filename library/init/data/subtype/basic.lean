@@ -11,7 +11,7 @@ universes u
 
 namespace subtype
 
-def exists_of_subtype {α : Type u} {p : α → Prop} : { x // p x } → ∃ x, p x
+lemma exists_of_subtype {α : Type u} {p : α → Prop} : { x // p x } → ∃ x, p x
 | ⟨a, h⟩ := ⟨a, h⟩
 
 variables {α : Type u} {p : α → Prop}
@@ -25,12 +25,12 @@ protected lemma eq : ∀ {a1 a2 : {x // p x}}, val a1 = val a2 → a1 = a2
 lemma ne_of_val_ne {a1 a2 : {x // p x}} : val a1 ≠ val a2 → a1 ≠ a2 :=
 mt $ congr_arg _
 
-@[simp] lemma eta (a : {x // p x}) (h : p (val a)) : mk (val a) h = a :=
+lemma eta (a : {x // p x}) (h : p (val a)) : mk (val a) h = a :=
 subtype.eq rfl
 
 end subtype
 
 open subtype
 
-instance {α : Type u} {p : α → Prop} {a : α} (h : p a) : inhabited {x // p x} :=
+def subtype.inhabited {α : Type u} {p : α → Prop} {a : α} (h : p a) : inhabited {x // p x} :=
 ⟨⟨a, h⟩⟩

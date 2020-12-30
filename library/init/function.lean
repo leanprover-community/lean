@@ -161,7 +161,7 @@ funext (λ ⟨a, b⟩, rfl)
 protected lemma left_inverse.id {g : β → α} {f : α → β} (h : left_inverse g f) : g ∘ f = id :=
 funext h
 
-protected def right_inverse.id {g : β → α} {f : α → β} (h : right_inverse g f) : f ∘ g = id :=
+protected lemma right_inverse.id {g : β → α} {f : α → β} (h : right_inverse g f) : f ∘ g = id :=
 funext h
 
 end function
