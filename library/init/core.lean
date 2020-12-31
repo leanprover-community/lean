@@ -185,10 +185,10 @@ Heterogeneous equality.
 Its purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
 
-If you have a goal `⊢ x == y`, 
+If you have a goal `⊢ x == y`,
 your first instinct should be to ask (either yourself, or on [zulip](https://leanprover.zulipchat.com/))
 if something has gone wrong already.
-If you really do need to follow this route, 
+If you really do need to follow this route,
 you may find the lemmas `eq_rec_heq` and `eq_mpr_heq` useful.
 -/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
@@ -206,7 +206,7 @@ structure pprod (α : Sort u) (β : Sort v) :=
 Logical and.
 
 `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
-both true. 
+both true.
 
 To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
 which gives two separate goals `⊢ P` and `⊢ Q`.
@@ -228,7 +228,8 @@ infix = := eq
 
 attribute [refl] eq.refl
 
-@[pattern] lemma rfl {α : Sort u} {a : α} : a = a := eq.refl a
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
+@[pattern] def rfl {α : Sort u} {a : α} : a = a := eq.refl a
 
 @[elab_as_eliminator, subst]
 lemma eq.subst {α : Sort u} {P : α → Prop} {a b : α} (h₁ : a = b) (h₂ : P a) : P b :=
@@ -244,7 +245,8 @@ h ▸ rfl
 
 infix == := heq
 
-@[pattern] lemma heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
+@[pattern] def heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
 
 lemma eq_of_heq {α : Sort u} {a a' : α} (h : a == a') : a = a' :=
 have ∀ (α' : Sort u) (a' : α') (h₁ : @heq α a α' a') (h₂ : α = α'), (eq.rec_on h₂ a : α') = a', from
