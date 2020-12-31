@@ -213,7 +213,7 @@ sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
   (assume i m, have m + i + 1 + k = (m + k) + i + 1, by simp [nat.add_comm, nat.add_left_comm],
     begin rw [this], exact sub_nat_nat_add_right end)
 
-lemma sub_nat_nat_of_ge {m n : ℕ} (h : n ≤ m) : sub_nat_nat m n = of_nat (m - n) :=
+lemma sub_nat_nat_of_le {m n : ℕ} (h : n ≤ m) : sub_nat_nat m n = of_nat (m - n) :=
 sub_nat_nat_of_sub_eq_zero (sub_eq_zero_of_le h)
 
 lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
