@@ -241,8 +241,13 @@ meta def ignore_action : component π α → component π β
 meta def ignore_props : component unit α → component π α
 | c := with_should_update (λ a b, ff) $ component.map_props (λ p, ()) c
 
-meta instance : has_coe (component π empty) (component π α)
-:= ⟨component.filter_map_action (λ p x, none)⟩
+meta instance : has_coe (component π empty) (component π α) :=
+⟨component.filter_map_action (λ p x, none)⟩
+
+meta instance : has_coe_to_fun (component π α) :=
+{ F := λ c, π → html α
+, coe := λ c p, html.of_component p c
+}
 
 meta def stateful {π α : Type}
      (β σ : Type)
