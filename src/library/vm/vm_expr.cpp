@@ -470,6 +470,11 @@ vm_obj expr_subst(vm_obj const &, vm_obj const & _e1, vm_obj const & _e2) {
     }
 }
 
+vm_obj expr_is_string_macro(vm_obj const &, vm_obj const & _e) {
+    expr const & e = to_expr(_e);
+    return to_obj(expand_string_macro(e));
+}
+
 vm_obj expr_is_annotation(vm_obj const &, vm_obj const & _e) {
     expr const & e = to_expr(_e);
     if (is_annotation(e)) {
@@ -572,6 +577,7 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name("mk_int_val_ne_proof"),        vm_mk_int_val_ne_proof);
 
     DECLARE_VM_BUILTIN(name("expr", "is_annotation"),      expr_is_annotation);
+    DECLARE_VM_BUILTIN(name("expr", "is_string_macro"),    expr_is_string_macro);
 
     DECLARE_VM_BUILTIN(name("expr", "mk_sorry"), expr_mk_sorry);
     DECLARE_VM_BUILTIN(name("expr", "is_sorry"), expr_is_sorry);
