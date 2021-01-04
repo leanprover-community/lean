@@ -1,3 +1,22 @@
+3.24.0c (4 January 2021)
+-------------------------
+
+Features:
+- Position argument with `insert_text` (#501)
+- Check that classes are types (#502)
+- Enable type class cache in nested resolution problems (#505)
+
+Bug fixes:
+- Tests on arm64 (#498)
+- Make `infer_instance` work on sorts (#506)
+- Fix universe levels in punit lemmas (#507)
+- Ensure `json.parse`/`json.unparse` are inverses (#509)
+
+Changes:
+- Improve default termination measure for mutually recursive functions (#496)
+- Make `is_lawful_singleton` a Prop (#499)
+- `well_founded.recursion` is a definition now (#503)
+
 3.23.0c (29 October 2020)
 -------------------------
 
