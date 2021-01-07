@@ -143,6 +143,10 @@ cmd_meta to_cmd_meta(vm_obj const & o) {
     return {to_decl_attributes(cfield(o, 0)), to_decl_modifiers(cfield(o, 1)), doc_string};
 }
 
+vm_obj to_obj(lean_parser_state const & s) {
+    return lean_parser::to_obj(s);
+}
+
 vm_obj vm_parser_state_env(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
     return to_obj(s.m_p->env());
@@ -406,7 +410,7 @@ static vm_obj interactive_parse_binders(vm_obj const & vm_rbp, vm_obj const & vm
 }
 
 static vm_obj vm_parser_of_tactic(vm_obj const &, vm_obj const & tac, vm_obj const & vm_s) {
-    auto s = lean_parser::to_state(vm_s);
+    auto const & s = lean_parser::to_state(vm_s);
     tactic_state ts = mk_tactic_state_for(s.m_p->env(), s.m_p->get_options(), name("_parser_of_tactic"),
                                           metavar_context(), local_context(), mk_true());
     try {
@@ -427,18 +431,22 @@ static vm_obj vm_parser_of_tactic(vm_obj const &, vm_obj const & tac, vm_obj con
 }
 
 /** α:Type → parser α → string → tactic_state → result tactic_state α */
-static vm_obj vm_parser_run(vm_obj const & /*α*/, vm_obj const & vm_p, vm_obj const & str, vm_obj const & vm_ts) {
-    tactic_state s = tactic::to_state(vm_ts);
+static vm_obj vm_parser_run(vm_obj const &/*α*/, vm_obj const & vm_p, vm_obj const & str, vm_obj const & vm_ts) {
+    auto s = tactic::to_state(vm_ts);
     io_state const & ios = get_global_ios();
-    std::string input = to_string(str);
-    std::istringstream input_stream(input);
-    parser p = parser(s.env(), get_global_ios(), mk_dummy_loader(), input_stream, "dummy file");
-    lean_parser_state lps = {&p};
-    vm_obj result = invoke(vm_p, interaction_monad<lean_parser_state>::to_obj(lps));
-    if (lean_parser::is_result_success(result)) {
-        return tactic::mk_success(lean_parser::get_success_value(result), s);
-    } else {
-        return tactic::update_exception_state(result, s);
+    try {
+      std::string input = to_string(str);
+      std::istringstream input_stream(input, std::ios_base::out);
+      parser p = parser(s.env(), ios, mk_dummy_loader(), input_stream, "dummy file");
+      lean_parser_state lps = {&p};
+      vm_obj result = invoke(vm_p, interaction_monad<lean_parser_state>::to_obj(lps));
+      if (lean_parser::is_result_success(result)) {
+          return tactic::mk_success(lean_parser::get_success_value(result), s);
+      } else {
+          return tactic::update_exception_state(result, s);
+      }
+    } catch (exception & ex) {
+      return tactic::mk_exception(ex, s);
     }
 }
 
