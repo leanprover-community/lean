@@ -35,7 +35,7 @@ local infix `≺`:50    := r
 
 parameter hwf : well_founded r
 
-lemma recursion {C : α → Sort v} (a : α) (h : Π x, (Π y, y ≺ x → C y) → C x) : C a :=
+def recursion {C : α → Sort v} (a : α) (h : Π x, (Π y, y ≺ x → C y) → C x) : C a :=
 acc.rec_on (apply hwf a) (λ x₁ ac₁ ih, h x₁ ih)
 
 lemma induction {C : α → Prop} (a : α) (h : ∀ x, (∀ y, y ≺ x → C y) → C x) : C a :=

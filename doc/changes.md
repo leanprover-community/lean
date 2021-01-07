@@ -1,3 +1,36 @@
+3.24.0c (4 January 2021)
+-------------------------
+
+Features:
+- Position argument with `insert_text` (#501)
+- Check that classes are types (#502)
+- Enable type class cache in nested resolution problems (#505)
+
+Bug fixes:
+- Tests on arm64 (#498)
+- Make `infer_instance` work on sorts (#506)
+- Fix universe levels in punit lemmas (#507)
+- Ensure `json.parse`/`json.unparse` are inverses (#509)
+
+Changes:
+- Improve default termination measure for mutually recursive functions (#496)
+- Make `is_lawful_singleton` a Prop (#499)
+- `well_founded.recursion` is a definition now (#503)
+
+3.23.0c (29 October 2020)
+-------------------------
+
+Features:
+- Expose `kabstract` in `type_context` to the VM (#391)
+- Add position information to declarations added in user commands (#488)
+
+Bug fixes:
+- The `a` bug is replaced by the `ᾰ` bug (#490)
+
+Changes:
+- New instance naming heuristic (#458, #493)
+- `by_contradiction` uses classical logic and the name `h` (#491)
+
 3.22.0c (27 October 2020)
 -------------------------
 

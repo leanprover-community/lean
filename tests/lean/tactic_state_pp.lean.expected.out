@@ -1,8 +1,8 @@
 tactic_state_pp.lean:31:0: error: tactic failed, there are unsolved goals
 state:
 My custom goal visualizer
-Goal: ∀ {n_1 : ℕ} (a : α) (a_1 : Vec α n_1),
-  (λ (a : ℕ) (w : Vec α a), n = a → v == w → f v ≠ 2) n_1.succ (Vec.cons a a_1)
+Goal: ∀ {n_1 : ℕ} (ᾰ : α) (ᾰ_1 : Vec α n_1),
+  (λ (ᾰ : ℕ) (w : Vec α ᾰ), n = ᾰ → v == w → f v ≠ 2) n_1.succ (Vec.cons ᾰ ᾰ_1)
 tactic_state_pp.lean:39:0: error: tactic failed, there are unsolved goals
 state:
 My custom goal visualizer

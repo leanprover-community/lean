@@ -448,7 +448,7 @@ attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
 export has_insert (insert)
 
 class is_lawful_singleton (α : Type u) (β : Type v) [has_emptyc β] [has_insert α β]
-  [has_singleton α β] :=
+  [has_singleton α β] : Prop :=
 (insert_emptyc_eq : ∀ (x : α), (insert x ∅ : β) = {x})
 
 export has_singleton (singleton)
@@ -626,4 +626,4 @@ attribute [elab_simple] bin_tree.node bin_tree.leaf
   constraints := [z ≟ x + y] }
 
 /-- Like `by apply_instance`, but not dependent on the tactic framework. -/
-@[reducible] def infer_instance {α : Type u} [i : α] : α := i
+@[reducible] def infer_instance {α : Sort u} [i : α] : α := i

@@ -108,6 +108,10 @@ class context_cache : public context_cacheless {
 public:
     context_cache();
     context_cache(options const & o);
+    /* Faster version of `context_cache(c.get_options())`.
+       The bool parameter is not used. It is here just to make sure we don't confuse
+       this constructor with the copy constructor. */
+    context_cache(abstract_context_cache const &, bool);
     context_cache(context_cache const &) = delete;
     context_cache(context_cache &&) = default;
     virtual ~context_cache();

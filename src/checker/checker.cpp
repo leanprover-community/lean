@@ -72,6 +72,14 @@ struct checker_print_fn {
     }
 };
 
+struct dummy_task_queue : public task_queue {
+    void wait_for_finish(gtask const &) { throw exception("dummy_task_queue::wait_for_finish"); }
+    void fail_and_dispose(gtask const &) {}
+    void evacuate() {}
+    void join() {}
+    void submit(gtask const &) { throw exception("dummy_task_queue::submit"); }
+};
+
 int main(int argc, char ** argv) {
 #if defined(LEAN_EMSCRIPTEN)
     LEAN_EMSCRIPTEN_ENV
@@ -108,6 +116,9 @@ int main(int argc, char ** argv) {
             out << "!!!" << e.what() << "!!!";
         }
     });
+
+    dummy_task_queue tq;
+    set_task_queue(&tq);
 
     try {
         std::ifstream in(argv[1]);

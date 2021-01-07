@@ -302,7 +302,7 @@ end
 /--
 `resume r` continues execution from a result previously obtained using `capture`.
 
-This is like `unwrap`, but the `tactic_state` is rolled back to point of capture even upon success. 
+This is like `unwrap`, but the `tactic_state` is rolled back to point of capture even upon success.
 -/
 meta def resume {α : Type*} (t : tactic_result α) : tactic α :=
 λ s, t
@@ -1474,17 +1474,13 @@ meta def triv : tactic unit := mk_const `trivial >>= exact
 
 notation `dec_trivial` := of_as_true (by tactic.triv)
 
-meta def by_contradiction (H : option name := none) : tactic expr :=
-do tgt : expr ← target,
-   (match_not tgt >> return ())
-   <|>
-   (mk_mapp `decidable.by_contradiction [some tgt, none] >>= eapply >> skip)
-   <|>
-   fail "tactic by_contradiction failed, target is not a negation nor a decidable proposition (remark: when 'local attribute [instance] classical.prop_decidable' is used, all propositions are decidable)",
-   match H with
-   | some n := intro n
-   | none   := intro1
-   end
+meta def by_contradiction (H : name) : tactic expr :=
+do tgt ← target,
+  (match_not tgt $> ()) <|>
+  (mk_mapp `decidable.by_contradiction [some tgt, none] >>= eapply >> skip) <|>
+  applyc ``classical.by_contradiction <|>
+  fail "tactic by_contradiction failed, target is not a proposition",
+  intro H
 
 private meta def generalizes_aux (md : transparency) : list expr → tactic unit
 | []      := skip

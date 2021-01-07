@@ -178,8 +178,8 @@ inline unsigned hardware_concurrency() { return 1; }
 #define LEAN_THREAD_PTR(T, V) static __declspec(thread) T * V = nullptr
 #define LEAN_THREAD_VALUE(T, V, VAL) static __declspec(thread) T V = VAL
 #else
-#define LEAN_THREAD_PTR(T, V) static __thread T * V = nullptr
-#define LEAN_THREAD_VALUE(T, V, VAL) static __thread T V = VAL
+#define LEAN_THREAD_PTR(T, V) static thread_local T * V = nullptr
+#define LEAN_THREAD_VALUE(T, V, VAL) static thread_local T V = VAL
 #endif
 
 #define MK_THREAD_LOCAL_GET(T, GETTER_NAME, DEF_VALUE)                  \

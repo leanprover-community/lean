@@ -12,6 +12,7 @@ Author: E.W.Ayers
 #include "library/vm/vm_option.h"
 #include "library/vm/vm_string.h"
 #include "library/vm/vm_list.h"
+#include "library/vm/vm_int.h"
 #include "library/vm/vm_pos_info.h"
 #include "library/vm/vm_json.h"
 #include "util/list.h"
@@ -47,12 +48,13 @@ enum attr_idx {
     text_change_event = 13
 };
 enum effect_idx {
-    insert_text = 0,
-    reveal_position = 1,
-    highlight_position = 2,
-    clear_highlighting = 3,
-    copy_text = 4,
-    custom = 5
+    insert_text_absolute = 0,
+    insert_text_relative = 1,
+    reveal_position = 2,
+    highlight_position = 3,
+    clear_highlighting = 4,
+    copy_text = 5,
+    custom = 6
 };
 
 std::atomic_uint g_fresh_component_instance_id;
@@ -523,15 +525,28 @@ void get_effects(vm_obj const & o_effects, json & result) {
     }
     for (auto e : effects) {
         switch (cidx(e)) {
-            case effect_idx::insert_text: {
+            case effect_idx::insert_text_absolute: {
+                auto pos = to_pos_info(cfield(e, 1));
                 result.push_back({
                     {"kind", "insert_text"},
-                    {"text", to_string(cfield(e, 0))}
+                    {"file_name", to_file_name(cfield(e, 0))},
+                    {"line", pos.first},
+                    {"column", pos.second},
+                    {"text", to_string(cfield(e, 2))},
+                    {"insert_type", "absolute"}
+                });
+                break;
+            } case effect_idx::insert_text_relative: {
+                result.push_back({
+                    {"kind", "insert_text"},
+                    {"line", to_int(cfield(e, 0))},
+                    {"text", to_string(cfield(e, 1))},
+                    {"insert_type", "relative"}
                 });
                 break;
             } case effect_idx::reveal_position: {
                 auto pos = to_pos_info(cfield(e, 1));
-               result.push_back({
+                result.push_back({
                     {"kind", "reveal_position"},
                     {"file_name", to_file_name(cfield(e, 0))},
                     {"line", pos.first},
