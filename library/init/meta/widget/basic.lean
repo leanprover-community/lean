@@ -172,10 +172,19 @@ inductive mouse_event_kind
 | on_mouse_enter
 | on_mouse_leave
 
-/-- An effect is an action at the root of the widget component hierarchy
-and can give instructions to the editor to perform some task. -/
+/-- An effect is some change that the widget makes outside of its own state.
+Usually, giving instructions to the editor to perform some task.
+- `insert_text_relative` will insert at a line relative to the position of the widget.
+- `insert_text_absolute` will insert text at the precise position given.
+- `reveal_position` will move the editor to view the given position.
+- `highlight_position` will add a text highlight to the given position.
+- `clear_highlighting` will remove all highlights created with `highlight_position`.
+- `copy_text` will copy the given text to the clipboard.
+- `custom` can be used to pass custom effects to the client without having to recompile Lean.
+-/
 meta inductive effect : Type
-| insert_text (text : string)
+| insert_text_absolute (file_name : option string) (p : pos) (text : string)
+| insert_text_relative (relative_line : int) (text : string)
 | reveal_position (file_name : option string) (p : pos)
 | highlight_position (file_name : option string) (p : pos)
 | clear_highlighting
@@ -241,8 +250,12 @@ meta def ignore_action : component π α → component π β
 meta def ignore_props : component unit α → component π α
 | c := with_should_update (λ a b, ff) $ component.map_props (λ p, ()) c
 
-meta instance : has_coe (component π empty) (component π α)
-:= ⟨component.filter_map_action (λ p x, none)⟩
+meta instance : has_coe (component π empty) (component π α) :=
+⟨component.filter_map_action (λ p x, none)⟩
+
+meta instance : has_coe_to_fun (component π α) :=
+{ F := λ c, π → html α,
+  coe := λ c p, html.of_component p c }
 
 meta def stateful {π α : Type}
      (β σ : Type)
@@ -362,6 +375,9 @@ meta def with_cn : string → html α → html α
 
 meta def with_key {β} [has_to_string β] : β → html α → html α
 | s h := with_attr (key s) h
+
+meta def effect.insert_text : string → effect :=
+effect.insert_text_relative 0
 
 end widget
 
