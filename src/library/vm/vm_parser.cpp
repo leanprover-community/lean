@@ -431,11 +431,11 @@ static vm_obj vm_parser_of_tactic(vm_obj const &, vm_obj const & tac, vm_obj con
 }
 
 /** α:Type → parser α → string → tactic_state → result tactic_state α */
-static vm_obj vm_parser_run(vm_obj const &/*α*/, vm_obj const & vm_p, vm_obj const & str, vm_obj const & vm_ts) {
+static vm_obj vm_parser_run(vm_obj const &/*α*/, vm_obj const & vm_p, vm_obj const & vm_ts) {
     auto s = tactic::to_state(vm_ts);
     io_state const & ios = get_global_ios();
     try {
-      std::string input = to_string(str);
+      std::string input = "";
       std::istringstream input_stream(input, std::ios_base::out);
       parser p = parser(s.env(), ios, mk_dummy_loader(), input_stream, "dummy file");
       lean_parser_state lps = {&p};
