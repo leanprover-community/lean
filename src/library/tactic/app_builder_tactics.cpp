@@ -13,28 +13,23 @@ Author: Leonardo de Moura
 #include "library/tactic/app_builder_tactics.h"
 
 namespace lean {
-vm_obj tactic_mk_app(vm_obj const & c, vm_obj const & as, vm_obj const & tmode, vm_obj const & _s) {
-    tactic_state const & s = tactic::to_state(_s);
-    try {
-        type_context_old ctx       = mk_type_context_for(s, to_transparency_mode(tmode));
-        buffer<expr> args;
-        to_buffer_expr(as, args);
-        expr r                 = mk_app(ctx, to_name(c), args.size(), args.data());
-        return tactic::mk_success(to_obj(r), s);
-    } catch (exception & ex) {
-        return tactic::mk_exception(ex, s);
-    }
-}
-
 #define MK_APP(CODE) {                                                  \
-    tactic_state const & s = tactic::to_state(_s);                       \
+    tactic_state s = tactic::to_state(_s);                       \
+    tactic_state_context_cache cache(s);                                \
     try {                                                               \
-        type_context_old ctx       = mk_type_context_for(s);                \
+        type_context_old ctx       = cache.mk_type_context(s);          \
         expr r = CODE;                                                  \
         return tactic::mk_success(to_obj(r), s);                         \
     } catch (exception & ex) {                                          \
         return tactic::mk_exception(ex, s);                              \
     }                                                                   \
+}
+
+vm_obj tactic_mk_app(vm_obj const & c, vm_obj const & as, vm_obj const & tmode, vm_obj const & _s) {
+    buffer<expr> args;
+    to_buffer_expr(as, args);
+    MK_APP(mk_app(ctx, to_name(c), args.size(), args.data(),
+        optional<transparency_mode>(to_transparency_mode(tmode))));
 }
 
 vm_obj tactic_mk_congr_arg(vm_obj const & f, vm_obj const & H, vm_obj const & _s) {

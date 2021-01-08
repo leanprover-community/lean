@@ -5,7 +5,7 @@ Possible solutions:
   - The default decreasing tactic uses the 'assumption' tactic, thus hints (aka local proofs) can be provided using 'have'-expressions.
 The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
-failed
+default_dec_tac failed
 state:
 foo : ℕ → false,
 x y : ℕ

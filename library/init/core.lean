@@ -10,7 +10,7 @@ prelude
 notation `Prop` := Sort 0
 notation f ` $ `:1 a:0 := f a
 
-/- Reserving notation. We do this sot that the precedence of all of the operators
+/- Reserving notation. We do this so that the precedence of all of the operators
 can be seen in one place and to prevent core notation being accidentally overloaded later.  -/
 
 /- Notation for logical operations and relations -/
@@ -45,7 +45,7 @@ reserve infixl ` - `:65
 reserve infixl ` * `:70
 reserve infixl ` / `:70
 reserve infixl ` % `:70
-reserve prefix `-`:100
+reserve prefix `-`:75
 reserve infixr ` ^ `:80
 
 reserve infixr ` ∘ `:90  -- function composition
@@ -142,6 +142,17 @@ inductive false : Prop
 
 inductive empty : Type
 
+/--
+Logical not.
+
+`not P`, with notation `¬ P`, is the `Prop` which is true if and only if `P` is false. It is
+internally represented as `P → false`, so one way to prove a goal `⊢ ¬ P` is to use `intro h`,
+which gives you a new hypothesis `h : P` and the goal `⊢ false`.
+
+A hypothesis `h : ¬ P` can be used in term mode as a function, so if `w : P` then `h w : false`.
+
+Related mathlib tactic: `contrapose`.
+-/
 def not (a : Prop) := a → false
 prefix `¬` := not
 
@@ -168,10 +179,18 @@ quot.lift f _ (quot.mk a) ~~> f a
 -/
 init_quotient
 
-/-- Heterogeneous equality.
-It's purpose is to write down equalities between terms whose types are not definitionally equal.
+/--
+Heterogeneous equality.
+
+Its purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
- -/
+
+If you have a goal `⊢ x == y`, 
+your first instinct should be to ask (either yourself, or on [zulip](https://leanprover.zulipchat.com/))
+if something has gone wrong already.
+If you really do need to follow this route, 
+you may find the lemmas `eq_rec_heq` and `eq_mpr_heq` useful.
+-/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
 | refl [] : heq a
 
@@ -183,6 +202,19 @@ structure prod (α : Type u) (β : Type v) :=
 structure pprod (α : Sort u) (β : Sort v) :=
 (fst : α) (snd : β)
 
+/--
+Logical and.
+
+`and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
+both true. 
+
+To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
+which gives two separate goals `⊢ P` and `⊢ Q`.
+
+Given a hypothesis `h : P ∧ Q`, you can use the tactic `cases h with hP hQ`
+to obtain two new hypotheses `hP : P` and `hQ : Q`. See also the `obtain` or `rcases` tactics in
+mathlib.
+-/
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
@@ -246,6 +278,20 @@ inductive psum (α : Sort u) (β : Sort v)
 | inl (val : α) : psum
 | inr (val : β) : psum
 
+/--
+Logical or.
+
+`or P Q`, with notation `P ∨ Q`, is the proposition which is true if and only if `P` or `Q` is
+true.
+
+To prove a goal `⊢ P ∨ Q`, if you know which alternative you want to prove,
+you can use the tactics `left` (which gives the goal `⊢ P`)
+or `right` (which gives the goal `⊢ Q`).
+
+Given a hypothesis `h : P ∨ Q` and goal `⊢ R`,
+the tactic `cases h` will give you two copies of the goal `⊢ R`,
+with the hypothesis `h : P` in the first, and the hypothesis `h : Q` in the second.
+-/
 inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
@@ -402,7 +448,7 @@ attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
 export has_insert (insert)
 
 class is_lawful_singleton (α : Type u) (β : Type v) [has_emptyc β] [has_insert α β]
-  [has_singleton α β] :=
+  [has_singleton α β] : Prop :=
 (insert_emptyc_eq : ∀ (x : α), (insert x ∅ : β) = {x})
 
 export has_singleton (singleton)
@@ -580,4 +626,4 @@ attribute [elab_simple] bin_tree.node bin_tree.leaf
   constraints := [z ≟ x + y] }
 
 /-- Like `by apply_instance`, but not dependent on the tactic framework. -/
-@[reducible] def infer_instance {α : Type u} [i : α] : α := i
+@[reducible] def infer_instance {α : Sort u} [i : α] : α := i

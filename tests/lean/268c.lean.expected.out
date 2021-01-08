@@ -1,0 +1,2 @@
+nat.case a b c : ℕ
+nat.case b c a : ℕ

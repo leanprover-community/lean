@@ -139,8 +139,6 @@ environment add_namespace(environment const & env, name const & ns) {
 }
 
 environment push_scope(environment const & env, io_state const & ios, scope_kind k, name const & n) {
-    if (k == scope_kind::Namespace && in_section(env))
-        throw exception("invalid namespace declaration, a namespace cannot be declared inside a section");
     name new_n = get_namespace(env);
     if (k == scope_kind::Namespace)
         new_n = new_n + n;

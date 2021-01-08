@@ -10,7 +10,7 @@ import init.data.int.basic init.data.ordering.basic
 
 namespace int
 
-private def nonneg (a : ℤ) : Prop := int.cases_on a (assume n, true) (assume n, false)
+def nonneg (a : ℤ) : Prop := int.cases_on a (assume n, true) (assume n, false)
 
 protected def le (a b : ℤ) : Prop := nonneg (b - a)
 
@@ -20,7 +20,7 @@ protected def lt (a b : ℤ) : Prop := (a + 1) ≤ b
 
 instance : has_lt int := ⟨int.lt⟩
 
-private def decidable_nonneg (a : ℤ) : decidable (nonneg a) :=
+def decidable_nonneg (a : ℤ) : decidable (nonneg a) :=
 int.cases_on a (assume a, decidable.true) (assume a, decidable.false)
 
 instance decidable_le (a b : ℤ) : decidable (a ≤ b) := decidable_nonneg _
@@ -29,10 +29,10 @@ instance decidable_lt (a b : ℤ) : decidable (a < b) := decidable_nonneg _
 
 lemma lt_iff_add_one_le (a b : ℤ) : a < b ↔ a + 1 ≤ b := iff.refl _
 
-private lemma nonneg.elim {a : ℤ} : nonneg a → ∃ n : ℕ, a = n :=
+lemma nonneg.elim {a : ℤ} : nonneg a → ∃ n : ℕ, a = n :=
 int.cases_on a (assume n H, exists.intro n rfl) (assume n', false.elim)
 
-private lemma nonneg_or_nonneg_neg (a : ℤ) : nonneg a ∨ nonneg (-a) :=
+lemma nonneg_or_nonneg_neg (a : ℤ) : nonneg a ∨ nonneg (-a) :=
 int.cases_on a (assume n, or.inl trivial) (assume n, or.inr trivial)
 
 lemma le.intro_sub {a b : ℤ} {n : ℕ} (h : b - a = n) : a ≤ b :=
@@ -187,7 +187,7 @@ simp [int.lt_iff_le_and_ne], split; intro h,
   { intro h, simp [*] at * } }
 end
 
-instance : decidable_linear_order int :=
+instance : linear_order int :=
 { le              := int.le,
   le_refl         := int.le_refl,
   le_trans        := @int.le_trans,
@@ -938,9 +938,9 @@ theorem sign_eq_zero_iff_zero (a : ℤ) : sign a = 0 ↔ a = 0 :=
 
 protected lemma eq_zero_or_eq_zero_of_mul_eq_zero
         {a b : ℤ} (h : a * b = 0) : a = 0 ∨ b = 0 :=
-match lt_trichotomy 0 a with
+match decidable.lt_trichotomy 0 a with
 | or.inl hlt₁          :=
-  match lt_trichotomy 0 b with
+  match decidable.lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 < a * b, from int.mul_pos hlt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _) end
@@ -951,7 +951,7 @@ match lt_trichotomy 0 a with
   end
 | or.inr (or.inl heq₁) := or.inl heq₁.symm
 | or.inr (or.inr hgt₁) :=
-  match lt_trichotomy 0 b with
+  match decidable.lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 > a * b, from int.mul_neg_of_neg_of_pos hgt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _)  end

@@ -506,6 +506,15 @@ vm_obj expr_mk_delayed_abstraction(vm_obj const & e, vm_obj const & ns) {
     return to_obj(mk_delayed_abstraction(to_expr(e), names));
 }
 
+vm_obj expr_get_delayed_abstraction_locals(vm_obj const & eo) {
+    expr e = to_expr(eo);
+    if (!is_delayed_abstraction(e)) { return mk_vm_none(); }
+    buffer<name> names;
+    buffer<expr> exprs;
+    get_delayed_abstraction_info(e, names, exprs);
+    return mk_vm_some(to_obj(names));
+}
+
 void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "var"}),              expr_var_intro);
     DECLARE_VM_BUILTIN(name({"expr", "sort"}),             expr_sort_intro);
@@ -571,7 +580,8 @@ void initialize_vm_expr() {
     DECLARE_VM_BUILTIN(name({"expr", "is_internal_cnstr"}), expr_is_internal_cnstr);
     DECLARE_VM_BUILTIN(name({"expr", "get_nat_value"}), expr_get_nat_value);
 
-    DECLARE_VM_BUILTIN(name({"expr", "mk_delayed_abstraction"}), expr_mk_delayed_abstraction);
+    DECLARE_VM_BUILTIN(name({"expr", "mk_delayed_abstraction"}),         expr_mk_delayed_abstraction);
+    DECLARE_VM_BUILTIN(name({"expr", "get_delayed_abstraction_locals"}), expr_get_delayed_abstraction_locals);
 }
 
 void finalize_vm_expr() {

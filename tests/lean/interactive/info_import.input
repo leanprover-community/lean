@@ -1,0 +1,2 @@
+{"seq_num": 0, "command": "sync", "file_name": "info_import.lean", "content": "import .lib.open_locale\nopen_locale"}
+{"seq_num": 3, "command": "info", "file_name": "info_import.lean", "line": 2, "column": 0}

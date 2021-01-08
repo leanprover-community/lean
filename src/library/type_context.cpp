@@ -33,6 +33,7 @@ Author: Leonardo de Moura
 #include "library/num.h"
 #include "library/quote.h"
 #include "library/check.h"
+#include "library/context_cache.h"
 
 namespace lean {
 bool is_at_least_semireducible(transparency_mode m) {
@@ -89,6 +90,10 @@ bool type_context_old::is_cached_failure(expr const & t, expr const & s) {
 
 void type_context_old::freeze_local_instances() {
     m_lctx.freeze_local_instances(m_local_instances);
+}
+
+void type_context_old::unfreeze_local_instances() {
+    m_lctx.unfreeze_local_instances();
 }
 
 void type_context_old::init_local_instances() {
@@ -185,7 +190,7 @@ void type_context_old::set_env(environment const & env) {
 }
 
 void type_context_old::update_local_instances(expr const & new_local, expr const & new_type) {
-    if (!m_cache->get_frozen_local_instances()) {
+    if (!lctx().get_frozen_local_instances()) {
         if (auto c_name = is_class(new_type)) {
             m_local_instances = local_instances(local_instance(*c_name, new_local), m_local_instances);
             flush_instance_cache();
@@ -206,7 +211,7 @@ expr type_context_old::push_let(name const & ppn, expr const & type, expr const 
 }
 
 void type_context_old::pop_local() {
-    if (!m_cache->get_frozen_local_instances() && m_local_instances) {
+    if (!lctx().get_frozen_local_instances() && m_local_instances) {
         optional<local_decl> decl = m_lctx.find_last_local_decl();
         if (decl && decl->get_name() == mlocal_name(head(m_local_instances).get_local())) {
             m_local_instances = tail(m_local_instances);
@@ -2370,12 +2375,20 @@ bool type_context_old::is_def_eq_binding(expr e1, expr e2) {
 }
 
 optional<expr> type_context_old::mk_class_instance_at(local_context const & lctx, expr const & type) {
-    if (m_cache->get_frozen_local_instances() &&
-        m_cache->get_frozen_local_instances() == lctx.get_frozen_local_instances() &&
-        equal_locals(m_lctx, lctx)) {
-        return mk_class_instance(type);
+    if (m_lctx.get_frozen_local_instances() &&
+            m_lctx.get_frozen_local_instances() == lctx.get_frozen_local_instances()) {
+        if (equal_locals(m_lctx, lctx)) {
+            // same local context, just synthesize instance here
+            return mk_class_instance(type);
+        } else {
+            // same frozen instances, reuse cache
+            type_context_old tmp_ctx(env(), m_mctx, lctx, *m_cache, m_transparency_mode);
+            auto r = tmp_ctx.mk_class_instance(type);
+            m_mctx = tmp_ctx.mctx();
+            return r;
+        }
     } else {
-        context_cacheless tmp_cache(*m_cache, true);
+        context_cache tmp_cache(*m_cache, true);
         type_context_old tmp_ctx(env(), m_mctx, lctx, tmp_cache, m_transparency_mode);
         auto r = tmp_ctx.mk_class_instance(type);
         if (r)
@@ -2399,7 +2412,13 @@ bool type_context_old::mk_nested_instance(expr const & m, expr const & m_type) {
     } else {
         optional<metavar_decl> mdecl = m_mctx.find_metavar_decl(m);
         if (!mdecl) return false;
-        inst = mk_class_instance_at(mdecl->get_context(), m_type);
+
+        // HACK(gabriel): do not reuse type-class cache for nested resolution problems
+        // For one example that easily breaks, see the default field values in `init/control/lawful.lean`
+        context_cache tmp_cache(*m_cache, true);
+        type_context_old tmp_ctx(env(), m_mctx, mdecl->get_context(), tmp_cache, m_transparency_mode);
+        inst = tmp_ctx.mk_class_instance(m_type);
+        if (inst) m_mctx = tmp_ctx.mctx();
     }
     if (inst) {
         assign(m, *inst);
@@ -3102,8 +3121,6 @@ lbool type_context_old::try_numeral_eq_numeral(expr const & t, expr const & s) {
     if (!n1) return l_undef;
     optional<mpz> n2 = eval_num(s);
     if (!n2) return l_undef;
-    if (!is_nat_type(whnf(infer(t))))
-        return l_undef;
     if (*n1 != *n2)
         return l_false;
     else if (to_small_num(t) && to_small_num(s))
@@ -3117,6 +3134,9 @@ lbool type_context_old::try_nat_offset_cnstrs(expr const & t, expr const & s) {
     /* We should not use this feature when transparency_mode is none.
        See issue #1295 */
     if (m_transparency_mode == transparency_mode::None) return l_undef;
+    // Only special-case natural numbers, see https://github.com/leanprover-community/lean/issues/362
+    if (!is_nat_type(whnf(infer(t))) || !is_nat_type(whnf(infer(s))))
+        return l_undef;
     lbool r;
     r = try_offset_eq_offset(t, s);
     if (r != l_undef) return r;
@@ -3444,6 +3464,10 @@ optional<name> type_context_old::constant_is_class(expr const & e) {
 }
 
 optional<name> type_context_old::is_full_class(expr type) {
+    if (!is_sort(whnf(infer(type)))) {
+        // Only types can be classes
+        return {};
+    }
     expr new_type = whnf(type);
     if (is_pi(new_type)) {
         type = new_type;
@@ -3526,8 +3550,9 @@ struct instance_synthesizer {
     struct stack_entry {
         expr     m_mvar;
         unsigned m_depth;
-        stack_entry(expr const & m, unsigned d):
-            m_mvar(m), m_depth(d) {}
+        bool m_assigned;
+        stack_entry(expr const & m, unsigned d, bool a):
+            m_mvar(m), m_depth(d), m_assigned(a) {}
     };
 
     struct state {
@@ -3541,6 +3566,7 @@ struct instance_synthesizer {
     };
 
     type_context_old &        m_ctx;
+    local_instances       m_local_instances;
     expr                  m_main_mvar;
     state                 m_state;    // active state
     buffer<choice>        m_choices;
@@ -3550,6 +3576,8 @@ struct instance_synthesizer {
 
     instance_synthesizer(type_context_old & ctx):
         m_ctx(ctx),
+        m_local_instances(ctx.lctx().get_frozen_local_instances() ?
+            *ctx.lctx().get_frozen_local_instances() : ctx.m_local_instances),
         m_displayed_trace_header(false),
         m_old_transparency_mode(m_ctx.m_transparency_mode),
         m_old_zeta(m_ctx.m_zeta) {
@@ -3600,7 +3628,7 @@ struct instance_synthesizer {
             expr const & mvar = e.m_mvar;
             expr mvar_type    = m_ctx.infer(mvar);
             while (true) {
-                expr new_mvar_type = m_ctx.relaxed_whnf(mvar_type);
+                expr new_mvar_type = m_ctx.whnf(mvar_type);
                 if (!is_pi(new_mvar_type))
                     break;
                 mvar_type   = new_mvar_type;
@@ -3611,7 +3639,7 @@ struct instance_synthesizer {
             expr r     = inst;
             buffer<expr> new_inst_mvars;
             while (true) {
-                expr new_type = m_ctx.relaxed_whnf(type);
+                expr new_type = m_ctx.whnf(type);
                 if (!is_pi(new_type))
                     break;
                 type          = new_type;
@@ -3632,9 +3660,11 @@ struct instance_synthesizer {
             }
             r = locals.mk_lambda(r);
             m_ctx.assign(mvar, r);
+            // keep copy of current mvar (when we get back to this mvar, we'll try to cache the result)
+            m_state.m_stack = cons(stack_entry(e.m_mvar, e.m_depth, true), m_state.m_stack);
             // copy new_inst_mvars to stack
             for (auto & mvar : new_inst_mvars) {
-                m_state.m_stack = cons(stack_entry(mvar, e.m_depth+1), m_state.m_stack);
+                m_state.m_stack = cons(stack_entry(mvar, e.m_depth+1, false), m_state.m_stack);
             }
             return true;
         } catch (exception & ex) {
@@ -3660,7 +3690,7 @@ struct instance_synthesizer {
 
     list<expr> get_local_instances(name const & cname) {
         buffer<expr> selected;
-        for (local_instance const & li : m_ctx.m_local_instances) {
+        for (local_instance const & li : m_local_instances) {
             if (li.get_class_name() == cname)
                 selected.push_back(li.get_local());
         }
@@ -3735,6 +3765,11 @@ struct instance_synthesizer {
             return true;
         }
         cs.back().m_instances = list<name>();
+        // We've run out of choices, cache a failure.
+        expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+        if (!has_idx_metavar(ty)) {
+            cache_result(ty, none_expr());
+        }
         return false;
     }
 
@@ -3743,7 +3778,7 @@ struct instance_synthesizer {
         expr const & mvar = e.m_mvar;
         expr mvar_type    = m_ctx.infer(mvar);
         while (true) {
-            expr new_mvar_type = m_ctx.relaxed_whnf(mvar_type);
+            expr new_mvar_type = m_ctx.whnf(mvar_type);
             if (!is_pi(new_mvar_type))
                 break;
             mvar_type   = new_mvar_type;
@@ -3794,7 +3829,7 @@ struct instance_synthesizer {
             unsigned i = new_inst_mvars.size();
             while (i > 0) {
                 --i;
-                m_state.m_stack = cons(stack_entry(new_inst_mvars[i], e.m_depth+1), m_state.m_stack);
+                m_state.m_stack = cons(stack_entry(new_inst_mvars[i], e.m_depth+1, false), m_state.m_stack);
             }
             return true;
         }
@@ -3804,6 +3839,17 @@ struct instance_synthesizer {
     bool process_next_mvar() {
         lean_assert(!is_done());
         stack_entry e = head(m_state.m_stack);
+        if (e.m_assigned) {
+            expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+            if (!has_idx_metavar(ty)) {
+                expr inst = m_ctx.instantiate_mvars(e.m_mvar);
+                if (!has_idx_metavar(inst)) {
+                    cache_result(ty, some_expr(inst));
+                }
+            }
+            m_state.m_stack = tail(m_state.m_stack);
+            return true;
+        }
         if (process_special(e))
             return true;
         if (m_ctx.is_assigned(e.m_mvar)) {
@@ -3811,6 +3857,21 @@ struct instance_synthesizer {
             // This typically happens if the instance has already been found via unification.
             m_state.m_stack = tail(m_state.m_stack);
             return true;
+        }
+        expr ty = m_ctx.instantiate_mvars(m_ctx.infer(e.m_mvar));
+        if (!has_idx_metavar(ty)) {
+            if (auto r = get_cache(ty)) {
+                if (*r) {
+                    if (m_ctx.is_def_eq(e.m_mvar, **r)) {
+                        m_state.m_stack = tail(m_state.m_stack);
+                        return true;
+                    }
+                } else {
+                    m_choices.push_back(choice());
+                    push_scope();
+                    return false;
+                }
+            }
         }
         if (!mk_choice_point(e.m_mvar))
             return false;
@@ -3862,23 +3923,39 @@ struct instance_synthesizer {
     }
 
     void cache_result(expr const & type, optional<expr> const & inst) {
-        if (!has_expr_metavar(type))
-            m_ctx.m_cache->set_instance(type, inst);
+        lean_trace("class_instances",
+                    scope_trace_env scope(m_ctx.env(), m_ctx);
+                    if (inst)
+                        tout() << "caching instance for " << type << "\n" << *inst << "\n";
+                    else
+                        tout() << "caching failure for " << type << "\n";);
+        m_ctx.m_cache->set_instance(type, inst);
+    }
+
+    optional<optional<expr>> get_cache(expr const & type) {
+        auto r = m_ctx.m_cache->get_instance(type);
+        if (r) {
+            /* instance/failure is already cached */
+            lean_trace("class_instances",
+                        scope_trace_env scope(m_ctx.env(), m_ctx);
+                        if (*r)
+                            tout() << "cached instance for " << type << "\n" << *(*r) << "\n";
+                        else
+                            tout() << "cached failure for " << type << "\n";);
+        }
+        return r;
     }
 
     optional<expr> ensure_no_meta(optional<expr> r) {
         while (true) {
             if (!r) {
-                cache_result(m_ctx.infer(m_main_mvar), r);
+                expr type = m_ctx.infer(m_main_mvar);
+                if (!has_expr_metavar(type))
+                    cache_result(type, none_expr());
                 return none_expr();
             }
             *r = m_ctx.instantiate_mvars(*r);
             if (!has_idx_metavar(*r)) {
-                expr type = m_ctx.infer(m_main_mvar);
-                if (!has_idx_metavar(type)) {
-                    /* We only cache the result if it does not contain universe tmp metavars. */
-                    cache_result(type, some_expr(m_ctx.instantiate_mvars(*r)));
-                }
                 return r;
             }
             lean_trace("class_instances",
@@ -3891,20 +3968,13 @@ struct instance_synthesizer {
     optional<expr> mk_class_instance_core(expr const & type) {
         /* We do not cache results when multiple instances have to be generated. */
         if (!has_expr_metavar(type)) {
-            if (auto r = m_ctx.m_cache->get_instance(type)) {
-                /* instance/failure is already cached */
-                lean_trace("class_instances",
-                           scope_trace_env scope(m_ctx.env(), m_ctx);
-                           if (*r)
-                               tout() << "cached instance for " << type << "\n" << *(*r) << "\n";
-                           else
-                               tout() << "cached failure for " << type << "\n";);
+            if (auto r = get_cache(type)) {
                 return *r;
             }
         }
         m_state          = state();
         m_main_mvar      = m_ctx.mk_tmp_mvar(type);
-        m_state.m_stack  = to_list(stack_entry(m_main_mvar, 0));
+        m_state.m_stack  = to_list(stack_entry(m_main_mvar, 0, false));
         auto r = search();
         return ensure_no_meta(r);
     }
@@ -4013,6 +4083,7 @@ For all these reasons, we have discarded this alternative design.
 expr type_context_old::preprocess_class(expr const & type,
                                     buffer<level_pair> & u_replacements,
                                     buffer<expr_pair> &  e_replacements) {
+    relaxed_scope scope(*this, transparency_mode::Instances);
     if (!has_metavar(type)) {
         expr const & C = get_app_fn(type);
         if (is_constant(C) && !has_class_out_params(env(), const_name(C)))
@@ -4021,7 +4092,7 @@ expr type_context_old::preprocess_class(expr const & type,
     type_context_old::tmp_locals locals(*this);
     expr it = type;
     while (true) {
-        expr new_it = relaxed_whnf(it);
+        expr new_it = whnf(it);
         if (!is_pi(new_it))
             break;
         expr local  = locals.push_local_from_binding(new_it);
@@ -4046,7 +4117,7 @@ expr type_context_old::preprocess_class(expr const & type,
         C = update_constant(C, to_list(C_levels));
     expr it2 = infer(C);
     for (expr & C_arg : C_args) {
-        it2  = relaxed_whnf(it2);
+        it2  = whnf(it2);
         if (!is_pi(it2))
             return type; /* failed */
         expr const & d = binding_domain(it2);

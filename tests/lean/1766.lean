@@ -6,7 +6,7 @@ def value_1 (x : option nat) (H : is_some x)
 begin
    destruct x; intros,
    {destruct H, -- ERROR: `is_some` can only eliminate into Prop
-    intros, clear a_2, rw a at a_1, contradiction},
+    intros, clear _x_2, rw _x at _x_1, contradiction},
    {assumption}
 end
 
@@ -15,7 +15,7 @@ def value_2 (x : option nat) (H : is_some x)
 begin
    destruct x; intros,
    {destruct H,
-    intros, rw a at a_1},
+    intros, rw a at ᾰ},
    {refl}
 end
 
@@ -27,6 +27,6 @@ def value_3 (x : option nat) (H : is_some' x)
 begin
    destruct x; intros,
    {destruct H,
-    intros, clear a_2, rw a at a_1, contradiction},
+    intros, clear a_1, rw a at ᾰ, contradiction},
    {assumption}
 end

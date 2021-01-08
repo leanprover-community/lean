@@ -8,7 +8,7 @@ include P
 example : false :=
 begin
   dsimp [_match_1] at P,
-  guard_hyp P := true,
+  guard_hyp P : true,
   admit
 end
 end
@@ -23,7 +23,7 @@ include P
 example : false :=
 begin
   dsimp [_match_1] at P,
-  guard_hyp P := true,
+  guard_hyp P : true,
   admit
 end
 end
@@ -44,7 +44,7 @@ include P
 example : false :=
 begin
   dsimp [_match_1] at P,
-  guard_hyp P := true,
+  guard_hyp P : true,
   admit
 end
 end
@@ -54,7 +54,7 @@ include Q
 example : false :=
 begin
   dsimp [_match_2] at Q,
-  guard_hyp Q := true,
+  guard_hyp Q : true,
   admit
 end
 end

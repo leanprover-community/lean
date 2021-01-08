@@ -1,4 +1,4 @@
 @has_add.add.{0} nat nat.has_add a b
 nat
-@has_add.add.{0} nat nat.has_add a.succ b
+@has_add.add.{0} nat nat.has_add (nat.succ a) b
 nat

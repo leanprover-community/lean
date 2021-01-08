@@ -1,7 +1,7 @@
 (n.add n).succ
-((nat.rec ⟨λ (a : ℕ), a, punit.star⟩
+((nat.rec ⟨λ (ᾰ : ℕ), ᾰ, punit.star⟩
     (λ (n : ℕ)
      (ih : pprod (ℕ → ℕ) (nat.rec punit (λ (n : ℕ) (ih : Type), pprod (pprod (ℕ → ℕ) ih) punit) n)),
-       ⟨λ (a : ℕ), (ih.fst a).succ, ⟨ih, punit.star⟩⟩)
+       ⟨λ (ᾰ : ℕ), (ih.fst ᾰ).succ, ⟨ih, punit.star⟩⟩)
     n).fst
    n).succ

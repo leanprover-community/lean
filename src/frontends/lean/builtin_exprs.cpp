@@ -854,7 +854,7 @@ static expr parse_infix_paren(parser & p, list<notation::accepting> const & accs
     return p.save_pos(mk_choice(cs.size(), cs.data()), pos);
 }
 
-static expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
+expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
     if (auto accs = is_infix_paren_notation(p))
         return parse_infix_paren(p, accs, pos);
     expr e = p.parse_expr();
@@ -1090,9 +1090,11 @@ static expr parse_field(parser & p, unsigned, expr const * args, pos_info const 
     }
 }
 
+static name * g_arrow_binder = nullptr;
+
 parse_table init_led_table() {
     parse_table r(false);
-    r = r.add({transition("->", mk_expr_action(get_arrow_prec()-1))},    mk_arrow(Var(1), Var(1)));
+    r = r.add({transition("->", mk_expr_action(get_arrow_prec()-1))}, mk_pi(*g_arrow_binder, Var(1), Var(1), binder_info()));
     r = r.add({transition("^.", mk_ext_action(parse_field))}, Var(0));
     return r;
 }
@@ -1124,6 +1126,8 @@ void initialize_builtin_exprs() {
     g_end_hole = new name("end_hole");
     register_annotation(*g_end_hole);
 
+    g_arrow_binder = new name("ᾰ");
+
     g_not               = new expr(mk_constant(get_not_name()));
     g_nud_table         = new parse_table();
     *g_nud_table        = init_nud_table();
@@ -1146,6 +1150,7 @@ void finalize_builtin_exprs() {
     delete g_end_hole;
     delete g_do_failure_eq;
     delete g_infix_function;
+    delete g_arrow_binder;
     delete g_led_table;
     delete g_nud_table;
     delete g_not;

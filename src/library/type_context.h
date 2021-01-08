@@ -624,6 +624,8 @@ public:
        add tactic `unfreeze_local_instances : tactic unit` which unfreezes the set of frozen local instances
        for the current goal. */
     void freeze_local_instances();
+    void unfreeze_local_instances();
+    list<local_instance> get_local_instances() const { return m_local_instances; }
 
     bool is_def_eq(level const & l1, level const & l2);
     virtual expr whnf(expr const & e) override;

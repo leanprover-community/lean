@@ -63,7 +63,7 @@ unsigned get_fuzzy_match_max_errors(unsigned prefix_sz) {
 
 optional<name> exact_prefix_match(environment const & env, std::string const & pattern, declaration const & d) {
     if (auto it = is_essentially_atomic(env, d.get_name())) {
-        std::string it_str = it->to_string();
+        std::string it_str = it->to_string_unescaped();
         // if pattern "perfectly" matches beginning of declaration name, we just display d on the top of the list
         if (it_str.compare(0, pattern.size(), pattern) == 0)
             return it;
@@ -141,7 +141,7 @@ std::vector<json> get_decl_completions(std::string const & pattern, environment 
         if (auto it = exact_prefix_match(env, pattern, d)) {
             exact_matches.emplace_back(*it, d.get_name());
         } else {
-            std::string text = d.get_name().to_string();
+            std::string text = d.get_name().to_string_unescaped();
             if (matcher.match(text))
                 selected.emplace_back(text, d.get_name());
         }
@@ -188,7 +188,7 @@ void search_decls(std::string const & pattern, std::vector<pair<std::string, env
             if (auto it = exact_prefix_match(env, pattern, d)) {
                 exact_matches.emplace_back(*it, d.get_name());
             } else {
-                std::string text = d.get_name().to_string();
+                std::string text = d.get_name().to_string_unescaped();
                 if (matcher.match(text))
                     selected.emplace_back(text, d.get_name());
             }
@@ -225,7 +225,7 @@ std::vector<json> get_field_completions(name const & s, std::string const & patt
     unsigned max_errors = get_fuzzy_match_max_errors(pattern.size());
 
     std::string new_pattern;
-    new_pattern  = s.to_string();
+    new_pattern  = s.to_string_unescaped();
     if (!pattern.empty()) {
         new_pattern += ".";
         new_pattern += pattern;
@@ -244,7 +244,7 @@ std::vector<json> get_field_completions(name const & s, std::string const & patt
         if (auto it = exact_prefix_match(env, new_pattern, d)) {
             exact_matches.emplace_back(*it, d.get_name());
         } else {
-            std::string text = d.get_name().to_string();
+            std::string text = d.get_name().to_string_unescaped();
             if (matcher.match(text))
                 selected.emplace_back(text, d.get_name());
         }
@@ -278,13 +278,13 @@ std::vector<json> get_option_completions(std::string const & pattern, options co
     std::vector<json> completions;
 
     get_option_declarations().for_each([&](name const & n, option_declaration const &) {
-        std::string text = n.to_string();
+        std::string text = n.to_string_unescaped();
         if (matcher.match(text))
             selected.emplace_back(text, n);
     });
     filter_completions<name>(pattern, selected, completions, max_results, [&](name const & n) {
         json completion;
-        completion["text"] = n.to_string();
+        completion["text"] = n.escape();
         std::stringstream ss;
         auto const & decl = *get_option_declarations().find(n);
         decl.display_value(ss, opts);
@@ -366,14 +366,14 @@ std::vector<json> get_attribute_completions(std::string const & pattern, environ
     get_attributes(env, attrs);
     for (auto const & attr : attrs) {
         if (!is_internal_name(attr->get_name())) {
-            auto s = attr->get_name().to_string();
+            auto s = attr->get_name().to_string_unescaped();
             if (matcher.match(s))
                 selected.emplace_back(s, attr->get_name());
         }
     }
     filter_completions<name>(pattern, selected, completions, max_results, [&](name const & n) {
         json completion;
-        completion["text"] = n.to_string();
+        completion["text"] = n.escape();
         completion["doc"] = get_attribute(env, n).get_description();
         add_source_info(env, n, completion);
         return completion;
@@ -392,13 +392,13 @@ std::vector<json> get_namespace_completions(std::string const & pattern, environ
     for (auto const & ns : get_namespace_completion_candidates(env)) {
         if (ns.is_anonymous())
             continue;
-        auto s = ns.to_string();
+        auto s = ns.to_string_unescaped();
         if (matcher.match(s))
             selected.emplace_back(s, ns);
     }
     filter_completions<name>(pattern, selected, completions, max_results, [&](name const & n) {
         json completion;
-        completion["text"] = n.to_string();
+        completion["text"] = n.escape();
         return completion;
     });
     return completions;

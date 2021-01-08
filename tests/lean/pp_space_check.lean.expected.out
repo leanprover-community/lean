@@ -1,0 +1,7 @@
+- -2 : ℤ
+symm₂ : ∀ (A : Type u_1) (a b : A), a = b → b = a
+∀ (A : Type ?) (a b : A), a = b → b = a
+g (f (f 0)) (f (has_add.add (f 1) (f 2)))
+λ {A B : Type} (a : A) (b : B), a
+i↥tt t 3 e 45 : ℕ
+i↥tt t 3 e 45

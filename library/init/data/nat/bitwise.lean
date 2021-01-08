@@ -176,34 +176,6 @@ end
 
 lemma shiftl_sub : ∀ m {n k}, k ≤ n → shiftl m (n - k) = shiftr (shiftl m n) k := shiftl'_sub _
 
-lemma shiftl_eq_mul_pow (m) : ∀ n, shiftl m n = m * 2 ^ n
-| 0     := (nat.mul_one _).symm
-| (k+1) := show bit0 (shiftl m k) = m * (2^k * 2), by rw [bit0_val, shiftl_eq_mul_pow, nat.mul_comm 2, nat.mul_assoc]
-
-lemma shiftl'_tt_eq_mul_pow (m) : ∀ n, shiftl' tt m n + 1 = (m + 1) * 2 ^ n
-| 0     := by simp [shiftl, shiftl', nat.pow_zero, nat.one_mul]
-| (k+1) :=
-begin
-  change bit1 (shiftl' tt m k) + 1 = (m + 1) * (2^k * 2),
-  rw bit1_val,
-  change 2 * (shiftl' tt m k + 1) = _,
-  rw [shiftl'_tt_eq_mul_pow, nat.mul_comm 2, nat.mul_assoc]
-end
-
-lemma one_shiftl (n) : shiftl 1 n = 2 ^ n :=
-(shiftl_eq_mul_pow _ _).trans (nat.one_mul _)
-
-@[simp] lemma zero_shiftl (n) : shiftl 0 n = 0 :=
-(shiftl_eq_mul_pow _ _).trans (nat.zero_mul _)
-
-lemma shiftr_eq_div_pow (m) : ∀ n, shiftr m n = m / 2 ^ n
-| 0     := (nat.div_one _).symm
-| (k+1) := (congr_arg div2 (shiftr_eq_div_pow k)).trans $
-           by rw [div2_val, nat.div_div_eq_div_mul]; refl
-
-@[simp] lemma zero_shiftr (n) : shiftr 0 n = 0 :=
-(shiftr_eq_div_pow _ _).trans (nat.zero_div _)
-
 @[simp] lemma test_bit_zero (b n) : test_bit (bit b n) 0 = b := bodd_bit _ _
 
 lemma test_bit_succ (m b n) : test_bit (bit b n) (succ m) = test_bit n m :=

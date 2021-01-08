@@ -1,0 +1,4 @@
+⊢ ∀ (x : ℕ), x ∈ {carrier := ∅, a1 := _}.carrier → true
+197c.lean:8:0: warning: declaration 'example_1' uses sorry
+⊢ ∀ (x : ℕ), x ∈ ∅ → true
+197c.lean:18:0: warning: declaration 'example_2' uses sorry

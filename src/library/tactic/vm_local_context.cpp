@@ -34,6 +34,11 @@ vm_obj to_obj(local_decl const & ld) {
     return mk_vm_constructor(0, 6, args);
 }
 
+vm_obj lc_mk_empty() {
+    local_context lc;
+    return to_obj(lc);
+}
+
 vm_obj lc_mk_local_decl(vm_obj const & pn, vm_obj const & y, vm_obj const & bi, vm_obj const & lc) {
     local_context lctx = to_local_context(lc);
     expr h = lctx.mk_local_decl(to_name(pn), to_expr(y), to_binder_info(bi));
@@ -57,6 +62,10 @@ vm_obj lc_is_subset(vm_obj const & lc1, vm_obj const & lc2) {
         .is_subset_of(to_local_context(lc2)));
 }
 
+vm_obj lc_has_decidable_eq(vm_obj const & lc1, vm_obj const & lc2) {
+    return mk_vm_bool(equal_locals(to_local_context(lc1), to_local_context(lc2)));
+}
+
 vm_obj lc_fold(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_obj const & lc0) {
     vm_obj r0 = a0;
     to_local_context(lc0).for_each([&](local_decl const & ld) {
@@ -66,10 +75,12 @@ vm_obj lc_fold(vm_obj const &, vm_obj const & f0, vm_obj const & a0, vm_obj cons
 }
 
 void initialize_vm_local_context() {
+    DECLARE_VM_BUILTIN(name({"local_context", "empty"}),  lc_mk_empty);
     DECLARE_VM_BUILTIN(name({"local_context", "mk_local"}),  lc_mk_local_decl);
     DECLARE_VM_BUILTIN(name({"local_context", "get_local"}), lc_get_local);
     DECLARE_VM_BUILTIN(name({"local_context", "get_local_decl"}), lc_get_local_decl);
     DECLARE_VM_BUILTIN(name({"local_context", "is_subset"}), lc_is_subset);
+    DECLARE_VM_BUILTIN(name({"local_context", "has_decidable_eq"}), lc_has_decidable_eq);
     DECLARE_VM_BUILTIN(name({"local_context", "fold"}), lc_fold);
 }
 void finalize_vm_local_context() {

@@ -54,10 +54,10 @@ instance : has_to_string char :=
 ⟨λ c, c.to_string⟩
 
 instance (n : nat) : has_to_string (fin n) :=
-⟨λ f, to_string (fin.val f)⟩
+⟨λ f, to_string f.val⟩
 
 instance : has_to_string unsigned :=
-⟨λ n, to_string (fin.val n)⟩
+⟨λ n, to_string n.val⟩
 
 instance {α : Type u} [has_to_string α] : has_to_string (option α) :=
 ⟨λ o, match o with | none := "none" | (some a) := "(some " ++ to_string a ++ ")" end⟩

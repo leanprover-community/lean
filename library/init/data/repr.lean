@@ -144,10 +144,10 @@ instance : has_repr string :=
 ⟨string.quote⟩
 
 instance (n : nat) : has_repr (fin n) :=
-⟨λ f, repr (fin.val f)⟩
+⟨λ f, repr f.val⟩
 
 instance : has_repr unsigned :=
-⟨λ n, repr (fin.val n)⟩
+⟨λ n, repr n.val⟩
 
 def char.repr (c : char) : string :=
 repr c

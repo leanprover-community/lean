@@ -3,7 +3,7 @@ inaccessible2.lean:8:10: error: invalid pattern, must be an application, constan
 inaccessible2.lean:8:40: error: unknown identifier 'a'
 inaccessible2.lean:7:11: error: equation compiler failed (use 'set_option trace.eqn_compiler.elim_match true' for additional details)
 inaccessible2.lean:11:11: error: invalid pattern, must be an application, constant, variable, type ascription, aliasing pattern or inaccessible term
-inaccessible2.lean:11:39: error: don't know how to synthesize placeholder
+inaccessible2.lean:11:39: error: don't know how to synthesize placeholder (a)
 context:
 A : Sort ?,
 B : Sort ?,
@@ -11,7 +11,7 @@ f : A → B,
 inv_3 : Π (b : B), imf f b → A
 ⊢ A
 inaccessible2.lean:10:11: error: equation compiler failed (use 'set_option trace.eqn_compiler.elim_match true' for additional details)
-inaccessible2.lean:14:21: error: don't know how to synthesize placeholder
+inaccessible2.lean:14:21: error: don't know how to synthesize placeholder (a)
 context:
 A : Sort ?,
 sym : ∀ (a b : A), a = b → b = a
@@ -19,10 +19,10 @@ sym : ∀ (a b : A), a = b → b = a
 inaccessible2.lean:13:11: error: equation compiler failed to create auxiliary declaration 'sym._main'
 nested exception message:
 type mismatch at application
-  eq.rec (λ (a_1 : a = a) (H_2 : a_1 == eq.refl a), id_rhs (⁇ = ⁇) rfl)
+  eq.rec (λ (ᾰ : a = a) (H_2 : ᾰ == eq.refl a), id_rhs (⁇ = ⁇) rfl)
 term
-  λ (a_1 : a = a) (H_2 : a_1 == eq.refl a), id_rhs (⁇ = ⁇) rfl
+  λ (ᾰ : a = a) (H_2 : ᾰ == eq.refl a), id_rhs (⁇ = ⁇) rfl
 has type
-  ∀ (a_1 : a = a), a_1 == _ → ⁇ = ⁇
+  ∀ (ᾰ : a = a), ᾰ == _ → ⁇ = ⁇
 but is expected to have type
-  (λ (b : A), ∀ (a_1 : a = b), a_1 == _ → b = a) a
+  (λ (b : A), ∀ (ᾰ : a = b), ᾰ == _ → b = a) a

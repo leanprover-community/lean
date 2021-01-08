@@ -19,7 +19,7 @@ def of_nat {n : nat} (a : nat) : fin (succ n) :=
 private lemma mlt {n b : nat} : ∀ {a}, n > a → b % n < n
 | 0     h := nat.mod_lt _ h
 | (a+1) h :=
-  have n > 0, from lt.trans (nat.zero_lt_succ _) h,
+  have n > 0, from lt_trans (nat.zero_lt_succ _) h,
   nat.mod_lt _ this
 
 protected def add : fin n → fin n → fin n
@@ -40,7 +40,7 @@ begin
   {simp [mod_zero], assumption},
   {have h : a % (succ b) < succ b,
    apply nat.mod_lt _ (nat.zero_lt_succ _),
-   exact lt.trans h h₂}
+   exact lt_trans h h₂}
 end
 
 protected def mod : fin n → fin n → fin n

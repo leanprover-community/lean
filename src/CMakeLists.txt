@@ -4,7 +4,7 @@ if ((${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 3.1) OR (${CMAKE_MAJO
 endif()
 project(LEAN CXX C)
 set(LEAN_VERSION_MAJOR 3)
-set(LEAN_VERSION_MINOR 14)
+set(LEAN_VERSION_MINOR 24)
 set(LEAN_VERSION_PATCH 0)
 set(LEAN_VERSION_IS_RELEASE 1)  # This number is 1 in the release revision, and 0 otherwise.
 set(LEAN_SPECIAL_VERSION_DESC "" CACHE STRING "Additional version description like 'nightly-2018-03-11'")
@@ -162,12 +162,6 @@ else()
   message(WARNING "Disabling JSON support, compile server will not be available")
 endif()
 
-if(MINGW AND CMAKE_COMPILER_IS_GNUCXX)
-  # See https://github.com/leanprover/lean/issues/930#issuecomment-172555475
-  message(STATUS "Set _GLIBCXX_USE_CXX11_ABI = 0 for a system using MSYS2 + g++")
-  set(LEAN_EXTRA_CXX_FLAGS "${LEAN_EXTRA_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
-endif()
-
 if(NOT MULTI_THREAD)
   message(STATUS "Disabled multi-thread support, it will not be safe to run multiple threads in parallel")
   set(AUTO_THREAD_FINALIZATION OFF)
@@ -214,11 +208,6 @@ set(CPACK_PACKAGE_ICON "${LEAN_SOURCE_DIR}/../images/lean.png")
 # When CMake 3.0.0 is required, remove this block (see CMP0042).
 if (NOT DEFINED CMAKE_MACOSX_RPATH)
   set(CMAKE_MACOSX_RPATH 0)
-endif()
-
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  # The following options is needed to generate a shared library
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 # SPLIT_STACK
@@ -437,7 +426,6 @@ else()
 endif()
 add_library(leanstatic ${LEAN_LIBRARY_TYPE} ${LEAN_OBJS})
 target_link_libraries(leanstatic ${EXTRA_LIBS})
-add_subdirectory(api)
 
 if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
 # skip building main files
@@ -455,7 +443,7 @@ function(add_exec_test name tgt)
     endif()
 endfunction()
 
-if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main)
+if(NOT BUILD_TESTING OR (EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main))
 # skip building standalone test binaries
 else()
 add_subdirectory(tests/util)
@@ -464,27 +452,9 @@ add_subdirectory(tests/kernel)
 add_subdirectory(tests/library)
 add_subdirectory(tests/frontends/lean)
 
-# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
-# For some strange reason, it contains a copy of pthread_equal.
-# Remark: this problem does not happen when we generate the DLL using msys2 on Windows.
-if (NOT("${CROSS_COMPILE}" MATCHES "ON"))
-  if ("${STATIC}" MATCHES "OFF")
-    add_library(leanshared SHARED shared/init.cpp $<TARGET_OBJECTS:api> ${LEAN_OBJS})
-    target_link_libraries(leanshared ${EXTRA_LIBS})
-    install(TARGETS leanshared DESTINATION lib)
-  endif()
-  install(TARGETS leanstatic DESTINATION lib)
 endif()
 
-# The DLL (shared library) is not being generated correctly when we use cross-compilation (i.e., generate the Windows DLL using Linux).
-# For some strange reason, it contains a copy of pthread_equal.
-if (NOT("${CROSS_COMPILE}" MATCHES "ON") AND ("${STATIC}" MATCHES "OFF"))
-  add_subdirectory(tests/shared)
-endif()
-
-endif()
-
-if(EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Test)
+if(NOT BUILD_TESTING OR (EMSCRIPTEN AND LEAN_EMSCRIPTEN_BUILD STREQUAL Main))
 # skip building tests for main files
 else()
 # Include style check

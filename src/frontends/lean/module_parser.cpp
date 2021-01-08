@@ -35,7 +35,7 @@ module_parser::~module_parser() {}
 pair<cancellation_token, task<module_parser_result>>
 module_parser::resume(module_parser_result const & res, optional<std::vector<gtask>> const & dependencies) {
     snapshot const & s = *res.m_snapshot_at_end;
-    m_parser.m_scanner.skip_to_pos(s.m_pos);
+    bool skip_success = m_parser.m_scanner.skip_to_pos(s.m_pos);
     m_parser.m_env                = s.m_env;
     m_parser.m_ngen               = s.m_ngen;
     m_parser.m_ios.set_options(s.m_options);
@@ -48,6 +48,7 @@ module_parser::resume(module_parser_result const & res, optional<std::vector<gta
     m_parser.m_ignore_noncomputable = s.m_noncomputable_theory;
     m_parser.m_parser_scope_stack = s.m_parser_scope_stack;
     m_parser.m_next_inst_idx      = s.m_next_inst_idx;
+    if (!skip_success) return {mk_cancellation_token(), {}};
     auto lt = res.m_lt;
     scope_log_tree_core scope_lt(&lt);
     return parse_next_command_like(dependencies);
@@ -76,6 +77,8 @@ module_parser::parse_next_command_like(optional<std::vector<gtask>> const & depe
     auto fn = [self, begin_pos] {
         scope_pos_info_provider scope_pip(self->m_parser); // for nested_elaborator_exception::pp
 
+        bool imports_were_already_parsed = self->m_parser.imports_parsed();
+
         bool done = false;
         try {
             check_system("module_parser::parse_next_command_like");
@@ -92,6 +95,12 @@ module_parser::parse_next_command_like(optional<std::vector<gtask>> const & depe
             done = true;
         }
         auto end_pos = self->m_parser.pos();
+        if (!done && end_pos == begin_pos && self->m_parser.imports_parsed() == imports_were_already_parsed) {
+            auto msg = self->m_parser.mk_message(begin_pos, ERROR);
+            msg << "parse_command_like did not consume any input";
+            msg.report();
+            done = true;
+        }
         if (done) end_pos = self->m_end_pos;
         lean_assert(end_pos >= begin_pos);
 

@@ -230,7 +230,7 @@ vm_obj vm_decl_args_info(vm_obj const & d) {
 }
 
 vm_obj vm_decl_override_idx(vm_obj const & d) {
-    if (optional<unsigned int> i = to_vm_decl(d).get_overridden()) {
+    if (optional<unsigned int> i = to_vm_decl(d).get_overridden_idx()) {
         return mk_vm_some(mk_vm_nat(*i));
     } else {
         return mk_vm_none();

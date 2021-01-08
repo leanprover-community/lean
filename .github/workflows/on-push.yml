@@ -46,6 +46,23 @@ jobs:
         run: ctest -j2 --output-on-failure
         working-directory: ./build
 
+  build_sanitize_job:
+    runs-on: ubuntu-latest
+    name: Build sanitized
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - name: Configure
+        run: |
+          cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DLEAN_EXTRA_CXX_FLAGS="-fsanitize=address,undefined"
+        working-directory: ./build
+      - name: Build
+        run: make -j2
+        working-directory: ./build
+      - name: Test
+        run: ctest -j2 --output-on-failure
+        working-directory: ./build
+
   build_macos_job:
     runs-on: macos-latest
     name: Build macos ${{ matrix.build_type }}
@@ -92,21 +109,24 @@ jobs:
       matrix:
         # not enough disk space for debug build :-(
         build_type: [Release]
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
-      - run: mkdir -p ./build
-      - uses: eine/setup-msys2@v0
+      - uses: msys2/setup-msys2@v2
         with:
-          update: true
-          install: 'base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git'
+          # update: true
+          install: base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gmp make mingw-w64-x86_64-cmake cmake git
+      - run: mkdir -p ./build
       - name: Configure
         run: |
-          msys2do cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Unix\ Makefiles
+          cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Unix\ Makefiles
         working-directory: ./build
       - name: Build
         run: |
-          msys2do make -j2
-          msys2do cpack
+          make -j2
+          cpack
         working-directory: ./build
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -122,7 +142,7 @@ jobs:
           path: ./build/lean-*
       - name: Test
         run: |
-          msys2do ctest -j2 --output-on-failure
+          ctest -j2 --output-on-failure
         working-directory: ./build
 
 

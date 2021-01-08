@@ -305,7 +305,7 @@ static environment variable_cmd_core(parser & p, variable_kind k, cmd_meta const
     }
     level_param_names new_ls;
     list<expr> ctx = p.locals_to_context();
-    std::tie(type, new_ls) = p.elaborate_type("_variable", ctx, type);
+    std::tie(type, new_ls) = p.elaborate_type("_variable", ctx, type, false);
     if (k == variable_kind::Variable || k == variable_kind::Parameter)
         update_local_levels(p, new_ls, k == variable_kind::Variable);
     return declare_var(p, p.env(), n, append(ls, new_ls), type, k, bi, pos, meta);
@@ -425,14 +425,13 @@ static environment variables_cmd_core(parser & p, variable_kind k, cmd_meta cons
     p.parse_close_binder_info(bi);
     environment env = p.env();
     level_param_names ls = to_level_param_names(collect_univ_params(type));
-    list<expr> ctx = p.locals_to_context();
     for (auto id : ids) {
         // Hack: to make sure we get different universe parameters for each parameter.
         // Alternative: elaborate once and copy types replacing universes in new_ls.
         level_param_names new_ls;
         expr new_type;
         check_command_period_open_binder_or_eof(p);
-        std::tie(new_type, new_ls) = p.elaborate_type("_variables", ctx, type);
+        std::tie(new_type, new_ls) = p.elaborate_type("_variables", p.locals_to_context(), type);
         if (k == variable_kind::Variable || k == variable_kind::Parameter)
             update_local_levels(p, new_ls, k == variable_kind::Variable);
         new_ls = append(ls, new_ls);
@@ -530,13 +529,13 @@ static environment modifiers_cmd(parser & p, cmd_meta const & _meta) {
     return p.env();
 }
 
-static environment attribute_cmd_core(parser & p, bool persistent) {
+static environment attribute_cmd_core(parser & p, bool persistent, cmd_meta const & meta) {
     buffer<name> ds;
     decl_attributes attributes(persistent);
     attributes.parse(p);
     // 'attribute [attr] definition ...'
     if (p.curr_is_command()) {
-        return modifiers_cmd(p, {attributes, {}, {}});
+        return modifiers_cmd(p, {attributes, meta.m_modifiers, meta.m_doc_string});
     }
     do {
         auto pos = p.pos();
@@ -553,12 +552,12 @@ static environment attribute_cmd_core(parser & p, bool persistent) {
     return env;
 }
 
-static environment attribute_cmd(parser & p) {
-    return attribute_cmd_core(p, true);
+static environment attribute_cmd(parser & p, cmd_meta const & meta) {
+    return attribute_cmd_core(p, true, meta);
 }
 
-environment local_attribute_cmd(parser & p) {
-    return attribute_cmd_core(p, false);
+environment local_attribute_cmd(parser & p, cmd_meta const & meta) {
+    return attribute_cmd_core(p, false, meta);
 }
 
 static environment compact_attribute_cmd(parser & p, cmd_meta const & meta) {
