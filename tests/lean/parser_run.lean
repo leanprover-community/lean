@@ -9,4 +9,3 @@ meta def parse_hello : tactic unit := do
   tactic.trace n.to_string
 
 run_cmd parse_hello
-run_cmd do {ps ← lean.parser.mk_parser_state, tactic.trace ps.cur_pos}
