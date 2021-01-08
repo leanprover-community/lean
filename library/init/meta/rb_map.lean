@@ -196,6 +196,9 @@ meta constant size           : name_set → nat
 meta constant empty          : name_set → bool
 meta constant fold {α :Type} : name_set → α → (name → α → α) → α
 
+meta def union (l r : name_set) : name_set :=
+r.fold l (λ ns n, name_set.insert n ns)
+
 meta def to_list (s : name_set) : list name :=
 s.fold [] list.cons
 

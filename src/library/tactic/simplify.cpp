@@ -40,6 +40,7 @@ Author: Daniel Selsam, Leonardo de Moura
 #include "library/vm/vm_list.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_name.h"
+#include "library/vm/vm_rb_map.h"
 #include "library/tactic/eqn_lemmas.h"
 #include "library/tactic/tactic_state.h"
 #include "library/tactic/app_builder_tactics.h"
@@ -140,7 +141,7 @@ bool simplify_core_fn::instantiate_emetas(tmp_type_context & tmp_ctx, list <expr
 simp_result simplify_core_fn::lift_from_eq(simp_result const & r_eq) {
     if (!r_eq.has_proof()) return r_eq;
     expr new_pr = ::lean::lift_from_eq(m_ctx, m_rel, r_eq.get_proof());
-    return simp_result(r_eq.get_new(), new_pr);
+    return simp_result(r_eq.get_new(), new_pr, r_eq.get_lemmas());
 }
 
 simp_lemmas simplify_core_fn::add_to_slss(simp_lemmas const & _slss, buffer<expr> const & ls) {
@@ -241,7 +242,7 @@ simp_result simplify_core_fn::try_user_congrs(expr const & e) {
 simp_result simplify_core_fn::try_user_congr(expr const & e, simp_lemma const & cl) {
     tmp_type_context tmp_ctx(m_ctx, cl.get_num_umeta(), cl.get_num_emeta());
     if (!tmp_ctx.is_def_eq(cl.get_lhs(), e))
-        return simp_result(e);
+        return simp_result(e, cl.get_id());
 
     lean_simp_trace(tmp_ctx, name({"debug", "simplify", "try_congruence"}),
                     tout() << "(" << cl.get_id() << ") " << e << "\n";);
@@ -253,6 +254,7 @@ simp_result simplify_core_fn::try_user_congr(expr const & e, simp_lemma const & 
 
     buffer<type_context_old::tmp_locals> factories;
     buffer<name> relations;
+    name_set lms;
     for (expr const & m : congr_hyps) {
         factories.emplace_back(m_ctx);
         type_context_old::tmp_locals & local_factory = factories.back();
@@ -297,29 +299,31 @@ simp_result simplify_core_fn::try_user_congr(expr const & e, simp_lemma const & 
 
             expr pf_body = finalize(m_ctx, const_name(h_rel), r_congr_hyp).get_proof();
             expr pf      = local_factory.mk_lambda(pf_body);
+            lms.merge(r_congr_hyp.get_lemmas());
             if (!tmp_ctx.is_def_eq(m, pf)) {
                 lean_simp_trace(tmp_ctx, name({"simplify", "congruence"}),
                     tout() << "failed to unify proof " << pf << " of " << tmp_ctx.infer(pf););
-                return simp_result(e);
+                return simp_result(e, cl.get_id());
             }
         }
     }
 
     if (!simplified)
-        return simp_result(e);
+        return simp_result(e, cl.get_id());
 
     if (!instantiate_emetas(tmp_ctx, cl.get_emetas(), cl.get_instances()))
-        return simp_result(e);
+        return simp_result(e, cl.get_id());
 
     for (unsigned i = 0; i < cl.get_num_umeta(); i++) {
         if (!tmp_ctx.is_uassigned(i))
-            return simp_result(e);
+            return simp_result(e, cl.get_id());
     }
 
     expr e_s = tmp_ctx.instantiate_mvars(cl.get_rhs());
     expr pf = tmp_ctx.instantiate_mvars(cl.get_proof());
 
-    simp_result r(e_s, pf);
+    lms.insert(cl.get_id());
+    simp_result r(e_s, pf, lms);
 
     lean_simp_trace(tmp_ctx, name({"simplify", "congruence"}),
                     tout() << "(" << cl.get_id() << ") "
@@ -389,6 +393,7 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
     expr proof = congr_lemma->get_proof();
     expr type = congr_lemma->get_type();
     buffer<expr> subst;
+    name_set lms;
 
     i = 0;
     unsigned i_eq = 0;
@@ -409,6 +414,7 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             type = binding_body(type);
             {
                 simp_result r_arg = finalize(m_ctx, m_rel, r_args[i_eq]);
+                lms.merge(r_arg.get_lemmas());
                 proof = mk_app(proof, r_arg.get_new(), r_arg.get_proof());
                 subst.push_back(r_arg.get_new());
                 subst.push_back(r_arg.get_proof());
@@ -427,7 +433,7 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
     }
     lean_assert(is_eq(type));
     expr rhs   = instantiate_rev(app_arg(type), subst.size(), subst.data());
-    simp_result r(rhs, proof);
+    simp_result r(rhs, proof, lms);
 
     if (has_cast) {
         r.update(remove_unnecessary_casts(r.get_new()));
@@ -437,7 +443,9 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
 }
 
 simp_result simplify_core_fn::congr_fun_arg(simp_result const & r_f, simp_result const & r_arg) {
-    if (!r_f.has_proof() && !r_arg.has_proof()) return simp_result(mk_app(r_f.get_new(), r_arg.get_new()));
+    name_set lms = r_f.get_lemmas();
+    lms.merge(r_arg.get_lemmas());
+    if (!r_f.has_proof() && !r_arg.has_proof()) return simp_result(mk_app(r_f.get_new(), r_arg.get_new()), lms);
     else if (!r_f.has_proof()) return congr_arg(r_f.get_new(), r_arg);
     else if (!r_arg.has_proof()) return congr_fun(r_f, r_arg.get_new());
     else return congr(r_f, r_arg);
@@ -448,7 +456,9 @@ simp_result simplify_core_fn::congr(simp_result const & r_f, simp_result const &
     // theorem congr {A B : Type} {f₁ f₂ : A → B} {a₁ a₂ : A} (H₁ : f₁ = f₂) (H₂ : a₁ = a₂) : f₁ a₁ = f₂ a₂
     expr e  = mk_app(r_f.get_new(), r_arg.get_new());
     expr pf = mk_congr(m_ctx, r_f.get_proof(), r_arg.get_proof());
-    return simp_result(e, pf);
+    name_set lms = r_f.get_lemmas();
+    lms.merge(r_arg.get_lemmas());
+    return simp_result(e, pf, lms);
 }
 
 simp_result simplify_core_fn::congr_fun(simp_result const & r_f, expr const & arg) {
@@ -456,7 +466,7 @@ simp_result simplify_core_fn::congr_fun(simp_result const & r_f, expr const & ar
     // theorem congr_fun {A : Type} {B : A → Type} {f g : Π x, B x} (H : f = g) (a : A) : f a = g a
     expr e  = mk_app(r_f.get_new(), arg);
     expr pf = mk_congr_fun(m_ctx, r_f.get_proof(), arg);
-    return simp_result(e, pf);
+    return simp_result(e, pf, r_f.get_lemmas());
 }
 
 simp_result simplify_core_fn::congr_arg(expr const & f, simp_result const & r_arg) {
@@ -464,7 +474,7 @@ simp_result simplify_core_fn::congr_arg(expr const & f, simp_result const & r_ar
     // theorem congr_arg {A B : Type} {a₁ a₂ : A} (f : A → B) : a₁ = a₂ → f a₁ = f a₂
     expr e  = mk_app(f, r_arg.get_new());
     expr pf = mk_congr_arg(m_ctx, f, r_arg.get_proof());
-    return simp_result(e, pf);
+    return simp_result(e, pf, r_arg.get_lemmas());
 }
 
 simp_result simplify_core_fn::congr_funs(simp_result const & r_f, buffer<expr> const & args) {
@@ -473,12 +483,12 @@ simp_result simplify_core_fn::congr_funs(simp_result const & r_f, buffer<expr> c
         e  = mk_app(e, args[i]);
     }
     if (!r_f.has_proof())
-        return simp_result(e);
+        return simp_result(e, r_f.get_lemmas());
     expr pf = r_f.get_proof();
     for (unsigned i = 0; i < args.size(); ++i) {
         pf = mk_congr_fun(m_ctx, pf, args[i]);
     }
-    return simp_result(e, pf);
+    return simp_result(e, pf, r_f.get_lemmas());
 }
 
 simp_result simplify_core_fn::rewrite(expr const & e) {
@@ -497,6 +507,7 @@ simp_result simplify_core_fn::rewrite(expr const & e) {
                 lean_simp_trace_d(m_ctx, name({"simplify", "rewrite"}),
                                 tout() << "[" << lemma.get_id() << "]: "
                                 << e << " ==> " << r.get_new() << "\n";);
+                r.insert_lemma(lemma.get_id());
                 return r;
             }
         } catch (ext_exception & ex) {
@@ -578,7 +589,7 @@ simp_result simplify_core_fn::rewrite_core(expr const & e, simp_lemma const & sl
     }
 
     expr pf = tmp_ctx.instantiate_mvars(sl.get_proof());
-    return simp_result(new_rhs, pf);
+    return simp_result(new_rhs, pf, sl.get_id());
 }
 
 simp_result simplify_core_fn::rewrite(expr const & e, simp_lemma const & sl) {
@@ -589,7 +600,7 @@ simp_result simplify_core_fn::rewrite(expr const & e, simp_lemma const & sl) {
     if (e_nargs == lhs_nargs)
         return rewrite_core(e, sl);
     if (e_nargs < lhs_nargs)
-        return simp_result(e);
+        return simp_result(e, sl.get_id());
     buffer<expr> extra_args;
     unsigned i = e_nargs;
     auto it = e;
@@ -605,14 +616,14 @@ simp_result simplify_core_fn::rewrite(expr const & e, simp_lemma const & sl) {
     expr new_e = mk_rev_app(it_r.get_new(), extra_args);
     new_e      = reduce(new_e);
     if (!it_r.has_proof())
-        return simp_result(new_e);
+        return simp_result(new_e, it_r.get_lemmas());
     expr pr = it_r.get_proof();
     i = extra_args.size();
     while (i > 0) {
         --i;
         pr = mk_congr_fun(m_ctx, pr, extra_args[i]);
     }
-    return simp_result(new_e, pr);
+    return simp_result(new_e, pr, it_r.get_lemmas());
 }
 
 simp_result simplify_core_fn::propext_rewrite(expr const & e) {
@@ -622,7 +633,7 @@ simp_result simplify_core_fn::propext_rewrite(expr const & e) {
     simp_result r = rewrite(e);
     if (!r.has_proof()) return r;
     expr new_pr = mk_app(m_ctx, get_propext_name(), r.get_proof());
-    return simp_result(r.get_new(), new_pr);
+    return simp_result(r.get_new(), new_pr, r.get_lemmas());
 }
 
 simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & parent) {
@@ -1239,8 +1250,8 @@ meta constant simplify
   (e : expr)
   (c : simp_config)
   (r : name)
-  (prove : tactic unit)
-  : tactic (expr × expr)
+  (prove : tactic unit) :
+  tactic (expr × expr × name_set)
 */
 vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, vm_obj const & c, vm_obj const & rel,
                        vm_obj const & prove, vm_obj const & _s) {
@@ -1259,7 +1270,8 @@ vm_obj tactic_simplify(vm_obj const & slss, vm_obj const & u, vm_obj const & e, 
             result = finalize(ctx, to_name(rel), result);
             tactic_state new_s = set_dcs(s, dcs);
             if (!was_frozen) new_s = unfreeze_local_instances(new_s);
-            return tactic::mk_success(mk_vm_pair(to_obj(result.get_new()), to_obj(result.get_proof())), new_s);
+            return tactic::mk_success(mk_vm_pair(to_obj(result.get_new()),
+                mk_vm_pair(to_obj(result.get_proof()), to_obj(result.get_lemmas()))), new_s);
         } else {
             return tactic::mk_exception("simplify tactic failed to simplify", s);
         }

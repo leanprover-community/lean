@@ -140,7 +140,7 @@ meta def simp (no_dflt : parse only_flag) (hs : parse tactic.simp_arg_list) (att
               : conv unit :=
 do (s, u) ← tactic.mk_simp_set no_dflt attr_names hs,
    (r, lhs, rhs) ← tactic.target_lhs_rhs,
-   (new_lhs, pr) ← tactic.simplify s u lhs cfg.to_simp_config r cfg.discharger,
+   (new_lhs, pr, lms) ← tactic.simplify s u lhs cfg.to_simp_config r cfg.discharger,
    update_lhs new_lhs pr,
    return ()
 

@@ -15,6 +15,9 @@ struct simp_result {
     /* If proof is not provided, it is assumed to be reflexivity */
     optional<expr> m_proof;
 
+    /* The set of simplification lemmas used in the proof */
+    name_set m_lemmas;
+
     bool m_done{false};
 public:
     simp_result() {}
@@ -22,12 +25,24 @@ public:
     simp_result(expr const & e, expr const & proof, bool done = false): m_new(e), m_proof(proof), m_done(done) {}
     simp_result(expr const & e, optional<expr> const & proof): m_new(e), m_proof(proof) {}
     simp_result(pair<expr, optional<expr>> const & r): m_new(r.first), m_proof(r.second) {}
+    simp_result(expr const & e, name_set const & lemmas, bool done = false):
+      m_new(e), m_lemmas(lemmas), m_done(done) {}
+    simp_result(expr const & e, expr const & proof, name_set const & lemmas, bool done = false):
+      m_new(e), m_proof(proof), m_lemmas(lemmas), m_done(done) {}
+    simp_result(expr const & e, expr const & proof, name const & lem, bool done = false):
+      m_new(e), m_proof(proof), m_done(done) { m_lemmas.insert(lem); }
+    simp_result(expr const & e, name const & lem, bool done = false):
+      m_new(e), m_done(done) { m_lemmas.insert(lem); }
 
     bool has_proof() const { return static_cast<bool>(m_proof); }
 
     expr const & get_new() const { return m_new; }
     expr const & get_proof() const { lean_assert(m_proof); return *m_proof; }
     optional<expr> const & get_optional_proof() const { return m_proof; }
+    name_set const & get_lemmas() const { return m_lemmas; }
+
+    /* Insert a lemma name to the set of simplification lemmas used in the proof */
+    void insert_lemma(name const & lem) { m_lemmas.insert(lem); }
 
     /* The following assumes that [e] and [m_new] are definitionally equal */
     void update(expr const & e) { m_new = e; }
