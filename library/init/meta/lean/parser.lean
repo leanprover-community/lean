@@ -24,7 +24,7 @@ namespace parser
 
 variable {α : Type}
 
-meta def get_state : parser parser_state := λ σ, success σ σ
+protected meta def get_state : parser parser_state := λ σ, success σ σ
 
 meta def val (p : lean.parser (reflected_value α)) : lean.parser α :=
 reflected_value.val <$> p
