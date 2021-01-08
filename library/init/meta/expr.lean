@@ -122,6 +122,8 @@ For example, a `have x:X, from p, q` expression will be compiled to `(λ x:X,q)(
 These annotations have no real semantic meaning, but are useful for helping Lean's pretty printer. -/
 meta constant expr.is_annotation : expr elab → option (name × expr elab)
 
+meta constant expr.is_string_macro : expr elab → option (expr elab)
+
 /-- Remove all macro annotations from the given `expr`. -/
 meta def expr.erase_annotations : expr elab → expr elab
 | e :=

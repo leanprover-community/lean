@@ -7,6 +7,8 @@ Author: Leonardo de Moura
 #pragma once
 #include "frontends/lean/cmd_table.h"
 #include "library/message_builder.h"
+#include "library/export_decl.h"
+
 namespace lean {
 bool print_id_info(parser & p, message_builder & out, name const & id, bool show_value, pos_info const & pos);
 bool print_token_info(parser const & p, message_builder & out, name const & tk);
@@ -14,6 +16,7 @@ bool print_token_info(parser const & p, message_builder & out, name const & tk);
 cmd_table get_builtin_cmds();
 /* \brief Replay export declarations in the top-level of imported files */
 environment replay_export_decls_core(environment env, io_state const & ios);
+environment execute_open(environment env, io_state const & ios, export_decl const & edecl);
 
 void initialize_builtin_cmds();
 void finalize_builtin_cmds();

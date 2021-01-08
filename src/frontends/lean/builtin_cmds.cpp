@@ -343,7 +343,7 @@ environment open_export_cmd(parser & p, bool open) {
     }
     return env;
 }
-static environment open_cmd(parser & p) { return open_export_cmd(p, true); }
+environment open_cmd(parser & p) { return open_export_cmd(p, true); }
 static environment export_cmd(parser & p) { return open_export_cmd(p, false); }
 
 static environment local_cmd(parser & p, cmd_meta const & meta) {
