@@ -150,5 +150,10 @@ end reflectable
 meta def reflect (p : parser α) [r : reflectable p] : parser expr :=
 r.expr
 
+meta constant run {α} : parser α → tactic α
+
+meta def run_with_input {α} : parser α → string → tactic α := λ p s,
+prod.fst <$> run (with_input p s)
+
 end parser
 end lean

@@ -90,6 +90,12 @@ meta constant add_defn_eqns (env : environment) (opt : options)
 
 /-- Register the given name as a namespace, making it available to the `open` command -/
 meta constant add_namespace   : environment → name → environment
+/-- Mark a namespace as open -/
+meta constant mark_namespace_as_open : environment -> name -> environment
+/-- Modify the environment as if `open %%name` had been parsed -/
+meta constant execute_open : environment -> name -> environment
+/-- Retrieve all registered namespaces -/
+meta constant get_namespaces : environment -> list name
 /-- Return tt iff the given name is a namespace -/
 meta constant is_namespace    : environment → name → bool
 /-- Add a new inductive datatype to the environment

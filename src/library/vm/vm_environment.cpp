@@ -33,6 +33,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_rb_map.h"
 #include "frontends/lean/structure_cmd.h"
 #include "frontends/lean/definition_cmds.h"
+#include "frontends/lean/builtin_cmds.h"
 
 namespace lean {
 struct vm_environment : public vm_external {
@@ -279,6 +280,23 @@ vm_obj environment_add_namespace(vm_obj const & env, vm_obj const & n) {
     return to_obj(add_namespace(to_env(env), to_name(n)));
 }
 
+vm_obj environment_mark_namespace_as_open (vm_obj const & env, vm_obj const & n) {
+    return to_obj(mark_namespace_as_open(to_env(env), to_name(n)));
+}
+
+vm_obj environment_execute_open (vm_obj const & env, vm_obj const & n) {
+    auto ns = to_name(n);
+    name as; bool found_explicit = false;
+    buffer<name> exception_names; buffer<pair<name, name>> renames;
+    export_decl edecl (ns, as, found_explicit, renames, exception_names);
+    auto env_ = mark_namespace_as_open(to_env(env), ns);
+    return to_obj(execute_open(env_, get_global_ios(), edecl));
+}
+
+vm_obj environment_get_namespaces (vm_obj const & env) {
+  return to_obj(get_namespaces(to_env(env)));
+}
+
 vm_obj environment_is_namespace(vm_obj const & env, vm_obj const & n) {
     return mk_vm_bool(is_namespace(to_env(env), to_name(n)));
 }
@@ -324,38 +342,41 @@ vm_obj environment_fingerprint(vm_obj const & env) {
 }
 
 void initialize_vm_environment() {
-    DECLARE_VM_BUILTIN(name({"environment", "mk_std"}),                environment_mk_std);
-    DECLARE_VM_BUILTIN(name({"environment", "trust_lvl"}),             environment_trust_lvl);
-    DECLARE_VM_BUILTIN(name({"environment", "add"}),                   environment_add);
-    DECLARE_VM_BUILTIN(name({"environment", "is_protected"}),          environment_is_protected);
-    DECLARE_VM_BUILTIN(name({"environment", "mk_protected"}),          environment_mk_protected);
-    DECLARE_VM_BUILTIN(name({"environment", "get"}),                   environment_get);
-    DECLARE_VM_BUILTIN(name({"environment", "fold"}),                  environment_fold);
-    DECLARE_VM_BUILTIN(name({"environment", "add_inductive"}),         environment_add_inductive);
-    DECLARE_VM_BUILTIN(name({"environment", "is_inductive"}),          environment_is_inductive);
-    DECLARE_VM_BUILTIN(name({"environment", "is_constructor"}),        environment_is_constructor);
-    DECLARE_VM_BUILTIN(name({"environment", "is_recursor"}),           environment_is_recursor);
-    DECLARE_VM_BUILTIN(name({"environment", "is_recursive"}),          environment_is_recursive);
-    DECLARE_VM_BUILTIN(name({"environment", "add_ginductive"}),        environment_add_ginductive);
-    DECLARE_VM_BUILTIN(name({"environment", "inductive_type_of"}),     environment_inductive_type_of);
-    DECLARE_VM_BUILTIN(name({"environment", "constructors_of"}),       environment_constructors_of);
-    DECLARE_VM_BUILTIN(name({"environment", "recursor_of"}),           environment_recursor_of);
-    DECLARE_VM_BUILTIN(name({"environment", "inductive_num_params"}),  environment_inductive_num_params);
-    DECLARE_VM_BUILTIN(name({"environment", "inductive_num_indices"}), environment_inductive_num_indices);
-    DECLARE_VM_BUILTIN(name({"environment", "inductive_dep_elim"}),    environment_inductive_dep_elim);
-    DECLARE_VM_BUILTIN(name({"environment", "add_namespace"}),         environment_add_namespace);
-    DECLARE_VM_BUILTIN(name({"environment", "is_namespace"}),          environment_is_namespace);
-    DECLARE_VM_BUILTIN(name({"environment", "is_ginductive"}),         environment_is_ginductive);
-    DECLARE_VM_BUILTIN(name({"environment", "is_projection"}),         environment_is_projection);
-    DECLARE_VM_BUILTIN(name({"environment", "relation_info"}),         environment_relation_info);
-    DECLARE_VM_BUILTIN(name({"environment", "refl_for"}),              environment_refl_for);
-    DECLARE_VM_BUILTIN(name({"environment", "symm_for"}),              environment_symm_for);
-    DECLARE_VM_BUILTIN(name({"environment", "trans_for"}),             environment_trans_for);
-    DECLARE_VM_BUILTIN(name({"environment", "decl_olean"}),            environment_decl_olean);
-    DECLARE_VM_BUILTIN(name({"environment", "decl_pos"}),              environment_decl_pos);
+    DECLARE_VM_BUILTIN(name({"environment", "mk_std"}),                 environment_mk_std);
+    DECLARE_VM_BUILTIN(name({"environment", "trust_lvl"}),              environment_trust_lvl);
+    DECLARE_VM_BUILTIN(name({"environment", "add"}),                    environment_add);
+    DECLARE_VM_BUILTIN(name({"environment", "is_protected"}),           environment_is_protected);
+    DECLARE_VM_BUILTIN(name({"environment", "mk_protected"}),           environment_mk_protected);
+    DECLARE_VM_BUILTIN(name({"environment", "get"}),                    environment_get);
+    DECLARE_VM_BUILTIN(name({"environment", "fold"}),                   environment_fold);
+    DECLARE_VM_BUILTIN(name({"environment", "add_inductive"}),          environment_add_inductive);
+    DECLARE_VM_BUILTIN(name({"environment", "is_inductive"}),           environment_is_inductive);
+    DECLARE_VM_BUILTIN(name({"environment", "is_constructor"}),         environment_is_constructor);
+    DECLARE_VM_BUILTIN(name({"environment", "is_recursor"}),            environment_is_recursor);
+    DECLARE_VM_BUILTIN(name({"environment", "is_recursive"}),           environment_is_recursive);
+    DECLARE_VM_BUILTIN(name({"environment", "add_ginductive"}),         environment_add_ginductive);
+    DECLARE_VM_BUILTIN(name({"environment", "inductive_type_of"}),      environment_inductive_type_of);
+    DECLARE_VM_BUILTIN(name({"environment", "constructors_of"}),        environment_constructors_of);
+    DECLARE_VM_BUILTIN(name({"environment", "recursor_of"}),            environment_recursor_of);
+    DECLARE_VM_BUILTIN(name({"environment", "inductive_num_params"}),   environment_inductive_num_params);
+    DECLARE_VM_BUILTIN(name({"environment", "inductive_num_indices"}),  environment_inductive_num_indices);
+    DECLARE_VM_BUILTIN(name({"environment", "inductive_dep_elim"}),     environment_inductive_dep_elim);
+    DECLARE_VM_BUILTIN(name({"environment", "add_namespace"}),          environment_add_namespace);
+    DECLARE_VM_BUILTIN(name({"environment", "mark_namespace_as_open"}), environment_mark_namespace_as_open);
+    DECLARE_VM_BUILTIN(name({"environment", "execute_open"}),           environment_execute_open);
+    DECLARE_VM_BUILTIN(name({"environment", "get_namespaces"}),         environment_get_namespaces);
+    DECLARE_VM_BUILTIN(name({"environment", "is_namespace"}),           environment_is_namespace);
+    DECLARE_VM_BUILTIN(name({"environment", "is_ginductive"}),          environment_is_ginductive);
+    DECLARE_VM_BUILTIN(name({"environment", "is_projection"}),          environment_is_projection);
+    DECLARE_VM_BUILTIN(name({"environment", "relation_info"}),          environment_relation_info);
+    DECLARE_VM_BUILTIN(name({"environment", "refl_for"}),               environment_refl_for);
+    DECLARE_VM_BUILTIN(name({"environment", "symm_for"}),               environment_symm_for);
+    DECLARE_VM_BUILTIN(name({"environment", "trans_for"}),              environment_trans_for);
+    DECLARE_VM_BUILTIN(name({"environment", "decl_olean"}),             environment_decl_olean);
+    DECLARE_VM_BUILTIN(name({"environment", "decl_pos"}),               environment_decl_pos);
     DECLARE_VM_BUILTIN(name({"environment", "unfold_untrusted_macros"}), environment_unfold_untrusted_macros);
-    DECLARE_VM_BUILTIN(name({"environment", "unfold_all_macros"}),     environment_unfold_all_macros);
-    DECLARE_VM_BUILTIN(name({"environment", "structure_fields"}),      environment_structure_fields);
+    DECLARE_VM_BUILTIN(name({"environment", "unfold_all_macros"}),      environment_unfold_all_macros);
+    DECLARE_VM_BUILTIN(name({"environment", "structure_fields"}),       environment_structure_fields);
     DECLARE_VM_BUILTIN(name({"environment", "get_class_attribute_symbols"}), environment_get_class_attribute_symbols);
     DECLARE_VM_BUILTIN(name({"environment", "fingerprint"}),           environment_fingerprint);
 }

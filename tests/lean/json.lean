@@ -44,4 +44,4 @@ meta def test_parse_unparse : tactic unit := do {
   guard (obj_msg = obj_msg') <|> tactic.trace format!"FAILED:\n{obj_msg}\n{obj_msg'}"
 }
 
-run_cmd test_parse_unparse
+#eval test_parse_unparse
