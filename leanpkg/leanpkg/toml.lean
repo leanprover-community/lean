@@ -41,11 +41,12 @@ with repr_core : value → string
 | (value.bool tt)  := "true"
 | (value.bool ff)  := "false"
 | (value.table cs) :=
-  have sizeof (@psum.inr value (list (string × value)) cs) < sizeof
-    (@psum.inl value (list (string × value)) (table cs)) :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inr cs) (psum.inl (table cs)) :=
   begin
-    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof,
-    apply nat.add_lt_add_left,
+    unfold has_well_founded.r sizeof_measure measure inv_image,
+    unfold sizeof has_sizeof.sizeof value.sizeof psum.alt.sizeof,
     rw [nat.add_comm],
     exact nat.lt_succ_self _,
   end,
@@ -53,12 +54,12 @@ with repr_core : value → string
 with repr_pairs : list (string × value) → string
 | []               := ""
 | [(k, v)]         :=
-  have sizeof (@psum.inl value (list (string × value)) v) < sizeof
-    (@psum.inr value (list (string × value)) [(k, v)]) :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inl v) (psum.inr [(k, v)]) :=
   begin
-    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
-    apply nat.add_lt_add_left,
     apply nat.lt_succ_of_lt,
+    unfold sizeof has_sizeof.sizeof prod.sizeof,
     rw [← nat.add_assoc],
     apply nat.lt_add_of_pos_left,
     rw [nat.add_comm],
@@ -66,21 +67,20 @@ with repr_pairs : list (string × value) → string
   end,
   k ++ " = " ++ repr_core v
 | ((k, v)::kvs)    :=
-  have sizeof (@psum.inl value (list (string × value)) v) < sizeof
-    (@psum.inr value (list (string × value)) ((k, v):: kvs)) :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inl v) (psum.inr ((k, v) :: kvs)) :=
   begin
-    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
-    apply nat.add_lt_add_left,
+    change v.sizeof < 1 + (1 + k.length + v.sizeof) + kvs.sizeof,
     rw [← nat.add_assoc, nat.add_comm, ← nat.add_assoc],
     apply nat.lt_add_of_pos_left,
     rw [nat.add_comm, nat.add_assoc, nat.add_comm],
     exact nat.succ_pos _,
   end,
-  have sizeof (@psum.inr value (list (string × value)) kvs) < sizeof
-    (@psum.inr value (list (string × value)) ((k, v):: kvs)) :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (@psum.has_sizeof_alt value _ _ _))
+    (psum.inr kvs) (psum.inr ((k, v) :: kvs)) :=
   begin
-    unfold sizeof has_sizeof.sizeof psum.sizeof value.sizeof list.sizeof prod.sizeof,
-    apply nat.add_lt_add_left,
     apply nat.lt_add_of_pos_left,
     rw [nat.add_comm],
     exact nat.succ_pos _,

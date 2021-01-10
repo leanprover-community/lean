@@ -37,6 +37,7 @@ end well_founded_tactics
 
 /-- Arguments for `using_well_founded`
 
+  The tactic `rel_tac` has to synthesize an element of type `(has_well_founded A)`.
   The two arguments are: a local representing the function being defined by well
   founded recursion, and a list of recursive equations.
   The equations can be used to decide which well founded relation should be used.
