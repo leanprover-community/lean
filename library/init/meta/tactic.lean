@@ -1648,6 +1648,16 @@ match _root_.try_for max (tac s) with
 | none   := mk_exception "try_for tactic failed, timeout" none s
 end
 
+/-- Execute tac for 'max' milliseconds. Useful due to variance
+    in the number of heartbeats taken by various tactics. -/
+meta def try_for_time {α} (max : nat) (tac : tactic α) : tactic α :=
+λ s,
+match _root_.try_for_time max (tac s) with
+| some r := r
+| none   := mk_exception "try_for_time tactic failed, timeout" none s
+end
+
+
 meta def updateex_env (f : environment → exceptional environment) : tactic unit :=
 do env ← get_env,
    env ← returnex $ f env,

@@ -56,6 +56,32 @@ vm_obj vm_try_for(vm_obj const &, vm_obj const & n, vm_obj const & thunk) {
     }
 }
 
+vm_obj vm_try_for_time (vm_obj const &, vm_obj const & n, vm_obj const & thunk) {
+  size_t max = static_cast<size_t> (force_to_unsigned(n)); // n = # millisecs, max = # millisecs
+  auto ctok = mk_cancellation_token(global_cancellation_token());
+  condition_variable wake_up_killer;
+  mutex killer_mutex;
+  bool finished = false;
+  lthread killer([&] () {
+    unique_lock<mutex> lock(killer_mutex);
+    wake_up_killer.wait_for(lock, chrono::milliseconds(max), [&] { return finished; });
+    cancel(ctok);
+  });
+  scope_cancellation_token scope1(ctok);
+  vm_obj unit = mk_vm_unit();
+  vm_obj result;
+  if (auto r = get_vm_state().try_invoke_catch(thunk, 1, &unit)) {
+    result = mk_vm_some(*r);
+  } else {
+    result = mk_vm_none();
+  }
+  { unique_lock<mutex> lock(killer_mutex); finished = true; }
+  wake_up_killer.notify_one();
+  killer.join();
+  return result;
+}
+
+
 void initialize_vm_aux() {
     DECLARE_VM_BUILTIN("timeit",           vm_timeit);
     DECLARE_VM_BUILTIN("trace",            vm_trace);
@@ -63,6 +89,7 @@ void initialize_vm_aux() {
     DECLARE_VM_BUILTIN("sorry",            vm_sorry);
     DECLARE_VM_BUILTIN("undefined_core",   vm_undefined_core);
     DECLARE_VM_BUILTIN("try_for",          vm_try_for);
+    DECLARE_VM_BUILTIN("try_for_time",     vm_try_for_time);
 }
 
 void finalize_vm_aux() {
