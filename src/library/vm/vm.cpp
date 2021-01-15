@@ -2389,7 +2389,7 @@ optional<vm_obj> vm_state::try_invoke_catch(vm_obj const & fn, unsigned nargs, v
             while (m_call_stack.size() > call_stack_sz) m_call_stack.pop_back();
         }
         return optional<vm_obj>();
-    } catch (lean::interrupted) {
+    } catch (lean::interrupted &) {
         m_code           = code;
         m_fn_idx         = fn_idx;
         m_pc             = pc;
