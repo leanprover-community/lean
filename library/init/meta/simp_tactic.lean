@@ -319,7 +319,7 @@ do when (expr.is_local_constant h = ff) (fail "tactic simp_at failed, the given 
   + if it succeeds the result is `(new_a, new_e, new_pr, flag)` where
     - `new_a` is the new value for the user data
     - `new_e` is a new expression s.t. `r e new_e`
-    - `new_pr` is a proof for `e r new_e`, If it is none, the proof is assumed to be by reflexivity
+    - `new_pr` is a proof for `r e new_e`, If it is none, the proof is assumed to be by reflexivity
     - `flag`  if tt `new_e` children should be visited, and `post` invoked.
 - `(post a s r p e)` is invoked after visiting the children of subterm `e`,
   The output is similar to `(pre a r s p e)`, but the 'flag' indicates whether the new expression should be revisited or not.
