@@ -1,3 +1,14 @@
+3.25.0c (21 January 2021)
+-------------------------
+
+Features:
+  - `try_for_time` interruption function (#517)
+  - Add primitives for GPT integration (#510)
+  - Record simplification lemmas and export them to tactic.simplify (#497)
+
+Bug fixes:
+  - Correct minor typo in docstring (#518)
+
 3.24.0c (4 January 2021)
 -------------------------
 
