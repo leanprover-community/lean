@@ -21,3 +21,10 @@ constant bar [inhabited ℕ] [inhabited ℕ] : ℕ → ℤ
 constant foo (α : Type) [inhabited ℕ] [inhabited ℕ] : ℕ → ℤ
 #eval (sf.of_eformat <$> tactic.pp_tagged `((int.of_nat = bar))) >>= tactic.trace
 #eval (sf.of_eformat <$> tactic.pp_tagged `((int.of_nat = (foo nat)))) >>= tactic.trace
+
+#eval (sf.of_eformat <$> tactic.pp_tagged `(∃ (x : nat), x = x)) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `(∃ (x y z: nat), x = x)) >>= tactic.trace
+
+#eval (sf.of_eformat <$> tactic.pp_tagged `(∃ (x > 0), x = x)) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `(λ (x > 0), x = x)) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `(Π (x > 0), x = x)) >>= tactic.trace
