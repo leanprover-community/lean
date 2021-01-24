@@ -180,6 +180,11 @@ public:
         static_cast<user_attribute_data const *>(&data)->write(s);
     }
 
+    void textualize_entry(tlean_exporter & x, attr_data const & data) override {
+        lean_assert(dynamic_cast<user_attribute_data const *>(&data));
+        static_cast<user_attribute_data const *>(&data)->textualize(x);
+    }
+
     attr_data_ptr read_entry(deserializer & d) override {
         auto data = new user_attribute_data;
         data->read(d);
@@ -201,6 +206,11 @@ struct user_attr_modification : public modification {
 
     void serialize(serializer & s) const override {
         s << m_name;
+    }
+
+    void textualize(tlean_exporter & x) const override {
+        unsigned n = x.export_name(m_name);
+        x.out() << "#USER_ATTR " << n << std::endl;
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

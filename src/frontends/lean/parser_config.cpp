@@ -19,6 +19,23 @@ using notation::transition;
 using notation::action;
 using notation::action_kind;
 
+std::string notation_entry_kind_to_string (notation_entry_kind const & k) {
+    switch (k) {
+    case notation_entry_kind::NuD:     return "NuD";
+    case notation_entry_kind::LeD:     return "LeD";
+    case notation_entry_kind::Numeral: return "Numeral";
+    }
+    lean_unreachable();
+}
+
+std::string notation_entry_group_to_string (notation_entry_group const & g) {
+    switch (g) {
+    case notation_entry_group::Main:    return "Main";
+    case notation_entry_group::Reserve: return "Reserve";
+    }
+    lean_unreachable();
+}
+
 notation_entry replace(notation_entry const & e, std::function<expr(expr const &)> const & f) {
     if (e.is_numeral())
         return notation_entry(e.get_num(), f(e.get_expr()), e.overload(), e.parse_only());
@@ -93,9 +110,22 @@ struct token_config {
         return *g_class_name;
     }
     static const char * get_serialization_key() { return "TK"; }
+
     static void  write_entry(serializer & s, entry const & e) {
         s << e.m_token.c_str() << e.m_prec;
     }
+
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        x.out() << "#TOKEN"
+                << " " << e.m_token.c_str();
+        if (e.m_prec) {
+            x.out() << " " << *e.m_prec;
+        } else {
+            x.out() << " " << "NONE";
+        }
+        x.out() << std::endl;
+    }
+
     static entry read_entry(deserializer & d) {
         entry e;
         d >> e.m_token >> e.m_prec;
@@ -284,6 +314,7 @@ struct notation_config {
         return *g_class_name;
     }
     static char const * get_serialization_key() { return "NOTA"; }
+
     static void  write_entry(serializer & s, entry const & e) {
         s << static_cast<char>(e.kind()) << e.overload() << e.parse_only() << e.get_expr();
         if (e.is_numeral()) {
@@ -295,6 +326,54 @@ struct notation_config {
             s << e.priority();
         }
     }
+
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        // Note: we do not export all notations, only simple ones
+        // (e.g. prefix, postfix, infix)
+        if (e.parse_only()) return;
+        if (length(e.get_transitions()) != 1) return;
+        auto & t = head(e.get_transitions());
+
+        buffer<expr> args;
+        auto & fn = get_app_rev_args(e.get_expr(), args);
+
+        std::string kind;
+
+        if (args.size() == 0) {
+            kind = "singleton";
+        } else if (args.size() == 1 && args[0] == mk_var(0)) {
+            if (e.is_nud()) {
+                kind = "prefix";
+            } else {
+                kind = "postfix";
+            }
+        } else if (!e.is_nud() && args.size() == 2 && args[0] == mk_var(0) && args[1] == mk_var(1)) {
+            kind = "infix"; // we will specialize this shortly
+        } else {
+            return;
+        }
+
+        if (is_constant(fn)) {
+            auto fni = x.export_name(const_name(fn));
+
+            auto token_prec_opt = get_expr_precedence(get_token_table(x.env()), t.get_token().get_string());
+            auto token_prec = token_prec_opt ? *token_prec_opt : 0;
+            auto rule_prec = t.get_action().rbp();
+
+            unsigned prec;
+
+            if (kind == "infix") {
+                // if (k == mixfix_kind::infixr) prec = *prec - 1;
+                if (rule_prec + 1 == token_prec) { kind = "infixr"; prec = token_prec; }
+                else { kind = "infixl"; prec = rule_prec; }
+            } else {
+                prec = rule_prec;
+            }
+
+            x.out() << "#MIXFIX " << kind << " " << fni << " " << prec << " " << t.get_pp_token().get_string() << std::endl;
+        }
+    }
+
     static entry read_entry(deserializer & d) {
         notation_entry_kind k = static_cast<notation_entry_kind>(d.read_char());
         bool overload, parse_only; expr e;

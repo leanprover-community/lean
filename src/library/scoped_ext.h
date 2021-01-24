@@ -83,6 +83,7 @@ class scoped_ext : public environment_extension {
         Config::add_entry(env, ios, s, e);
     }
     static void  write_entry(serializer & s, entry const & e) { Config::write_entry(s, e); }
+    static void  textualize_entry(tlean_exporter & x, entry const & e) { Config::textualize_entry(x, e); }
     static entry read_entry(deserializer & d) { return Config::read_entry(d); }
     static const char * get_serialization_key() { return Config::get_serialization_key(); }
     static optional<unsigned> get_fingerprint(entry const & e) {
@@ -151,6 +152,10 @@ public:
 
         void serialize(serializer & s) const override {
             write_entry(s, m_entry);
+        }
+
+        void textualize(tlean_exporter & x) const override {
+            textualize_entry(x, m_entry);
         }
 
         static std::shared_ptr<lean::modification const> deserialize(deserializer & d) {

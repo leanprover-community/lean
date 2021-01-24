@@ -286,6 +286,14 @@ std::string olean_of_lean(std::string const & lean_fn) {
     }
 }
 
+std::string tlean_of_lean(std::string const & lean_fn) {
+    if (lean_fn.size() > 5 && lean_fn.substr(lean_fn.size() - 5) == ".lean") {
+        return lean_fn.substr(0, lean_fn.size() - 5) + ".tlean";
+    } else {
+        throw exception(sstream() << "not a .lean file: " << lean_fn);
+    }
+}
+
 std::string olean_file_to_lean_file(std::string const &olean) {
     lean_assert(is_olean_file(olean));
     std::string lean = olean;

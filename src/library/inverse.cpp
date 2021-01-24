@@ -47,6 +47,20 @@ struct inverse_config {
     static void  write_entry(serializer & s, entry const & e) {
         s << e.m_fn << e.m_info.m_arity << e.m_info.m_inv << e.m_info.m_inv_arity << e.m_info.m_lemma;
     }
+
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        unsigned n_fn    = x.export_name(e.m_fn);
+        unsigned n_inv   = x.export_name(e.m_info.m_inv);
+        unsigned n_lemma = x.export_name(e.m_info.m_lemma);
+        x.out() << "#INVERSE"
+                << " " << n_fn
+                << " " << e.m_info.m_arity
+                << " " << n_inv
+                << " " << e.m_info.m_inv_arity
+                << " " << n_lemma
+                << std::endl;
+    }
+
     static entry read_entry(deserializer & d) {
         entry e;
         d >> e.m_fn >> e.m_info.m_arity >> e.m_info.m_inv >> e.m_info.m_inv_arity >> e.m_info.m_lemma;

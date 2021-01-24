@@ -190,6 +190,44 @@ struct class_config {
         }
     }
 
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        unsigned n_class, n_instance, n_track_attr;
+        switch (e.m_kind) {
+        case class_entry_kind::Class:
+            n_class = x.export_name(e.m_class);
+            x.out() << "#CLASS"
+                    << " " << n_class
+                    << std::endl;
+            break;
+        case class_entry_kind::Instance:
+            n_class    = x.export_name(e.m_class);
+            n_instance = x.export_name(e.m_instance);
+            x.out() << "#CLASS_INSTANCE"
+                    << " " << n_class
+                    << " " << n_instance
+                    << " " << e.m_priority
+                    << std::endl;
+            break;
+        case class_entry_kind::Tracker:
+            n_class      = x.export_name(e.m_class);
+            n_track_attr = x.export_name(e.m_track_attr);
+            x.out() << "#CLASS_TRACK_ATTR"
+                    << " " << n_class
+                    << " " << n_track_attr
+                    << std::endl;
+            break;
+        case class_entry_kind::RemoveInstance:
+            n_class    = x.export_name(e.m_class);
+            n_instance = x.export_name(e.m_instance);
+            x.out() << "#CLASS_RM_INSTANCE"
+                    << " " << n_class
+                    << " " << n_instance
+                    << " " << e.m_priority
+                    << std::endl;
+            break;
+        }
+    }
+
     static entry read_entry(deserializer & d) {
         entry e; char k;
         d >> k;

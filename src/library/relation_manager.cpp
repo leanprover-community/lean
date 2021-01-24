@@ -35,6 +35,17 @@ static pair<expr, unsigned> extract_arg_types_core(environment const & env, name
 
 enum class op_kind { Relation, Subst, Trans, Refl, Symm };
 
+std::string op_kind_to_string(op_kind const & k) {
+    switch (k) {
+    case op_kind::Relation: return "Relation";
+    case op_kind::Refl:     return "Refl";
+    case op_kind::Subst:    return "Subst";
+    case op_kind::Trans:    return "Trans";
+    case op_kind::Symm:     return "Symm";
+    }
+    lean_unreachable();
+}
+
 struct rel_entry {
     op_kind m_kind;
     name    m_name;
@@ -160,9 +171,19 @@ struct rel_config {
         }
     }
     static const char * get_serialization_key() { return "REL"; }
+
     static void  write_entry(serializer & s, entry const & e) {
         s << static_cast<char>(e.m_kind) << e.m_name;
     }
+
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        unsigned n_name = x.export_name(e.m_name);
+        x.out() << "#RELATION"
+                << " " << op_kind_to_string(e.m_kind)
+                << " " << n_name
+                << std::endl;
+    }
+
     static entry read_entry(deserializer & d) {
         entry e;
         char cmd;

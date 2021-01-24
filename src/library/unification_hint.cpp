@@ -147,6 +147,15 @@ struct unification_hint_config {
     static void  write_entry(serializer & s, entry const & e) {
         s << e.m_decl_name << e.m_priority;
     }
+
+    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+        unsigned n_decl_name = x.export_name(e.m_decl_name);
+        x.out() << "#UNIFICATION_HINT"
+                << " " << n_decl_name
+                << " " << e.m_priority
+                << std::endl;
+    }
+
     static entry read_entry(deserializer & d) {
         name decl_name; unsigned prio;
         d >> decl_name >> prio;

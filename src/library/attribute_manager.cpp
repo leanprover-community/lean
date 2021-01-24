@@ -141,6 +141,26 @@ struct attr_config {
         }
     }
 
+    static void textualize_entry(tlean_exporter & x, entry const & e) {
+        unsigned n_attr = x.export_name(e.m_attr);
+        unsigned n_decl = x.export_name(e.m_record.m_decl);
+        x.out() << "#ATTR"
+                << " " << n_attr
+                << " " << e.m_prio
+                << " " << n_decl
+                << " " << e.m_record.deleted()
+                << " ";
+
+        if (!e.m_record.deleted()) {
+            if (is_system_attribute(e.m_attr))
+                get_system_attribute(e.m_attr).textualize_entry(x, *e.m_record.m_data);
+            else
+                // dispatch over the extension, since we can't call get_attribute without an env
+                g_user_attribute_ext->textualize_entry(x, *e.m_record.m_data);
+        }
+        x.out() << std::endl;
+    }
+
     static entry read_entry(deserializer & d) {
         entry e; bool deleted;
         d >> e.m_attr >> e.m_prio >> e.m_record.m_decl >> deleted;

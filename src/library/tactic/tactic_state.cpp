@@ -714,6 +714,12 @@ vm_obj tactic_add_decl(vm_obj const & _d, vm_obj const & _s) {
     tactic_state const & s  = tactic::to_state(_s);
     try {
         declaration d       = to_declaration(_d);
+        unsigned trust_lvl  = LEAN_BELIEVER_TRUST_LEVEL + 1;
+
+        if (trust_lvl > s.env().trust_lvl()) {
+            d = unfold_untrusted_macros(s.env(), d);
+        }
+
         environment new_env = module::add(s.env(), check(s.env(), d));
         new_env = vm_compile(new_env, s.get_options(), d);
         return tactic::mk_success(set_env(s, new_env));
