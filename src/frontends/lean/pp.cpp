@@ -1049,12 +1049,12 @@ T pretty_fn<T>::pp_binders(buffer<subexpr> const & locals) {
     T r;
     for (unsigned i = 1; i < num; i++) {
         expr local = locals[i].first;
-        address la = locals[i].second;
-        address_scope scope(*this, la);
         if (!bi.is_inst_implicit() && mlocal_type(local) == type && local_info(local) == bi) {
             names.push_back(mlocal_pp_name(local));
         } else {
+            address_scope scope(*this, la);
             r += group(compose(line(), pp_binder_block(names, type, bi)));
+            la = locals[i].second;
             names.clear();
             type = mlocal_type(local);
             bi   = local_info(local);

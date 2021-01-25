@@ -69,3 +69,136 @@
   (tag_expr [app_fn, app_fn, app_fn] `(foo) "foo")
   "\n"
   (tag_expr [app_fn, app_fn, app_arg] `(nat) "ℕ"))
+"∃"
+""
+"\n"
+""
+"("
+"x"
+" "
+":"
+"\n"
+(tag_expr [app_arg, lam_var_type] `(nat) "ℕ")
+")"
+","
+"\n"
+(tag_expr [app_arg, lam_body]
+  `(eq.{1} nat x x)
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " ="
+  "\n"
+  (tag_expr [app_arg] `(x) "x"))
+"∃"
+""
+"\n"
+""
+"("
+"x"
+" "
+"y"
+" "
+"z"
+" "
+":"
+"\n"
+(tag_expr [app_arg, lam_var_type] `(nat) "ℕ")
+")"
+","
+"\n"
+(tag_expr [app_arg, lam_body, app_arg, lam_body, app_arg, lam_body]
+  `(eq.{1} nat x x)
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " ="
+  "\n"
+  (tag_expr [app_arg] `(x) "x"))
+"∃"
+""
+"\n"
+""
+"("
+"x"
+" "
+":"
+"\n"
+(tag_expr [app_arg, lam_var_type] `(nat) "ℕ")
+")"
+"\n"
+""
+"("
+"H"
+" "
+":"
+"\n"
+(tag_expr [app_arg, lam_body, app_arg, lam_var_type]
+  `(gt.{0} nat nat.has_lt x (has_zero.zero.{0} nat nat.has_zero))
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " >"
+  "\n"
+  (tag_expr [app_arg] `(has_zero.zero.{0} nat nat.has_zero) "0"))
+")"
+","
+"\n"
+(tag_expr [app_arg, lam_body, app_arg, lam_body]
+  `(eq.{1} nat x x)
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " ="
+  "\n"
+  (tag_expr [app_arg] `(x) "x"))
+"λ"
+""
+"\n"
+""
+"("
+"x"
+" "
+":"
+"\n"
+(tag_expr [lam_var_type] `(nat) "ℕ")
+")"
+"\n"
+""
+"("
+"H"
+" "
+":"
+"\n"
+(tag_expr [lam_body, lam_var_type]
+  `(gt.{0} nat nat.has_lt x (has_zero.zero.{0} nat nat.has_zero))
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " >"
+  "\n"
+  (tag_expr [app_arg] `(has_zero.zero.{0} nat nat.has_zero) "0"))
+")"
+","
+"\n"
+(tag_expr [lam_body, lam_body]
+  `(eq.{1} nat x x)
+  (tag_expr [app_fn, app_arg] `(x) "x")
+  " ="
+  "\n"
+  (tag_expr [app_arg] `(x) "x"))
+"∀"
+""
+"\n"
+""
+"("
+"x"
+" "
+":"
+"\n"
+(tag_expr [pi_var_type] `(nat) "ℕ")
+")"
+","
+"\n"
+(tag_expr [pi_body]
+  `((gt.{0} nat nat.has_lt x (has_zero.zero.{0} nat nat.has_zero)) -> (eq.{1} nat x x))
+  (tag_expr [pi_var_type]
+    `(gt.{0} nat nat.has_lt x (has_zero.zero.{0} nat nat.has_zero))
+    (tag_expr [app_fn, app_arg] `(x) "x")
+    " >"
+    "\n"
+    (tag_expr [app_arg] `(has_zero.zero.{0} nat nat.has_zero) "0"))
+  " "
+  "→"
+  "\n"
+  (tag_expr [pi_body] `(eq.{1} nat x x) (tag_expr [app_fn, app_arg] `(x) "x") " =" "\n" (tag_expr [app_arg] `(x) "x")))
