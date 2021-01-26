@@ -1,10 +1,16 @@
+3.26.0c (26 January 2021)
+-------------------------
+
+Bug fixes:
+  - Fix addressing bug in pretty printer (#520)
+
 3.25.0c (21 January 2021)
 -------------------------
 
 Features:
   - `try_for_time` interruption function (#517)
   - Add primitives for GPT integration (#510)
-  - Record simplification lemmas and export them to tactic.simplify (#497)
+  - Record simplification lemmas and export them to `tactic.simplify` (#497)
 
 Bug fixes:
   - Correct minor typo in docstring (#518)
