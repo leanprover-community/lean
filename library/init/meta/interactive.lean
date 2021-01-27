@@ -738,7 +738,7 @@ do
     | (case_tag.hyps _ new_hyp_names) := do
         let num_new_hyps := new_hyp_names.length,
         when (num_ids > num_new_hyps) $ fail format!
-          "Invalid `case'`: You gave {num_ids} names, but the case introduces
+          "Invalid `case`: You gave {num_ids} names, but the case introduces
           {num_new_hyps} new hypotheses.",
         let renamings := native.rb_map.of_list (new_hyp_names.zip ids),
         propagate_tags $ tactic.rename_many renamings tt tt
