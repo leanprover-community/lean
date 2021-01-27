@@ -74,39 +74,19 @@ ys_tl : list ℕ
 case.lean:56:2: error: Invalid `case`: You gave 3 names, but the case introduces
          2 new hypotheses.
 state:
-2 goals
 case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ
 ⊢ ℕ
-
-case list.nil
-⊢ ℕ
 case.lean:62:2: error: Invalid `case`: You gave 4 names, but the case introduces
          3 new hypotheses.
 state:
-4 goals
 case list.cons, list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ,
 xs_ih ys_hd : ℕ,
 ys_tl : list ℕ,
 ys_ih : ℕ
-⊢ ℕ
-
-case list.nil, list.nil
-⊢ ℕ
-
-case list.nil, list.cons
-ys_hd : ℕ,
-ys_tl : list ℕ,
-ys_ih : ℕ
-⊢ ℕ
-
-case list.cons, list.nil
-xs_hd : ℕ,
-xs_tl : list ℕ,
-xs_ih : ℕ
 ⊢ ℕ
 case.lean:68:2: error: case tactic failed, focused goals have not been solved
 state:
