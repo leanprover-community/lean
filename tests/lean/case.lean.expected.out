@@ -71,15 +71,13 @@ xs_tl : list ℕ,
 ys_hd : ℕ,
 ys_tl : list ℕ
 ⊢ ℕ
-case.lean:56:2: error: Invalid `case`: You gave 3 names, but the case introduces
-         2 new hypotheses.
+case.lean:56:2: error: Invalid `case`: You gave 3 names, but the case introduces 2 new hypotheses.
 state:
 case list.cons
 xs_hd : ℕ,
 xs_tl : list ℕ
 ⊢ ℕ
-case.lean:62:2: error: Invalid `case`: You gave 4 names, but the case introduces
-         3 new hypotheses.
+case.lean:62:2: error: Invalid `case`: You gave 4 names, but the case introduces 3 new hypotheses.
 state:
 case list.cons, list.cons
 xs_hd : ℕ,
