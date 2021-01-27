@@ -722,7 +722,7 @@ would select the first goal (or the first goal with a case tag), renaming
 hypotheses to `x, y, z`. The renaming functionality would be available only if
 the goal has a case tag.
 -/
-meta def case (ns : parse ident_*) (args : case_arg_parser) (tac : itactic) : tactic unit :=
+meta def case (args : case_arg_parser) (tac : itactic) : tactic unit :=
 do
   target_goals ← args.mmap (λ ⟨ns, ids⟩, do
     ⟨goal, tag⟩ ← goal_with_matching_tag ns,
