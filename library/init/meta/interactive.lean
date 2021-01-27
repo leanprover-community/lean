@@ -737,7 +737,7 @@ do
       when (num_ids < num_args) $ intron (num_args - num_ids)
     | (case_tag.hyps _ new_hyp_names) := do
         let num_new_hyps := new_hyp_names.length,
-        when (num_ids > num_new_hyps) $ fail format!
+        when (num_ids > num_new_hyps) $ fail format! $
           "Invalid `case`: You gave {num_ids} names, but the case introduces " ++
           "{num_new_hyps} new hypotheses.",
         let renamings := native.rb_map.of_list (new_hyp_names.zip ids),
