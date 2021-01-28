@@ -694,6 +694,10 @@ begin
   { rw [div_def, mod_def, if_neg h', if_neg h', nat.mul_zero, nat.add_zero] },
 end
 
+lemma div_add_mod (m k : ℕ)
+: k * (m / k) + m % k = m :=
+(nat.add_comm _ _).trans (mod_add_div _ _)
+
 /- div -/
 
 @[simp] protected lemma div_one (n : ℕ) : n / 1 = n :=
