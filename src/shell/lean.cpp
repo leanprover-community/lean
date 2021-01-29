@@ -318,7 +318,7 @@ class progress_message_stream {
     mutex m_mutex;
     bool m_showing_task = false;
     std::ostream & m_out;
-    bool m_use_json;
+    std::ostream * m_json_out;
     log_tree::node m_lt;
 
     bool m_show_progress;
@@ -333,8 +333,8 @@ class progress_message_stream {
     }
 
 public:
-    progress_message_stream(std::ostream & out, bool use_json, bool show_progress, log_tree::node const & lt) :
-            m_out(out), m_use_json(use_json), m_lt(lt), m_show_progress(show_progress) {
+    progress_message_stream(std::ostream & out, std::ostream * json_out, bool show_progress, log_tree::node const & lt) :
+            m_out(out), m_json_out(json_out), m_lt(lt), m_show_progress(show_progress) {
 #if defined(LEAN_MULTI_THREAD)
         if (show_progress) {
             m_timer.reset(new single_timer);
@@ -355,9 +355,9 @@ public:
                     if (auto msg = dynamic_cast<message const *>(e.m_entry.get())) {
                         unique_lock<mutex> lock(m_mutex);
                         clear_shown_task();
-                        if (m_use_json) {
+                        if (m_json_out) {
 #if defined(LEAN_JSON)
-                            print_json(m_out, *msg);
+                            print_json(*m_json_out, *msg);
 #endif
                         } else {
                             m_out << *msg;
@@ -404,7 +404,6 @@ public:
         show_current_task_core();
     }
     void show_current_task_core() {
-        if (m_use_json) return;
         if (auto desc = find_current_task()) {
             if (*desc == m_last_task && m_showing_task) return;
             m_last_task = *desc;
@@ -600,8 +599,8 @@ int main(int argc, char ** argv) {
     log_tree lt;
 
     bool show_progress = make_mode && isatty(STDOUT_FILENO);
-    progress_message_stream msg_stream(std::cout, json_output, show_progress, lt.get_root());
     if (json_output) ios.set_regular_channel(ios.get_diagnostic_channel_ptr());
+    progress_message_stream msg_stream(ios.get_regular_stream(), json_output ? &std::cout : nullptr, show_progress, lt.get_root());
 
     if (!test_suite)
         lt.add_listener([&] (std::vector<log_tree::event> const & evs) { msg_stream.on_event(evs); });
