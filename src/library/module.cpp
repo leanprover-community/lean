@@ -282,6 +282,8 @@ void write_module_tlean(loaded_module const & mod, std::ostream & out) {
     for (auto p : mod.m_modifications) {
         p->textualize(x);
     }
+
+    out << std::flush;
 }
 
 static task<bool> has_sorry(modification_list const & mods) {
