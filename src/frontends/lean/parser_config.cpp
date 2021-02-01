@@ -358,19 +358,23 @@ struct notation_config {
 
             auto token_prec_opt = get_expr_precedence(get_token_table(x.env()), t.get_token().get_string());
             auto token_prec = token_prec_opt ? *token_prec_opt : 0;
-            auto rule_prec = t.get_action().rbp();
 
             unsigned prec;
 
-            if (kind == "infix") {
-                // if (k == mixfix_kind::infixr) prec = *prec - 1;
-                if (rule_prec + 1 == token_prec) {
-                    kind = "infixr"; prec = token_prec;
-                } else {
-                    kind = "infixl"; prec = rule_prec;
-                }
+            if (kind == "singleton") {
+                prec = get_max_prec();
             } else {
-                prec = rule_prec;
+                auto rule_prec = t.get_action().rbp();
+                if (kind == "infix") {
+                    // if (k == mixfix_kind::infixr) prec = *prec - 1;
+                    if (rule_prec + 1 == token_prec) {
+                        kind = "infixr"; prec = token_prec;
+                    } else {
+                        kind = "infixl"; prec = rule_prec;
+                    }
+                } else {
+                    prec = rule_prec;
+                }
             }
 
             x.out() << "#MIXFIX " << kind << " " << fni << " " << prec << " " << t.get_pp_token().get_string() << "\n";
