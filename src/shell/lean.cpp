@@ -754,22 +754,15 @@ int main(int argc, char ** argv) {
         // }
 
         if (export_tlean) {
-            buffer<task<unit>> tasks;
             for (auto & mod : mods) {
-                scope_log_tree scope(logtree().mk_child({}, "saving tlean", {mod.m_id, {{1,0}, {2,0}}}));
-                tasks.push_back(add_library_task(task_builder<unit>([mod] {
-                    auto res = get(mod.m_mod_info->m_result);
-                    auto tlean_fn = tlean_of_lean(mod.m_id);
-                    exclusive_file_lock output_lock(tlean_fn);
-                    std::ofstream out(tlean_fn);
-                    write_module_tlean(*res.m_loaded_module, out);
-                    out.close();
-                    if (!out) throw exception("failed to write tlean file");
-                    return unit();
-                }).wrap(exception_reporter()), "saving tlean"));
-            }
-            for (auto const & task : tasks) {
-                taskq().wait_for_finish(task);
+                auto res = get(mod.m_mod_info->m_result);
+                auto tlean_fn = tlean_of_lean(mod.m_id);
+                std::cerr << "exporting " << tlean_fn << std::endl;
+                exclusive_file_lock output_lock(tlean_fn);
+                std::ofstream out(tlean_fn);
+                write_module_tlean(*res.m_loaded_module, out);
+                out.close();
+                if (!out) throw exception(sstream() << "failed to write tlean file: " << tlean_fn);
             }
         }
 
