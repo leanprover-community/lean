@@ -29,11 +29,11 @@ unsigned tlean_exporter::export_name(name const & n) {
     } else if (n.is_string()) {
         unsigned p = export_name(n.get_prefix());
         i = static_cast<unsigned>(m_name2idx.size());
-        m_out << i << " #NS " << p << " " << n.get_string() << std::endl;
+        m_out << i << " #NS " << p << " " << n.get_string() << "\n";
     } else {
         unsigned p = export_name(n.get_prefix());
         i = static_cast<unsigned>(m_name2idx.size());
-        m_out << i << " #NI " << p << " " << n.get_numeral() << std::endl;
+        m_out << i << " #NI " << p << " " << n.get_numeral() << "\n";
     }
     m_name2idx[n] = i;
     return i;
@@ -52,24 +52,24 @@ unsigned tlean_exporter::export_level(level const & l) {
     case level_kind::Succ:
         l1 = export_level(succ_of(l));
         i = static_cast<unsigned>(m_level2idx.size());
-        m_out << i << " #US " << l1 << std::endl;
+        m_out << i << " #US " << l1 << "\n";
         break;
     case level_kind::Max:
         l1 = export_level(max_lhs(l));
         l2 = export_level(max_rhs(l));
         i = static_cast<unsigned>(m_level2idx.size());
-        m_out << i << " #UM " << l1 << " " << l2 << std::endl;
+        m_out << i << " #UM " << l1 << " " << l2 << "\n";
         break;
     case level_kind::IMax:
         l1 = export_level(imax_lhs(l));
         l2 = export_level(imax_rhs(l));
         i = static_cast<unsigned>(m_level2idx.size());
-        m_out << i << " #UIM " << l1 << " " << l2 << std::endl;
+        m_out << i << " #UIM " << l1 << " " << l2 << "\n";
         break;
     case level_kind::Param:
         n = export_name(param_id(l));
         i = static_cast<unsigned>(m_level2idx.size());
-        m_out << i << " #UP " << n << std::endl;
+        m_out << i << " #UP " << n << "\n";
         break;
     case level_kind::Meta:
         throw exception("invalid 'export', universe meta-variables cannot be exported");
@@ -96,7 +96,7 @@ unsigned tlean_exporter::export_binding(expr const & e, char const * k) {
     unsigned i = static_cast<unsigned>(m_expr2idx.size());
     m_out << i << " " << k << " ";
     export_binder_info(binding_info(e));
-    m_out << " " << n << " " << e1 << " " << e2 << std::endl;
+    m_out << " " << n << " " << e1 << " " << e2 << "\n";
     return i;
 }
 
@@ -109,7 +109,7 @@ unsigned tlean_exporter::export_const(expr const & e) {
     m_out << i << " #EC " << n;
     for (unsigned l : ls)
         m_out << " " << l;
-    m_out << std::endl;
+    m_out << "\n";
     return i;
 }
 
@@ -122,12 +122,12 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     switch (e.kind()) {
     case expr_kind::Var:
         i = static_cast<unsigned>(m_expr2idx.size());
-        m_out << i << " #EV " << var_idx(e) << std::endl;
+        m_out << i << " #EV " << var_idx(e) << "\n";
         break;
     case expr_kind::Sort:
         l = export_level(sort_level(e));
         i = static_cast<unsigned>(m_expr2idx.size());
-        m_out << i << " #ES " << l << std::endl;
+        m_out << i << " #ES " << l << "\n";
         break;
     case expr_kind::Constant:
         i = export_const(e);
@@ -136,7 +136,7 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
         e1 = export_expr_core(app_fn(e));
         e2 = export_expr_core(app_arg(e));
         i = static_cast<unsigned>(m_expr2idx.size());
-        m_out << i << " #EA " << e1 << " " << e2 << std::endl;
+        m_out << i << " #EA " << e1 << " " << e2 << "\n";
         break;
     case expr_kind::Let: {
         auto n = export_name(let_name(e));
@@ -144,7 +144,7 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
         e2 = export_expr_core(let_value(e));
         auto e3 = export_expr_core(let_body(e));
         i = static_cast<unsigned>(m_expr2idx.size());
-        m_out << i << " #EZ " << n << " " << e1 << " " << e2 << " " << e3 << std::endl;
+        m_out << i << " #EZ " << n << " " << e1 << " " << e2 << " " << e3 << "\n";
         break;
     }
     case expr_kind::Lambda:
@@ -187,7 +187,7 @@ void tlean_exporter::export_definition(declaration const & d) {
     m_out << t << " " << v;
     for (unsigned p : ps)
         m_out << " " << p;
-    m_out << std::endl;
+    m_out << "\n";
 }
 
 void tlean_exporter::export_axiom(declaration const & d) {
@@ -197,7 +197,7 @@ void tlean_exporter::export_axiom(declaration const & d) {
     m_out << "#AX " << n << " " << t;
     for (unsigned p : ps)
         m_out << " " << p;
-    m_out << std::endl;
+    m_out << "\n";
 }
 
 void tlean_exporter::export_declaration(declaration const & d) {
@@ -237,7 +237,7 @@ void tlean_exporter::export_inductive(inductive::certified_inductive_decl const 
     for (name const & p : decl.m_level_params)
         m_out << " " << export_name(p);
 
-    m_out << std::endl;
+    m_out << "\n";
 }
 
 tlean_exporter::tlean_exporter(std::ostream & out, environment const & env) : m_out(out), m_env(env) {

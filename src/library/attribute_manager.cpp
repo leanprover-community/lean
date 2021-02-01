@@ -158,7 +158,7 @@ struct attr_config {
                 // dispatch over the extension, since we can't call get_attribute without an env
                 g_user_attribute_ext->textualize_entry(x, *e.m_record.m_data);
         }
-        x.out() << std::endl;
+        x.out() << "\n";
     }
 
     static entry read_entry(deserializer & d) {

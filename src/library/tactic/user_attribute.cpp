@@ -210,7 +210,7 @@ struct user_attr_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_name);
-        x.out() << "#USER_ATTR " << n << std::endl;
+        x.out() << "#USER_ATTR " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

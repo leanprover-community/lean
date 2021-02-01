@@ -126,7 +126,7 @@ struct export_decl_modification : public modification {
             x.out() << " " << n_except_name;
         }
 
-        x.out() << std::endl;
+        x.out() << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

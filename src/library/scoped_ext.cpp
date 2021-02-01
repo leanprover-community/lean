@@ -118,7 +118,7 @@ struct new_namespace_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_ns);
-        x.out() << "#NEW_NAMESPACE " << n << std::endl;;
+        x.out() << "#NEW_NAMESPACE " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

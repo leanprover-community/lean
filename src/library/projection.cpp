@@ -67,7 +67,7 @@ struct proj_modification : public modification {
                 << " " << m_info.m_nparams
                 << " " << m_info.m_i
                 << " " << m_info.m_inst_implicit
-                << std::endl;
+                << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

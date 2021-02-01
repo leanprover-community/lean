@@ -48,7 +48,7 @@ struct protected_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_name);
-        x.out() << "#PROTECTED " << n << std::endl;
+        x.out() << "#PROTECTED " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

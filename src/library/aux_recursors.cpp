@@ -49,7 +49,7 @@ struct auxrec_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_decl);
-        x.out() << "#AUXREC " << n << std::endl;;
+        x.out() << "#AUXREC " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
@@ -77,7 +77,7 @@ struct no_conf_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_decl);
-        x.out() << "#NOCONF " << n << std::endl;;
+        x.out() << "#NOCONF " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

@@ -197,7 +197,7 @@ struct class_config {
             n_class = x.export_name(e.m_class);
             x.out() << "#CLASS"
                     << " " << n_class
-                    << std::endl;
+                    << "\n";
             break;
         case class_entry_kind::Instance:
             n_class    = x.export_name(e.m_class);
@@ -206,7 +206,7 @@ struct class_config {
                     << " " << n_class
                     << " " << n_instance
                     << " " << e.m_priority
-                    << std::endl;
+                    << "\n";
             break;
         case class_entry_kind::Tracker:
             n_class      = x.export_name(e.m_class);
@@ -214,7 +214,7 @@ struct class_config {
             x.out() << "#CLASS_TRACK_ATTR"
                     << " " << n_class
                     << " " << n_track_attr
-                    << std::endl;
+                    << "\n";
             break;
         case class_entry_kind::RemoveInstance:
             n_class    = x.export_name(e.m_class);
@@ -223,7 +223,7 @@ struct class_config {
                     << " " << n_class
                     << " " << n_instance
                     << " " << e.m_priority
-                    << std::endl;
+                    << "\n";
             break;
         }
     }

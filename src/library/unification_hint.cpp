@@ -153,7 +153,7 @@ struct unification_hint_config {
         x.out() << "#UNIFICATION_HINT"
                 << " " << n_decl_name
                 << " " << e.m_priority
-                << std::endl;
+                << "\n";
     }
 
     static entry read_entry(deserializer & d) {

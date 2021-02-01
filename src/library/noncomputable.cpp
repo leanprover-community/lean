@@ -59,7 +59,7 @@ struct noncomputable_modification : public modification {
 
     void textualize(tlean_exporter & x) const override {
         unsigned n = x.export_name(m_decl);
-        x.out() << "#NONCOMPUTABLE " << n << std::endl;
+        x.out() << "#NONCOMPUTABLE " << n << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

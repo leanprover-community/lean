@@ -58,7 +58,7 @@ struct inverse_config {
                 << " " << n_inv
                 << " " << e.m_info.m_inv_arity
                 << " " << n_lemma
-                << std::endl;
+                << "\n";
     }
 
     static entry read_entry(deserializer & d) {

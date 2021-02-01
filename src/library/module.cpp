@@ -175,7 +175,7 @@ struct pos_info_mod : public modification {
         x.out() << "#POS_INFO " << n
                 << " " << m_pos_info.first
                 << " " << m_pos_info.second
-                << std::endl;
+                << "\n";
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
@@ -276,7 +276,7 @@ void write_module_tlean(loaded_module const & mod, std::ostream & out) {
         int rel = import.m_relative.has_value() ? *import.m_relative : -1;
         out << import.m_name << " " << rel << " ";
     }
-    out << std::endl;
+    out << "\n";
 
     tlean_exporter x(out, get(mod.m_env));
     for (auto p : mod.m_modifications) {

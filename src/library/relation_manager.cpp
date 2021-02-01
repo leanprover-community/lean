@@ -181,7 +181,7 @@ struct rel_config {
         x.out() << "#RELATION"
                 << " " << op_kind_to_string(e.m_kind)
                 << " " << n_name
-                << std::endl;
+                << "\n";
     }
 
     static entry read_entry(deserializer & d) {

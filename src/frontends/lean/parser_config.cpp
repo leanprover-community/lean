@@ -123,7 +123,7 @@ struct token_config {
         } else {
             x.out() << " " << "NONE";
         }
-        x.out() << std::endl;
+        x.out() << "\n";
     }
 
     static entry read_entry(deserializer & d) {
@@ -370,7 +370,7 @@ struct notation_config {
                 prec = rule_prec;
             }
 
-            x.out() << "#MIXFIX " << kind << " " << fni << " " << prec << " " << t.get_pp_token().get_string() << std::endl;
+            x.out() << "#MIXFIX " << kind << " " << fni << " " << prec << " " << t.get_pp_token().get_string() << "\n";
         }
     }
 
