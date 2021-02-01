@@ -364,8 +364,11 @@ struct notation_config {
 
             if (kind == "infix") {
                 // if (k == mixfix_kind::infixr) prec = *prec - 1;
-                if (rule_prec + 1 == token_prec) { kind = "infixr"; prec = token_prec; }
-                else { kind = "infixl"; prec = rule_prec; }
+                if (rule_prec + 1 == token_prec) {
+                    kind = "infixr"; prec = token_prec;
+                } else {
+                    kind = "infixl"; prec = rule_prec;
+                }
             } else {
                 prec = rule_prec;
             }
