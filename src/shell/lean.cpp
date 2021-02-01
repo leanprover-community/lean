@@ -607,7 +607,7 @@ int main(int argc, char ** argv) {
 
     log_tree lt;
 
-    bool show_progress = make_mode && isatty(STDOUT_FILENO);
+    bool show_progress = (make_mode || export_tlean) && isatty(STDOUT_FILENO);
     progress_message_stream msg_stream(std::cout, json_output, show_progress, lt.get_root());
     if (json_output) ios.set_regular_channel(ios.get_diagnostic_channel_ptr());
 
@@ -756,7 +756,8 @@ int main(int argc, char ** argv) {
         if (export_tlean) {
             buffer<task<unit>> tasks;
             for (auto & mod : mods) {
-	        tasks.push_back(add_library_task(task_builder<unit>([mod] {
+                scope_log_tree scope(logtree().mk_child({}, "saving tlean", {mod.m_id, {{1,0}, {2,0}}}));
+                tasks.push_back(add_library_task(task_builder<unit>([mod] {
                     auto res = get(mod.m_mod_info->m_result);
                     auto tlean_fn = tlean_of_lean(mod.m_id);
                     exclusive_file_lock output_lock(tlean_fn);
@@ -765,7 +766,7 @@ int main(int argc, char ** argv) {
                     out.close();
                     if (!out) throw exception("failed to write tlean file");
                     return unit();
-                }), std::string("saving tlean")));
+                }).wrap(exception_reporter()), "saving tlean"));
             }
             for (auto const & task : tasks) {
                 taskq().wait_for_finish(task);
