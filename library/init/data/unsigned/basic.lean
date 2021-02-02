@@ -20,6 +20,9 @@ zero_lt_succ _
 protected def of_nat' (n : nat) : unsigned :=
 if h : n < unsigned_sz then ⟨n, h⟩ else ⟨0, zero_lt_unsigned_sz⟩
 
+instance : has_zero unsigned := ⟨⟨0, succ_pos _⟩⟩
+instance : has_one unsigned  := ⟨⟨1, succ_le_succ (succ_pos _)⟩⟩
+
 def to_nat (c : unsigned) : nat := c.val
 
 end unsigned
