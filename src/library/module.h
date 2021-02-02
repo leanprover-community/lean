@@ -18,6 +18,7 @@ Author: Leonardo de Moura
 #include "util/task.h"
 #include "util/rb_map.h"
 #include "library/string.h"
+#include "library/tlean_exporter.h"
 
 namespace lean {
 class corrupted_file_exception : public exception {
@@ -91,6 +92,7 @@ environment add_transient_decl_pos_info(environment const & env, name const & de
 /** \brief Store/Export module using \c env. */
 loaded_module export_module(environment const & env, std::string const & mod_name, unsigned src_hash, unsigned trans_hash);
 void write_module(loaded_module const & mod, std::ostream & out);
+void write_module_tlean(loaded_module const & mod, std::ostream & out);
 
 std::shared_ptr<loaded_module const> cache_preimported_env(
         loaded_module &&, environment const & initial_env,
@@ -119,6 +121,7 @@ public:
     virtual void perform(environment &) const = 0;
     virtual void serialize(serializer &) const = 0;
     virtual void get_task_dependencies(buffer<gtask> &) const {}
+    virtual void textualize(tlean_exporter &) const { return; }
 
     // Used to check for sorrys.
     virtual void get_introduced_exprs(std::vector<task<expr>> &) const {}

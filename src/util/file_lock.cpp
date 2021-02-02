@@ -6,6 +6,7 @@ Author: Leonardo de Moura
 */
 #include <string>
 #include <errno.h>
+#include <string.h>
 #include <fcntl.h>
 #include "util/exception.h"
 #include "util/sstream.h"
@@ -85,12 +86,12 @@ file_lock::file_lock(char const * fname, bool exclusive):
             // fname is probably part of the Lean installation in a system directory.
             // So, we ignore the file_lock in this case.
         } else {
-            throw exception(sstream() << "failed to lock file '" << fname << "'");
+            throw exception(sstream() << "failed to lock file '" << fname << "': " << strerror(errno));
         }
     } else {
         int status = flock(m_fd, exclusive ? LOCK_EX : LOCK_SH);
         if (status == -1)
-            throw exception(sstream() << "failed to lock file '" << fname << "'");
+            throw exception(sstream() << "failed to lock file '" << fname << "': " << strerror(errno));
     }
 #endif
 }

@@ -16,6 +16,15 @@ Author: Leonardo de Moura
 namespace lean {
 static name * g_reducibility = nullptr;
 
+std::string reducible_status_to_string(reducible_status const & s) {
+    switch (s) {
+    case reducible_status::Reducible:     return "Reducible";
+    case reducible_status::Semireducible: return "Semireducible";
+    case reducible_status::Irreducible:   return "Irreducible";
+    }
+    lean_unreachable();
+}
+
 unsigned get_reducibility_fingerprint(environment const & env) {
     return get_attribute_fingerprint(env, *g_reducibility);
 }
@@ -31,6 +40,11 @@ struct reducibility_attribute_data : public attr_data {
     void write(serializer & s) const {
         s << static_cast<char>(m_status);
     }
+
+    void textualize(tlean_exporter & x) const override {
+        x.out() << reducible_status_to_string(m_status);
+    }
+
     void read(deserializer & d) {
         char c;
         d >> c;

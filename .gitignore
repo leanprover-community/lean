@@ -2,6 +2,7 @@
 \#*
 .#*
 *.olean
+*.tlean
 *.lock
 build
 GPATH
