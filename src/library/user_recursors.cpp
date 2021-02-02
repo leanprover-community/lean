@@ -311,6 +311,8 @@ struct recursor_config {
     static void  write_entry(serializer & s, entry const & e) {
         e.write(s);
     }
+    static void  textualize_entry(tlean_exporter &, entry const &) {}
+
     static entry read_entry(deserializer & d) {
         return recursor_info::read(d);
     }

@@ -170,6 +170,14 @@ struct pos_info_mod : public modification {
         s << m_decl_name << m_pos_info.first << m_pos_info.second;
     }
 
+    void textualize(tlean_exporter & x) const override {
+        unsigned n = x.export_name(m_decl_name);
+        x.out() << "#POS_INFO " << n
+                << " " << m_pos_info.first
+                << " " << m_pos_info.second
+                << "\n";
+    }
+
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
         name decl_name; unsigned line, column;
         d >> decl_name >> line >> column;
@@ -261,6 +269,23 @@ void write_module(loaded_module const & mod, std::ostream & out) {
     s2.write_blob(r);
 }
 
+void write_module_tlean(loaded_module const & mod, std::ostream & out) {
+    out << "IMPORT " << static_cast<unsigned>(mod.m_imports.size()) << " ";
+
+    for (auto import : mod.m_imports) {
+        int rel = import.m_relative.has_value() ? *import.m_relative : -1;
+        out << import.m_name << " " << rel << " ";
+    }
+    out << "\n";
+
+    tlean_exporter x(out, get(mod.m_env));
+    for (auto p : mod.m_modifications) {
+        p->textualize(x);
+    }
+
+    out << std::flush;
+}
+
 static task<bool> has_sorry(modification_list const & mods) {
     std::vector<task<expr>> introduced_exprs;
     for (auto & mod : mods) mod->get_introduced_exprs(introduced_exprs);
@@ -338,6 +363,10 @@ struct decl_modification : public modification {
         s << m_decl << m_trust_lvl;
     }
 
+    void textualize(tlean_exporter & x) const override {
+        x.export_declaration(m_decl);
+    }
+
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
         auto decl = read_declaration(d);
         unsigned trust_lvl; d >> trust_lvl;
@@ -365,7 +394,6 @@ struct inductive_modification : public modification {
     inductive::certified_inductive_decl m_decl;
     unsigned m_trust_lvl = LEAN_BELIEVER_TRUST_LEVEL + 1;
 
-
     inductive_modification(inductive::certified_inductive_decl const & decl, unsigned trust_lvl) :
             m_decl(decl), m_trust_lvl(trust_lvl) {}
 
@@ -384,6 +412,10 @@ struct inductive_modification : public modification {
 
     void serialize(serializer & s) const override {
         s << m_decl << m_trust_lvl;
+    }
+
+    void textualize(tlean_exporter & x) const override {
+        x.export_inductive(m_decl);
     }
 
     static std::shared_ptr<modification const> deserialize(deserializer & d) {

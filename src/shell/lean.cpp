@@ -40,6 +40,7 @@ Author: Leonardo de Moura
 #include "library/export.h"
 #include "library/message_builder.h"
 #include "library/time_task.h"
+#include "library/library_task_builder.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/pp.h"
 #include "frontends/lean/dependencies.h"
@@ -202,6 +203,7 @@ static void display_help(std::ostream & out) {
     std::cout << "  --tstack=num -s    thread stack size in Kb\n";
 #endif
     std::cout << "  --deps             just print dependencies of a Lean input\n";
+    std::cout << "  --old-oleans       reuse existing *.olean files\n";
 #if defined(LEAN_JSON)
     std::cout << "  --path             display the path used for finding Lean libraries and extensions\n";
     std::cout << "  --json             print JSON-formatted structured error messages\n";
@@ -215,6 +217,7 @@ static void display_help(std::ostream & out) {
         )
     std::cout << "  -D name=value      set a configuration option (see set_option command)\n";
     std::cout << "Exporting data:\n";
+    std::cout << "  --tlean            export a textual .tlean file for every .lean file\n";
     std::cout << "  --export=file -E   export final environment as textual low-level file\n";
     std::cout << "  --only-export=decl_name   only export the specified declaration (+ dependencies)\n";
     std::cout << "  --test-suite       capture output and status code from each input file $f in $f.produced and $f.status, respectively\n";
@@ -228,6 +231,7 @@ static struct option g_long_options[] = {
     {"make",         no_argument,       0, 'm'},
     {"old-oleans",   no_argument,       0, 'O'},
     {"recursive",    no_argument,       0, 'R'},
+    {"tlean",        no_argument,       0, 'x'},
     {"export",       required_argument, 0, 'E'},
     {"only-export",  required_argument, 0, 'o'},
     {"memory",       required_argument, 0, 'M'},
@@ -426,6 +430,7 @@ int main(int argc, char ** argv) {
 #endif
     ::initializer init;
     bool make_mode          = false;
+    bool export_tlean       = false;
     bool use_old_oleans     = false;
     bool report_widgets     = true;
     bool recursive          = false;
@@ -475,6 +480,9 @@ int main(int argc, char ** argv) {
         case 'm':
             make_mode = true;
             recursive = true;
+            break;
+        case 'x':
+            export_tlean = true;
             break;
         case 'O':
             use_old_oleans = true;
@@ -599,7 +607,7 @@ int main(int argc, char ** argv) {
 
     log_tree lt;
 
-    bool show_progress = make_mode && isatty(STDOUT_FILENO);
+    bool show_progress = (make_mode || export_tlean) && isatty(STDOUT_FILENO);
     progress_message_stream msg_stream(std::cout, json_output, show_progress, lt.get_root());
     if (json_output) ios.set_regular_channel(ios.get_diagnostic_channel_ptr());
 
@@ -744,6 +752,19 @@ int main(int argc, char ** argv) {
         //     // this code is now broken
         //     env = lean::set_native_module_path(env, lean::name(native_output));
         // }
+
+        if (export_tlean) {
+            for (auto & mod : mods) {
+                auto res = get(mod.m_mod_info->m_result);
+                auto tlean_fn = tlean_of_lean(mod.m_id);
+                std::cerr << "exporting " << tlean_fn << std::endl;
+                exclusive_file_lock output_lock(tlean_fn);
+                std::ofstream out(tlean_fn);
+                write_module_tlean(*res.m_loaded_module, out);
+                out.close();
+                if (!out) throw exception(sstream() << "failed to write tlean file: " << tlean_fn);
+            }
+        }
 
         if (export_txt && !mods.empty()) {
             buffer<std::shared_ptr<module_info const>> mod_infos;

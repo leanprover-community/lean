@@ -57,6 +57,19 @@ struct proj_modification : public modification {
         s << m_proj << m_info.m_constructor << m_info.m_nparams << m_info.m_i << m_info.m_inst_implicit;
     }
 
+    void textualize(tlean_exporter & x) const override {
+        unsigned n_proj = x.export_name(m_proj);
+        unsigned n_constructor = x.export_name(m_info.m_constructor);
+
+        x.out() << "#PROJECTION"
+                << " " << n_proj
+                << " " << n_constructor
+                << " " << m_info.m_nparams
+                << " " << m_info.m_i
+                << " " << m_info.m_inst_implicit
+                << "\n";
+    }
+
     static std::shared_ptr<modification const> deserialize(deserializer & d) {
         name p, mk; unsigned nparams, i; bool inst_implicit;
         d >> p >> mk >> nparams >> i >> inst_implicit;
