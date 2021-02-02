@@ -1,16 +1,14 @@
 [class_instances]  class-instance resolution trace
 [class_instances] (0) ?x_0 : has_one α := native.float.has_one
 failed is_def_eq
-[class_instances] (0) ?x_0 : has_one α := unsigned.has_one
-failed is_def_eq
-[class_instances] (0) ?x_0 : has_one α := @fin.has_one ?x_1
-failed is_def_eq
 [class_instances] (0) ?x_0 : has_one α := int.has_one
+failed is_def_eq
+[class_instances] (0) ?x_0 : has_one α := unsigned.has_one
 failed is_def_eq
 [class_instances] (0) ?x_0 : has_one α := nat.has_one
 failed is_def_eq
-[class_instances] (0) ?x_0 : has_one α := @ring.to_has_one ?x_2 ?x_3
-[class_instances] (1) ?x_3 : ring α := _inst_1
+[class_instances] (0) ?x_0 : has_one α := @ring.to_has_one ?x_1 ?x_2
+[class_instances] (1) ?x_2 : ring α := _inst_1
 [class_instances] caching instance for ring α
 _inst_1
 [class_instances] caching instance for has_one α

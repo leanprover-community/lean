@@ -29,11 +29,9 @@
 [class_instances]  class-instance resolution trace
 [class_instances] (0) ?x_0 : has_one ℕ := native.float.has_one
 failed is_def_eq
-[class_instances] (0) ?x_0 : has_one ℕ := unsigned.has_one
-failed is_def_eq
-[class_instances] (0) ?x_0 : has_one ℕ := @fin.has_one ?x_1
-failed is_def_eq
 [class_instances] (0) ?x_0 : has_one ℕ := int.has_one
+failed is_def_eq
+[class_instances] (0) ?x_0 : has_one ℕ := unsigned.has_one
 failed is_def_eq
 [class_instances] (0) ?x_0 : has_one ℕ := nat.has_one
 [class_instances] caching instance for has_one ℕ
@@ -49,8 +47,6 @@ nat.has_one
 [class_instances] (0) ?x_0 : has_add ℕ := native.float.has_add
 failed is_def_eq
 [class_instances] (0) ?x_0 : has_add ℕ := unsigned.has_add
-failed is_def_eq
-[class_instances] (0) ?x_0 : has_add ℕ := @fin.has_add ?x_1
 failed is_def_eq
 [class_instances] (0) ?x_0 : has_add ℕ := int.has_add
 failed is_def_eq
