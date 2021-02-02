@@ -47,6 +47,11 @@ lemma ne_of_vne {i j : fin n} (h : i.val ≠ j.val) : i ≠ j :=
 lemma vne_of_ne {i j : fin n} (h : i ≠ j) : i.val ≠ j.val :=
 λ h', absurd (eq_of_veq h') h
 
+protected def succ : fin n → fin (succ n)
+| ⟨a, h⟩ := ⟨nat.succ a, succ_le_succ h⟩
+
+instance : has_zero (fin (succ n)) := ⟨⟨0, succ_pos n⟩⟩
+
 end fin
 
 open fin
