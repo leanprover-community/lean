@@ -1636,11 +1636,12 @@ do gs ← get_goals,
 /--
 The tactic `specialize h a₁ ... aₙ` works on local hypothesis `h`. The premises of this hypothesis, either universal quantifications or non-dependent implications, are instantiated by concrete terms coming either from arguments `a₁` ... `aₙ`. The tactic adds a new hypothesis with the same name `h := h a₁ ... aₙ` and tries to clear the previous one.
 -/
-meta def specialize (p : parse texpr) : tactic unit :=
+meta def specialize' (p : parse texpr) : tactic unit :=
+focus1 $
 do e ← i_to_expr p,
    let h := expr.get_app_fn e,
    if h.is_local_constant
-   then tactic.note h.local_pp_name none e >> try (tactic.clear h)
+   then tactic.note h.local_pp_name none e >> try (tactic.clear h) >> rotate 1
    else tactic.fail "specialize requires a term of the form `h x_1 .. x_n` where `h` appears in the local context"
 
 meta def congr := tactic.congr
