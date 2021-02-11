@@ -78,13 +78,13 @@ absurd (eq.mpr h this) this
 
 universes u
 
-lemma if_eq_of_eq_true {c : Prop} [d : decidable c] {α : Sort u} (t e : α) (h : c = true) : (@ite c d α t e) = t :=
+lemma if_eq_of_eq_true {c : Prop} [d : decidable c] {α : Sort u} (t e : α) (h : c = true) : (@ite α c d t e) = t :=
 if_pos (of_eq_true h)
 
-lemma if_eq_of_eq_false {c : Prop} [d : decidable c] {α : Sort u} (t e : α) (h : c = false) : (@ite c d α t e) = e :=
+lemma if_eq_of_eq_false {c : Prop} [d : decidable c] {α : Sort u} (t e : α) (h : c = false) : (@ite α c d t e) = e :=
 if_neg (not_of_eq_false h)
 
-lemma if_eq_of_eq (c : Prop) [d : decidable c] {α : Sort u} {t e : α} (h : t = e) : (@ite c d α t e) = t :=
+lemma if_eq_of_eq (c : Prop) [d : decidable c] {α : Sort u} {t e : α} (h : t = e) : (@ite α c d t e) = t :=
 match d with
 | (is_true hc)   := rfl
 | (is_false hnc) := eq.symm h

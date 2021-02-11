@@ -619,12 +619,12 @@ is_false not_false
 
 -- We use "dependent" if-then-else to be able to communicate the if-then-else condition
 -- to the branches
-@[inline] def dite (c : Prop) [h : decidable c] {α : Sort u} : (c → α) → (¬ c → α) → α :=
+@[inline] def dite {α : Sort u} (c : Prop) [h : decidable c] : (c → α) → (¬ c → α) → α :=
 λ t e, decidable.rec_on h e t
 
 /- if-then-else -/
 
-@[inline] def ite (c : Prop) [h : decidable c] {α : Sort u} (t e : α) : α :=
+@[inline] def ite {α : Sort u} (c : Prop) [h : decidable c] (t e : α) : α :=
 decidable.rec_on h (λ hnc, e) (λ hc, t)
 
 namespace decidable
@@ -889,11 +889,11 @@ lemma if_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidab
 @if_ctx_congr α b c dec_b dec_c x y u v h_c (λ h, h_t) (λ h, h_e)
 
 @[simp]
-lemma if_true {α : Sort u} {h : decidable true} (t e : α) : (@ite true h α t e) = t :=
+lemma if_true {α : Sort u} {h : decidable true} (t e : α) : (@ite α true h t e) = t :=
 if_pos trivial
 
 @[simp]
-lemma if_false {α : Sort u} {h : decidable false} (t e : α) : (@ite false h α t e) = e :=
+lemma if_false {α : Sort u} {h : decidable false} (t e : α) : (@ite α false h t e) = e :=
 if_neg not_false
 
 lemma if_ctx_congr_prop {b c x y u v : Prop} [dec_b : decidable b] [dec_c : decidable c]
@@ -914,13 +914,13 @@ if_ctx_congr_prop h_c (λ h, h_t) (λ h, h_e)
 
 lemma if_ctx_simp_congr_prop {b c x y u v : Prop} [dec_b : decidable b]
                                (h_c : b ↔ c) (h_t : c → (x ↔ u)) (h_e : ¬c → (y ↔ v)) :
-        ite b x y ↔ (@ite c (decidable_of_decidable_of_iff dec_b h_c) Prop u v) :=
+        ite b x y ↔ (@ite Prop c (decidable_of_decidable_of_iff dec_b h_c) u v) :=
 @if_ctx_congr_prop b c x y u v dec_b (decidable_of_decidable_of_iff dec_b h_c) h_c h_t h_e
 
 @[congr]
 lemma if_simp_congr_prop {b c x y u v : Prop} [dec_b : decidable b]
                            (h_c : b ↔ c) (h_t : x ↔ u) (h_e : y ↔ v) :
-        ite b x y ↔ (@ite c (decidable_of_decidable_of_iff dec_b h_c) Prop u v) :=
+        ite b x y ↔ (@ite Prop c (decidable_of_decidable_of_iff dec_b h_c) u v) :=
 @if_ctx_simp_congr_prop b c x y u v dec_b h_c (λ h, h_t) (λ h, h_e)
 
 @[simp] lemma dif_pos {c : Prop} [h : decidable c] (hc : c) {α : Sort u} {t : c → α} {e : ¬ c → α} : dite c t e = t hc :=
@@ -941,7 +941,7 @@ lemma dif_ctx_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : de
                     (h_c : b ↔ c)
                     (h_t : ∀ (h : c),    x (iff.mpr h_c h)                      = u h)
                     (h_e : ∀ (h : ¬c),   y (iff.mpr (not_iff_not_of_iff h_c) h) = v h) :
-        (@dite b dec_b α x y) = (@dite c dec_c α u v) :=
+        (@dite α b dec_b x y) = (@dite α c dec_c u v) :=
 match dec_b, dec_c with
 | (is_false h₁), (is_false h₂) := h_e h₂
 | (is_true h₁),  (is_true h₂)  := h_t h₂
@@ -954,7 +954,7 @@ lemma dif_ctx_simp_congr {α : Sort u} {b c : Prop} [dec_b : decidable b]
                          (h_c : b ↔ c)
                          (h_t : ∀ (h : c),    x (iff.mpr h_c h)                      = u h)
                          (h_e : ∀ (h : ¬c),   y (iff.mpr (not_iff_not_of_iff h_c) h) = v h) :
-        (@dite b dec_b α x y) = (@dite c (decidable_of_decidable_of_iff dec_b h_c) α u v) :=
+        (@dite α b dec_b x y) = (@dite α c (decidable_of_decidable_of_iff dec_b h_c) u v) :=
 @dif_ctx_congr α b c dec_b (decidable_of_decidable_of_iff dec_b h_c) x u y v h_c h_t h_e
 
 -- Remark: dite and ite are "defally equal" when we ignore the proofs.

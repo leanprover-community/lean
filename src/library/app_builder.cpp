@@ -975,7 +975,7 @@ expr mk_false_rec(type_context_old & ctx, expr const & c, expr const & H) {
 }
 
 expr mk_ite(type_context_old & ctx, expr const & c, expr const & t, expr const & e) {
-    bool mask[5] = {true, false, false, true, true};
+    bool mask[5] = {false, true, false, true, true};
     expr args[3] = {c, t, e};
     return mk_app(ctx, get_ite_name(), 5, mask, args);
 }
