@@ -1486,8 +1486,8 @@ static name * g_if_eq_of_eq_false = nullptr;
 static name * g_if_eq_of_eq       = nullptr;
 
 void congruence_closure::propagate_ite_up(expr const & e) {
-    expr c, d, A, a, b;
-    lean_verify(is_ite(e, c, d, A, a, b));
+    expr A, c, d, a, b;
+    lean_verify(is_ite(e, A, c, d, a, b));
 
     if (is_eq_true(c)) {
         // c = true  -> (ite c a b) = a

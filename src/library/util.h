@@ -205,7 +205,7 @@ bool is_int_type(expr const & e);
 
 expr mk_char_type();
 
-bool is_ite(expr const & e, expr & c, expr & H, expr & A, expr & t, expr & f);
+bool is_ite(expr const & e, expr & A, expr & c, expr & H, expr & t, expr & f);
 bool is_ite(expr const & e);
 
 bool is_iff(expr const & e);

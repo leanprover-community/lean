@@ -11,31 +11,31 @@ meta def trace_tagged_debug_locals : tactic unit := do
   cs ← cs.mmap infer_type,
   cs.mmap' trace_tagged_debug
 
-example (α : Type) (x : α) (h : 1 = 2) (f : ite ff true false) (g : x ≠ x) : true :=
+def example1 (α : Type) (x : α) (h : 1 = 2) (f : ite ff true false) (g : x ≠ x) : true :=
 begin
   trace_tagged_debug_locals,
   trivial
 end
 
-example (k : (-3 : int) < (1 + 1 : nat)) : true :=
+def example2 (k : (-3 : int) < (1 + 1 : nat)) : true :=
 begin
   trace_tagged_debug_locals, -- note the coe is present.
   trivial
 end
 
-example (k : Π {α β : Type}, α ≠ β) : true :=
+def example3 (k : Π {α β : Type}, α ≠ β) : true :=
 begin
   trace_tagged_debug_locals,
   trivial
 end
 
-example (k : (λ α β : Type, α ≠ β) Prop Prop) : true :=
+def example4 (k : (λ α β : Type, α ≠ β) Prop Prop) : true :=
 begin
   trace_tagged_debug_locals,
   trivial
 end
 
-example  (S : set nat) (k : S = {3, 2, 1}) : true :=
+def example5 (S : set nat) (k : S = {3, 2, 1}) : true :=
 begin
   trace_tagged_debug_locals,
   trivial
