@@ -55,5 +55,10 @@ meta instance list.reflect {α : Type} [has_reflect α] [reflected α] : has_ref
 | []     := `([])
 | (h::t) := `(λ t, h :: t).subst (list.reflect t)
 
+-- `has_reflect_derive_handler` only generates this for `Sort`
+meta instance option.reflect {α : Type} [has_reflect α] [reflected α] : has_reflect (option α)
+| none     := `(none)
+| (some x) := `(some x)
+
 meta instance punit.reflect : has_reflect punit
 | () := `(_)
