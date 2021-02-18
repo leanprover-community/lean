@@ -1206,7 +1206,7 @@ do (hs, gex, hex, all_hyps) ← decode_simp_arg_list_with_symm hs,
    when (all_hyps ∧ at_star ∧ not hex.empty) $ fail "A tactic of the form `simp [*, -h] at *` is currently not supported",
    s      ← join_user_simp_lemmas no_dflt attr_names,
    -- Erase `h` from the default simp set for calls of the form `simp [←h]`.
-   let to_erase : list pname :=
+   let to_erase : list name :=
                    hs.foldl (λ l h, match h with
                                     | (const id _, tt) := id :: l
                                     | (local_const id _ _ _, tt) := id :: l
