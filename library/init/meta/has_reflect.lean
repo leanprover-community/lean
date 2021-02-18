@@ -47,7 +47,7 @@ meta instance name.reflect : has_reflect name
 | (name.mk_string  s n) := `(λ n, name.mk_string  s n).subst (name.reflect n)
 | (name.mk_numeral i n) := `(λ n, name.mk_numeral i n).subst (name.reflect n)
 
-meta instance list.reflect {α : Type} [has_reflect α] [reflected α] : has_reflect (list α)
+meta instance list.reflect {α : Sort*} [has_reflect α] [reflected α] : has_reflect (list α)
 | []     := `([])
 | (h::t) := `(λ t, h :: t).subst (list.reflect t)
 
