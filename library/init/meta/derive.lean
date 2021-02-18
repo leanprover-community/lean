@@ -81,7 +81,7 @@ do decl ← get_decl n,
 else pure false
 
 @[derive_handler] meta def has_reflect_derive_handler :=
-instance_derive_handler ``has_reflect mk_has_reflect_instance tt (λ n params tgt,
+instance_derive_handler ``has_reflect mk_has_reflect_instance ff (λ n params tgt,
   -- add additional `reflected` assumption for each parameter
   params.mfoldr (λ param tgt,
   do param_cls ← mk_app `reflected [param],
