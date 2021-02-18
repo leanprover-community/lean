@@ -8,7 +8,7 @@ import init.data.list.basic init.function init.meta init.data.nat.lemmas
 import init.meta.interactive init.meta.smt.rsimp
 
 universes u v w w₁ w₂
-variables {α : Type u} {β : Type v} {γ : Type w}
+variables {α : Sort u} {β : Sort v} {γ : Sort w}
 
 namespace list
 open nat
