@@ -43,7 +43,7 @@ json to_json(vm_obj const & o) {
     } case json_idx::vnull: {
         return json(nullptr);
     } case json_idx::vobject: {
-        json j;
+        json j = json::object();
         vm_obj l = cfield(o, 0);
         while (!is_simple(l)) {
             vm_obj h = head(l);
