@@ -105,8 +105,8 @@ log_tree::node log_tree::node::mk_child(name n, std::string const & description,
     std::vector<event> events;
 
     if (!overwrite && (n.is_anonymous() || m_ptr->m_used_names.contains(n))) {
-        for (unsigned i = 0;; i++) {
-            name n_(n, i);
+        for (;; m_ptr->m_used_names_cnt++) {
+            name n_(n, m_ptr->m_used_names_cnt);
             if (!m_ptr->m_used_names.contains(n_)) {
                 n = n_;
                 break;
@@ -114,6 +114,7 @@ log_tree::node log_tree::node::mk_child(name n, std::string const & description,
         }
     }
     m_ptr->m_used_names.insert(n);
+    m_ptr->m_used_names_cnt++;
 
     node child;
     if (auto existing = m_ptr->m_children.find(n)) {

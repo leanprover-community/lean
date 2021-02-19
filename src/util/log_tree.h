@@ -47,6 +47,7 @@ public:
 
         name_map<node> m_children;
         name_set m_used_names;
+        unsigned m_used_names_cnt = 0;
 
         log_tree * m_tree = nullptr;
         bool m_detached = false;
