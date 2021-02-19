@@ -1,4 +1,6 @@
 #eval to_string $ json.parse $ "[0.7]"
+#eval to_string $ json.parse "{}"
+#eval to_string $ json.unparse (json.object [])
 run_cmd tactic.success_if_fail $ json.parse "spurgles"
 
 meta def ball : list bool → bool :=
