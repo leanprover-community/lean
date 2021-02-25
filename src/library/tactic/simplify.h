@@ -10,6 +10,7 @@ Author: Daniel Selsam, Leonardo de Moura
 #include "library/vm/vm.h"
 #include "library/tactic/simp_lemmas.h"
 #include "library/tactic/simp_result.h"
+#include "util/name_hash_map.h"
 
 namespace lean {
 
@@ -74,7 +75,7 @@ struct simp_config {
 */
 class simplify_core_fn {
 protected:
-    typedef expr_map<simp_result> simplify_cache;
+    typedef name_hash_map<expr_map<simp_result>> simplify_cache;
 
     type_context_old &        m_ctx;
     defeq_canonizer           m_defeq_canonizer;
