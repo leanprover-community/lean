@@ -1,3 +1,22 @@
+3.27.0c (25 February 2021)
+--------------------------
+
+Features:
+ - Export textual .tlean files (#524)
+ - Allow `case` to match multiple cases (#508)
+ - `specialize` puts goals from underscores first (#530)
+ - Make `has_mul.mul` a pattern (#532)
+ - Do not clear simp cache unnecessarily (#537)
+ - Allow irreducible instances (#538)
+
+Bug fixes:
+ - Do not treat empty JSON objects as null (#534)
+ - Accidentally quadratic name creation (#535)
+
+Changes:
+ - Generalize `exists_unique_of_exists_of_unique` to sort (#526)
+ - Sync `ite` and `dite` with lean4 (#531)
+
 3.26.0c (26 January 2021)
 -------------------------
 
