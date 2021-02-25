@@ -5,7 +5,7 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.meta.declaration init.meta.exceptional init.data.option.basic
-import init.meta.rb_map
+import init.meta.rb_map init.meta.pexpr
 
 /-- An __environment__ contains all of the declarations and notation that have been defined so far.   -/
 meta constant environment : Type
@@ -149,6 +149,10 @@ But there are no `is_inductive`s which are not `is_ginductive`.
 meta constant is_ginductive : environment → name → bool
 /-- See the docstring for `projection_info`. -/
 meta constant is_projection : environment → name → option projection_info
+
+/-- Get the equations specifying a certain definition -/
+meta constant defn_spec : environment → name → option pexpr
+
 /-- Fold over declarations in the environment. -/
 meta constant fold {α :Type} : environment → α → (declaration → α → α) → α
 /-- `relation_info env n` returns some value if n is marked as a relation in the given environment.

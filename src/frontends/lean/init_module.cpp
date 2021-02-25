@@ -31,6 +31,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/user_notation.h"
 #include "frontends/lean/user_command.h"
 #include "frontends/lean/widget.h"
+#include "frontends/lean/eqn_api.h"
 
 namespace lean {
 void initialize_frontend_lean_module() {
@@ -61,8 +62,10 @@ void initialize_frontend_lean_module() {
     initialize_user_notation();
     initialize_user_command();
     initialize_widget();
+    initialize_eqn_api();
 }
 void finalize_frontend_lean_module() {
+    finalize_eqn_api();
     finalize_user_command();
     finalize_user_notation();
     finalize_completion();

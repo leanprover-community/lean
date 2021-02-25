@@ -1,0 +1,12 @@
+eqn_api.lean:24:0: error: failed
+state:
+⊢ true
+foo
+equations (fun (foo : (option a) -> a), (equation ((«@» foo) option.none) x)) (fun (foo : (option a) -> a) (y : _), (equation ((«@» foo) (option.some y)) y))
+foo_bar
+equations (fun (foo_bar : (option a) -> a), (equation ((«@» foo_bar) option.none) x)) (fun (foo_bar : (option a) -> a) (y : _), (equation ((«@» foo_bar) (option.some y)) y))
+all
+equations (fun (all : bool -> bool -> bool -> bool -> bool) (_x : _) (_x_1 : _) (_x_2 : _), (equation ((«@» all) bool.ff _x _x_1 _x_2) bool.ff)) (fun (all : bool -> bool -> bool -> bool -> bool) (_x : _) (_x_1 : _) (_x_2 : _), (equation ((«@» all) _x bool.ff _x_1 _x_2) bool.ff)) (fun (all : bool -> bool -> bool -> bool -> bool) (_x : _) (_x_1 : _) (_x_2 : _), (equation ((«@» all) _x _x_1 bool.ff _x_2) bool.ff)) (fun (all : bool -> bool -> bool -> bool -> bool) (_x : _) (_x_1 : _) (_x_2 : _), (equation ((«@» all) _x _x_1 _x_2 bool.ff) bool.ff)) (fun (all : bool -> bool -> bool -> bool -> bool) (_x : _) (_x_1 : _) (_x_2 : _) (_x_3 : _), (equation ((«@» all) _x _x_1 _x_2 _x_3) bool.tt))
+f
+equations (fun (f : (list nat) -> nat) (g : (list nat) -> nat), (equation ((«@» f) list.nil) 0)) (fun (f : (list nat) -> nat) (g : (list nat) -> nat) (x : _) (xs : _), (equation ((«@» f) (list.cons x xs)) (has_add.add x (g xs)))) (fun (f : (list nat) -> nat) (g : (list nat) -> nat), (equation ((«@» g) list.nil) 0)) (fun (f : (list nat) -> nat) (g : (list nat) -> nat) (x : _) (xs : _), (equation ((«@» g) (list.cons x xs)) (f xs)))
+g

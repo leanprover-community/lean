@@ -237,7 +237,7 @@ vm_obj expr_lex_lt(vm_obj const & o1, vm_obj const & o2) {
     return mk_vm_bool(is_lt(to_expr(o1), to_expr(o2), false));
 }
 
-vm_obj expr_fold(vm_obj const &, vm_obj const & e, vm_obj const & a, vm_obj const & fn) {
+vm_obj expr_fold(vm_obj const &, vm_obj const &, vm_obj const & e, vm_obj const & a, vm_obj const & fn) {
     vm_obj r = a;
     for_each(to_expr(e), [&](expr const & o, unsigned d) {
             r = invoke(fn, to_obj(o), mk_vm_nat(d), r);
@@ -246,7 +246,7 @@ vm_obj expr_fold(vm_obj const &, vm_obj const & e, vm_obj const & a, vm_obj cons
     return r;
 }
 
-vm_obj expr_replace(vm_obj const & e, vm_obj const & fn) {
+vm_obj expr_replace(vm_obj const &, vm_obj const & e, vm_obj const & fn) {
     expr r = replace(to_expr(e), [&](expr const & o, unsigned d) {
             vm_obj new_o = invoke(fn, to_obj(o), mk_vm_nat(d));
             if (is_none(new_o))
