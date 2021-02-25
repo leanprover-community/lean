@@ -11,7 +11,7 @@ open sum subtype nat
 
 universes u v
 
-/-- Convert the object into a string for tracing/display purposes. 
+/-- Convert the object into a string for tracing/display purposes.
 Similar to Haskell's `show`.
 See also `has_repr`, which is used to output a string which is a valid lean code.
 See also `has_to_format` and `has_to_tactic_format`, `format` has additional support for colours and pretty printing multilines.
@@ -30,7 +30,7 @@ instance : has_to_string bool :=
 
 instance {p : Prop} : has_to_string (decidable p) :=
 -- Remark: type class inference will not consider local instance `b` in the new elaborator
-⟨λ b : decidable p, @ite p b _ "tt" "ff"⟩
+⟨λ b : decidable p, @ite _ p b "tt" "ff"⟩
 
 protected def list.to_string_aux {α : Type u} [has_to_string α] : bool → list α → string
 | b  []      := ""

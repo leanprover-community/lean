@@ -35,7 +35,7 @@ begin
   trivial
 end
 
-example  (S : set nat) (k : S = {3, 2, 1}) : true :=
+example (S : set nat) (k : S = {3, 2, 1}) : true :=
 begin
   trace_tagged_debug_locals,
   trivial

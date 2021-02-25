@@ -608,12 +608,12 @@ bool is_ite(expr const & e) {
     return is_app_of(e, get_ite_name(), 5);
 }
 
-bool is_ite(expr const & e, expr & c, expr & H, expr & A, expr & t, expr & f) {
+bool is_ite(expr const & e, expr & A, expr & c, expr & H, expr & t, expr & f) {
     if (is_ite(e)) {
         buffer<expr> args;
         get_app_args(e, args);
         lean_assert(args.size() == 5);
-        c = args[0]; H = args[1]; A = args[2]; t = args[3]; f = args[4];
+        A = args[0]; c = args[1]; H = args[2]; t = args[3]; f = args[4];
         return true;
     } else {
         return false;

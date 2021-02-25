@@ -546,7 +546,7 @@ class to_ceqvs_fn {
             } else {
                 return lift(local, r);
             }
-        } else if (is_ite(e, c, Hdec, A, arg1, arg2) && is_prop(e)) {
+        } else if (is_ite(e, A, c, Hdec, arg1, arg2) && is_prop(e)) {
             expr not_c = mk_app(mk_constant(get_not_name()), c);
             type_context_old::tmp_locals locals(m_ctx);
             expr Hc    = locals.push_local(name(), c);

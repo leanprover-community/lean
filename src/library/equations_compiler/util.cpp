@@ -382,7 +382,7 @@ static expr whnf_ite(type_context_old & ctx, expr const & e) {
    If the result is true, then the ite args are stored in `ite_args`. */
 static bool is_ite_eq(expr const & lhs, buffer<expr> & ite_args) {
     expr const & fn = get_app_args(lhs, ite_args);
-    return is_constant(fn, get_ite_name()) && ite_args.size() == 5 && is_eq(ite_args[0]);
+    return is_constant(fn, get_ite_name()) && ite_args.size() == 5 && is_eq(ite_args[1]);
 }
 
 static bool conservative_is_def_eq(type_context_old & ctx, expr const & a, expr const & b) {
@@ -588,31 +588,31 @@ static expr prove_eqn_lemma_core(type_context_old & ctx, buffer<expr> const & Hs
     buffer<expr> ite_args;
     expr new_lhs = whnf_ite(ctx, lhs);
     if (is_ite_eq(new_lhs, ite_args)) {
-        expr const & c = ite_args[0];
+        expr const & c = ite_args[1];
         expr c_lhs, c_rhs;
         lean_verify(is_eq(c, c_lhs, c_rhs));
         if (auto H = find_if_neg_hypothesis(ctx, c_lhs, c_rhs, Hs)) {
             expr lhs_else = ite_args[4];
-            expr A        = ite_args[2];
+            expr A        = ite_args[0];
             level A_lvl   = get_level(ctx, A);
-            expr H1       = mk_app(mk_constant(get_if_neg_name(), {A_lvl}), {c, ite_args[1], *H, A, ite_args[3], lhs_else});
+            expr H1       = mk_app(mk_constant(get_if_neg_name(), {A_lvl}), {c, ite_args[2], *H, A, ite_args[3], lhs_else});
             expr H2       = prove_eqn_lemma_core(ctx, Hs, lhs_else, rhs, false);
             return mk_app(mk_constant(get_eq_trans_name(), {A_lvl}), {A, lhs, lhs_else, rhs, H1, H2});
         } else if (quick_is_def_eq_when_values(ctx, c_lhs, c_rhs)) {
             expr H = mk_eq_refl(ctx, c_lhs);
             expr lhs_then = ite_args[3];
-            expr A        = ite_args[2];
+            expr A        = ite_args[0];
             level A_lvl   = get_level(ctx, A);
-            expr H1       = mk_app(mk_constant(get_if_pos_name(), {A_lvl}), {c, ite_args[1], H, A, lhs_then, ite_args[4]});
+            expr H1       = mk_app(mk_constant(get_if_pos_name(), {A_lvl}), {c, ite_args[2], H, A, lhs_then, ite_args[4]});
             expr H2       = prove_eqn_lemma_core(ctx, Hs, lhs_then, rhs, false);
             expr eq_trans = mk_constant(get_eq_trans_name(), {A_lvl});
             return mk_app(eq_trans, {A, lhs, lhs_then, rhs, H1, H2});
         } else if (compare_values(c_lhs, c_rhs) == l_false) {
             if (auto H = mk_val_ne_proof(ctx, c_lhs, c_rhs)) {
                 expr lhs_else = ite_args[4];
-                expr A        = ite_args[2];
+                expr A        = ite_args[0];
                 level A_lvl   = get_level(ctx, A);
-                expr H1       = mk_app(mk_constant(get_if_neg_name(), {A_lvl}), {c, ite_args[1], *H, A, ite_args[3], lhs_else});
+                expr H1       = mk_app(mk_constant(get_if_neg_name(), {A_lvl}), {c, ite_args[2], *H, A, ite_args[3], lhs_else});
                 expr H2       = prove_eqn_lemma_core(ctx, Hs, lhs_else, rhs, false);
                 return mk_app(mk_constant(get_eq_trans_name(), {A_lvl}), {A, lhs, lhs_else, rhs, H1, H2});
             }

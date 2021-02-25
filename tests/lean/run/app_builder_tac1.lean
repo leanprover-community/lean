@@ -4,7 +4,7 @@ set_option trace.app_builder true
 set_option pp.all true
 
 meta definition mk_ite (c a b : expr) : tactic expr :=
-mk_mapp `ite [some c, none, none, some a, some b]
+mk_mapp `ite [none, some c, none, some a, some b]
 
 example (a b : nat) : nat :=
 by do a ← get_local `a,

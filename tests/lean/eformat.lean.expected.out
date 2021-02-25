@@ -1,8 +1,8 @@
 Type
 α
 [([app_fn, app_arg], 1): 1] = [([app_arg], 2): 2]
-[([app_fn], ite ↥ff true): [([app_fn], ite ↥ff): [([app_fn, app_fn, app_fn], ite): ite]
- [([app_fn, app_fn, app_arg], ↥ff): ↥[([app_arg], ff): ff]]]
+[([app_fn], ite ↥ff true): [([app_fn], ite ↥ff): [([app_fn, app_fn], ite): ite]
+ [([app_fn, app_arg], ↥ff): ↥[([app_arg], ff): ff]]]
  [([app_arg], true): true]]
  [([app_arg], false): false]
 [([app_fn, app_arg], x): x] ≠ [([app_arg], x): x]
