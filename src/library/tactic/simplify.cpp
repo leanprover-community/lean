@@ -279,11 +279,12 @@ simp_result simplify_core_fn::try_user_congr(expr const & e, simp_lemma const & 
             lean_assert(!has_idx_metavar(h_lhs));
 
             simp_result r_congr_hyp;
-            if (m_cfg.m_contextual || m_rel != const_name(h_rel)) {
+            if (m_cfg.m_contextual) {
                 flet<name> set_name(m_rel, const_name(h_rel));
                 freset<simplify_cache> reset_cache(m_cache);
                 r_congr_hyp = visit(h_lhs, some_expr(e));
             } else {
+                flet<name> set_name(m_rel, const_name(h_rel));
                 r_congr_hyp = visit(h_lhs, some_expr(e));
             }
 
@@ -629,7 +630,6 @@ simp_result simplify_core_fn::rewrite(expr const & e, simp_lemma const & sl) {
 simp_result simplify_core_fn::propext_rewrite(expr const & e) {
     if (m_rel != get_eq_name()) return simp_result(e);
     flet<name> set_rel(m_rel, get_iff_name());
-    freset<simplify_cache> reset_cache(m_cache);
     simp_result r = rewrite(e);
     if (!r.has_proof()) return r;
     expr new_pr = mk_app(m_ctx, get_propext_name(), r.get_proof());
@@ -643,8 +643,9 @@ simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & paren
     lean_simp_trace(m_ctx, "simplify", tout() << m_rel << ": " << e << "\n";);
 
     if (m_cfg.m_memoize) {
-        auto it = m_cache.find(e);
-        if (it != m_cache.end())
+        auto cache = m_cache[m_rel];
+        auto it = cache.find(e);
+        if (it != cache.end())
             return it->second;
     }
 
@@ -652,7 +653,7 @@ simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & paren
     if (auto r1 = pre(e, parent)) {
         if (!r1->second) {
             if (m_cfg.m_memoize)
-                m_cache.insert(mk_pair(e, r1->first));
+                m_cache[m_rel].insert(mk_pair(e, r1->first));
             return r1->first;
         }
         curr_result = r1->first;
@@ -712,11 +713,7 @@ simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & paren
 
     if (m_cfg.m_lift_eq && m_rel != get_eq_name()) {
         simp_result eq_result;
-        {
-            flet<name> use_eq(m_rel, get_eq_name());
-            freset<simplify_cache> reset_cache(m_cache);
-            eq_result = visit(curr_result.get_new(), parent);
-        }
+        eq_result = (flet<name>(m_rel, get_eq_name()), visit(curr_result.get_new(), parent));
         if (eq_result.get_new() != curr_result.get_new()) {
             curr_result = join(curr_result, lift_from_eq(eq_result));
             curr_result = join(curr_result, visit(curr_result.get_new(), parent));
@@ -724,7 +721,7 @@ simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & paren
     }
 
     if (m_cfg.m_memoize)
-        m_cache.insert(mk_pair(e, curr_result));
+        m_cache[m_rel].insert(mk_pair(e, curr_result));
     return curr_result;
 }
 
@@ -885,7 +882,6 @@ simplify_core_fn::simplify_core_fn(type_context_old & ctx, defeq_canonizer::stat
 }
 
 simp_result simplify_core_fn::simplify(expr const & e) {
-    m_cache.clear();
     simp_result r(e);
     while (true) {
         m_need_restart = false;
@@ -897,13 +893,8 @@ simp_result simplify_core_fn::simplify(expr const & e) {
 }
 
 simp_result simplify_core_fn::operator()(name const & rel, expr const & e) {
-    if (m_rel != rel) {
-        flet<name> _(m_rel, rel);
-        freset<simplify_cache> reset_cache(m_cache);
-        return simplify(e);
-    } else {
-        return simplify(e);
-    }
+    flet<name> _(m_rel, rel);
+    return simplify(e);
 }
 
 static expr mk_mpr(type_context_old & ctx, name const & rel, expr const & h1, expr const & h2) {
