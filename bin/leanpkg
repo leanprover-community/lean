@@ -1,21 +1,20 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-unamestr=`uname`
-if [[ "$unamestr" == 'Darwin' ]]; then
-    # OSX
-    if command -v greadlink >/dev/null 2>&1; then
-        # macOS readlink doesn't support -f option
-        READLINK=greadlink
-    else
-        echo "OSX 'readlink' command does not support option '-f', please install 'greadlink'. If you use 'brew', you can install 'greadlink' using 'brew install coreutils'"
-        exit 1
-    fi
+if command -v realpath >/dev/null 2>&1; then
+     REALPATH=realpath
 else
-    READLINK=readlink
+     unamestr=`uname`
+     # OS X
+     if [[ "$unamestr" == 'Darwin' ]]; then
+         echo "Cannot find 'realpath' command, please install 'realpath'. If you use 'brew', you can install 'realpath' using 'brew install coreutils'"
+         exit 1
+     else
+         REALPATH="readlink -f"
+     fi
 fi
 
-leandir=$(dirname "$($READLINK -f "$0")")/..
-leandir=$($READLINK -f "$leandir")
+leandir=$(dirname "$($REALPATH "$0")")/..
+leandir=$($REALPATH "$leandir")
 
 librarydir="$leandir/lib/lean"
 test -d "$librarydir" || librarydir="$leandir"
