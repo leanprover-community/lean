@@ -443,7 +443,7 @@ infix ⊃        := ssuperset
 def bit0 {α : Type u} [s  : has_add α] (a  : α)                 : α := a + a
 def bit1 {α : Type u} [s₁ : has_one α] [s₂ : has_add α] (a : α) : α := (bit0 a) + 1
 
-attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg
+attribute [pattern] has_zero.zero has_one.one bit0 bit1 has_add.add has_neg.neg has_mul.mul
 
 export has_insert (insert)
 
