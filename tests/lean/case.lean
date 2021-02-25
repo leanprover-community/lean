@@ -81,3 +81,29 @@ begin
   case nil { exact 0 },
   case cons : x xs { exact 0 }
 end
+
+example (α β : Type*) (i j : α ⊕ β) : ℕ :=
+begin
+  with_cases {cases hi : i; cases hj : j},
+  case [sum.inl sum.inl, sum.inr sum.inr] {
+    exact 1,
+    exact 1,
+  },
+  case [sum.inl sum.inr, sum.inr sum.inl] {
+    exact 2,
+    exact 2,
+  },
+end
+
+example (α β : Type*) (i j : α ⊕ β) : ℕ :=
+begin
+  with_cases {cases hi : i; cases hj : j},
+  case [sum.inl sum.inl : i j, sum.inr sum.inr : i j] {
+    exact 1,
+    exact 1,
+  },
+  case [sum.inl sum.inr : i j, sum.inr sum.inl : i j] {
+    exact 2,
+    exact 2,
+  },
+end
