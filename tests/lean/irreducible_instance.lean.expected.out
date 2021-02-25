@@ -1,0 +1,2 @@
+irreducible_instance.lean:6:0: error: tactic.mk_instance failed to generate instance for
+  foo ""
