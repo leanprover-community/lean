@@ -92,7 +92,7 @@ itactic: parse a nested "interactive" tactic. That is, parse
 meta def itactic : Type :=
 tactic unit
 
-meta def propagate_tags (tac : tactic unit) : tactic unit :=
+meta def propagate_tags (tac : itactic) : tactic unit :=
 do tag ← get_main_tag,
    if tag = [] then tac
    else focus1 $ do
