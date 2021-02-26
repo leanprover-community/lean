@@ -32,7 +32,7 @@ private lemma sublt {a b n : nat} (h : a < n) : a - b < n :=
 lt_of_le_of_lt (nat.sub_le a b) h
 
 protected def sub : fin n → fin n → fin n
-| ⟨a, h⟩ ⟨b, _⟩ := ⟨a - b, sublt h⟩
+| ⟨a, h⟩ ⟨b, _⟩ := ⟨(a + (n - b)) % n, mlt h⟩
 
 private lemma modlt {a b n : nat} (h₁ : a < n) (h₂ : b < n) : a % b < n :=
 begin
@@ -70,9 +70,8 @@ lemma mul_def (a b : fin n) : (a * b).val = (a.val * b.val) % n :=
 show (fin.mul a b).val = (a.val * b.val) % n, from
 by cases a; cases b; simp [fin.mul]
 
-lemma sub_def (a b : fin n) : (a - b).val = a.val - b.val :=
-show (fin.sub a b).val = a.val - b.val, from
-by cases a; cases b; simp [fin.sub]
+lemma sub_def (a b : fin n) : (a - b).val = (a.val + (n - b.val)) % n :=
+by cases a; cases b; refl
 
 lemma mod_def (a b : fin n) : (a % b).val = a.val % b.val :=
 show (fin.mod a b).val = a.val % b.val, from
