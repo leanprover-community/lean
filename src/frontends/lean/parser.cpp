@@ -2758,6 +2758,35 @@ bool parse_commands(environment & env, io_state & ios, char const * fname) {
     return get(has_errors(lt.get_root()));
 }
 
+void parser::reset(environment const & env, std::istream& new_stream) {
+    m_env = env;
+    m_next_inst_idx = 1;
+    m_ignore_noncomputable = false;
+    m_in_quote = false;
+    m_in_pattern = false;
+    m_has_params = false;
+    m_id_behavior  = id_behavior::ErrorIfUndef;
+    updt_options();
+    m_next_tag_idx  = 0;
+    m_curr = token_kind::Identifier;
+    m_scanner = scanner(new_stream, m_file_name.c_str());
+}
+
+void parser::from_snapshot(std::shared_ptr<const snapshot> snapshot) {
+    m_env                = snapshot->m_env;
+    m_ngen               = snapshot->m_ngen;
+    m_ios.set_options(snapshot->m_options);
+    m_local_level_decls  = snapshot->m_lds;
+    m_local_decls        = snapshot->m_eds;
+    m_level_variables    = snapshot->m_lvars;
+    m_variables          = snapshot->m_vars;
+    m_include_vars       = snapshot->m_include_vars;
+    m_imports_parsed     = snapshot->m_imports_parsed;
+    m_ignore_noncomputable = snapshot->m_noncomputable_theory;
+    m_parser_scope_stack = snapshot->m_parser_scope_stack;
+    m_next_inst_idx      = snapshot->m_next_inst_idx;
+}
+
 void initialize_parser() {
     g_frontend_fresh         = new name("_ffresh");
     register_name_generator_prefix(*g_frontend_fresh);

@@ -607,6 +607,10 @@ public:
     virtual pos_info get_some_pos() const override;
     virtual char const * get_file_name() const override;
 
+public:
+    void reset(environment const & env, std::istream& input);
+    void from_snapshot(std::shared_ptr<const snapshot> snap);
+
 protected:
     virtual std::tuple<expr, expr, name> parse_definition(buffer<name> & lp_names, buffer<expr> & params,
                                                           bool is_example, bool is_instance, bool, bool) override;
