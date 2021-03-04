@@ -295,7 +295,7 @@ meta instance html.is_functor : functor html :=
 
 namespace html
 
-meta instance to_string_coe [has_to_string β] : has_coe_t β (html α) :=
+meta instance to_string_coe [has_to_string β] : has_coe β (html α) :=
 ⟨html.of_string ∘ to_string⟩
 
 meta instance : has_emptyc (html α) := ⟨of_string ""⟩
