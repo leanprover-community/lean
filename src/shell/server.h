@@ -121,6 +121,9 @@ public:
     log_tree & get_log_tree() { return m_lt; }
 
     region_of_interest get_roi();
+
+    void setup_handlers(unsigned num_threads);
+    void clear_handlers();
 };
 
 void initialize_server();

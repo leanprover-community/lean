@@ -294,13 +294,7 @@ public:
     }
 };
 
-server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios,
-        bool use_old_oleans,
-        bool report_widgets) :
-        m_path(path), m_initial_env(initial_env), m_ios(ios) {
-    m_ios.set_regular_channel(std::make_shared<stderr_channel>());
-    m_ios.set_diagnostic_channel(std::make_shared<stderr_channel>());
-
+void server::setup_handlers(unsigned num_threads){
     m_msg_handler.reset(new message_handler(this, &m_lt, num_threads > 0));
     m_tasks_handler.reset(new tasks_handler(this, &m_lt, num_threads > 0));
 
@@ -308,7 +302,22 @@ server::server(unsigned num_threads, search_path const & path, environment const
         m_msg_handler->on_event(evs);
         m_tasks_handler->on_event(evs);
     });
+}
 
+void server::clear_handlers(){
+    m_lt.clear_listeners();
+    m_msg_handler.reset(nullptr);
+    m_tasks_handler.reset(nullptr);
+}
+
+server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios,
+        bool use_old_oleans,
+        bool report_widgets) :
+        m_path(path), m_initial_env(initial_env), m_ios(ios) {
+    m_ios.set_regular_channel(std::make_shared<stderr_channel>());
+    m_ios.set_diagnostic_channel(std::make_shared<stderr_channel>());
+
+    setup_handlers(num_threads);
     scope_global_ios scoped_ios(m_ios);
 #if defined(LEAN_MULTI_THREAD)
     if (num_threads == 0) {
