@@ -147,6 +147,7 @@ public:
     void print() const;
 
     void add_listener(listener const & l);
+    void clear_listeners();
 
     void for_each(std::function<bool(node const & n)> const &) const; // NOLINT
 };

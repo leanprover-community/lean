@@ -23,6 +23,11 @@ void log_tree::add_listener(log_tree::listener const & l) {
     m_listeners.push_back(l);
 }
 
+void log_tree::clear_listeners() {
+    unique_lock<mutex> lock(m_mutex);
+    m_listeners.clear();
+}
+
 log_tree::log_tree() {
     auto cell = new node_cell;
     cell->m_tree = this;
