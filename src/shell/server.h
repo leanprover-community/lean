@@ -107,10 +107,15 @@ class server : public module_vfs {
     json hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action, pos_info const & pos);
     json info(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos);
 
+    bool m_quiet;
+    bool m_never_use_olean;
+
 public:
     server(unsigned num_threads, search_path const & path, environment const & intial_env, io_state const & ios,
         bool use_old_oleans = false,
-        bool report_widgets = true);
+        bool report_widgets = true,
+        bool quiet = false,
+        bool never_use_olean = false);
     ~server();
 
     std::shared_ptr<module_info> load_module(module_id const & id, bool can_use_olean) override;

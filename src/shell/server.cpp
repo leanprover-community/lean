@@ -312,8 +312,10 @@ void server::clear_handlers(){
 
 server::server(unsigned num_threads, search_path const & path, environment const & initial_env, io_state const & ios,
         bool use_old_oleans,
-        bool report_widgets) :
-        m_path(path), m_initial_env(initial_env), m_ios(ios) {
+        bool report_widgets,
+        bool quiet,
+        bool never_use_olean) :
+        m_path(path), m_initial_env(initial_env), m_ios(ios), m_quiet(quiet), m_never_use_olean(never_use_olean) {
     m_ios.set_regular_channel(std::make_shared<stderr_channel>());
     m_ios.set_diagnostic_channel(std::make_shared<stderr_channel>());
 
@@ -737,11 +739,12 @@ std::shared_ptr<module_info> server::load_module(module_id const & id, bool can_
         auto & ef = m_open_files[id];
         return std::make_shared<module_info>(id, ef.m_content, ef.m_src_hash, ef.m_src_hash, module_src::LEAN);
     }
-    return m_fs_vfs.load_module(id, can_use_olean);
+    return m_fs_vfs.load_module(id, can_use_olean && !m_never_use_olean);
 }
 
 template <class Msg>
 void server::send_msg(Msg const & m) {
+    if (m_quiet) return;
     json j = m.to_json_response();
     unique_lock<mutex> _(m_out_mutex);
     std::cout << j << std::endl;
