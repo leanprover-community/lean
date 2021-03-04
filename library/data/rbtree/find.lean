@@ -79,7 +79,7 @@ end
 
 lemma mem_of_mem_exact {lt} [is_irrefl α lt] {x t} : mem_exact x t → mem lt x t :=
 begin
-  induction t; simp [mem_exact, mem]; intro h,
+  induction t; simp [mem_exact, mem, false_implies_iff]; intro h,
   all_goals { blast_disjs, simp [t_ih_lchild h], simp [h, irrefl_of lt t_val], simp [t_ih_rchild h] }
 end
 
@@ -143,7 +143,8 @@ end
 
 lemma find_eq_find_of_eqv {lt a b} [decidable_rel lt] [is_strict_weak_order α lt] {t : rbnode α} : ∀ {lo hi} (hs : is_searchable lt t lo hi) (heqv : a ≈[lt] b), find lt t a = find lt t b :=
 begin
-  apply find.induction lt t a; intros; simp [mem, find, strict_weak_order.equiv, *] at *,
+  apply find.induction lt t a; intros;
+    simp [mem, find, strict_weak_order.equiv, *, true_implies_iff] at *,
   iterate 2 {
     { have : lt b y := lt_of_incomp_of_lt heqv.swap h,
       simp [cmp_using, find, *], cases hs, apply ih hs_hs₁ },

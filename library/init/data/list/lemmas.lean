@@ -82,7 +82,7 @@ by simp [join, list.bind]
 @[simp] lemma cons_bind (x xs) (f : α → list β) : list.bind (x :: xs) f = f x ++ list.bind xs f :=
 by simp [join, list.bind]
 
-lemma append_bind (xs ys) (f : α → list β) :
+@[simp] lemma append_bind (xs ys) (f : α → list β) :
   list.bind (xs ++ ys) f = list.bind xs f ++ list.bind ys f :=
 by induction xs; [refl, simp [*, cons_bind]]
 
@@ -181,11 +181,11 @@ theorem ne_nil_of_length_eq_succ {l : list α} : ∀ {n : nat}, length l = succ 
 by induction l; intros; contradiction
 
 @[simp] theorem length_map₂ (f : α → β → γ) (l₁) : ∀ l₂, length (map₂ f l₁ l₂) = min (length l₁) (length l₂) :=
-by {induction l₁; intro l₂; cases l₂; simp [*, add_one, min_succ_succ]}
+by { induction l₁; intro l₂; cases l₂; simp [*, add_one, min_succ_succ, nat.zero_min, nat.min_zero] }
 
 @[simp] theorem length_take : ∀ (i : ℕ) (l : list α), length (take i l) = min i (length l)
-| 0        l      := by simp
-| (succ n) []     := by simp
+| 0        l      := by simp [nat.zero_min]
+| (succ n) []     := by simp [nat.min_zero]
 | (succ n) (a::l) := by simp [*, nat.min_succ_succ, add_one]
 
 theorem length_take_le (n) (l : list α) : length (take n l) ≤ n :=

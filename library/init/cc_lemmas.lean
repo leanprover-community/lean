@@ -67,7 +67,7 @@ lemma imp_eq_true_of_eq {a b : Prop} (h : a = b) : (a → b) = true :=
 h ▸ propext (iff.intro (λ h, trivial) (λ h ha, ha))
 
 lemma not_eq_of_eq_true {a : Prop} (h : a = true) : (not a) = false :=
-h.symm ▸ propext not_true_iff
+h.symm ▸ propext not_true
 
 lemma not_eq_of_eq_false {a : Prop} (h : a = false) : (not a) = true :=
 h.symm ▸ propext not_false_iff

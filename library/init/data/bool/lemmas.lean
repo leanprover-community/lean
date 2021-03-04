@@ -101,10 +101,10 @@ show (ff = tt) = false, by simp
 @[simp] lemma coe_tt : ↑tt = true :=
 show (tt = tt) = true, by simp
 
-lemma coe_sort_ff : ↥ff = false :=
+@[simp] lemma coe_sort_ff : ↥ff = false :=
 show (ff = tt) = false, by simp
 
-lemma coe_sort_tt : ↥tt = true :=
+@[simp] lemma coe_sort_tt : ↥tt = true :=
 show (tt = tt) = true, by simp
 
 @[simp] theorem to_bool_iff (p : Prop) [d : decidable p] : (to_bool p = tt) ↔ p :=

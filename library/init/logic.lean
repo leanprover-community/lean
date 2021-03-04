@@ -508,7 +508,7 @@ iff_true_intro iff.rfl
     (iff_iff_implies_and_implies c d).symm)
 
 /- implies simp rule -/
-lemma implies_true_iff (α : Sort u) : (α → true) ↔ true :=
+@[simp] lemma implies_true_iff (α : Sort u) : (α → true) ↔ true :=
 iff.intro (λ h, trivial) (λ ha h, trivial)
 
 lemma false_implies_iff (a : Prop) : (false → a) ↔ true :=
@@ -599,10 +599,10 @@ decidable.cases_on h (λ h₁, bool.ff) (λ h₂, bool.tt)
 
 export decidable (is_true is_false to_bool)
 
-lemma to_bool_true_eq_tt (h : decidable true) : @to_bool true h = tt :=
+@[simp] lemma to_bool_true_eq_tt (h : decidable true) : @to_bool true h = tt :=
 decidable.cases_on h (λ h, false.elim (iff.mp not_true h)) (λ _, rfl)
 
-lemma to_bool_false_eq_ff (h : decidable false) : @to_bool false h = ff :=
+@[simp] lemma to_bool_false_eq_ff (h : decidable false) : @to_bool false h = ff :=
 decidable.cases_on h (λ h, rfl) (λ h, false.elim h)
 
 instance decidable.true : decidable true :=
