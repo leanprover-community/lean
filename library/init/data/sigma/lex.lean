@@ -79,7 +79,8 @@ section
   parameters {r  : α → α → Prop} {s : β → β → Prop}
   local infix `≺`:50 := rev_lex r s
 
-  lemma rev_lex_accessible {b} (acb : acc s b) (aca : ∀ a, acc r a) :
+  -- there is a test that depends on this being a def, even though it should probably be a lemma
+  def rev_lex_accessible {b} (acb : acc s b) (aca : ∀ a, acc r a) :
     ∀ a, acc (rev_lex r s) ⟨a, b⟩ :=
   acc.rec_on acb
     (λ xb acb (ihb : ∀ y, s y xb → ∀ a, acc (rev_lex r s) ⟨a, y⟩),
