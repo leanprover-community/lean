@@ -134,7 +134,8 @@ by {cases n, exact or.inl rfl, exact or.inr (succ_pos _)}
 protected lemma pos_of_ne_zero {n : nat} : n ≠ 0 → 0 < n :=
 or.resolve_left (eq_zero_or_pos n)
 
-protected lemma lt_trans {n m k : ℕ} (h₁ : n < m) : m < k → n < k :=
+-- there is a test that depends on this being a def, even though it should probably be a lemma
+protected def lt_trans {n m k : ℕ} (h₁ : n < m) : m < k → n < k :=
 nat.le_trans (less_than_or_equal.step h₁)
 
 protected lemma lt_of_le_of_lt {n m k : ℕ} (h₁ : n ≤ m) : m < k → n < k :=

@@ -67,7 +67,8 @@ rfl
 
 /- properties of inequality -/
 
-@[refl] protected lemma le_refl (a : ℕ) : a ≤ a :=
+-- there is a test that depends on this being a def, even though it should probably be a lemma
+@[refl] protected def le_refl (a : ℕ) : a ≤ a :=
 less_than_or_equal.refl
 
 lemma le_succ (n : ℕ) : n ≤ succ n :=
@@ -127,7 +128,8 @@ lemma not_succ_le_self : ∀ n : ℕ, ¬succ n ≤ n :=
 protected lemma lt_irrefl (n : ℕ) : ¬n < n :=
 not_succ_le_self n
 
-protected lemma le_trans {n m k : ℕ} (h1 : n ≤ m) : m ≤ k → n ≤ k :=
+-- there is a test that depends on this being a def, even though it should probably be a lemma
+protected def le_trans {n m k : ℕ} (h1 : n ≤ m) : m ≤ k → n ≤ k :=
 less_than_or_equal.rec h1 (λ p h2, less_than_or_equal.step)
 
 lemma pred_le : ∀ (n : ℕ), pred n ≤ n
