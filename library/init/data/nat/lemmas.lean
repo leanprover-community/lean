@@ -125,8 +125,7 @@ nat.le_trans (le_succ n) h
 protected lemma le_of_lt {n m : ℕ} (h : n < m) : n ≤ m :=
 le_of_succ_le h
 
--- there is a test that depends on this being a def, even though it should probably be a lemma
-def lt.step {n m : ℕ} : n < m → n < succ m := less_than_or_equal.step
+lemma lt.step {n m : ℕ} : n < m → n < succ m := less_than_or_equal.step
 
 lemma eq_zero_or_pos (n : ℕ) : n = 0 ∨ 0 < n :=
 by {cases n, exact or.inl rfl, exact or.inr (succ_pos _)}
@@ -134,15 +133,13 @@ by {cases n, exact or.inl rfl, exact or.inr (succ_pos _)}
 protected lemma pos_of_ne_zero {n : nat} : n ≠ 0 → 0 < n :=
 or.resolve_left (eq_zero_or_pos n)
 
--- there is a test that depends on this being a def, even though it should probably be a lemma
-protected def lt_trans {n m k : ℕ} (h₁ : n < m) : m < k → n < k :=
+protected lemma lt_trans {n m k : ℕ} (h₁ : n < m) : m < k → n < k :=
 nat.le_trans (less_than_or_equal.step h₁)
 
 protected lemma lt_of_le_of_lt {n m k : ℕ} (h₁ : n ≤ m) : m < k → n < k :=
 nat.le_trans (succ_le_succ h₁)
 
--- there is a test that depends on this being a def, even though it should probably be a lemma
-def lt.base (n : ℕ) : n < succ n := nat.le_refl (succ n)
+lemma lt.base (n : ℕ) : n < succ n := nat.le_refl (succ n)
 
 lemma lt_succ_self (n : ℕ) : n < succ n := lt.base n
 
