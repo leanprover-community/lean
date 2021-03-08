@@ -13,8 +13,22 @@ Author: Gabriel Ebner
 #include <iostream>
 #include <unordered_map>
 #include "kernel/quotient/quotient.h"
+#include "checker/simple_pp.h"
+#include "kernel/ext_exception.h"
 
 namespace lean {
+
+template <typename Fn>
+void wrap_exception(name const & decl_name, environment const & env, Fn const & fn) {
+    try {
+        fn();
+    } catch (ext_exception & ex) {
+        throw throwable(sstream() << decl_name << ": " <<
+            ex.pp(formatter(options(), [&] (expr const & e, options const &) {
+                return simple_pp(env, e, lowlevel_notations());
+            })));
+    }
+}
 
 struct text_importer {
     std::unordered_map<unsigned, expr> m_expr;
@@ -61,27 +75,35 @@ struct text_importer {
         auto ls = read_level_params(in);
 
         inductive::inductive_decl decl(m_name.at(name_idx), ls, num_params, m_expr.at(type_idx), to_list(intros));
-        m_env = inductive::add_inductive(m_env, decl, true).first;
+        wrap_exception(decl.m_name, m_env, [&] {
+            m_env = inductive::add_inductive(m_env, decl, true).first;
+        });
     }
 
     void handle_def(std::istream & in) {
         unsigned name_idx, type_idx, val_idx;
         in >> name_idx >> type_idx >> val_idx;
         auto ls = read_level_params(in);
+        name n = m_name.at(name_idx);
 
-        auto decl =
-            type_checker(m_env).is_prop(m_expr.at(type_idx)) ?
-                mk_theorem(m_name.at(name_idx), ls, m_expr.at(type_idx), m_expr.at(val_idx)) :
-                mk_definition(m_env, m_name.at(name_idx), ls, m_expr.at(type_idx), m_expr.at(val_idx), true, true);
+        wrap_exception(n, m_env, [&] {
+            auto decl =
+                type_checker(m_env).is_prop(m_expr.at(type_idx)) ?
+                    mk_theorem(n, ls, m_expr.at(type_idx), m_expr.at(val_idx)) :
+                    mk_definition(m_env, n, ls, m_expr.at(type_idx), m_expr.at(val_idx), true, true);
 
-        m_env = m_env.add(check(m_env, decl, true));
+            m_env = m_env.add(check(m_env, decl, true));
+        });
     }
 
     void handle_ax(std::istream & in) {
         unsigned name_idx, type_idx;
         in >> name_idx >> type_idx;
         auto ls = read_level_params(in);
-        m_env = m_env.add(check(m_env, mk_axiom(m_name.at(name_idx), ls, m_expr.at(type_idx))));
+        name n = m_name.at(name_idx);
+        wrap_exception(n, m_env, [&] {
+            m_env = m_env.add(check(m_env, mk_axiom(n, ls, m_expr.at(type_idx))));
+        });
     }
 
     void handle_notation(std::istream & in, lowlevel_notation_kind kind) {
