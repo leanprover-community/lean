@@ -550,7 +550,10 @@ meta def extract_opt_auto_param : expr → expr
 
 open format
 
-private meta def p := λ xs, paren (format.join (list.intersperse " " xs))
+private meta def p : list format → format
+| [] := ""
+| [x] := x.paren
+| (x::y::xs) := p ((x ++ format.line ++ y).group :: xs)
 
 meta def to_raw_fmt : expr elab → format
 | (var n) := p ["var", to_fmt n]
