@@ -315,8 +315,7 @@ theorem nth_interleave_left : ∀ (n : nat) (s₁ s₂ : stream α), nth (2*n) (
 | 0        s₁ s₂ := rfl
 | (succ n) s₁ s₂ :=
   begin
-    change nth (succ (succ (2*n))) (s₁ ⋈ s₂) = nth (succ n) s₁,
-    rw [nth_succ, nth_succ, interleave_eq, tail_cons, tail_cons, nth_interleave_left],
+    rw [mul_succ, nth_succ, nth_succ, interleave_eq, tail_cons, tail_cons, nth_interleave_left],
     refl
   end
 
@@ -324,8 +323,7 @@ theorem nth_interleave_right : ∀ (n : nat) (s₁ s₂ : stream α), nth (2*n+1
 | 0        s₁ s₂ := rfl
 | (succ n) s₁ s₂ :=
   begin
-    change nth (succ (succ (2*n+1))) (s₁ ⋈ s₂) = nth (succ n) s₂,
-    rw [nth_succ, nth_succ, interleave_eq, tail_cons, tail_cons, nth_interleave_right],
+    rw [mul_succ, nth_succ, nth_succ, interleave_eq, tail_cons, tail_cons, nth_interleave_right],
     refl
   end
 
@@ -385,8 +383,7 @@ theorem nth_even : ∀ (n : nat) (s : stream α), nth n (even s) = nth (2*n) s
 | 0        s := rfl
 | (succ n) s :=
   begin
-    change nth (succ n) (even s) = nth (succ (succ (2 * n))) s,
-    rw [nth_succ, nth_succ, tail_even, nth_even], refl
+    rw [mul_succ, nth_succ, nth_succ, tail_even, nth_even], refl
   end
 
 theorem nth_odd : ∀ (n : nat) (s : stream α), nth n (odd s) = nth (2*n + 1) s :=

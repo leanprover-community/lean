@@ -67,29 +67,29 @@ rfl
 lemma pred_succ (n : ℕ) : pred (succ n) = n :=
 rfl
 
-protected lemma mul_zero (n : ℕ) : n * 0 = 0 :=
+protected lemma zero_mul (n : ℕ) : 0 * n = 0 :=
 rfl
 
-lemma mul_succ (n m : ℕ) : n * succ m = n * m + n :=
+lemma succ_mul (n m : ℕ) : succ n * m = n * m + m :=
 rfl
 
-protected theorem zero_mul : ∀ (n : ℕ), 0 * n = 0
+protected theorem mul_zero : ∀ (n : ℕ), n * 0 = 0
 | 0        := rfl
-| (succ n) := by rw [mul_succ, zero_mul]
+| (succ n) := by rw [succ_mul, nat.add_zero, mul_zero]
 
 private meta def sort_add :=
 `[simp [nat.add_assoc, nat.add_comm, nat.add_left_comm]]
 
-lemma succ_mul : ∀ (n m : ℕ), (succ n) * m = (n * m) + m
-| n 0        := rfl
-| n (succ m) :=
+lemma mul_succ : ∀ (n m : ℕ), n * succ m = (n * m) + n
+| 0        m := rfl
+| (succ n) m :=
   begin
-    simp [mul_succ, add_succ, succ_mul n m],
-    sort_add
+    rw [succ_mul, succ_mul, mul_succ n m, add_succ, add_succ],
+    sort_add,
   end
 
 protected lemma right_distrib : ∀ (n m k : ℕ), (n + m) * k = n * k + m * k
-| n m 0        := rfl
+| n m 0        := by simp [nat.mul_zero]
 | n m (succ k) :=
   begin simp [mul_succ, right_distrib n m k], sort_add end
 
@@ -103,10 +103,11 @@ protected lemma mul_comm : ∀ (n m : ℕ), n * m = m * n
 | n (succ m) := by simp [mul_succ, succ_mul, mul_comm n m]
 
 protected lemma mul_assoc : ∀ (n m k : ℕ), (n * m) * k = n * (m * k)
-| n m 0        := rfl
+| n m 0        := by simp [nat.mul_zero]
 | n m (succ k) := by simp [mul_succ, nat.left_distrib, mul_assoc n m k]
 
-protected lemma mul_one : ∀ (n : ℕ), n * 1 = n := nat.zero_add
+protected lemma mul_one : ∀ (n : ℕ), n * 1 = n :=
+λ n, by rw [nat.mul_succ n 0, nat.mul_zero, nat.zero_add]
 
 protected lemma one_mul (n : ℕ) : 1 * n = n :=
 by rw [nat.mul_comm, nat.mul_one]
@@ -1189,7 +1190,7 @@ by rwa mod_add_div at t
 theorem le_of_dvd {m n : ℕ} (h : n > 0) : m ∣ n → m ≤ n :=
 λ⟨k, e⟩, by {
   revert h, rw e, refine k.cases_on _ _,
-  exact λhn, absurd hn (lt_irrefl _),
+  rw nat.mul_zero, exact λhn, absurd hn (lt_irrefl _),
   exact λk _, let t := mul_le_mul_left m (succ_pos k) in by rwa nat.mul_one at t }
 
 theorem dvd_antisymm : Π {m n : ℕ}, m ∣ n → n ∣ m → m = n

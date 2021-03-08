@@ -32,8 +32,8 @@ protected def sub : ℕ → ℕ → ℕ
 | a (b+1) := pred (sub a b)
 
 protected def mul : nat → nat → nat
-| a 0     := 0
-| a (b+1) := (mul a b) + a
+| 0 b     := 0
+| (a+1) b := (mul a b) + b
 
 instance : has_sub ℕ :=
 ⟨nat.sub⟩

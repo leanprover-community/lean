@@ -40,7 +40,7 @@ end
 @[simp] lemma bodd_mul (m n : ℕ) : bodd (m * n) = bodd m && bodd n :=
 begin
     induction n with n IH,
-    { simp, cases bodd m; refl },
+    { simp [nat.mul_zero], cases bodd m; refl },
     { simp [mul_succ, IH], cases bodd m; cases bodd n; refl }
 end
 
@@ -84,8 +84,7 @@ def bit (b : bool) : ℕ → ℕ := cond b bit1 bit0
 
 lemma bit0_val (n : nat) : bit0 n = 2 * n :=
 calc n + n = 0 + n + n : by rw nat.zero_add
-       ... = n * 2 : rfl
-       ... = 2 * n : nat.mul_comm _ _
+       ... = 2 * n : rfl
 
 lemma bit1_val (n : nat) : bit1 n = 2 * n + 1 := congr_arg succ (bit0_val _)
 

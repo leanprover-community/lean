@@ -418,9 +418,16 @@ protected lemma mul_comm : ∀ a b : ℤ, a * b = b * a
 | -[1+ m]    (of_nat n) := by simp [nat.mul_comm]
 | -[1+ m]    -[1+ n]    := by simp [nat.mul_comm]
 
+protected lemma zero_mul : ∀ (a : ℤ), 0 * a = 0
+| (of_nat m) := rfl
+| -[1+ m]    := rfl
+
+protected lemma mul_zero (a : ℤ) : a * 0 = 0 :=
+int.mul_comm 0 a ▸ int.zero_mul a
+
 lemma of_nat_mul_neg_of_nat (m : ℕ) :
    ∀ n, of_nat m * neg_of_nat n = neg_of_nat (m * n)
-| 0        := rfl
+| 0        := begin unfold neg_of_nat, rw [int.mul_zero, nat.mul_zero], refl end
 | (succ n) := begin unfold neg_of_nat, simp end
 
 lemma neg_of_nat_mul_of_nat (m n : ℕ) :
@@ -429,7 +436,7 @@ begin rw int.mul_comm, simp [of_nat_mul_neg_of_nat, nat.mul_comm] end
 
 lemma neg_succ_of_nat_mul_neg_of_nat (m : ℕ) :
   ∀ n, -[1+ m] * neg_of_nat n = of_nat (succ m * n)
-| 0        := rfl
+| 0        := begin unfold neg_of_nat, rw [int.mul_zero, nat.mul_zero], refl end
 | (succ n) := begin unfold neg_of_nat, simp end
 
 lemma neg_of_nat_mul_neg_succ_of_nat (m n : ℕ) :
@@ -448,13 +455,6 @@ protected lemma mul_assoc : ∀ a b c : ℤ, a * b * c = a * (b * c)
 | -[1+ m]    (of_nat n) -[1+ k]    := by simp [nat.mul_assoc]
 | -[1+ m]    -[1+ n]    (of_nat k) := by simp [nat.mul_assoc]
 | -[1+ m]    -[1+ n]   -[1+ k]     := by simp [nat.mul_assoc]
-
-protected lemma mul_zero : ∀ (a : ℤ), a * 0 = 0
-| (of_nat m) := rfl
-| -[1+ m]    := rfl
-
-protected lemma zero_mul (a : ℤ) : 0 * a = 0 :=
-int.mul_comm a 0 ▸ int.mul_zero a
 
 lemma neg_of_nat_eq_sub_nat_nat_zero : ∀ n, neg_of_nat n = sub_nat_nat 0 n
 | 0        := rfl
@@ -513,7 +513,7 @@ begin
     rw [nat.mul_comm k, nat.mul_comm n, ← succ_pred_eq_of_pos (nat.sub_pos_of_lt h₁),
         ← neg_of_nat_of_succ],
     reflexivity },
-  subst h', simp, reflexivity
+  subst h', simp [int.mul_zero]
 end
 
 local attribute [simp] of_nat_mul_sub_nat_nat neg_of_nat_add neg_succ_of_nat_mul_sub_nat_nat
