@@ -75,7 +75,7 @@ struct text_importer {
         auto ls = read_level_params(in);
 
         inductive::inductive_decl decl(m_name.at(name_idx), ls, num_params, m_expr.at(type_idx), to_list(intros));
-        wrap_exception(decl.m_name, m_env, [&] { 
+        wrap_exception(decl.m_name, m_env, [&] {
             m_env = inductive::add_inductive(m_env, decl, true).first;
         });
     }
