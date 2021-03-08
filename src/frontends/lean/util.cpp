@@ -89,6 +89,18 @@ name remove_root_prefix(name const & n) {
     return n.replace_prefix(get_root_tk(), name());
 }
 
+name resolve_decl_name(environment const & env, name const & n) {
+    if (n.get_root() == get_root_tk()) {
+        return remove_root_prefix(n);
+    } else {
+        return get_namespace(env) + n;
+    }
+}
+
+name resolve_decl_name(environment const & env, expr const & mlocal) {
+    return resolve_decl_name(env, mlocal_pp_name(mlocal));
+}
+
 bool is_eqn_prefix(parser & p, bool bar_only = false) {
     return p.curr_is_token(get_bar_tk()) || (!bar_only && p.curr_is_token(get_comma_tk()));
 }
