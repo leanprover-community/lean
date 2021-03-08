@@ -44,10 +44,12 @@ def read' [inhabited α] : buffer α → nat → α
 def write' : buffer α → nat → α → buffer α
 | ⟨n, a⟩ i v := ⟨n, a.write' i v⟩
 
-lemma read_eq_read' [inhabited α] (b : buffer α) (i : nat) (h : i < b.size) : read b ⟨i, h⟩ = read' b i :=
+lemma read_eq_read' [inhabited α] (b : buffer α) (i : nat) (h : i < b.size) :
+  read b ⟨i, h⟩ = read' b i :=
 by cases b; unfold read read'; simp [array.read_eq_read']
 
-lemma write_eq_write' (b : buffer α) (i : nat) (h : i < b.size) (v : α) : write b ⟨i, h⟩ v = write' b i v :=
+lemma write_eq_write' (b : buffer α) (i : nat) (h : i < b.size) (v : α) :
+  write b ⟨i, h⟩ v = write' b i v :=
 by cases b; unfold write write'; simp [array.write_eq_write']
 
 def to_list (b : buffer α) : list α :=
@@ -66,16 +68,16 @@ b.append_list s.to_list
 lemma lt_aux_1 {a b c : nat} (h : a + c < b) : a < b :=
 lt_of_le_of_lt (nat.le_add_right a c) h
 
-lemma lt_aux_2 {n} (h : n > 0) : n - 1 < n :=
-have h₁ : 1 > 0, from dec_trivial,
-nat.sub_lt h h₁
+lemma lt_aux_2 {n : nat} (h : 0 < n) : n - 1 < n :=
+nat.sub_lt h (nat.succ_pos 0)
 
 lemma lt_aux_3 {n i} (h : i + 1 < n) : n - 2 - i < n  :=
 have n > 0,     from lt_trans (nat.zero_lt_succ i) h,
 have n - 2 < n, from nat.sub_lt this (dec_trivial),
 lt_of_le_of_lt (nat.sub_le _ _) this
 
-def append_array {α : Type u} {n : nat} (nz : n > 0) : buffer α → array n α → ∀ i : nat, i < n → buffer α
+def append_array {α : Type u} {n : nat} (nz : 0 < n) :
+  buffer α → array n α → ∀ i : nat, i < n → buffer α
 | ⟨m, b⟩ a 0     _ :=
   let i : fin n := ⟨n - 1, lt_aux_2 nz⟩ in
   ⟨m+1, b.push_back (a.read i)⟩

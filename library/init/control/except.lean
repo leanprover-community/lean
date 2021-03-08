@@ -133,7 +133,9 @@ export monad_except_adapter (adapt_except)
 section
 variables {ε ε' : Type u} {m m' : Type u → Type v}
 
-instance monad_except_adapter_trans {n n' : Type u → Type v} [monad_functor m m' n n'] [monad_except_adapter ε ε' m m'] : monad_except_adapter ε ε' n n' :=
+@[priority 100]
+instance monad_except_adapter_trans {n n' : Type u → Type v} [monad_except_adapter ε ε' m m']
+  [monad_functor m m' n n'] : monad_except_adapter ε ε' n n' :=
 ⟨λ α f, monad_map (λ α, (adapt_except f : m α → m' α))⟩
 
 instance [monad m] : monad_except_adapter ε ε' (except_t ε m) (except_t ε' m) :=

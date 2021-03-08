@@ -85,6 +85,7 @@ class monad_reader (ρ : out_param (Type u)) (m : Type u → Type v) :=
 
 export monad_reader (read)
 
+@[priority 100]
 instance monad_reader_trans {ρ : Type u} {m : Type u → Type v} {n : Type u → Type w}
   [monad_reader ρ m] [has_monad_lift m n] : monad_reader ρ n :=
 ⟨monad_lift (monad_reader.read : m ρ)⟩
@@ -110,7 +111,9 @@ export monad_reader_adapter (adapt_reader)
 section
 variables {ρ ρ' : Type u} {m m' : Type u → Type v}
 
-instance monad_reader_adapter_trans {n n' : Type u → Type v} [monad_functor m m' n n'] [monad_reader_adapter ρ ρ' m m'] : monad_reader_adapter ρ ρ' n n' :=
+@[priority 100]
+instance monad_reader_adapter_trans {n n' : Type u → Type v} [monad_reader_adapter ρ ρ' m m']
+  [monad_functor m m' n n'] : monad_reader_adapter ρ ρ' n n' :=
 ⟨λ α f, monad_map (λ α, (adapt_reader f : m α → m' α))⟩
 
 instance [monad m] : monad_reader_adapter ρ ρ' (reader_t ρ m) (reader_t ρ' m) :=

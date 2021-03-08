@@ -185,10 +185,10 @@ Heterogeneous equality.
 Its purpose is to write down equalities between terms whose types are not definitionally equal.
 For example, given `x : vector α n` and `y : vector α (0+n)`, `x = y` doesn't typecheck but `x == y` does.
 
-If you have a goal `⊢ x == y`, 
+If you have a goal `⊢ x == y`,
 your first instinct should be to ask (either yourself, or on [zulip](https://leanprover.zulipchat.com/))
 if something has gone wrong already.
-If you really do need to follow this route, 
+If you really do need to follow this route,
 you may find the lemmas `eq_rec_heq` and `eq_mpr_heq` useful.
 -/
 inductive heq {α : Sort u} (a : α) : Π {β : Sort u}, β → Prop
@@ -206,7 +206,7 @@ structure pprod (α : Sort u) (β : Sort v) :=
 Logical and.
 
 `and P Q`, with notation `P ∧ Q`, is the `Prop` which is true precisely when `P` and `Q` are
-both true. 
+both true.
 
 To prove a goal `⊢ P ∧ Q`, you can use the tactic `split`,
 which gives two separate goals `⊢ P` and `⊢ Q`.
@@ -218,9 +218,9 @@ mathlib.
 structure and (a b : Prop) : Prop :=
 intro :: (left : a) (right : b)
 
-def and.elim_left {a b : Prop} (h : and a b) : a := h.1
+lemma and.elim_left {a b : Prop} (h : and a b) : a := h.1
 
-def and.elim_right {a b : Prop} (h : and a b) : b := h.2
+lemma and.elim_right {a b : Prop} (h : and a b) : b := h.2
 
 /- eq basic support -/
 
@@ -228,6 +228,7 @@ infix = := eq
 
 attribute [refl] eq.refl
 
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
 @[pattern] def rfl {α : Sort u} {a : α} : a = a := eq.refl a
 
 @[elab_as_eliminator, subst]
@@ -244,6 +245,7 @@ h ▸ rfl
 
 infix == := heq
 
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
 @[pattern] def heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
 
 lemma eq_of_heq {α : Sort u} {a a' : α} (h : a == a') : a = a' :=
@@ -296,10 +298,10 @@ inductive or (a b : Prop) : Prop
 | inl (h : a) : or
 | inr (h : b) : or
 
-def or.intro_left {a : Prop} (b : Prop) (ha : a) : or a b :=
+lemma or.intro_left {a : Prop} (b : Prop) (ha : a) : or a b :=
 or.inl ha
 
-def or.intro_right (a : Prop) {b : Prop} (hb : b) : or a b :=
+lemma or.intro_right (a : Prop) {b : Prop} (hb : b) : or a b :=
 or.inr hb
 
 structure sigma {α : Type u} (β : α → Type v) :=

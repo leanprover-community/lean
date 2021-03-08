@@ -99,7 +99,9 @@ variables {σ : Type u} {m : Type u → Type v}
 
 -- NOTE: The ordering of the following two instances determines that the top-most `state_t` monad layer
 -- will be picked first
-instance monad_state_trans {n : Type u → Type w} [monad_state σ m] [has_monad_lift m n] : monad_state σ n :=
+@[priority 100]
+instance monad_state_trans {n : Type u → Type w} [monad_state σ m] [has_monad_lift m n] :
+  monad_state σ n :=
 ⟨λ α x, monad_lift (monad_state.lift x : m α)⟩
 
 instance [monad m] : monad_state σ (state_t σ m) :=
@@ -163,7 +165,9 @@ export monad_state_adapter (adapt_state)
 section
 variables {σ σ' : Type u} {m m' : Type u → Type v}
 
-instance monad_state_adapter_trans {n n' : Type u → Type v} [monad_functor m m' n n'] [monad_state_adapter σ σ' m m'] : monad_state_adapter σ σ' n n' :=
+@[priority 100]
+instance monad_state_adapter_trans {n n' : Type u → Type v} [monad_state_adapter σ σ' m m']
+  [monad_functor m m' n n'] : monad_state_adapter σ σ' n n' :=
 ⟨λ σ'' α split join, monad_map (λ α, (adapt_state split join : m α → m' α))⟩
 
 instance [monad m] : monad_state_adapter σ σ' (state_t σ m) (state_t σ' m) :=

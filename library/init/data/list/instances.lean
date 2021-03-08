@@ -16,10 +16,11 @@ instance : monad list :=
 { pure := @list.ret, map := @list.map, bind := @list.bind }
 
 instance : is_lawful_monad list :=
-{ bind_pure_comp_eq_map := by intros; induction x; simp [*, (<$>), (>>=), pure] at *,
+{ bind_pure_comp_eq_map := by { intros α β f l, induction l; simp [*, (<$>), (>>=), pure] at * },
   id_map := @list.map_id,
-  pure_bind := by intros; simp [pure, (>>=)],
-  bind_assoc := by simp [(>>=)]; intros; induction x; simp * }
+  pure_bind := by { intros, simp [pure, (>>=)] },
+  bind_assoc := by { intros α β γ l f g, induction l with x l ih, { simp [(>>=)] },
+    { simp [(>>=)] at ih, simp [(>>=), ih] } } }
 
 instance : alternative list :=
 { failure := @list.nil,
@@ -34,7 +35,7 @@ instance bin_tree_to_list : has_coe (bin_tree α) (list α) :=
 ⟨bin_tree.to_list⟩
 
 instance decidable_bex : ∀ (l : list α), decidable (∃ x ∈ l, p x)
-| []      := is_false (by simp)
+| []      := is_false (by simp [list.not_bex_nil])
 | (x::xs) :=
   if h₁ : p x
   then is_true ⟨x, mem_cons_self _ _, h₁⟩

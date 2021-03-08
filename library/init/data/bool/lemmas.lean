@@ -47,22 +47,22 @@ by cases b; simp
 @[simp] lemma bxor_tt (b : bool) : bxor b tt = bnot b :=
 by cases b; simp
 
-@[simp] lemma bxor_ff (b : bool) : bxor b ff = b :=
+lemma bxor_ff (b : bool) : bxor b ff = b :=
 by cases b; simp
 
 @[simp] lemma tt_bxor (b : bool) : bxor tt b = bnot b :=
 by cases b; simp
 
-@[simp] lemma ff_bxor (b : bool) : bxor ff b = b :=
+lemma ff_bxor (b : bool) : bxor ff b = b :=
 by cases b; simp
 
 @[simp] lemma bnot_bnot (b : bool) : bnot (bnot b) = b :=
 by cases b; simp
 
-@[simp] lemma tt_eq_ff_eq_false : ¬(tt = ff) :=
+lemma tt_eq_ff_eq_false : ¬(tt = ff) :=
 by contradiction
 
-@[simp] lemma ff_eq_tt_eq_false : ¬(ff = tt) :=
+lemma ff_eq_tt_eq_false : ¬(ff = tt) :=
 by contradiction
 
 @[simp] lemma eq_ff_eq_not_eq_tt (b : bool) : (¬(b = tt)) = (b = ff) :=

@@ -17,15 +17,18 @@ by induction s; refl
 
 @[simp] lemma length_next_to_string_next (it : iterator) :
   it.next.next_to_string.length = it.next_to_string.length - 1 :=
-by cases it; cases it_snd; simp [iterator.next, iterator.next_to_string, string.length, nat.add_sub_cancel_left]
+by cases it; cases it_snd;
+  simp [iterator.next, iterator.next_to_string, string.length, nat.add_sub_cancel_left]
 
 lemma zero_lt_length_next_to_string_of_has_next {it : iterator} :
   it.has_next → 0 < it.next_to_string.length :=
-by cases it; cases it_snd; simp [iterator.has_next, iterator.next_to_string, string.length, nat.zero_lt_one_add, nat.add_comm]
+by cases it; cases it_snd; simp [iterator.has_next, iterator.next_to_string, string.length,
+  nat.zero_lt_one_add, nat.add_comm, false_implies_iff]
 
 end iterator
 
--- TODO(Sebastian): generalize to something like https://doc.rust-lang.org/std/primitive.str.html#method.split
+-- TODO(Sebastian): generalize to something like
+-- https://doc.rust-lang.org/std/primitive.str.html#method.split
 private def split_core (p : char → bool) : iterator → iterator → list string
 | start stop :=
 if h : stop.has_next then

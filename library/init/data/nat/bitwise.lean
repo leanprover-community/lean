@@ -24,8 +24,8 @@ def div2 (n : ℕ) : ℕ := (bodd_div2 n).2
 def bodd (n : ℕ) : bool := (bodd_div2 n).1
 
 @[simp] lemma bodd_zero : bodd 0 = ff := rfl
-@[simp] lemma bodd_one : bodd 1 = tt := rfl
-@[simp] lemma bodd_two : bodd 2 = ff := rfl
+lemma bodd_one : bodd 1 = tt := rfl
+lemma bodd_two : bodd 2 = ff := rfl
 
 @[simp] lemma bodd_succ (n : ℕ) : bodd (succ n) = bnot (bodd n) :=
 by unfold bodd bodd_div2; cases bodd_div2 n; cases fst; refl
@@ -55,8 +55,8 @@ begin
 end
 
 @[simp] lemma div2_zero : div2 0 = 0 := rfl
-@[simp] lemma div2_one : div2 1 = 0 := rfl
-@[simp] lemma div2_two : div2 2 = 1 := rfl
+lemma div2_one : div2 1 = 0 := rfl
+lemma div2_two : div2 2 = 1 := rfl
 
 @[simp] lemma div2_succ (n : ℕ) : div2 (succ n) = cond (bodd n) (succ (div2 n)) (div2 n) :=
 by unfold bodd div2 bodd_div2; cases bodd_div2 n; cases fst; refl
@@ -98,7 +98,7 @@ lemma bit_decomp (n : nat) : bit (bodd n) (div2 n) = n :=
 def bit_cases_on {C : nat → Sort u} (n) (h : ∀ b n, C (bit b n)) : C n :=
 by rw [← bit_decomp n]; apply h
 
-@[simp] lemma bit_zero : bit ff 0 = 0 := rfl
+lemma bit_zero : bit ff 0 = 0 := rfl
 
 def shiftl' (b : bool) (m : ℕ) : ℕ → ℕ
 | 0     := m

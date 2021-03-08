@@ -34,7 +34,9 @@ export has_monad_lift_t (monad_lift)
 @[reducible] def has_monad_lift_to_has_coe {m n} [has_monad_lift_t m n] {α} : has_coe (m α) (n α) :=
 ⟨monad_lift⟩
 
-instance has_monad_lift_t_trans (m n o) [has_monad_lift_t m n] [has_monad_lift n o] : has_monad_lift_t m o :=
+@[priority 100]
+instance has_monad_lift_t_trans (m n o) [has_monad_lift_t m n] [has_monad_lift n o] :
+    has_monad_lift_t m o :=
 ⟨λ α ma, has_monad_lift.monad_lift (monad_lift ma : n α)⟩
 
 instance has_monad_lift_t_refl (m) : has_monad_lift_t m m :=
@@ -58,6 +60,7 @@ class monad_functor_t (m m' : Type u → Type v) (n n' : Type u → Type w) :=
 
 export monad_functor_t (monad_map)
 
+@[priority 100]
 instance monad_functor_t_trans (m m' n n' o o') [monad_functor_t m m' n n'] [monad_functor n n' o o'] :
   monad_functor_t m m' o o' :=
 ⟨λ α f, monad_functor.monad_map (λ α, (monad_map @f : n α → n' α))⟩

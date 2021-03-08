@@ -17,19 +17,19 @@ open color
 begin cases r₂; refl end
 
 @[simp] lemma balance1_eq₂ (l₁ : rbnode α) (y l₂ x r v t) : get_color l₁ ≠ red → balance1 l₁ y (red_node l₂ x r)  v t = red_node (black_node l₁ y l₂) x (black_node r v t) :=
-begin cases l₁; simp [get_color, balance1] end
+begin cases l₁; simp [get_color, balance1, false_implies_iff] end
 
 @[simp] lemma balance1_eq₃ (l : rbnode α) (y r v t) : get_color l ≠ red → get_color r ≠ red → balance1 l y r v t = black_node (red_node l y r) v t :=
-begin cases l; cases r; simp [get_color, balance1] end
+begin cases l; cases r; simp [get_color, balance1, false_implies_iff] end
 
 @[simp] lemma balance2_eq₁ (l : rbnode α) (x₁ r₁ y r₂ v t) : balance2 (red_node l x₁ r₁) y r₂  v t = red_node (black_node t v l) x₁ (black_node r₁ y r₂) :=
 by cases r₂; refl
 
 @[simp] lemma balance2_eq₂ (l₁ : rbnode α) (y l₂ x₂ r₂ v t) : get_color l₁ ≠ red → balance2 l₁ y (red_node l₂ x₂ r₂) v t = red_node (black_node t v l₁) y (black_node l₂ x₂ r₂) :=
-begin cases l₁; simp [get_color, balance2] end
+begin cases l₁; simp [get_color, balance2, false_implies_iff] end
 
 @[simp] lemma balance2_eq₃ (l : rbnode α) (y r v t) : get_color l ≠ red → get_color r ≠ red → balance2 l  y r  v t = black_node t v (red_node l y r) :=
-begin cases l; cases r; simp [get_color, balance2] end
+begin cases l; cases r; simp [get_color, balance2, false_implies_iff] end
 
 /- We can use the same induction principle for balance1 and balance2 -/
 lemma balance.cases {p : rbnode α → α → rbnode α → Prop}
@@ -168,13 +168,13 @@ local infix `∈` := mem lt
 
 lemma mem_balance1_node_of_mem_left {x s} (v) (t : rbnode α) : x ∈ s → x ∈ balance1_node s v t :=
 begin
-  cases s; simp,
+  cases s; simp [false_implies_iff],
   all_goals { apply balance.cases s_lchild s_val s_rchild; intros; simp at *; blast_disjs; simp [*] }
 end
 
 lemma mem_balance2_node_of_mem_left {x s} (v) (t : rbnode α) : x ∈ s → x ∈ balance2_node s v t :=
 begin
-  cases s; simp,
+  cases s; simp [false_implies_iff],
   all_goals { apply balance.cases s_lchild s_val s_rchild; intros; simp at *; blast_disjs; simp [*] }
 end
 
@@ -302,13 +302,13 @@ local attribute [simp] mem_exact
 
 lemma mem_exact_balance1_node_of_mem_exact {x s} (v) (t : rbnode α) : mem_exact x s → mem_exact x (balance1_node s v t) :=
 begin
-  cases s; simp,
+  cases s; simp [false_implies_iff],
   all_goals { apply balance.cases s_lchild s_val s_rchild; intros; simp [*] at *; blast_disjs; simp [*] }
 end
 
 lemma mem_exact_balance2_node_of_mem_exact {x s} (v) (t : rbnode α) : mem_exact x s → mem_exact x (balance2_node s v t) :=
 begin
-  cases s; simp,
+  cases s; simp [false_implies_iff],
   all_goals { apply balance.cases s_lchild s_val s_rchild; intros; simp [*] at *; blast_disjs; simp [*] }
 end
 

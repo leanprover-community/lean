@@ -9,7 +9,8 @@ universe u
 namespace rbnode
 variables {α : Type u} {lt : α → α → Prop}
 
-lemma mem_of_min_eq (lt : α → α → Prop) [is_irrefl α lt] {a : α} {t : rbnode α} : t.min = some a → mem lt a t :=
+lemma mem_of_min_eq (lt : α → α → Prop) [is_irrefl α lt] {a : α} {t : rbnode α} :
+  t.min = some a → mem lt a t :=
 begin
    induction t,
    { intros, contradiction },
@@ -19,7 +20,8 @@ begin
      all_goals { rw [mem], simp [t_ih_lchild h] } }
 end
 
-lemma mem_of_max_eq (lt : α → α → Prop) [is_irrefl α lt] {a : α} {t : rbnode α} : t.max = some a → mem lt a t :=
+lemma mem_of_max_eq (lt : α → α → Prop) [is_irrefl α lt] {a : α} {t : rbnode α} :
+  t.max = some a → mem lt a t :=
 begin
    induction t,
    { intros, contradiction },
@@ -36,7 +38,7 @@ begin
   induction t,
   { intros, refl },
   all_goals {
-    cases t_lchild; simp [rbnode.min]; intro h,
+    cases t_lchild; simp [rbnode.min, false_implies_iff]; intro h,
     all_goals { have := t_ih_lchild h, contradiction } }
 end
 
@@ -45,7 +47,7 @@ begin
   induction t,
   { intros, refl },
   all_goals {
-    cases t_rchild; simp [rbnode.max]; intro h,
+    cases t_rchild; simp [rbnode.max, false_implies_iff]; intro h,
     all_goals { have := t_ih_rchild h, contradiction } }
 end
 

@@ -67,7 +67,7 @@ rfl
 
 /- properties of inequality -/
 
-@[refl] protected def le_refl (a : ℕ) : a ≤ a :=
+@[refl] protected lemma le_refl (a : ℕ) : a ≤ a :=
 less_than_or_equal.refl
 
 lemma le_succ (n : ℕ) : n ≤ succ n :=
@@ -83,7 +83,7 @@ lemma zero_le : ∀ (n : ℕ), 0 ≤ n
 lemma zero_lt_succ (n : ℕ) : 0 < succ n :=
 succ_le_succ (zero_le n)
 
-def succ_pos := zero_lt_succ
+lemma succ_pos (n : ℕ) : 0 < succ n := zero_lt_succ n
 
 lemma not_succ_le_zero : ∀ (n : ℕ), succ n ≤ 0 → false
 .
