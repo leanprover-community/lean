@@ -416,7 +416,7 @@ name parser::check_id_next(char const * msg, break_at_pos_exception::token_conte
 }
 
 void parser::check_not_internal(name const & id, pos_info const & p) {
-    if (is_internal_name(id))
+    if (is_internal_name(id) && id.get_root() != get_root_tk())
         maybe_throw_error({
                 sstream() << "invalid declaration name '" << id
                           << "', identifiers starting with '_' are reserved to the system",

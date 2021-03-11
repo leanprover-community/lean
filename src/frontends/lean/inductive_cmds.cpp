@@ -597,7 +597,7 @@ class inductive_cmd_fn {
         m_explicit_levels = !m_lp_names.empty();
         m_mut_attrs.push_back({});
 
-        ind = mk_local(get_namespace(m_p.env()) + mlocal_name(ind), mlocal_name(ind), mlocal_type(ind), local_info(ind));
+        ind = mk_local(resolve_decl_name(m_p.env(), mlocal_name(ind)), mlocal_name(ind), mlocal_type(ind), local_info(ind));
 
         lean_trace(name({"inductive", "parse"}),
                    tout() << mlocal_name(ind) << " : " << mlocal_type(ind) << "\n";);
@@ -639,8 +639,8 @@ class inductive_cmd_fn {
             lean_trace(name({"inductive", "parse"}), tout() << mlocal_name(pre_ind) << " : " << ind_type << "\n";);
             intro_rules.emplace_back();
             intro_rule_docs.emplace_back();
-            parse_intro_rules(!params.empty(), pre_ind, intro_rules.back(), intro_rule_docs.back(), true);
-            expr ind = mk_local(get_namespace(m_p.env()) + mlocal_name(pre_ind), ind_type);
+            expr ind = mk_local(resolve_decl_name(m_p.env(), mlocal_name(pre_ind)), ind_type);
+            parse_intro_rules(!params.empty(), ind, intro_rules.back(), intro_rule_docs.back(), false);
             inds.push_back(ind);
         }
 

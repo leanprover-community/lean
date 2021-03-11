@@ -269,7 +269,6 @@ struct structure_cmd_fn {
     cmd_meta                    m_meta_info;
     environment                 m_env;
     type_context_old                m_ctx;
-    name                        m_namespace;
     name                        m_name;
     name                        m_given_name;
     pos_info                    m_name_pos;
@@ -299,8 +298,7 @@ struct structure_cmd_fn {
         m_p(p),
         m_meta_info(meta),
         m_env(p.env()),
-        m_ctx(p.env()),
-        m_namespace(get_namespace(m_env)) {
+        m_ctx(p.env()) {
         m_explicit_universe_params = false;
         m_infer_result_universe    = false;
         m_inductive_predicate      = false;
@@ -328,7 +326,7 @@ struct structure_cmd_fn {
             m_name = m_private_prefix + m_given_name;
             m_env  = register_private_name(m_env, m_given_name, m_name);
         } else {
-            m_name = m_namespace + m_given_name;
+            m_name = resolve_decl_name(m_env, m_given_name);
         }
     }
 
