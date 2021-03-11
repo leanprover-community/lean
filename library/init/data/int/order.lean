@@ -165,7 +165,7 @@ iff.mpr (int.lt_iff_le_and_ne _ _)
 protected lemma mul_nonneg {a b : ℤ} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a * b :=
 le.elim ha (assume n, assume hn,
 le.elim hb (assume m, assume hm,
-  le.intro (show 0 + ↑n * ↑m = a * b, begin rw [← hn, ← hm], simp [int.zero_add] end)))
+  @le.intro _ _ (n * m) (by simp [←hn, ←hm, int.coe_nat_mul])))
 
 protected lemma mul_pos {a b : ℤ} (ha : 0 < a) (hb : 0 < b) : 0 < a * b :=
 lt.elim ha (assume n, assume hn,

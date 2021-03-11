@@ -76,14 +76,16 @@ protected def add : ℤ → ℤ → ℤ
 | -[1+ m]    (of_nat n) := sub_nat_nat n (succ m)
 | -[1+ m]    -[1+ n]    := -[1+ succ (m + n)]
 
-protected def mul : ℤ → ℤ → ℤ
-| (of_nat m) (of_nat n) := of_nat (m * n)
-| (of_nat m) -[1+ n]    := neg_of_nat (m * succ n)
-| -[1+ m]    (of_nat n) := neg_of_nat (succ m * n)
-| -[1+ m]    -[1+ n]    := of_nat (succ m * succ n)
+protected def smul {α : Type*} [has_add α] [has_zero α] [has_neg α] : ℤ → α → α
+| (of_nat m) := m.smul
+| -[1+ m]    := λ x, - (m.succ.smul x)
 
 instance : has_neg ℤ := ⟨int.neg⟩
 instance : has_add ℤ := ⟨int.add⟩
+
+protected def mul : ℤ → ℤ → ℤ :=
+int.smul
+
 instance : has_mul ℤ := ⟨int.mul⟩
 
 -- defeq to algebra.sub which gives subtraction for arbitrary `add_group`s
@@ -95,7 +97,6 @@ instance : has_sub ℤ := ⟨int.sub⟩
 protected lemma neg_zero : -(0:ℤ) = 0 := rfl
 
 lemma of_nat_add (n m : ℕ) : of_nat (n + m) = of_nat n + of_nat m := rfl
-lemma of_nat_mul (n m : ℕ) : of_nat (n * m) = of_nat n * of_nat m := rfl
 lemma of_nat_succ (n : ℕ) : of_nat (succ n) = of_nat n + 1 := rfl
 
 lemma neg_of_nat_zero : -(of_nat 0) = 0 := rfl
@@ -106,13 +107,11 @@ lemma of_nat_eq_coe (n : ℕ) : of_nat n = ↑n := rfl
 lemma neg_succ_of_nat_coe (n : ℕ) : -[1+ n] = -↑(n + 1) := rfl
 
 protected lemma coe_nat_add (m n : ℕ) : (↑(m + n) : ℤ) = ↑m + ↑n := rfl
-protected lemma coe_nat_mul (m n : ℕ) : (↑(m * n) : ℤ) = ↑m * ↑n := rfl
 protected lemma coe_nat_zero : ↑(0 : ℕ) = (0 : ℤ) := rfl
 protected lemma coe_nat_one : ↑(1 : ℕ) = (1 : ℤ) := rfl
 protected lemma coe_nat_succ (n : ℕ) : (↑(succ n) : ℤ) = ↑n + 1 := rfl
 
 protected lemma coe_nat_add_out (m n : ℕ) : ↑m + ↑n = (m + n : ℤ) := rfl
-protected lemma coe_nat_mul_out (m n : ℕ) : ↑m * ↑n = (↑(m * n) : ℤ) := rfl
 protected lemma coe_nat_add_one_out (n : ℕ) : ↑n + (1 : ℤ) = ↑(succ n) := rfl
 
 /- these are only for internal use -/
@@ -125,19 +124,9 @@ lemma neg_succ_of_nat_add_of_nat (m n : nat) :
 lemma neg_succ_of_nat_add_neg_succ_of_nat (m n : nat) :
                 -[1+ m] + -[1+ n] = -[1+ succ (m + n)] := rfl
 
-lemma of_nat_mul_of_nat (m n : nat) : of_nat m * of_nat n = of_nat (m * n) := rfl
-lemma of_nat_mul_neg_succ_of_nat (m n : nat) :
-                of_nat m * -[1+ n] = neg_of_nat (m * succ n) := rfl
-lemma neg_succ_of_nat_of_nat (m n : nat) :
-                -[1+ m] * of_nat n = neg_of_nat (succ m * n) := rfl
-lemma mul_neg_succ_of_nat_neg_succ_of_nat (m n : nat) :
-               -[1+ m] * -[1+ n] = of_nat (succ m * succ n) := rfl
-
-local attribute [simp] of_nat_add_of_nat of_nat_mul_of_nat neg_of_nat_zero neg_of_nat_of_succ
+local attribute [simp] of_nat_add_of_nat neg_of_nat_zero neg_of_nat_of_succ
   neg_neg_of_nat_succ of_nat_add_neg_succ_of_nat neg_succ_of_nat_add_of_nat
-  neg_succ_of_nat_add_neg_succ_of_nat of_nat_mul_neg_succ_of_nat neg_succ_of_nat_of_nat
-  mul_neg_succ_of_nat_neg_succ_of_nat
-
+  neg_succ_of_nat_add_neg_succ_of_nat
 /- some basic functions and properties -/
 
 protected lemma coe_nat_inj {m n : ℕ} (h : (↑m : ℤ) = ↑n) : m = n :=
@@ -238,10 +227,6 @@ lemma nat_abs_pos_of_ne_zero {a : ℤ} (h : a ≠ 0) : nat_abs a > 0 :=
 lemma nat_abs_zero : nat_abs (0 : int) = (0 : nat) := rfl
 
 lemma nat_abs_one : nat_abs (1 : int) = (1 : nat) := rfl
-
-lemma nat_abs_mul_self : Π {a : ℤ}, ↑(nat_abs a * nat_abs a) = a * a
-| (of_nat m) := rfl
-| -[1+ m']   := rfl
 
 @[simp] lemma nat_abs_neg (a : ℤ) : nat_abs (-a) = nat_abs a :=
 by {cases a with n n, cases n; refl, refl}
@@ -394,6 +379,18 @@ protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
                                          int.add_comm -[1+ k] ]
 | -[1+ m]    -[1+ n]    -[1+ k]    := by simp [add_succ, nat.add_comm, nat.add_left_comm, neg_of_nat_of_succ]
 
+lemma neg_of_nat_add (m n : ℕ) :
+  neg_of_nat m + neg_of_nat n = neg_of_nat (m + n) :=
+begin
+  cases m,
+  {  cases n,
+    { simp, reflexivity },
+      simp [nat.zero_add], reflexivity },
+  cases n,
+  { simp, reflexivity },
+  simp [nat.succ_add], reflexivity
+end
+
 /- negation -/
 
 lemma sub_nat_self : ∀ n, sub_nat_nat n n = 0
@@ -411,6 +408,50 @@ protected lemma add_right_neg (a : ℤ) : a + -a = 0 :=
 by rw [int.add_comm, int.add_left_neg]
 
 /- multiplication -/
+
+lemma of_nat_mul (n m : ℕ) : of_nat (n * m) = of_nat n * of_nat m :=
+begin
+  induction n with n hn,
+  { refl },
+  { rw [succ_mul, of_nat_add, hn, of_nat_succ, int.add_comm], -- brittle rfl proof
+    refl }
+end
+
+protected lemma coe_nat_mul (m n : ℕ) : (↑(m * n) : ℤ) = ↑m * ↑n := of_nat_mul _ _
+protected lemma coe_nat_mul_out (m n : ℕ) : ↑m * ↑n = (↑(m * n) : ℤ) := (of_nat_mul _ _).symm
+lemma of_nat_mul_of_nat (m n : nat) : of_nat m * of_nat n = of_nat (m * n) :=
+int.coe_nat_mul_out _ _
+lemma of_nat_mul_neg_succ_of_nat (m n : nat) : of_nat m * -[1+ n] = neg_of_nat (m * succ n) :=
+begin
+  induction m with m hm,
+  { refl },
+  { rw [succ_mul, ←neg_of_nat_add, ←hm, int.add_comm],
+    refl }
+end
+lemma neg_succ_of_nat_of_nat (m n : nat) : -[1+ m] * of_nat n = neg_of_nat (succ m * n) :=
+begin
+  change -[1+ m] * of_nat n with -(m.succ.smul (of_nat n)),
+  change m.succ.smul (of_nat n) with of_nat m.succ * of_nat n,
+  rw of_nat_mul_of_nat,
+  refl
+end
+lemma mul_neg_succ_of_nat_neg_succ_of_nat (m n : nat) :
+               -[1+ m] * -[1+ n] = of_nat (succ m * succ n) :=
+begin
+  change -[1+ m] * -[1+ n] with -(m.succ.smul _),
+  change m.succ.smul -[1+ n] with of_nat m.succ * _,
+  rw [of_nat_mul_neg_succ_of_nat, ←int.neg_neg (of_nat _)],
+  refl
+end
+
+local attribute [simp] of_nat_mul_of_nat
+  of_nat_mul_neg_succ_of_nat
+  neg_succ_of_nat_of_nat
+  mul_neg_succ_of_nat_neg_succ_of_nat
+
+lemma nat_abs_mul_self : Π {a : ℤ}, ↑(nat_abs a * nat_abs a) = a * a
+| (of_nat m) := of_nat_mul _ _
+| -[1+ m']   := by rw [mul_neg_succ_of_nat_neg_succ_of_nat, nat_abs, of_nat_eq_coe]
 
 protected lemma mul_comm : ∀ a b : ℤ, a * b = b * a
 | (of_nat m) (of_nat n) := by simp [nat.mul_comm]
@@ -481,18 +522,6 @@ begin
   },
   have h₂ : of_nat 0 = 0, exact rfl,
   subst h₀, simp [h₂, int.zero_mul, nat.zero_mul]
-end
-
-lemma neg_of_nat_add (m n : ℕ) :
-  neg_of_nat m + neg_of_nat n = neg_of_nat (m + n) :=
-begin
-  cases m,
-  {  cases n,
-    { simp, reflexivity },
-      simp [nat.zero_add], reflexivity },
-  cases n,
-  { simp, reflexivity },
-  simp [nat.succ_add], reflexivity
 end
 
 lemma neg_succ_of_nat_mul_sub_nat_nat (m n k : ℕ) :
@@ -596,8 +625,8 @@ by rw [int.mul_comm, int.one_mul]
 
 protected lemma neg_eq_neg_one_mul : ∀ a : ℤ, -a = -1 * a
 | (of_nat 0)     := rfl
-| (of_nat (n+1)) := show _ = -[1+ (1*n)+0], by { rw nat.one_mul, refl }
-| -[1+ n]        := show _ = of_nat _, by { rw nat.one_mul, refl }
+| -[1+ n]        := by { have : (-1 : ℤ) = -[1+ 0] := rfl, rw this, simp [nat.one_mul] }
+| (of_nat (n+1)) := by { have : (-1 : ℤ) = -[1+ 0] := rfl, rw this, simp [nat.one_mul, neg_of_nat] }
 
 theorem sign_mul_nat_abs : ∀ (a : ℤ), sign a * nat_abs a = a
 | (n+1:ℕ) := int.one_mul _

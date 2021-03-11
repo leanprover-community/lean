@@ -71,7 +71,7 @@ protected lemma zero_mul (n : ℕ) : 0 * n = 0 :=
 rfl
 
 lemma succ_mul (n m : ℕ) : succ n * m = n * m + m :=
-rfl
+by refl <|> { rw [nat.add_comm]; refl } -- defensive to work on left or right addition
 
 protected theorem mul_zero : ∀ (n : ℕ), n * 0 = 0
 | 0        := rfl
