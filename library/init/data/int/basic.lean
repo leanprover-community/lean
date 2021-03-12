@@ -414,8 +414,8 @@ lemma of_nat_mul (n m : ℕ) : of_nat (n * m) = of_nat n * of_nat m :=
 begin
   induction n with n hn,
   { refl },
-  { rw [succ_mul, of_nat_add, hn, of_nat_succ, int.add_comm], -- brittle rfl proof
-    refl }
+  { rw [succ_mul, of_nat_add, hn, of_nat_succ], -- brittle rfl proof that depends on left/right mul
+    refl <|> { rw [int.add_comm]; refl } }
 end
 
 protected lemma coe_nat_mul (m n : ℕ) : (↑(m * n) : ℤ) = ↑m * ↑n := of_nat_mul _ _
@@ -426,8 +426,8 @@ lemma of_nat_mul_neg_succ_of_nat (m n : nat) : of_nat m * -[1+ n] = neg_of_nat (
 begin
   induction m with m hm,
   { refl },
-  { rw [succ_mul, ←neg_of_nat_add, ←hm, int.add_comm],
-    refl }
+  { rw [succ_mul, ←neg_of_nat_add, ←hm], -- brittle rfl proof that depends on left/right mul
+    refl <|> { rw [int.add_comm]; refl } }
 end
 lemma neg_succ_of_nat_of_nat (m n : nat) : -[1+ m] * of_nat n = neg_of_nat (succ m * n) :=
 begin
@@ -619,7 +619,7 @@ def nat_mod (m n : ℤ) : ℕ := (m % n).to_nat
 
 protected lemma one_mul : ∀ (a : ℤ), (1 : ℤ) * a = a
 | (of_nat n) := show of_nat (1 * n) = of_nat n, by rw nat.one_mul
-| -[1+ n]    := show -[1+ (1 * n)] = -[1+ n], by rw nat.one_mul
+| -[1+ n]    := by rw [←int.of_nat_one, of_nat_mul_neg_succ_of_nat, nat.one_mul, neg_of_nat]
 
 protected lemma mul_one (a : ℤ) : a * 1 = a :=
 by rw [int.mul_comm, int.one_mul]
