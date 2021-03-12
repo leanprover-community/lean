@@ -82,7 +82,8 @@ end
 
 def bit (b : bool) : ℕ → ℕ := cond b bit1 bit0
 
-lemma bit0_val (n : nat) : bit0 n = 2 * n := rfl
+lemma bit0_val (n : nat) : bit0 n = 2 * n :=
+by rw [bit0, succ_mul, nat.one_mul]
 
 lemma bit1_val (n : nat) : bit1 n = 2 * n + 1 :=
 by rw [bit1, bit0_val]
