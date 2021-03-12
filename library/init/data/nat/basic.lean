@@ -31,9 +31,8 @@ protected def sub : ℕ → ℕ → ℕ
 | a 0     := a
 | a (b+1) := pred (sub a b)
 
-protected def smul {α : Type*} [has_add α] [has_zero α] : ℕ → α → α
-| 0       := λ _, 0
-| (n + 1) := λ b, b + smul n b
+protected def smul {α : Type*} [has_add α] [has_zero α] : ℕ → α → α :=
+λ n a, nat.rec_on n 0 (λ b rec, a + rec)
 
 protected def mul : ℕ → ℕ → ℕ :=
 nat.smul

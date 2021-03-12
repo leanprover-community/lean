@@ -76,9 +76,10 @@ protected def add : ℤ → ℤ → ℤ
 | -[1+ m]    (of_nat n) := sub_nat_nat n (succ m)
 | -[1+ m]    -[1+ n]    := -[1+ succ (m + n)]
 
-protected def smul {α : Type*} [has_add α] [has_zero α] [has_neg α] : ℤ → α → α
-| (of_nat m) := m.smul
-| -[1+ m]    := λ x, - (m.succ.smul x)
+protected def smul {α : Type*} [has_add α] [has_zero α] [has_neg α] : ℤ → α → α :=
+λ m, int.rec_on m
+  (λ n a, nat.rec_on n 0 (λ b rec, a + rec))
+  (λ n a, - (nat.rec_on n.succ 0 (λ b rec, a + rec)))
 
 instance : has_neg ℤ := ⟨int.neg⟩
 instance : has_add ℤ := ⟨int.add⟩
