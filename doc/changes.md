@@ -1,3 +1,21 @@
+3.28.0c (15 March 20201)
+------------------------
+
+Features:
+- `leanchecker` prints error messages (#548)
+- `_root_` can now be used to put declarations in the root namespace (#550)
+
+Bug fixes:
+- line wrapping in `to_raw_fmt` (#549)
+- The `widget.html.to_string_coe` instance now uses `has_coe_t` (#544)
+- Fix in `mt_task_queue` (#552)
+
+Changes:
+- `propagate_tags` can now be used interactively (#540)
+- Change `fin.sub` to the Lean 4 definition (#541)
+- Some lint fixes (#545)
+- Update installation instructions (#547)
+
 3.27.0c (25 February 2021)
 --------------------------
 
