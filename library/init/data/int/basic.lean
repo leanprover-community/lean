@@ -78,7 +78,7 @@ protected def add : ℤ → ℤ → ℤ
 
 protected def smul {α : Type*} [has_add α] [has_zero α] [has_neg α] : ℤ → α → α :=
 λ m, int.rec_on m
-  (λ n a, nat.rec_on n 0 (λ b rec, a + rec))
+  (λ n a, nat.rec_on n 0 (λ b rec, a + rec)) -- definitionally equal to nat.smul
   (λ n a, - (nat.rec_on n.succ 0 (λ b rec, a + rec)))
 
 instance : has_neg ℤ := ⟨int.neg⟩

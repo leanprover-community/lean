@@ -106,13 +106,13 @@ run_cmd verify $ ∀ x < 100, ∀ y < 10, is_ok $ nat.test_bit x y
 
 def ints : list ℤ :=
 (do i ← list.range 40, [-i, i]) ++
-(do s ← [-1,1], j ← list.range 20, [s*(2^31:nat) + j-10])
+(do s ← [-1, 1], j ← list.range 20, [s*(2^31:nat) + j-10])
 
 def small_ints : list ℤ :=
 (do i ← list.range 40, [-i, i])
 
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.add x y
-run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.mul x y
+run_cmd verify $ ∀ x ∈ small_ints, ∀ y ∈ ints, is_ok $ int.mul x y
 run_cmd verify $ ∀ x ∈ ints, is_ok $ int.neg x
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.quot x y
 run_cmd verify $ ∀ x ∈ ints, ∀ y ∈ ints, is_ok $ int.rem x y
