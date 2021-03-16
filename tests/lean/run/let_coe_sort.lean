@@ -11,3 +11,8 @@ begin
   have y : foo.bar := (),
   trivial
 end
+
+example : true :=
+let x : foo.bar := () in
+have y : foo.bar, from (),
+trivial

@@ -3405,6 +3405,7 @@ expr elaborator::visit_pi(expr const & e) {
 expr elaborator::visit_let(expr const & e, optional<expr> const & expected_type) {
     expr ref = e;
     expr new_type  = visit(let_type(e), none_expr());
+    new_type = ensure_type(new_type, let_type(e));
     synthesize_no_tactics();
     expr new_value = visit(let_value(e), some_expr(new_type));
     expr ref_value = get_ref_for_child(let_value(e), ref);
