@@ -9,7 +9,9 @@ example : true :=
 begin
   let x : foo.bar := (),
   have y : foo.bar := (),
-  trivial
+  suffices z : foo.bar,
+  trivial,
+  exact (),
 end
 
 example : true :=
