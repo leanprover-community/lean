@@ -16,3 +16,9 @@ example : true :=
 let x : foo.bar := () in
 have y : foo.bar, from (),
 trivial
+
+example : foo.bar → true :=
+begin
+  assume x : foo.bar,
+  trivial
+end

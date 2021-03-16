@@ -936,7 +936,7 @@ do t ← target,
     t ← target,
     when (not $ t.is_pi ∨ t.is_let) $
       fail "assume tactic failed, Pi/let expression expected",
-    ty ← i_to_expr ty,
+    ty ← i_to_expr ``(%%ty : Sort*),
     unify ty t.binding_domain,
     intro_core n >> skip
 
