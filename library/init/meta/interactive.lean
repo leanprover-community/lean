@@ -1805,6 +1805,6 @@ by tactic.mk_inj_eq
   @eq (fin n) ⟨a, ha⟩ ⟨b, hb⟩ ↔ a = b :=
 by dunfold fin; rw subtype.mk.inj_eq
 
-@[simp] lemma subtype.mk_eq_mk {n : ℕ} (a b) (ha hb) :
+@[simp] lemma fin.mk_eq_mk {n : ℕ} (a b) (ha hb) :
   (fin.mk a ha : fin n) = fin.mk b hb ↔ a = b :=
 fin.subtype_mk_eq_mk _ _ _ _
