@@ -5,6 +5,7 @@ Author: Leonardo de Moura
 -/
 prelude
 import init.data.nat.basic
+import init.propext
 open nat
 
 /-- `fin n` is the subtype of `ℕ` consisting of natural numbers strictly smaller than `n`. -/

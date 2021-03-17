@@ -35,6 +35,8 @@ begin
   apply vector.eq,
   unfold mk_byte,
   unfold get_data,
-  simp
+  transitivity,
+  exact to_list'_drop _,
+  simp,
 end
 end Ex

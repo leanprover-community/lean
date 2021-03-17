@@ -2568,7 +2568,7 @@ bool type_context_old::is_def_eq_args(expr const & e1, expr const & e2) {
     /* Second pass: unify implicit arguments.
        In the second pass, we make sure we are unfolding at least semireducible (default setting) definitions. */
     {
-        transparency_scope scope(*this, ensure_semireducible_mode(m_transparency_mode));
+        transparency_scope scope(*this, ensure_instances_mode(m_transparency_mode));
         for (pair<unsigned, bool> const & p : postponed) {
             unsigned i = p.first;
             if (p.second) {

@@ -12,6 +12,7 @@ import init.data.punit
 import init.meta.mk_dec_eq_instance
 
 meta def subexpr := (expr × expr.address)
+meta instance : decidable_eq subexpr := prod.decidable_eq
 
 namespace widget
 

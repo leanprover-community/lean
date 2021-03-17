@@ -1800,3 +1800,11 @@ by tactic.mk_inj_eq
 
 lemma nat.succ.inj_eq (n₁ n₂ : nat) : (nat.succ n₁ = nat.succ n₂) = (n₁ = n₂) :=
 by tactic.mk_inj_eq
+
+@[simp] lemma fin.subtype_mk_eq_mk {n : ℕ} (a b) (ha hb) :
+  @eq (fin n) ⟨a, ha⟩ ⟨b, hb⟩ ↔ a = b :=
+by dunfold fin; rw subtype.mk.inj_eq
+
+@[simp] lemma subtype.mk_eq_mk {n : ℕ} (a b) (ha hb) :
+  (fin.mk a ha : fin n) = fin.mk b hb ↔ a = b :=
+fin.subtype_mk_eq_mk _ _ _ _
