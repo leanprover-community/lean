@@ -7,10 +7,7 @@ infix ` ≃ `:50 := equiv
 
 variables {α : Type u} {β : Type v} {γ : Type w}
 
-instance: has_coe_to_fun (α ≃ β) := {
-    F := λ _, α → β,
-    coe := equiv.f,
-}
+instance: has_coe_to_fun (α ≃ β) (λ _, α → β) := ⟨equiv.f⟩
 
 @[symm] def equiv.inv : α ≃ β → β ≃ α
 | ⟨f,g⟩ := ⟨g,f⟩

@@ -1,6 +1,6 @@
 structure hom (α β : Type*) := (f : α → β)
 
-instance {α β} : has_coe_to_fun (hom α β) := ⟨_, hom.f⟩
+instance {α β} : has_coe_to_fun (hom α β) (λ _, α → β) := ⟨hom.f⟩
 
 def frob {α β} (a : α) : hom β (α × β) := ⟨λ b, (a, b)⟩
 
@@ -15,8 +15,8 @@ structure constantFunction (α β : Type) :=
 (f : α → β)
 (h : ∀ a₁ a₂, f a₁ = f a₂)
 
-instance {α β : Type} : has_coe_to_fun (constantFunction α β) :=
-⟨_, constantFunction.f⟩
+instance {α β : Type} : has_coe_to_fun (constantFunction α β) (λ _, α → β) :=
+⟨constantFunction.f⟩
 
 def myFun {α : Type} : constantFunction α (option α) :=
 { f := fun a, none,
