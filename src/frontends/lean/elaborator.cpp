@@ -769,9 +769,9 @@ optional<expr> elaborator::mk_coercion_to_fn_sort(bool is_fn, expr const & e, ex
     if (!m_coercions) return none_expr();
     expr e_type = instantiate_mvars(_e_type);
     try {
-        bool mask[3] = { true, false, true };
+        bool mask[4] = { true, false, false, true };
         expr args[2] = { e_type, e };
-        expr new_e = mk_app(m_ctx, is_fn ? get_coe_fn_name() : get_coe_sort_name(), 3, mask, args);
+        expr new_e = mk_app(m_ctx, is_fn ? get_coe_fn_name() : get_coe_sort_name(), 4, mask, args);
         expr new_e_type = whnf(infer_type(new_e));
         if ((is_fn && is_pi(new_e_type)) || (!is_fn && is_sort(new_e_type))) {
             return some_expr(new_e);
