@@ -1,10 +1,10 @@
 def f (a b : nat) := 0
 def g (a b : nat) := 1
 
-instance : is_commutative nat f :=
+instance f.is_commutative : is_commutative nat f :=
 ⟨λ a b, rfl⟩
 
-instance : is_commutative nat g :=
+instance g.is_commutative : is_commutative nat g :=
 ⟨λ a b, rfl⟩
 
 open tactic
