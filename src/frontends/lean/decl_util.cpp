@@ -111,46 +111,48 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     if (!is_constant(C)) return {};
     name class_name = const_name(C);
 
-    // Look at head symbol of last argument.
-    if (!args.size()) return {};
-    expr arg_head = args[0];
-    while (true) {
-        if (is_app(arg_head)) {
-            arg_head = app_fn(arg_head);
-        } else if (is_typed_expr(arg_head)) {
-            arg_head = get_typed_expr_expr(arg_head);
-        } else if (is_explicit_or_partial_explicit(arg_head)) {
-            arg_head = get_explicit_or_partial_explicit_arg(arg_head);
-        } else if (is_annotation(arg_head)) {
-            arg_head = get_annotation_arg(arg_head);
-        } else {
-            break;
-        }
-    }
-
-    // Generate name for argument.
     name arg_name;
-    if (is_constant(arg_head)) {
-        arg_name = const_name(arg_head);
-    } else if (is_sort(arg_head) || is_sort_wo_universe(arg_head)) {
-        arg_name = "sort";
-    } else if (is_pi(arg_head)) {
-        arg_name = "pi";
-    } else if (is_field_notation(arg_head)) {
-        expr lhs = macro_arg(arg_head, 0);
-        arg_name = get_field_notation_field_name(arg_head);
+    // Get last viable argument head name.
+    std::reverse(args.begin(), args.end());
+    for (expr arg_head : args) {
+        if (arg_name) break;
 
-        // The field projection does not have the full name.
-        // If we can guess the type of the lhs, prepend it.
-        if (is_local(lhs)) {
-            expr type = get_app_fn(mlocal_type(lhs));
-            if (is_constant(type))
-                arg_name = const_name(type) + arg_name;
+        // Look at head symbol of the argument.
+        while (true) {
+            if (is_app(arg_head)) {
+                arg_head = app_fn(arg_head);
+            } else if (is_typed_expr(arg_head)) {
+                arg_head = get_typed_expr_expr(arg_head);
+            } else if (is_explicit_or_partial_explicit(arg_head)) {
+                arg_head = get_explicit_or_partial_explicit_arg(arg_head);
+            } else if (is_annotation(arg_head)) {
+                arg_head = get_annotation_arg(arg_head);
+            } else {
+                break;
+            }
         }
-    } else if (is_local(arg_head)) {
-        // only class name
-    } else {
-        return {};
+
+        // Generate name for argument.
+        if (is_constant(arg_head)) {
+            arg_name = const_name(arg_head);
+        } else if (is_sort(arg_head) || is_sort_wo_universe(arg_head)) {
+            arg_name = "sort";
+        } else if (is_pi(arg_head)) {
+            arg_name = "pi";
+        } else if (is_field_notation(arg_head)) {
+            expr lhs = macro_arg(arg_head, 0);
+            arg_name = get_field_notation_field_name(arg_head);
+
+            // The field projection does not have the full name.
+            // If we can guess the type of the lhs, prepend it.
+            if (is_local(lhs)) {
+                expr type = get_app_fn(mlocal_type(lhs));
+                if (is_constant(type))
+                    arg_name = const_name(type) + arg_name;
+            }
+        } else if (is_local(arg_head)) {
+            // only class name
+        }
     }
 
     // Strip namespace prefix of class.
