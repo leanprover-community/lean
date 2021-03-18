@@ -2,4 +2,7 @@
 ⇑(⇑f a) b : expr
 ⇑(⇑(⇑f a) b) a : expr
 f a b a : expr
-@coe_fn.{1 1} (expr bool.tt) expr_to_app (@coe_fn.{1 1} (expr bool.tt) expr_to_app f a) b : expr bool.tt
+@coe_fn.{1 1} (expr bool.tt) (λ (e : expr bool.tt), expr bool.tt → expr bool.tt) expr_to_app
+  (@coe_fn.{1 1} (expr bool.tt) (λ (e : expr bool.tt), expr bool.tt → expr bool.tt) expr_to_app f a)
+  b :
+  expr bool.tt
