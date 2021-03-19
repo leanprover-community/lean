@@ -116,6 +116,7 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     if (!args.size()) return {};
     expr arg_head = args.back();
     if (class_name == get_has_coe_to_fun_name() || class_name == get_has_coe_to_sort_name()) {
+        // TODO(gabriel): generalize, and pick the last non-out_param argument
         arg_head = args[0];
     }
     while (true) {
