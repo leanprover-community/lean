@@ -76,6 +76,8 @@ name const & get_has_andthen_andthen_name();
 name const & get_has_bind_and_then_name();
 name const & get_has_bind_seq_name();
 name const & get_has_coe_t_name();
+name const & get_has_coe_to_fun_name();
+name const & get_has_coe_to_sort_name();
 name const & get_has_div_div_name();
 name const & get_has_emptyc_emptyc_name();
 name const & get_has_insert_insert_name();

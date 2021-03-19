@@ -17,6 +17,7 @@ Author: Leonardo de Moura
 #include "library/private.h"
 #include "library/aliases.h"
 #include "library/explicit.h"
+#include "library/constants.h"
 #include "library/reducible.h"
 #include "library/scoped_ext.h"
 #include "library/tactic/elaborate.h"
@@ -113,7 +114,10 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
 
     // Look at head symbol of last argument.
     if (!args.size()) return {};
-    expr arg_head = args[0];
+    expr arg_head = args.back();
+    if (class_name == get_has_coe_to_fun_name() || class_name == get_has_coe_to_sort_name()) {
+        arg_head = args[0];
+    }
     while (true) {
         if (is_app(arg_head)) {
             arg_head = app_fn(arg_head);
