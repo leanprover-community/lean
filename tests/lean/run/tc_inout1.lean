@@ -65,7 +65,7 @@ has_mem2.mem
 
 local infix ∈ := mem2
 
-instance list.has_mem2 (α : Type u) : has_mem2 α (list α) :=
+instance (α : Type u) : has_mem2 α (list α) :=
 ⟨list.mem⟩
 
 #check λ a (s : list nat), a ∈ s

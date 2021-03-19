@@ -146,7 +146,7 @@ meta instance : has_to_string (expr elab) := ⟨expr.to_string⟩
 meta instance : has_to_format (expr elab) := ⟨λ e, e.to_string⟩
 
 /-- Coercion for letting users write (f a) instead of (expr.app f a) -/
-meta instance expr.has_coe_to_fun : has_coe_to_fun (expr elab) (λ e, expr elab → expr elab) :=
+meta instance : has_coe_to_fun (expr elab) (λ e, expr elab → expr elab) :=
 ⟨λ e, expr.app e⟩
 
 /-- Each expression created by Lean carries a hash.
