@@ -2066,6 +2066,10 @@ expr elaborator::visit_anonymous_constructor(expr const & e, optional<expr> cons
     expr const & c = get_app_args(get_anonymous_constructor_arg(e), args);
     if (!expected_type)
         throw elaborator_exception(e, "invalid constructor ⟨...⟩, expected type must be known");
+    // The expected type may be a coercion, and
+    // we need to synthesize type class instances
+    // to figure what inductive type it is.
+    synthesize();
     expr I = get_app_fn(m_ctx.relaxed_whnf(instantiate_mvars(*expected_type)));
     if (!is_constant(I))
         throw elaborator_exception(e, format("invalid constructor ⟨...⟩, expected type is not an inductive type") +
