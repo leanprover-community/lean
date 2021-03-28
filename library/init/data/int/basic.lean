@@ -345,7 +345,7 @@ calc
 
 lemma sub_nat_nat_add (m n k : ℕ) : sub_nat_nat (m + n) k = of_nat m + sub_nat_nat n k :=
 begin
-  have h := decidable.le_or_lt k n,
+  have h := le_or_lt k n,
   cases h with h' h',
   { rw [sub_nat_nat_of_le h'],
     have h₂ : k ≤ m + n, exact (le_trans h' (le_add_left _ _)),
@@ -359,7 +359,7 @@ end
 lemma sub_nat_nat_add_neg_succ_of_nat (m n k : ℕ) :
     sub_nat_nat m n + -[1+ k] = sub_nat_nat m (n + succ k) :=
 begin
-  have h := decidable.le_or_lt n m,
+  have h := le_or_lt n m,
   cases h with h' h',
   { rw [sub_nat_nat_of_le h'], simp, rw [sub_nat_nat_sub h', nat.add_comm] },
   have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (le_add_right _ _),

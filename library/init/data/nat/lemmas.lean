@@ -292,7 +292,7 @@ protected lemma mul_lt_mul_of_pos_right {n m k : ℕ} (h : n < m) (hk : 0 < k) :
 nat.mul_comm k m ▸ nat.mul_comm k n ▸ nat.mul_lt_mul_of_pos_left h hk
 
 protected lemma le_of_mul_le_mul_left {a b c : ℕ} (h : c * a ≤ c * b) (hc : 0 < c) : a ≤ b :=
-decidable.not_lt.1
+not_lt.1
   (assume h1 : b < a,
    have h2 : c * b < c * a, from nat.mul_lt_mul_of_pos_left h1 hc,
    not_le_of_gt h2 h)
@@ -652,7 +652,7 @@ begin
   { rw zero_mod, assumption },
   { by_cases h₁ : succ x < y,
     { rwa [mod_eq_of_lt h₁] },
-    { have h₁ : succ x % y = (succ x - y) % y := mod_eq_sub_mod (decidable.not_lt.1 h₁),
+    { have h₁ : succ x % y = (succ x - y) % y := mod_eq_sub_mod (not_lt.1 h₁),
       have : succ x - y ≤ x := le_of_lt_succ (sub_lt (succ_pos x) h),
       have h₂ : (succ x - y) % y < y := ih _ this,
       rwa [← h₁] at h₂ } }
@@ -752,7 +752,7 @@ begin
   apply nat.strong_induction_on y _,
   clear y,
   intros y IH x,
-  cases decidable.lt_or_le y k with h h,
+  cases lt_or_le y k with h h,
   -- base case: y < k
   { rw [div_eq_of_lt h],
     cases x with x,
@@ -962,14 +962,14 @@ protected theorem find_spec : p nat.find := nat.find_x.2.left
 protected theorem find_min : ∀ {m : ℕ}, m < nat.find → ¬p m := nat.find_x.2.right
 
 protected theorem find_min' {m : ℕ} (h : p m) : nat.find ≤ m :=
-decidable.le_of_not_lt (λ l, find_min l h)
+le_of_not_lt (λ l, find_min l h)
 
 end find
 
 /- mod -/
 
 theorem mod_le (x y : ℕ) : x % y ≤ x :=
-or.elim (decidable.lt_or_le x y)
+or.elim (lt_or_le x y)
   (λxlty, by rw mod_eq_of_lt xlty; refl)
   (λylex, or.elim (eq_zero_or_pos y)
     (λy0, by rw [y0, mod_zero]; refl)
@@ -1001,7 +1001,7 @@ else if z0 : z = 0 then
 else x.strong_induction_on $ λn IH,
   have y0 : y > 0, from nat.pos_of_ne_zero y0,
   have z0 : z > 0, from nat.pos_of_ne_zero z0,
-  or.elim (decidable.le_or_lt y n)
+  or.elim (le_or_lt y n)
     (λyn, by rw [
         mod_eq_sub_mod yn,
         mod_eq_sub_mod (mul_le_mul_left z yn),

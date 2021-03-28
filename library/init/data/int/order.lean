@@ -943,9 +943,9 @@ theorem sign_eq_zero_iff_zero (a : ℤ) : sign a = 0 ↔ a = 0 :=
 
 protected lemma eq_zero_or_eq_zero_of_mul_eq_zero
         {a b : ℤ} (h : a * b = 0) : a = 0 ∨ b = 0 :=
-match decidable.lt_trichotomy 0 a with
+match lt_trichotomy 0 a with
 | or.inl hlt₁          :=
-  match decidable.lt_trichotomy 0 b with
+  match lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 < a * b, from int.mul_pos hlt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _) end
@@ -956,7 +956,7 @@ match decidable.lt_trichotomy 0 a with
   end
 | or.inr (or.inl heq₁) := or.inl heq₁.symm
 | or.inr (or.inr hgt₁) :=
-  match decidable.lt_trichotomy 0 b with
+  match lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 > a * b, from int.mul_neg_of_neg_of_pos hgt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _)  end
