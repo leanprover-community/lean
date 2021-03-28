@@ -221,25 +221,26 @@ or.elim (le_total a b)
     (λ h : b < a, or.inr (or.inr h))
     (λ h : b = a, or.inr (or.inl h.symm)))
 
-lemma le_of_not_gt {a b : α} (h : ¬ a > b) : a ≤ b :=
+lemma le_of_not_lt {a b : α} (h : ¬ b < a) : a ≤ b :=
 match lt_trichotomy a b with
 | or.inl hlt          := le_of_lt hlt
 | or.inr (or.inl heq) := heq ▸ le_refl a
 | or.inr (or.inr hgt) := absurd hgt h
 end
 
+lemma le_of_not_gt {a b : α} : ¬ a > b → a ≤ b := le_of_not_lt
+
 lemma lt_of_not_ge {a b : α} (h : ¬ a ≥ b) : a < b :=
 lt_of_le_not_le ((le_total _ _).resolve_right h) h
 
-lemma lt_or_ge (a b : α) : a < b ∨ a ≥ b :=
-match lt_trichotomy a b with
-| or.inl hlt          := or.inl hlt
-| or.inr (or.inl heq) := or.inr (heq ▸ le_refl a)
-| or.inr (or.inr hgt) := or.inr (le_of_lt hgt)
-end
+lemma lt_or_le (a b : α) : a < b ∨ b ≤ a :=
+if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
 
-lemma le_or_gt (a b : α) : a ≤ b ∨ a > b :=
-or.swap (lt_or_ge b a)
+lemma le_or_lt (a b : α) : a ≤ b ∨ b < a :=
+(lt_or_le b a).swap
+
+lemma lt_or_ge : ∀ (a b : α), a < b ∨ a ≥ b := lt_or_le
+lemma le_or_gt : ∀ (a b : α), a ≤ b ∨ a > b := le_or_lt
 
 lemma lt_or_gt_of_ne {a b : α} (h : a ≠ b) : a < b ∨ a > b :=
 match lt_trichotomy a b with
@@ -281,15 +282,6 @@ is_strict_weak_order_of_is_total_preorder lt_iff_not_ge
 /- TODO(Leo): decide whether we should keep this instance or not -/
 instance is_strict_total_order_of_linear_order : is_strict_total_order α (<) :=
 { trichotomous := lt_trichotomy }
-
-lemma le_of_not_lt {a b : α} (h : ¬ b < a) : a ≤ b :=
-decidable.by_contradiction $ λ h', h $ lt_of_le_not_le ((le_total _ _).resolve_right h') h'
-
-lemma lt_or_le (a b : α) : a < b ∨ b ≤ a :=
-if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
-
-lemma le_or_lt (a b : α) : a ≤ b ∨ b < a :=
-(lt_or_le b a).swap
 
 /-- Perform a case-split on the ordering of `x` and `y` in a decidable linear order. -/
 def lt_by_cases (x y : α) {P : Sort*}
