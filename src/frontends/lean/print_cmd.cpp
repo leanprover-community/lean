@@ -257,16 +257,29 @@ static void print_attributes(parser const & p, message_builder & out, name const
         out << "]\n";
 }
 
+static void print_level_params(message_builder & out, level_param_names const & params) {
+    if (params && get_pp_universes(out.get_text_stream().get_options())) {
+        out << "{";
+        bool first = true;
+        for (auto u : params) {
+            if (first) first = false; else out << " ";
+            out << u;
+        }
+        out << "} ";
+    }
+}
+
 static void print_inductive(parser const & p, message_builder & out, name const & n, pos_info const & pos) {
     environment const & env = p.env();
     if (auto idecl = inductive::is_inductive_decl(env, n)) {
         level_param_names ls = idecl->m_level_params;
         print_attributes(p, out, n);
         if (is_structure(env, n))
-            out << "structure";
+            out << "structure ";
         else
-            out << "inductive";
-        out << " " << n;
+            out << "inductive ";
+        print_level_params(out, ls);
+        out << n;
         out << " : " << env.get(n).get_type() << "\n";
         if (is_structure(env, n)) {
             out << "fields:\n";
@@ -331,7 +344,9 @@ static bool print_constant(parser const & p, message_builder & out, char const *
         out << "noncomputable ";
     if (!d.is_trusted())
         out << "meta ";
-    out << kind << " " << to_user_name(p.env(), d.get_name());
+    out << kind << " ";
+    print_level_params(out, d.get_univ_params());
+    out << to_user_name(p.env(), d.get_name());
     out.get_text_stream().update_options(out.get_text_stream().get_options().update((name {"pp", "binder_types"}), true))
             << " : " << d.get_type();
     if (is_def)
