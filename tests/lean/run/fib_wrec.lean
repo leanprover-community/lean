@@ -2,7 +2,7 @@ open nat
 
 definition fib.F (n : nat) : (Π (m : nat), m < n → nat) → nat :=
 nat.cases_on n
-  (λ (f : Π (m : nat), m < 0 → nat), succ 0)
+  (λ (f : Π (m : nat), m < 0 → nat), 0)
   (λ (n₁ : nat), nat.cases_on n₁
     (λ (f : Π (m : nat), m < (succ 0) → nat), succ 0)
     (λ (n₂ : nat) (f : Π (m : nat), m < (succ (succ n₂)) → nat),
@@ -13,7 +13,7 @@ nat.cases_on n
 definition fib (n : nat) :=
 well_founded.fix lt_wf fib.F n
 
-theorem fib.zero_eq : fib 0 = 1 :=
+theorem fib.zero_eq : fib 0 = 0 :=
 well_founded.fix_eq lt_wf fib.F 0
 
 theorem fib.one_eq  : fib 1 = 1 :=
@@ -22,12 +22,8 @@ well_founded.fix_eq lt_wf fib.F 1
 theorem fib.succ_succ_eq (n : nat) : fib (succ (succ n)) = fib (succ n) + fib n :=
 well_founded.fix_eq lt_wf fib.F (succ (succ n))
 
-example : fib 5 = 8 :=
-rfl
-
-example : fib 6 = 13 :=
-rfl
-
+example : fib 5 = 5 := by simp [fib.zero_eq, fib.one_eq, fib.succ_succ_eq]
+example : fib 6 = 8 := by simp [fib.zero_eq, fib.one_eq, fib.succ_succ_eq]
 #print "------------"
-#reduce fib 10
-#eval fib 10
+#reduce fib 11
+#eval fib 11
