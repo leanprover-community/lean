@@ -39,7 +39,9 @@ struct text_importer {
 
     environment m_env;
 
-    text_importer(environment const & env) : m_env(env) {
+    bool m_verbose;
+
+    text_importer(environment const & env, bool verbose) : m_env(env), m_verbose(verbose) {
         m_level[0] = {};
         m_name[0] = {};
     }
@@ -75,6 +77,7 @@ struct text_importer {
         auto ls = read_level_params(in);
 
         inductive::inductive_decl decl(m_name.at(name_idx), ls, num_params, m_expr.at(type_idx), to_list(intros));
+        if (m_verbose) std::cerr << decl.m_name << std::endl;
         wrap_exception(decl.m_name, m_env, [&] {
             m_env = inductive::add_inductive(m_env, decl, true).first;
         });
@@ -85,6 +88,7 @@ struct text_importer {
         in >> name_idx >> type_idx >> val_idx;
         auto ls = read_level_params(in);
         name n = m_name.at(name_idx);
+        if (m_verbose) std::cerr << n << std::endl;
 
         wrap_exception(n, m_env, [&] {
             auto decl =
@@ -101,6 +105,7 @@ struct text_importer {
         in >> name_idx >> type_idx;
         auto ls = read_level_params(in);
         name n = m_name.at(name_idx);
+        if (m_verbose) std::cerr << n << std::endl;
         wrap_exception(n, m_env, [&] {
             m_env = m_env.add(check(m_env, mk_axiom(n, ls, m_expr.at(type_idx))));
         });
@@ -207,8 +212,8 @@ struct text_importer {
     }
 };
 
-void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations) {
-    text_importer importer(env);
+void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations, bool verbose) {
+    text_importer importer(env, verbose);
 
     std::string line;
     unsigned line_num = 0;
