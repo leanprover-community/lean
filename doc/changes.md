@@ -1,5 +1,20 @@
-3.28.0c (15 March 20201)
-------------------------
+3.29.0c (19 April 2021)
+-----------------------
+
+Features:
+- `leanchecker`: add -v flag to print declaration names (#564)
+- `#print` universe parameters of declarations (#558)
+
+Bug fixes:
+- Fix let with `coe_sort` (#555)
+
+Changes:
+- `acc.rec` should not aggressively reduce proof (#562)
+- Use name `self` for argument in structure projections (#561)
+- Reduce use of choice (#560)
+
+3.28.0c (15 March 2021)
+-----------------------
 
 Features:
 - `leanchecker` prints error messages (#548)
