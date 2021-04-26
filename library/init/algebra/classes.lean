@@ -15,7 +15,7 @@ These classes and the `@[algebra]` attribute are part of an incomplete refactor 
 
 By themselves, these classes are not good replacements for the `monoid` / `group` etc structures
 provided by mathlib, as they are not discoverable by `simp` unlike the current lemmas due to there
-is little to index, on. The Wiki page linked above describes an algebraic normalizer, but it is not
+being little to index on. The Wiki page linked above describes an algebraic normalizer, but it is not
 implemented.
 -/
 
