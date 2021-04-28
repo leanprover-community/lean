@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Gabriel Ebner
 */
 #include <fstream>
+#include <iomanip>
 #include <list>
 #include <string>
 #include "kernel/init_module.h"
@@ -123,6 +124,7 @@ int main(int argc, char ** argv) {
             out << "!!!" << e.what() << "!!!";
         }
     });
+    if (verbose) std::cerr << std::fixed << std::setprecision(6);
 
     dummy_task_queue tq;
     set_task_queue(&tq);

@@ -65,6 +65,7 @@ struct text_importer {
     }
 
     void handle_ind(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned num_params, name_idx, type_idx, num_intros;
         in >> num_params >> name_idx >> type_idx >> num_intros;
 
@@ -77,18 +78,22 @@ struct text_importer {
         auto ls = read_level_params(in);
 
         inductive::inductive_decl decl(m_name.at(name_idx), ls, num_params, m_expr.at(type_idx), to_list(intros));
-        if (m_verbose) std::cerr << decl.m_name << std::endl;
         wrap_exception(decl.m_name, m_env, [&] {
             m_env = inductive::add_inductive(m_env, decl, true).first;
         });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << decl.m_name << std::endl;
+        }
     }
 
     void handle_def(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned name_idx, type_idx, val_idx;
         in >> name_idx >> type_idx >> val_idx;
         auto ls = read_level_params(in);
         name n = m_name.at(name_idx);
-        if (m_verbose) std::cerr << n << std::endl;
 
         wrap_exception(n, m_env, [&] {
             auto decl =
@@ -98,17 +103,27 @@ struct text_importer {
 
             m_env = m_env.add(check(m_env, decl, true));
         });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << n << std::endl;
+        }
     }
 
     void handle_ax(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned name_idx, type_idx;
         in >> name_idx >> type_idx;
         auto ls = read_level_params(in);
         name n = m_name.at(name_idx);
-        if (m_verbose) std::cerr << n << std::endl;
         wrap_exception(n, m_env, [&] {
             m_env = m_env.add(check(m_env, mk_axiom(n, ls, m_expr.at(type_idx))));
         });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << n << std::endl;
+        }
     }
 
     void handle_notation(std::istream & in, lowlevel_notation_kind kind) {
