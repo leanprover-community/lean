@@ -1,3 +1,17 @@
+3.30.0c (30 April 2021)
+-----------------------
+
+Features:
+- Add a brief docstring about unbundled classes (#568)
+- Add timing info to verbose output for leanchecker (#567)
+- Add docstring for `nat.find` (#566)
+
+Bug fixes:
+- Bug with custom recursors on `add_monoid_algebra` (#569)
+
+Changes:
+- Avoid well-founded recursion in `nat.mod` and `nat.div` (#570)
+
 3.29.0c (19 April 2021)
 -----------------------
 
