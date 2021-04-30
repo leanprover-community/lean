@@ -60,8 +60,7 @@ instance : has_mul (fin n)         := ⟨fin.mul⟩
 instance : has_mod (fin n)         := ⟨fin.mod⟩
 instance : has_div (fin n)         := ⟨fin.div⟩
 
-lemma of_nat_zero : @of_nat n 0 = 0 :=
-by { simp only [of_nat], congr, rw mod_def_aux, reflexivity }
+lemma of_nat_zero : @of_nat n 0 = 0 := rfl
 
 lemma add_def (a b : fin n) : (a + b).val = (a.val + b.val) % n :=
 show (fin.add a b).val = (a.val + b.val) % n, from
