@@ -614,8 +614,27 @@ nat.strong_induction_on a $ λ n,
   end
 
 /- mod -/
+
+private lemma mod_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
+  nat.mod_core y f1 x = nat.mod_core y f2 x :=
+begin
+  cases y, { cases f1; cases f2; refl },
+  induction f1 with f1 ih generalizing x f2, { cases h1, cases f2; refl },
+  cases x, { cases f1; cases f2; refl },
+  cases f2, { cases h2 },
+  refine if_congr iff.rfl _ rfl,
+  simp only [succ_sub_succ],
+  exact ih
+    (le_trans (sub_le _ _) (le_of_succ_le_succ h1))
+    (le_trans (sub_le _ _) (le_of_succ_le_succ h2))
+end
+
 lemma mod_def (x y : nat) : x % y = if 0 < y ∧ y ≤ x then (x - y) % y else x :=
-by have h := mod_def_aux x y; rwa [dif_eq_if] at h
+begin
+  cases x, { cases y; refl },
+  cases y, { refl },
+  refine if_congr iff.rfl (mod_core_congr _ _) rfl; simp [sub_le]
+end
 
 @[simp] lemma mod_zero (a : nat) : a % 0 = a :=
 begin
@@ -673,8 +692,29 @@ match n % 2, @nat.mod_lt n 2 dec_trivial with
 end
 
 /- div & mod -/
+
+private lemma div_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
+  nat.div_core y f1 x = nat.div_core y f2 x :=
+begin
+  cases y, { cases f1; cases f2; refl },
+  induction f1 with f1 ih generalizing x f2, { cases h1, cases f2; refl },
+  cases x, { cases f1; cases f2; refl },
+  cases f2, { cases h2 },
+  refine if_congr iff.rfl _ rfl,
+  simp only [succ_sub_succ],
+  refine congr_arg (+1) _,
+  exact ih
+    (le_trans (sub_le _ _) (le_of_succ_le_succ h1))
+    (le_trans (sub_le _ _) (le_of_succ_le_succ h2))
+end
+
 lemma div_def (x y : nat) : x / y = if 0 < y ∧ y ≤ x then (x - y) / y + 1 else 0 :=
-by have h := div_def_aux x y; rwa dif_eq_if at h
+begin
+  cases x, { cases y; refl },
+  cases y, { refl },
+  refine if_congr iff.rfl (congr_arg (+1) _) rfl,
+  refine div_core_congr _ _; simp [sub_le]
+end
 
 lemma mod_add_div (m k : ℕ)
 : m % k + k * (m / k) = m :=
