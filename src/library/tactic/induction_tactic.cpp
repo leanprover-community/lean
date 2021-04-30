@@ -145,7 +145,7 @@ list<expr> induction(environment const & env, options const & opts, transparency
     buffer<expr> H_type_args;
     get_app_args(H_type, H_type_args);
     for (optional<unsigned> const & pos : rec_info.get_params_pos()) {
-        if (*pos >= H_type_args.size()) {
+        if (pos && *pos >= H_type_args.size()) {
             throw exception("induction tactic failed, major premise type is ill-formed");
         }
     }
@@ -211,7 +211,7 @@ list<expr> induction(environment const & env, options const & opts, transparency
     level g_lvl         = get_level(ctx2, g2->get_type());
     local_decl H2_decl  = lctx2.get_last_local_decl();
     expr H2             = H2_decl.mk_ref();
-    expr H2_type        = ctx2.relaxed_whnf(H2_decl.get_type());
+    expr H2_type = whnf_until(ctx1, rec_info.get_type_name(), H2_decl.get_type());
     buffer<expr> H2_type_args;
     expr const & I     = get_app_args(H2_type, H2_type_args);
     if (!is_constant(I))
