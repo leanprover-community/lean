@@ -25,6 +25,8 @@ with f : ℕ → ℕ
 | n := g n + 1
 with g : ℕ → ℕ
 | 0 := 0
-| (n+1) := f n
+| (n+1) :=
+  have _ := n.lt_succ_self,
+  f n
 
 end ex2

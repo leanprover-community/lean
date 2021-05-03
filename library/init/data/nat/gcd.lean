@@ -15,8 +15,8 @@ namespace nat
 /- gcd -/
 
 def gcd : nat → nat → nat
-| 0        y := y
-| (succ x) y := have y % succ x < succ x, from mod_lt _ $ succ_pos _,
+| 0        := id
+| (succ x) := λ y, have y % succ x < succ x, from mod_lt _ $ succ_pos _,
                 gcd (y % succ x) (succ x)
 
 

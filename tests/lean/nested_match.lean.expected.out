@@ -5,11 +5,14 @@ Possible solutions:
   - The default decreasing tactic uses the 'assumption' tactic, thus hints (aka local proofs) can be provided using 'have'-expressions.
 The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
-default_dec_tac failed
+assumption tactic failed
 state:
 f : ℕ → ℕ,
-n m : ℕ
-⊢ m < n
+f : Π (_x : ℕ), (Π (_y : ℕ), has_well_founded.r _y _x → ℕ) → ℕ,
+n : ℕ,
+_F : Π (_y : ℕ), has_well_founded.r _y n → ℕ,
+m : ℕ
+⊢ has_well_founded.r m n
 nested_match.lean:25:7: error: failed to prove recursive application is decreasing, well founded relation
   @has_well_founded.r (psum ℕ ℕ)
     (@has_well_founded_of_has_sizeof (psum ℕ ℕ) (@psum.has_sizeof_alt ℕ ℕ nat.has_sizeof nat.has_sizeof))
@@ -18,7 +21,14 @@ Possible solutions:
   - The default decreasing tactic uses the 'assumption' tactic, thus hints (aka local proofs) can be provided using 'have'-expressions.
 The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
-default_dec_tac failed
+assumption tactic failed
 state:
-n : ℕ
-⊢ n < n
+f.g._mutual : Π (_x : psum ℕ ℕ), _x.cases_on (λ (_s : ℕ), ℕ) (λ (_s : ℕ), ℕ),
+f.g._mutual :
+  Π (_x : psum ℕ ℕ),
+    (Π (_y : psum ℕ ℕ), has_well_founded.r _y _x → _y.cases_on (λ (_s : ℕ), ℕ) (λ (_s : ℕ), ℕ)) →
+    _x.cases_on (λ (_s : ℕ), ℕ) (λ (_s : ℕ), ℕ),
+n : ℕ,
+_F :
+  Π (_y : psum ℕ ℕ), has_well_founded.r _y (psum.inl n) → _y.cases_on (λ (_s : ℕ), ℕ) (λ (_s : ℕ), ℕ)
+⊢ has_well_founded.r (psum.inr n) (psum.inl n)

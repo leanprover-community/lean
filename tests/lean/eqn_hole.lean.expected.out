@@ -16,8 +16,10 @@ Possible solutions:
   - The default decreasing tactic uses the 'assumption' tactic, thus hints (aka local proofs) can be provided using 'have'-expressions.
 The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
-default_dec_tac failed
+assumption tactic failed
 state:
 g : ℕ → ℕ,
-n : ℕ
-⊢ ⁇ < n + 1
+g : Π (_x : ℕ), (Π (_y : ℕ), has_well_founded.r _y _x → ℕ) → ℕ,
+n : ℕ,
+_F : Π (_y : ℕ), has_well_founded.r _y (n + 1) → ℕ
+⊢ has_well_founded.r ⁇ (n + 1)

@@ -11,6 +11,40 @@ with is_rename_lst : list term → string → string → list term → Prop
 | nil  (c₁ c₂) : is_rename_lst [] c₁ c₂ []
 | cons (t₁ ts₁ t₂ ts₂ c₁ c₂) (h₁ : is_rename t₁ c₁ c₂ t₂) (h₂ : is_rename_lst ts₁ c₁ c₂ ts₂) : is_rename_lst (t₁::ts₁) c₁ c₂ (t₂::ts₂)
 
+lemma wf_inl_inr (t : term) (ts : list term) : @has_well_founded.r _
+  (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+  (psum.inl t) (psum.inr (t :: ts)) :=
+begin
+  unfold has_well_founded.r sizeof_measure measure inv_image,
+  unfold sizeof has_sizeof.sizeof psum.alt.sizeof term.sizeof list.sizeof,
+  rw [nat.add_comm, ← nat.add_assoc],
+  apply nat.lt_add_of_pos_left,
+  exact nat.succ_pos _,
+end
+
+lemma wf_inr_inl (ts : list term) (fn : string) :
+  @has_well_founded.r _ (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+  (psum.inr ts) (psum.inl (term.app fn ts)) :=
+begin
+  unfold has_well_founded.r sizeof_measure measure inv_image,
+  unfold sizeof has_sizeof.sizeof psum.alt.sizeof term.sizeof,
+  apply nat.lt_add_of_pos_left,
+  rw [nat.add_comm],
+  exact nat.succ_pos _,
+end
+
+lemma wf_inr_inr (t : term) (ts : list term) : @has_well_founded.r _
+  (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+  (psum.inr ts) (@psum.inr term _ (t :: ts)) :=
+begin
+  unfold has_well_founded.r sizeof_measure measure inv_image,
+  unfold sizeof has_sizeof.sizeof psum.alt.sizeof term.sizeof list.sizeof,
+  rw [nat.add_comm],
+  apply nat.lt_add_of_pos_right,
+  rw [nat.add_comm],
+  exact nat.succ_pos _,
+end
+
 mutual def term.ind, term_list.ind
   (p : term → Prop) (ps : list term → Prop)
   (h₁ : ∀ c, p (term.const c))
@@ -19,10 +53,15 @@ mutual def term.ind, term_list.ind
   (h₄ : ∀ t ts, p t → ps ts → ps (t::ts))
 with term.ind : ∀ t : term, p t
 | (term.const c)   := h₁ c
-| (term.app fn ts) := h₂ fn ts (term_list.ind ts)
+| (term.app fn ts) :=
+  have _ := wf_inr_inl ts fn,
+  h₂ fn ts (term_list.ind ts)
 with term_list.ind : ∀ ts : list term, ps ts
 | []      := h₃
-| (t::ts) := h₄ t ts (term.ind t) (term_list.ind ts)
+| (t::ts) :=
+  have _ := wf_inl_inr t ts,
+  have _ := wf_inr_inr t ts,
+  h₄ t ts (term.ind t) (term_list.ind ts)
 
 lemma term.ind_on
   (p : term → Prop) (ps : list term → Prop)
@@ -41,7 +80,7 @@ begin
     (λ ts₁ : list term, ∀ ts₂ ts₂' c₁ c₂, is_rename_lst ts₁ c₁ c₂ ts₂ → is_rename_lst ts₁ c₁ c₂ ts₂' → ts₂ = ts₂')
     t₁,
   { intros c₁ t₂ t₂' c₁' c₂ h₁ h₂,
-    cases h₁; cases h₂; trace_state; { refl <|> contradiction }  },
+    cases h₁; cases h₂; trace_state; { refl <|> contradiction } },
   { intros fn ts ih t₂ t₂' c₁ c₂ h₁ h₂, cases h₁; cases h₂, trace_state,
     have := ih _ _ _ _ h₁_h₁ h₂_h₁,
     simp [*] },
@@ -71,6 +110,7 @@ with is_rename.ind   : ∀ (t₁ c₁ c₂ t₂) (h : is_rename t₁ c₁ c₂ t
     { apply h₂, assumption }
   end
 | (term.app fn ts₁) :=
+  have _ := wf_inr_inl ts₁ fn,
   have ih : ∀ (c₁ c₂ ts₂) (h : is_rename_lst ts₁ c₁ c₂ ts₂), ps h, from is_rename_lst.ind ts₁,
   begin
     intros c₁ c₂ t₂ hr,
@@ -85,7 +125,9 @@ with is_rename_lst.ind  : ∀ (ts₁ c₁ c₂ ts₂) (h : is_rename_lst ts₁ c
     cases ts₂; cases hr, apply h₄
   end
 | (t₁::ts₁) :=
+  have _ := wf_inl_inr t₁ ts₁,
   have ih₁ : ∀ (c₁ c₂ t₂) (h : is_rename t₁ c₁ c₂ t₂), p h, from is_rename.ind t₁,
+  have _ := wf_inr_inr t₁ ts₁,
   have ih₂ : ∀ (c₁ c₂ ts₂) (h : is_rename_lst ts₁ c₁ c₂ ts₂), ps h, from is_rename_lst.ind ts₁,
   begin
     intros c₁ c₂ ts₂ hr,

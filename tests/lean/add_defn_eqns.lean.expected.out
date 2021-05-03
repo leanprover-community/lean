@@ -18,11 +18,13 @@ Possible solutions:
   - The default decreasing tactic uses the 'assumption' tactic, thus hints (aka local proofs) can be provided using 'have'-expressions.
 The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
-default_dec_tac failed
+assumption tactic failed
 state:
 a b : bool,
-mm : bool → bool
-⊢ 1 < 1
+mm : bool → bool,
+mm : Π (_x : bool), (Π (_y : bool), has_well_founded.r _y _x → bool) → bool,
+_F : Π (_y : bool), has_well_founded.r _y tt → bool
+⊢ has_well_founded.r ff tt
 state:
 ⊢ true
 add_defn_eqns.lean:38:0: error: unknown identifier mm

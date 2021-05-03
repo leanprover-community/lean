@@ -7,6 +7,7 @@ prelude
 import init.data.bool.lemmas
 import init.data.string.basic
 import init.meta.well_founded_tactics
+import init.data.nat.lemmas
 
 namespace string
 
@@ -33,8 +34,12 @@ private def split_core (p : char → bool) : iterator → iterator → list stri
 | start stop :=
 if h : stop.has_next then
   -- wf hint
-  have stop.next_to_string.length - 1 < stop.next_to_string.length,
-    from nat.sub_lt (iterator.zero_lt_length_next_to_string_of_has_next h) dec_trivial,
+  have measure (λ e : (Σ' _ : iterator, iterator), e.2.next_to_string.length)
+    ⟨stop.next, stop.next⟩ ⟨start, stop⟩ :=
+  begin
+    simp only [measure, inv_image, iterator.length_next_to_string_next],
+    exact nat.sub_lt (iterator.zero_lt_length_next_to_string_of_has_next h) dec_trivial
+  end,
   if p stop.curr then
     let rest := stop.next.next_to_string in
     (start.extract stop).get_or_else "" :: split_core stop.next stop.next
