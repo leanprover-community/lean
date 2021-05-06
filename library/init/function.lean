@@ -76,7 +76,7 @@ lemma injective.comp {g : β → φ} {f : α → β} (hg : injective g) (hf : in
   injective (g ∘ f) :=
 assume a₁ a₂, assume h, hf (hg h)
 
-/-- A function `f : α → β` is calles surjective if every `b : β` is equal to `f a`
+/-- A function `f : α → β` is called surjective if every `b : β` is equal to `f a`
 for some `a : α`. -/
 @[reducible] def surjective (f : α → β) : Prop := ∀ b, ∃ a, f a = b
 
