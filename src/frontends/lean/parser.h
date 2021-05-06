@@ -300,6 +300,8 @@ public:
 
     void init_scanner();
 
+    void from_snapshot(snapshot const & snap);
+
     name next_name() { return m_ngen.next(); }
 
     void set_break_at_pos(pos_info const & pos) { m_break_at_pos = some(pos); }

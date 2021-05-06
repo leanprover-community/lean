@@ -36,18 +36,7 @@ pair<cancellation_token, task<module_parser_result>>
 module_parser::resume(module_parser_result const & res, optional<std::vector<gtask>> const & dependencies) {
     snapshot const & s = *res.m_snapshot_at_end;
     bool skip_success = m_parser.m_scanner.skip_to_pos(s.m_pos);
-    m_parser.m_env                = s.m_env;
-    m_parser.m_ngen               = s.m_ngen;
-    m_parser.m_ios.set_options(s.m_options);
-    m_parser.m_local_level_decls  = s.m_lds;
-    m_parser.m_local_decls        = s.m_eds;
-    m_parser.m_level_variables    = s.m_lvars;
-    m_parser.m_variables          = s.m_vars;
-    m_parser.m_include_vars       = s.m_include_vars;
-    m_parser.m_imports_parsed     = s.m_imports_parsed;
-    m_parser.m_ignore_noncomputable = s.m_noncomputable_theory;
-    m_parser.m_parser_scope_stack = s.m_parser_scope_stack;
-    m_parser.m_next_inst_idx      = s.m_next_inst_idx;
+    m_parser.from_snapshot(s);
     if (!skip_success) return {mk_cancellation_token(), {}};
     auto lt = res.m_lt;
     scope_log_tree_core scope_lt(&lt);

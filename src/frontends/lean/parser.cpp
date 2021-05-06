@@ -2716,6 +2716,21 @@ void parser::init_scanner() {
     }
 }
 
+void parser::from_snapshot(snapshot const & s) {
+    m_env                = s.m_env;
+    m_ngen               = s.m_ngen;
+    m_ios.set_options(s.m_options);
+    m_local_level_decls  = s.m_lds;
+    m_local_decls        = s.m_eds;
+    m_level_variables    = s.m_lvars;
+    m_variables          = s.m_vars;
+    m_include_vars       = s.m_include_vars;
+    m_imports_parsed     = s.m_imports_parsed;
+    m_ignore_noncomputable = s.m_noncomputable_theory;
+    m_parser_scope_stack = s.m_parser_scope_stack;
+    m_next_inst_idx      = s.m_next_inst_idx;
+}
+
 void dummy_def_parser::maybe_throw_error(parser_error && err) {
   throw std::move(err);
 }
