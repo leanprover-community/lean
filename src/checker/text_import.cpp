@@ -52,6 +52,7 @@ struct text_importer {
         while (in >> idx) {
             ls.push_back(m_level.at(idx));
         }
+        in.clear();
         return to_list(ls);
     }
 
@@ -61,6 +62,7 @@ struct text_importer {
         while (in >> idx) {
             ls.push_back(m_name.at(idx));
         }
+        in.clear();
         return to_list(ls);
     }
 
@@ -223,6 +225,10 @@ struct text_importer {
             }
         } else {
             throw exception(sstream() << "unknown command: " << cmd);
+        }
+        in >> std::ws;
+        if (in.fail() || !in.eof()) {
+            throw exception(sstream() << "parse error");
         }
     }
 };
