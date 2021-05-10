@@ -226,7 +226,7 @@ struct text_importer {
         } else {
             throw exception(sstream() << "unknown command: " << cmd);
         }
-        in >> std::ws;
+        if (!in.eof()) in >> std::ws;
         if (in.fail() || !in.eof()) {
             throw exception(sstream() << "parse error");
         }
