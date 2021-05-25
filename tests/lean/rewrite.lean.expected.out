@@ -1,0 +1,5 @@
+rewrite.lean:8:3: error: invalid rewrite tactic, failed to synthesize type class instance for
+  is_one_class ?m_1
+state:
+n : ℕ
+⊢ n = 1

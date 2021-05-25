@@ -68,7 +68,8 @@ static bool try_instance(type_context_old & ctx, expr const & meta, tactic_state
             auto thunk = [=]() {
                 format msg("invalid");
                 msg += space() + format(tac_name) + space();
-                msg += format("tactic, failed to synthesize type class instance");
+                msg += format("tactic, failed to synthesize type class instance for");
+                msg += pp_indented_expr(s, meta_type);
                 return msg;
             };
             *out_error_obj = tactic::mk_exception(thunk, s);
