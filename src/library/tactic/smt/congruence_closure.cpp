@@ -562,7 +562,12 @@ void congruence_closure::add_symm_congruence_table(expr const & e) {
                 new_entry.m_cg_root = p.first;
                 m_state.m_entries.insert(e, new_entry);
                 /* 2. Put new equivalence in the TODO queue */
-                push_eq(e, p.first, *g_congr_mark);
+                // NOTE(gabriel): support for symmetric relations is pretty much broken,
+                // since it ignores all arguments except the last two ones.
+                // e.g. this would claim that `modeq n a b` and `modeq m a b` are equivalent.
+                // Whitelist some relations to contain breakage:
+                if (*rel == get_eq_name() || get_app_num_args(e) == 2)
+                    push_eq(e, p.first, *g_congr_mark);
                 check_eq_true(e);
                 return;
             }
