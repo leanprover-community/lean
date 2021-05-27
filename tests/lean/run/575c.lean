@@ -7,4 +7,7 @@ notation a ` ≡ `:50 b ` [MOD `:50 n `]`:0 := modeq n a b
 eq.symm
 
 example (a b m n : ℕ) (h : a ≡ b [MOD m * n]) : a ≡ b [MOD m] :=
-by cc
+begin
+  success_if_fail { cc },
+  sorry
+end

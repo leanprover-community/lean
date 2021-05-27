@@ -565,7 +565,9 @@ void congruence_closure::add_symm_congruence_table(expr const & e) {
                 // NOTE(gabriel): support for symmetric relations is pretty much broken,
                 // since it ignores all arguments except the last two ones.
                 // e.g. this would claim that `modeq n a b` and `modeq m a b` are equivalent.
-                // push_eq(e, p.first, *g_congr_mark);
+                // Whitelist some relations to contain breakage:
+                if (*rel == get_eq_name() || get_app_num_args(e) == 2)
+                    push_eq(e, p.first, *g_congr_mark);
                 check_eq_true(e);
                 return;
             }
