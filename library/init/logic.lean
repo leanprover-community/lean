@@ -536,8 +536,8 @@ attribute [intro] Exists.intro
 notation `exists` binders `, ` r:(scoped P, Exists P) := r
 notation `∃` binders `, ` r:(scoped P, Exists P) := r
 
-@[pattern]
-lemma exists.intro {α : Sort u} {p : α → Prop} (w : α) (h : p w) : ∃ x, p x := ⟨w, h⟩
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
+@[pattern] def exists.intro {α : Sort u} {p : α → Prop} (w : α) (h : p w) : ∃ x, p x := ⟨w, h⟩
 
 lemma exists.elim {α : Sort u} {p : α → Prop} {b : Prop}
   (h₁ : ∃ x, p x) (h₂ : ∀ (a : α), p a → b) : b :=
