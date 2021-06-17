@@ -105,6 +105,8 @@ json serialize_decl(name const & d, environment const & env, options const & o) 
 }
 
 json json_of_name(name const & n0) {
+    if (n0.is_atomic() && n0.is_string()) return n0.get_string();
+
     json j = json::array();
 
     name n = n0;

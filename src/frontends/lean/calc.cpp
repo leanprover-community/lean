@@ -75,10 +75,11 @@ static expr mk_op_fn(parser & p, name const & op, unsigned num_placeholders, pos
     return r;
 }
 
-static calc_step parse_calc_proof(parser & p, calc_pred const & pred) {
+static calc_step parse_calc_proof(parser & p, ast_data & parent, calc_pred const & pred) {
     p.check_token_next(get_colon_tk(), "invalid 'calc' expression, ':' expected");
     auto pos = p.pos();
     expr pr  = p.parse_expr();
+    parent.push(p.get_id(pr));
     return calc_step(pred, p.save_pos(mk_calc_annotation(pr), pos));
 }
 
@@ -116,9 +117,10 @@ static expr mk_implies(parser & p, expr const & lhs, expr const & rhs, pos_info 
     return p.mk_app(p.mk_app(p.save_pos(mk_constant(get_implies_name()), pos), lhs, pos), rhs, pos);
 }
 
-static expr parse_pred(parser & p) {
+static expr parse_pred(parser & p, ast_data & parent) {
     auto pos       = p.pos();
     expr pred      = p.parse_expr();
+    parent.push(p.get_id(pred));
     if (is_arrow(pred))
         return mk_implies(p, binding_domain(pred), binding_body(pred), pos);
     else
@@ -127,20 +129,27 @@ static expr parse_pred(parser & p) {
 
 static expr parse_next_pred(parser & p, expr const & dummy) {
     auto pos       = p.pos();
+    ast_id id = p.new_ast(get_ellipsis_tk(), pos).m_id;
     if (p.curr_is_token(get_arrow_tk())) {
         p.next();
         expr rhs  = p.parse_expr();
-        return mk_implies(p, dummy, rhs, pos);
+        expr r = mk_implies(p, dummy, rhs, pos);
+        p.set_ast_pexpr(p.new_ast(get_arrow_tk(), pos).push(id).push(p.get_id(rhs)).m_id, r);
+        return r;
     } else {
+        p.set_ast_pexpr(id, dummy);
         return p.parse_led(dummy);
     }
 }
 
-expr parse_calc(parser & p) {
+expr parse_calc(parser & p, pos_info const & calc_pos) {
+    auto& data = p.new_ast(*g_calc_name, calc_pos);
     auto pos = p.pos();
-    expr first_pred_expr = parse_pred(p);
+    auto& ast = p.new_ast("step", pos);
+    data.push(ast.m_id);
+    expr first_pred_expr = parse_pred(p, ast);
     calc_pred pred       = decode_expr(first_pred_expr, pos);
-    calc_step step       = parse_calc_proof(p, pred);
+    calc_step step       = parse_calc_proof(p, ast, pred);
     bool single          = true; // true if calc has only one step
     expr dummy;
 
@@ -149,21 +158,26 @@ expr parse_calc(parser & p) {
         pos    = p.pos();
         p.next();
         expr new_pred_expr = parse_next_pred(p, dummy);
+        auto& ast2 = p.new_ast("step", pos).push(p.get_id(new_pred_expr));
+        data.push(ast2.m_id);
         try {
             calc_pred new_pred = decode_expr(new_pred_expr, pos);
             new_pred           = calc_pred(pred_op(new_pred), pred_rhs(pred), pred_rhs(new_pred));
-            calc_step new_step = parse_calc_proof(p, new_pred);
+            calc_step new_step = parse_calc_proof(p, ast2, new_pred);
             step               = join(p, step, new_step, pos);
         } catch (parser_error & ex) {
             p.maybe_throw_error(std::move(ex));
         }
     }
 
+    expr r;
     if (single) {
-        return p.save_pos(mk_typed_expr(first_pred_expr, step_proof(step)), pos);
+        r = p.save_pos(mk_typed_expr(first_pred_expr, step_proof(step)), pos);
     } else {
-        return step_proof(step);
+        r = step_proof(step);
     }
+    p.set_ast_pexpr(data.m_id, r);
+    return r;
 }
 
 void initialize_calc() {

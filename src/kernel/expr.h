@@ -16,6 +16,7 @@ Author: Leonardo de Moura
 #include "util/name.h"
 #include "util/hash.h"
 #include "util/buffer.h"
+#include "util/lean_json.h"
 #include "util/list_fn.h"
 #include "util/optional.h"
 #include "util/serializer.h"
@@ -27,6 +28,7 @@ Author: Leonardo de Moura
 namespace lean {
 class abstract_type_context;
 class tlean_exporter;
+class abstract_ast_exporter;
 
 // Tags are used by frontends to mark expressions. They are automatically propagated by
 // procedures such as update_app, update_binder, etc.
@@ -369,6 +371,9 @@ public:
     virtual bool can_textualize() const { return false; }
     virtual void textualize(tlean_exporter &) const { throw exception("macro::textualize not implemented by default"); }
     typedef std::function<expr(deserializer&, unsigned, expr const *)> reader;
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const = 0;
+#endif
 };
 
 /** \brief Smart pointer for macro definitions */

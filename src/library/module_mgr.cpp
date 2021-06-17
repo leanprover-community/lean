@@ -17,6 +17,7 @@ Author: Gabriel Ebner
 #include "frontends/lean/pp.h"
 #include "frontends/lean/parser.h"
 #include "library/library_task_builder.h"
+#include "library/ast_exporter.h"
 
 namespace lean {
 
@@ -279,12 +280,16 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
         mod->m_snapshots = snapshots;
     }
 
+    // make a copy of the mod_parser only if exporting AST
+    auto mod_parser_for_export = m_export_ast ? mod_parser_fn : nullptr;
+
     auto initial_env = m_initial_env;
     unsigned src_hash = mod->m_src_hash;
     unsigned trans_hash = mod->m_trans_hash;
     mod->m_result = map<module_info::parse_result>(
         get_end(snapshots),
-        [id, initial_env, ldr, src_hash, trans_hash](module_parser_result const & res) {
+        [id, initial_env, ldr, src_hash, trans_hash, mod_parser_for_export]
+        (module_parser_result const & res) {
             module_info::parse_result parse_res;
 
             lean_always_assert(res.m_snapshot_at_end);
@@ -293,7 +298,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
                     initial_env, [=] { return ldr; });
 
             parse_res.m_opts = res.m_snapshot_at_end->m_options;
-
+            if (mod_parser_for_export) export_ast(mod_parser_for_export->get_parser());
             return parse_res;
         }).build();
 

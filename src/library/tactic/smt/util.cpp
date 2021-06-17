@@ -32,6 +32,10 @@ public:
         lean_unreachable();
     }
 
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
+
     virtual bool operator==(macro_definition_cell const & other) const {
         cc_proof_macro_cell const * other_ptr = dynamic_cast<cc_proof_macro_cell const *>(&other);
         return other_ptr;

@@ -115,6 +115,10 @@ public:
         s.write_string(*g_ac_app_opcode);
     }
 
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
+
     virtual bool operator==(macro_definition_cell const & other) const {
         ac_app_macro_cell const * other_ptr = dynamic_cast<ac_app_macro_cell const *>(&other);
         return other_ptr;
@@ -624,6 +628,10 @@ public:
     virtual void write(serializer & s) const {
         s.write_string(*g_perm_ac_opcode);
     }
+
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 
     virtual bool operator==(macro_definition_cell const & other) const {
         perm_ac_macro_cell const * other_ptr = dynamic_cast<perm_ac_macro_cell const *>(&other);

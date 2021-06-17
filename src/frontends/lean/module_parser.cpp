@@ -77,7 +77,7 @@ module_parser::parse_next_command_like(optional<std::vector<gtask>> const & depe
             report_message(ex);
             self->m_parser.sync_command();
         } catch (throwable & ex) {
-            self->m_parser.mk_message(self->m_parser.m_last_cmd_pos, ERROR).set_exception(ex).report();
+            self->m_parser.mk_message(self->m_parser.cmd_pos(), ERROR).set_exception(ex).report();
             self->m_parser.sync_command();
         } catch (interrupt_parser) {
             // this exception is thrown by the exit command

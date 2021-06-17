@@ -59,15 +59,18 @@ public:
     virtual void write(serializer & s) const {
         s.write_string(get_typed_expr_opcode());
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 };
 
 bool is_typed_expr(expr const & e) {
     return is_macro(e) && macro_def(e) == *g_typed_expr;
 }
 
-expr mk_typed_expr(expr const & t, expr const & v) {
+expr mk_typed_expr(expr const & t, expr const & v, tag g = nulltag) {
     expr args[2] = {t, v};
-    return mk_macro(*g_typed_expr, 2, args);
+    return mk_macro(*g_typed_expr, 2, args, g);
 }
 
 expr get_typed_expr_type(expr const & e) { lean_assert(is_typed_expr(e)); return macro_arg(e, 0); }

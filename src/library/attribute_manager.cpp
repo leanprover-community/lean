@@ -12,10 +12,26 @@ Author: Leonardo de Moura
 #include "util/sstream.h"
 #include "library/attribute_manager.h"
 #include "library/scoped_ext.h"
+#include "frontends/lean/parser.h"
 
 namespace lean {
 template class typed_attribute<indices_attribute_data>;
 template class typed_attribute<key_value_data>;
+
+ast_id key_value_data::parse(abstract_parser & p) {
+    std::cout << "in extern parser" << std::endl;
+    lean_assert(dynamic_cast<parser *>(&p));
+    auto& p2 = *static_cast<parser *>(&p);
+    auto& data = p2.new_ast("key_value", p2.pos());
+    auto n = p.parse_string_lit();
+    auto l = p.parse_string_lit();
+    data.push(n.first).push(l.first);
+    std::cout << "link symbol: " << n.second << std::endl;
+    std::cout << "library symbol: " << l.second << std::endl;
+    this->m_symbol = n.second;
+    this->m_library = l.second;
+    return data.m_id;
+}
 
 static name_map<attribute_ptr> * g_system_attributes = nullptr;
 static user_attribute_ext * g_user_attribute_ext     = nullptr;
@@ -253,20 +269,26 @@ priority_queue<name, name_quick_cmp> attribute::get_instances_by_prio(environmen
     return q;
 }
 
-attr_data_ptr attribute::parse_data(abstract_parser &) const {
+attr_data_ptr attribute::parse_data(abstract_parser &, ast_data & parent) const {
+    parent.push(0);
     return get_default_attr_data();
 }
 
-void indices_attribute_data::parse(abstract_parser & p) {
+ast_id indices_attribute_data::parse(abstract_parser & p) {
     buffer<unsigned> vs;
+    lean_assert(dynamic_cast<parser *>(&p));
+    auto& p2 = *static_cast<parser *>(&p);
+    auto& data = p2.new_ast("indices", p2.pos());
     while (p.curr_is_numeral()) {
         auto pos = p.pos();
-        unsigned v = p.parse_small_nat();
-        if (v == 0)
+        auto v = p.parse_small_nat();
+        data.push(v.first);
+        if (v.second == 0)
             throw parser_error("invalid attribute parameter, value must be positive", pos);
-        vs.push_back(v - 1);
+        vs.push_back(v.second - 1);
     }
     m_idxs = to_list(vs);
+    return data.m_id;
 }
 
 void register_incompatible(char const * attr1, char const * attr2) {

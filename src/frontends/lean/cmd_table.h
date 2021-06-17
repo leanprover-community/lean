@@ -16,6 +16,7 @@ class parser;
 
 struct cmd_meta {
     decl_attributes       m_attrs;
+    ast_id                m_modifiers_id = 0;
     decl_modifiers        m_modifiers;
     optional<std::string> m_doc_string;
     cmd_meta() {}
@@ -25,7 +26,7 @@ struct cmd_meta {
         m_attrs(attrs), m_modifiers(mods), m_doc_string(doc) {}
 };
 
-typedef std::function<environment(parser&, cmd_meta const &)> command_fn;
+typedef std::function<environment(parser&, ast_id &, cmd_meta const &)> command_fn;
 
 template<typename F>
 struct cmd_info_tmpl {
@@ -36,15 +37,15 @@ struct cmd_info_tmpl {
 public:
     cmd_info_tmpl(name const & n, char const * d, F const & fn, bool skip_token = true):
         m_name(n), m_descr(d), m_fn(fn), m_skip_token(skip_token) {}
-    cmd_info_tmpl(name const & n, char const * d, std::function<environment(parser&)> const & fn, bool skip_token = true):
-        cmd_info_tmpl(n, d, [=](parser & p, cmd_meta const & meta) {
+    cmd_info_tmpl(name const & n, char const * d, std::function<environment(parser&, ast_id&)> const & fn, bool skip_token = true):
+        cmd_info_tmpl(n, d, [=](parser & p, ast_id & cmd_id, cmd_meta const & meta) {
             if (meta.m_modifiers)
                 throw exception("command does not accept modifiers");
             if (meta.m_attrs)
                 throw exception("command does not accept attributes");
             if (meta.m_doc_string)
                 throw exception("command does not accept doc string");
-            return fn(p);
+            return fn(p, cmd_id);
         }, skip_token) {}
     cmd_info_tmpl() {}
     name const & get_name() const { return m_name; }

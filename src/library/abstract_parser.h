@@ -6,6 +6,7 @@ Author: Sebastian Ullrich
 */
 #pragma once
 #include <string>
+#include <vector>
 #include "util/name_map.h"
 #include "util/exception_with_pos.h"
 #include "kernel/pos_info_provider.h"
@@ -22,12 +23,33 @@ struct parser_error : public exception_with_pos {
     virtual void rethrow() const override { throw *this; }
 };
 
+typedef unsigned ast_id;
+
+struct ast_data {
+    ast_id                  m_id;
+    pos_info                m_start;
+    optional<pos_info>      m_end;
+    name                    m_type;
+    std::vector<ast_id>     m_children;
+    name                    m_value;
+    optional<expr>          m_pexpr;
+    optional<task<expr>>    m_expr;
+
+    ast_data(ast_id id, pos_info start, name type, name value = {}):
+        m_id(id), m_start(start), m_type(type), m_value(value) {}
+
+    ast_data & push(ast_id id) {
+        lean_assert(m_id != 0);
+        m_children.push_back(id);
+        return *this;
+    }
+};
+
 /** \brief Base class for frontend parsers with basic functions */
 class abstract_parser : public pos_info_provider {
 public:
     /** \brief Return the current position information */
     virtual pos_info pos() const = 0;
-
     /** \brief Return true iff the current token is a keyword (or command keyword) named \c tk */
     virtual bool curr_is_token(name const & tk) const = 0;
     /** \brief Return true iff the current token is a numeral */
@@ -35,7 +57,7 @@ public:
     /** \brief Read the next token if the current one is not End-of-file. */
     virtual void next() = 0;
 
-    virtual unsigned parse_small_nat() = 0;
-    virtual std::string parse_string_lit() = 0;
+    virtual pair<ast_id, unsigned> parse_small_nat() = 0;
+    virtual pair<ast_id, std::string> parse_string_lit() = 0;
 };
 }

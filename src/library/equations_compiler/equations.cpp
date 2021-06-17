@@ -27,6 +27,7 @@ Author: Leonardo de Moura
 #include "library/normalize.h"
 #include "library/pp_options.h"
 #include "library/equations_compiler/equations.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_equations_name                 = nullptr;
@@ -49,6 +50,9 @@ public:
     virtual expr check_type(expr const &, abstract_type_context &, bool) const override { throw_asp_ex(); }
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override { throw_asp_ex(); }
     virtual void write(serializer & s) const override { s << *g_as_pattern_opcode; }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 };
 
 bool operator==(equations_header const & h1, equations_header const & h2) {
@@ -80,6 +84,24 @@ public:
         write_list(s, m_header.m_fn_names);
         write_list(s, m_header.m_fn_actual_names);
     }
+
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["num_fns"] = m_header.m_num_fns;
+        j["is_private"] = m_header.m_is_private;
+        j["is_meta"] = m_header.m_is_meta;
+        j["is_noncomputable"] = m_header.m_is_noncomputable;
+        j["is_lemma"] = m_header.m_is_lemma;
+        j["aux_lemmas"] = m_header.m_aux_lemmas;
+        j["prev_errors"] = m_header.m_prev_errors;
+        j["gen_code"] = m_header.m_gen_code;
+        auto& names = j["fn_names"] = json::array();
+        for (auto& n : m_header.m_fn_names) names += json_of_name(n);
+        auto& actual_names = j["fn_actual_names"] = json::array();
+        for (auto& n : m_header.m_fn_actual_names) actual_names += json_of_name(n);
+    }
+#endif
+
     virtual bool operator==(macro_definition_cell const & other) const override {
         if (auto other_ptr = dynamic_cast<equations_macro_cell const *>(&other)) {
             return m_header == other_ptr->m_header;
@@ -112,6 +134,11 @@ public:
         s.write_string(*g_equation_opcode);
         s.write_bool(m_ignore_if_unused);
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["ignore_if_unused"] = m_ignore_if_unused;
+    }
+#endif
     virtual bool operator==(macro_definition_cell const & other) const override {
         if (auto other_ptr = dynamic_cast<equation_macro_cell const *>(&other)) {
             return m_ignore_if_unused == other_ptr->m_ignore_if_unused;
@@ -127,6 +154,9 @@ class no_equation_macro_cell : public equation_base_macro_cell {
 public:
     virtual name get_name() const override { return *g_no_equation_name; }
     virtual void write(serializer & s) const override { s.write_string(*g_no_equation_opcode); }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 };
 
 static macro_definition * g_as_pattern                = nullptr;
@@ -282,6 +312,9 @@ public:
         return some_expr(macro_arg(m, 0));
     }
     virtual void write(serializer & s) const { s << *g_equations_result_opcode; }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 };
 
 static macro_definition * g_equations_result = nullptr;
@@ -298,7 +331,7 @@ void initialize_equations() {
     g_equations_name            = new name("equations");
     g_equation_name             = new name("equation");
     g_no_equation_name          = new name("no_equation");
-    g_inaccessible_name         = new name("innaccessible");
+    g_inaccessible_name         = new name("inaccessible");
     g_equations_result_name     = new name("equations_result");
     g_as_pattern_name           = new name("as_pattern");
     g_equation                  = new macro_definition(new equation_macro_cell(false));

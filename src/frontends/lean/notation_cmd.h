@@ -15,10 +15,10 @@ bool curr_is_notation_decl(parser & p);
 /** \brief Parse a notation declaration, throws an error if the current token is not a "notation declaration".
     If allow_local is true, then notation may contain reference to local constants.
 */
-notation_entry parse_notation(parser & p, bool overload, buffer<token_entry> & new_tokens, bool allow_local);
+notation_entry parse_notation(parser & p, ast_data & data, bool overload, buffer<token_entry> & new_tokens, bool allow_local);
 
 /** \brief Parse local notation */
-environment local_notation_cmd(parser & p);
+environment local_notation_cmd(parser & p, ast_id & cmd_id);
 
 void register_notation_cmds(cmd_table & r);
 
