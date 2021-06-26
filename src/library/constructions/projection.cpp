@@ -211,7 +211,7 @@ environment mk_projections(environment const & env, name const & n, buffer<name>
     }
     expr C_A                     = mk_app(mk_constant(n, lvls), params);
     binder_info c_bi             = inst_implicit ? mk_inst_implicit_binder_info() : binder_info();
-    expr c                       = mk_local(ngen.next(), name("c"), C_A, c_bi);
+    expr c                       = mk_local(ngen.next(), name("self"), C_A, c_bi);
     buffer<expr> intro_type_args; // arguments that are not parameters
     expr it = intro_type;
     while (is_pi(it)) {
