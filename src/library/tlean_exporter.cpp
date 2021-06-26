@@ -181,7 +181,7 @@ void tlean_exporter::export_definition(declaration const & d) {
     } else if (hints.get_kind() == reducibility_hints::kind::Opaque) {
         m_out << "O ";
     } else {
-        m_out << hints.get_height() << " ";
+        m_out << hints.get_height() << "." << hints.use_self_opt() << " ";
     }
 
     m_out << t << " " << v;
