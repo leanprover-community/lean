@@ -51,6 +51,7 @@ structure manifest :=
 (lean_version : string := lean_version_string)
 (timeout : option nat := none)
 (path : option string := none)
+(olean_url : option string := none)
 (dependencies : list dependency := [])
 
 namespace manifest
@@ -78,17 +79,23 @@ path ← match pkg.lookup "path" with
        | none := some none
        | _ := none
        end,
+olean_url ← match pkg.lookup "olean_url" with
+            | some (toml.value.str olean_url) := some (some olean_url)
+            | none := some none
+            | _ := none
+            end,
 toml.value.table deps ← t.lookup "dependencies" <|> some (toml.value.table []) | none,
 deps ← deps.mmap (λ ⟨n, src⟩, do src ← source.from_toml src,
                                        return $ dependency.mk n src),
 return { name := n, version := ver, lean_version := lean_ver,
-         path := path, dependencies := deps, timeout := tm }
+         path := path, olean_url := olean_url, dependencies := deps, timeout := tm }
 
 def to_toml (d : manifest) : toml.value :=
 let pkg := [("name", toml.value.str d.name), ("version", toml.value.str d.version),
             ("lean_version", toml.value.str d.lean_version)],
     pkg := match d.path with some p := pkg ++ [("path", toml.value.str p)] | none := pkg end,
     pkg := match d.timeout with some t := pkg ++ [("timeout", toml.value.nat t)] | none := pkg end,
+    pkg := match d.olean_url with some o := pkg ++ [("olean_url", toml.value.str o)] | none := pkg end,
     deps := toml.value.table $ d.dependencies.map $ λ dep, (dep.name, dep.src.to_toml) in
 toml.value.table [("package", toml.value.table pkg), ("dependencies", deps)]
 

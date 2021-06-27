@@ -153,6 +153,7 @@ Ws *> (value.table <$> many Expression)
    "name = \"sss\"\n" ++
    "version = \"0.1\"\n" ++
    "timeout = 10\n" ++
+   "olean_url = \"https://google.com/\"" ++
    "\n" ++
    "[dependencies]\n" ++
    "library_dev = { git = \"https://github.com/leanprover/library_dev\", rev = \"master\" }"
