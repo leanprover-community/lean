@@ -1,3 +1,20 @@
+3.31.0c (29 June 2021)
+-----------------------
+
+Features:
+- `apply`: produce a better error for missing typeclasses (#577)
+
+Bug fixes:
+- Spelling (#573)
+- `cases`: fix segfault with equalities of subtypes (#580)
+- `cc`: partly disable broken support for symmetric relations (#579)
+- Make `trace` thread-safe (#583)
+- `simp`: fix segfault with ← and custom relation (#587)
+
+Changes:
+- Make `exists.intro` a def again (#582)
+- Delete `lazy_list` (#581)
+
 3.30.0c (30 April 2021)
 -----------------------
 
