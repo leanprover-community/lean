@@ -214,7 +214,7 @@ sub_nat_nat_elim m n (λm n i, sub_nat_nat (m + k) (n + k) = i)
     begin rw [this], exact sub_nat_nat_add_right end)
 
 lemma sub_nat_nat_of_le {m n : ℕ} (h : n ≤ m) : sub_nat_nat m n = of_nat (m - n) :=
-sub_nat_nat_of_sub_eq_zero (sub_eq_zero_of_le h)
+sub_nat_nat_of_sub_eq_zero (nat.sub_eq_zero_of_le h)
 
 lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n - m)] :=
 have n - m = succ (pred (n - m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
@@ -233,7 +233,7 @@ lemma eq_zero_of_nat_abs_eq_zero : Π {a : ℤ}, nat_abs a = 0 → a = 0
 | -[1+ m']   H := absurd H (succ_ne_zero _)
 
 lemma nat_abs_pos_of_ne_zero {a : ℤ} (h : a ≠ 0) : 0 < nat_abs a :=
-(eq_zero_or_pos _).resolve_left $ mt eq_zero_of_nat_abs_eq_zero h
+(nat.eq_zero_or_pos _).resolve_left $ mt eq_zero_of_nat_abs_eq_zero h
 
 lemma nat_abs_zero : nat_abs (0 : int) = (0 : nat) := rfl
 
@@ -348,7 +348,7 @@ begin
   have h := le_or_lt k n,
   cases h with h' h',
   { rw [sub_nat_nat_of_le h'],
-    have h₂ : k ≤ m + n, exact (le_trans h' (le_add_left _ _)),
+    have h₂ : k ≤ m + n, exact (le_trans h' (nat.le_add_left _ _)),
     rw [sub_nat_nat_of_le h₂], simp,
     rw nat.add_sub_assoc h' },
   rw [sub_nat_nat_of_lt h'], simp, rw [succ_pred_eq_of_pos (nat.sub_pos_of_lt h')],
@@ -362,7 +362,7 @@ begin
   have h := le_or_lt n m,
   cases h with h' h',
   { rw [sub_nat_nat_of_le h'], simp, rw [sub_nat_nat_sub h', nat.add_comm] },
-  have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (le_add_right _ _),
+  have h₂ : m < n + succ k, exact nat.lt_of_lt_of_le h' (nat.le_add_right _ _),
   have h₃ : m ≤ n + k, exact le_of_succ_le_succ h₂,
   rw [sub_nat_nat_of_lt h', sub_nat_nat_of_lt h₂], simp [nat.add_comm],
   rw [← add_succ, succ_pred_eq_of_pos (nat.sub_pos_of_lt h'), add_succ, succ_sub h₃, pred_succ],
@@ -464,7 +464,7 @@ lemma of_nat_mul_sub_nat_nat (m n k : ℕ) :
   of_nat m * sub_nat_nat n k = sub_nat_nat (m * n) (m * k) :=
 begin
   have h₀ : m > 0 ∨ 0 = m,
-    exact decidable.lt_or_eq_of_le (zero_le _),
+    exact decidable.lt_or_eq_of_le m.zero_le,
   cases h₀ with h₀ h₀,
   { have h := nat.lt_or_ge n k,
     cases h with h h,
@@ -475,7 +475,7 @@ begin
       rw [← neg_of_nat_of_succ, nat.mul_sub_left_distrib],
       rw [← succ_pred_eq_of_pos (nat.sub_pos_of_lt h')], reflexivity },
     have h' : m * k ≤ m * n,
-      exact mul_le_mul_left _ h,
+      exact nat.mul_le_mul_left _ h,
     rw [sub_nat_nat_of_le h, sub_nat_nat_of_le h'], simp,
     rw [nat.mul_sub_left_distrib]
   },
@@ -542,7 +542,7 @@ lemma of_nat_sub {n m : ℕ} (h : m ≤ n) : of_nat (n - m) = of_nat n - of_nat 
 show of_nat (n - m) = of_nat n + neg_of_nat m, from match m, h with
 | 0, h := rfl
 | succ m, h := show of_nat (n - succ m) = sub_nat_nat n (succ m),
-  by delta sub_nat_nat; rw sub_eq_zero_of_le h; refl
+  by delta sub_nat_nat; rw nat.sub_eq_zero_of_le h; refl
 end
 
 protected lemma add_left_comm (a b c : ℤ) : a + (b + c) = b + (a + c) :=
