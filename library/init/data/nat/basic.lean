@@ -76,19 +76,19 @@ less_than_or_equal.step (nat.le_refl n)
 lemma succ_le_succ {n m : ℕ} : n ≤ m → succ n ≤ succ m :=
 λ h, less_than_or_equal.rec (nat.le_refl (succ n)) (λ a b, less_than_or_equal.step) h
 
-lemma zero_le : ∀ (n : ℕ), 0 ≤ n
+protected lemma zero_le : ∀ (n : ℕ), 0 ≤ n
 | 0     := nat.le_refl 0
 | (n+1) := less_than_or_equal.step (zero_le n)
 
 lemma zero_lt_succ (n : ℕ) : 0 < succ n :=
-succ_le_succ (zero_le n)
+succ_le_succ n.zero_le
 
 lemma succ_pos (n : ℕ) : 0 < succ n := zero_lt_succ n
 
 lemma not_succ_le_zero : ∀ (n : ℕ), succ n ≤ 0 → false
 .
 
-lemma not_lt_zero (a : ℕ) : ¬ a < 0 := not_succ_le_zero a
+protected lemma not_lt_zero (a : ℕ) : ¬ a < 0 := not_succ_le_zero a
 
 lemma pred_le_pred {n m : ℕ} : n ≤ m → pred n ≤ pred m :=
 λ h, less_than_or_equal.rec_on h
@@ -99,7 +99,7 @@ lemma le_of_succ_le_succ {n m : ℕ} : succ n ≤ succ m → n ≤ m :=
 pred_le_pred
 
 instance decidable_le : ∀ a b : ℕ, decidable (a ≤ b)
-| 0     b     := is_true (zero_le b)
+| 0     b     := is_true b.zero_le
 | (a+1) 0     := is_false (not_succ_le_zero a)
 | (a+1) (b+1) :=
   match decidable_le a b with
@@ -138,16 +138,16 @@ lemma pred_lt : ∀ {n : ℕ}, n ≠ 0 → pred n < n
 | 0        h := absurd rfl h
 | (succ a) h := lt_succ_of_le less_than_or_equal.refl
 
-lemma sub_le (a b : ℕ) : a - b ≤ a :=
+protected lemma sub_le (a b : ℕ) : a - b ≤ a :=
 nat.rec_on b (nat.le_refl (a - 0)) (λ b₁, nat.le_trans (pred_le (a - b₁)))
 
-lemma sub_lt : ∀ {a b : ℕ}, 0 < a → 0 < b → a - b < a
+protected lemma sub_lt : ∀ {a b : ℕ}, 0 < a → 0 < b → a - b < a
 | 0     b     h1 h2 := absurd h1 (nat.lt_irrefl 0)
 | (a+1) 0     h1 h2 := absurd h2 (nat.lt_irrefl 0)
 | (a+1) (b+1) h1 h2 :=
   eq.symm (succ_sub_succ_eq_sub a b) ▸
     show a - b < succ a, from
-    lt_succ_of_le (sub_le a b)
+    lt_succ_of_le (a.sub_le b)
 
 protected lemma lt_of_lt_of_le {n m k : ℕ} : n < m → m ≤ k → n < k :=
 nat.le_trans

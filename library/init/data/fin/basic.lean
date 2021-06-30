@@ -31,7 +31,7 @@ instance decidable_le {n} (a b : fin n) : decidable (a ≤ b) :=
 nat.decidable_le _ _
 
 def {u} elim0 {α : fin 0 → Sort u} : Π (x : fin 0), α x
-| ⟨_, h⟩ := absurd h (not_lt_zero _)
+| ⟨n, h⟩ := absurd h n.not_lt_zero
 
 variable {n : nat}
 
