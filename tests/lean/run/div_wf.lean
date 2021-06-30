@@ -5,7 +5,7 @@ set_option pp.all true
 -- Auxiliary lemma used to justify recursive call
 private definition lt_aux {x y : nat} (H : 0 < y ∧ y ≤ x) : x - y < x :=
 and.rec_on H (λ ypos ylex,
-  sub_lt (nat.lt_of_lt_of_le ypos ylex) ypos)
+  nat.sub_lt (nat.lt_of_lt_of_le ypos ylex) ypos)
 
 definition wdiv.F (x : nat) (f : Π x₁, x₁ < x → nat → nat) (y : nat) : nat :=
 if H : 0 < y ∧ y ≤ x then f (x - y) (lt_aux H) y + 1 else 0
