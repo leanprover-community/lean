@@ -239,6 +239,7 @@ name const * g_reflected_subst = nullptr;
 name const * g_repr = nullptr;
 name const * g_rfl = nullptr;
 name const * g_scope_trace = nullptr;
+name const * g_set = nullptr;
 name const * g_set_of = nullptr;
 name const * g_sizeof = nullptr;
 name const * g_string = nullptr;
@@ -518,7 +519,8 @@ void initialize_constants() {
     g_repr = new name{"repr"};
     g_rfl = new name{"rfl"};
     g_scope_trace = new name{"scope_trace"};
-    g_set_of = new name{"set_of"};
+    g_set = new name{"set"};
+    g_set_of = new name{"set", "of"};
     g_sizeof = new name{"sizeof"};
     g_string = new name{"string"};
     g_string_empty = new name{"string", "empty"};
@@ -798,6 +800,7 @@ void finalize_constants() {
     delete g_repr;
     delete g_rfl;
     delete g_scope_trace;
+    delete g_set;
     delete g_set_of;
     delete g_sizeof;
     delete g_string;
@@ -1077,6 +1080,7 @@ name const & get_reflected_subst_name() { return *g_reflected_subst; }
 name const & get_repr_name() { return *g_repr; }
 name const & get_rfl_name() { return *g_rfl; }
 name const & get_scope_trace_name() { return *g_scope_trace; }
+name const & get_set_name() { return *g_set; }
 name const & get_set_of_name() { return *g_set_of; }
 name const & get_sizeof_name() { return *g_sizeof; }
 name const & get_string_name() { return *g_string; }

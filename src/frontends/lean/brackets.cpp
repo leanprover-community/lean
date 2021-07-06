@@ -31,7 +31,7 @@ static expr parse_set_of(parser & p, pos_info const & pos, expr const & local) {
     parser::local_scope scope(p);
     p.add_local(local);
     expr pred    = p.parse_expr();
-    p.check_token_next(get_rcurly_tk(), "invalid set_of, '}' expected");
+    p.check_token_next(get_rcurly_tk(), "invalid set.of, '}' expected");
     bool use_cache = false;
     pred        = p.save_pos(Fun(local, pred, use_cache), pos);
     expr set_of = p.save_pos(mk_constant(get_set_of_name()), pos);

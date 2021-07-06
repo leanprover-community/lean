@@ -234,7 +234,8 @@ reflected.subst
 repr
 rfl
 scope_trace
-set_of
+set
+set.of
 sizeof
 string
 string.empty

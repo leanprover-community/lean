@@ -1,5 +1,5 @@
 definition range (lower : nat) (upper : nat) : set nat :=
-λ a, lower ≤ a ∧ a ≤ upper
+{ a | lower ≤ a ∧ a ≤ upper }
 
 local notation `[` L `, ` U `]` := range L U
 
