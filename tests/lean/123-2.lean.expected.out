@@ -1,4 +1,4 @@
-123-2.lean:49:17: error: don't know how to synthesize placeholder
+123-2.lean:50:17: error: don't know how to synthesize placeholder
 context:
 R : Type,
 _inst_6 : comm_ring R,

@@ -54,7 +54,7 @@ structure boo : Type 1 :=
 (β : Type)
 [is_zoo : moo β]
 
-instance : has_coe_to_sort boo := ⟨_, boo.β⟩
+instance : has_coe_to_sort boo _ := ⟨boo.β⟩
 
 namespace boo
 -- Instance naming for variable arguments works (generating `boo.moo`)
@@ -94,3 +94,4 @@ example := lie_algebra.int.lie_algebra
 example := lie_algebra.gl.lie_algebra
 example := zoo.moo
 example := boo.moo
+example := boo.has_coe_to_sort

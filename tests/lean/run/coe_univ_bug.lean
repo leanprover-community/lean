@@ -8,10 +8,10 @@ v + 1
 
 universe variable u
 
-instance pred2subtype {A : Type u} : has_coe_to_sort (A → Prop) :=
-⟨Type u, (λ p : A → Prop, subtype p)⟩
+instance pred2subtype {A : Type u} : has_coe_to_sort (A → Prop) _ :=
+⟨(λ p : A → Prop, subtype p)⟩
 
-instance coesubtype {A : Type u} {p : A → Prop} : has_coe (@coe_sort _ pred2subtype p) A :=
+instance coesubtype {A : Type u} {p : A → Prop} : has_coe (@coe_sort _ _ pred2subtype p) A :=
 ⟨λ s, subtype.val s⟩
 
 def g {n : nat} (v : below n) : nat :=

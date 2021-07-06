@@ -603,7 +603,7 @@ static bool is_coercion(expr const & e) {
 }
 
 static bool is_coercion_fn(expr const & e) {
-    return is_app_of(e, get_coe_fn_name()) && get_app_num_args(e) >= 3;
+    return is_app_of(e, get_coe_fn_name()) && get_app_num_args(e) >= 4;
 }
 
 template<class T>
@@ -628,10 +628,10 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
     lean_assert(is_coercion_fn(e));
     buffer<expr> args;
     get_app_args(e, args);
-    if (args.size() == 3) {
-        return pp_child_at(args[2], bp, expr_address::app(args.size(), 2), ignore_hide);
+    if (args.size() == 4) {
+        return pp_child_at(args[2], bp, expr_address::app(args.size(), 3), ignore_hide);
     } else {
-        expr new_e = mk_app(args.size() - 2, args.data() + 2);
+        expr new_e = mk_app(args.size() - 3, args.data() + 3);
         // [todo] pp_child needs to know that `f` now has a different address. (see above)
         address_give_up_scope _(*this);
         return pp_child(new_e, bp, ignore_hide);

@@ -769,9 +769,9 @@ optional<expr> elaborator::mk_coercion_to_fn_sort(bool is_fn, expr const & e, ex
     if (!m_coercions) return none_expr();
     expr e_type = instantiate_mvars(_e_type);
     try {
-        bool mask[3] = { true, false, true };
+        bool mask[4] = { true, false, false, true };
         expr args[2] = { e_type, e };
-        expr new_e = mk_app(m_ctx, is_fn ? get_coe_fn_name() : get_coe_sort_name(), 3, mask, args);
+        expr new_e = mk_app(m_ctx, is_fn ? get_coe_fn_name() : get_coe_sort_name(), 4, mask, args);
         expr new_e_type = whnf(infer_type(new_e));
         if ((is_fn && is_pi(new_e_type)) || (!is_fn && is_sort(new_e_type))) {
             return some_expr(new_e);
@@ -2066,6 +2066,10 @@ expr elaborator::visit_anonymous_constructor(expr const & e, optional<expr> cons
     expr const & c = get_app_args(get_anonymous_constructor_arg(e), args);
     if (!expected_type)
         throw elaborator_exception(e, "invalid constructor ⟨...⟩, expected type must be known");
+    // The expected type may be a coercion, and
+    // we need to synthesize type class instances
+    // to figure what inductive type it is.
+    synthesize();
     expr I = get_app_fn(m_ctx.relaxed_whnf(instantiate_mvars(*expected_type)));
     if (!is_constant(I))
         throw elaborator_exception(e, format("invalid constructor ⟨...⟩, expected type is not an inductive type") +

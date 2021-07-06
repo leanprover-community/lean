@@ -74,6 +74,8 @@ run_cmd script_check_id `has_andthen.andthen
 run_cmd script_check_id `has_bind.and_then
 run_cmd script_check_id `has_bind.seq
 run_cmd script_check_id `has_coe_t
+run_cmd script_check_id `has_coe_to_fun
+run_cmd script_check_id `has_coe_to_sort
 run_cmd script_check_id `has_div.div
 run_cmd script_check_id `has_emptyc.emptyc
 run_cmd script_check_id `has_insert.insert

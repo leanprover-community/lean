@@ -5,11 +5,8 @@ infixr ` • `:73 := has_scalar.smul
 
 structure Ring : Type.
 
-instance : has_coe_to_sort Ring :=
-{
-  S := Type,
-  coe := λ R, unit
-}
+instance : has_coe_to_sort Ring Type :=
+⟨λ R, unit⟩
 
 variables {G : Type} [has_mul G] {R : Ring}
 

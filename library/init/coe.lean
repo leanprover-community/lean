@@ -42,11 +42,13 @@ class has_coe (a : Sort u) (b : Sort v) :=
 class has_coe_t (a : Sort u) (b : Sort v) :=
 (coe : a → b)
 
-class has_coe_to_fun (a : Sort u) : Sort (max u (v+1)) :=
-(F : a → Sort v) (coe : Π x, F x)
+class has_coe_to_fun (a : Sort u) (F : out_param (a → Sort v)) :
+  Sort (max u (v+1)) :=
+(coe : Π x, F x)
 
-class has_coe_to_sort (a : Sort u) : Type (max u (v+1)) :=
-(S : Sort v) (coe : a → S)
+class has_coe_to_sort (a : Sort u) (S : out_param (Sort v)) :
+  Type (max u (v+1)) :=
+(coe : a → S)
 
 def lift {a : Sort u} {b : Sort v} [has_lift a b] : a → b :=
 @has_lift.lift a b _
@@ -60,7 +62,8 @@ def coe_b {a : Sort u} {b : Sort v} [has_coe a b] : a → b :=
 def coe_t {a : Sort u} {b : Sort v} [has_coe_t a b] : a → b :=
 @has_coe_t.coe a b _
 
-def coe_fn_b {a : Sort u} [has_coe_to_fun.{u v} a] : Π x : a, has_coe_to_fun.F.{u v} x :=
+def coe_fn_b {a : Sort u} {b : a → Sort v} [has_coe_to_fun a b] :
+  Π x : a, b x :=
 has_coe_to_fun.coe
 
 /- User level coercion operators -/
@@ -68,10 +71,11 @@ has_coe_to_fun.coe
 @[reducible] def coe {a : Sort u} {b : Sort v} [has_lift_t a b] : a → b :=
 lift_t
 
-@[reducible] def coe_fn {a : Sort u} [has_coe_to_fun.{u v} a] : Π x : a, has_coe_to_fun.F.{u v} x :=
+@[reducible] def coe_fn {a : Sort u} {b : a → Sort v} [has_coe_to_fun a b] :
+  Π x : a, b x :=
 has_coe_to_fun.coe
 
-@[reducible] def coe_sort {a : Sort u} [has_coe_to_sort.{u v} a] : a → has_coe_to_sort.S.{u v} a :=
+@[reducible] def coe_sort {a : Sort u} {b : Sort v} [has_coe_to_sort a b] : a → b :=
 has_coe_to_sort.coe
 
 /- Notation -/
@@ -123,19 +127,20 @@ instance coe_option {a : Type u} : has_coe_t a (option a) :=
 class has_coe_t_aux (a : Sort u) (b : Sort v) :=
 (coe : a → b)
 
-instance coe_trans_aux {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe_t_aux b c] [has_coe a b] : has_coe_t_aux a c :=
+instance coe_trans_aux {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe_t_aux b c] [has_coe a b] :
+  has_coe_t_aux a c :=
 ⟨λ x : a, @has_coe_t_aux.coe b c _ (coe_b x)⟩
 
 instance coe_base_aux {a : Sort u} {b : Sort v} [has_coe a b] : has_coe_t_aux a b :=
 ⟨coe_b⟩
 
-instance coe_fn_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_fun.{u₂ u₃} b] [has_coe_t_aux a b] : has_coe_to_fun.{u₁ u₃} a :=
-{ F   := λ x, @has_coe_to_fun.F.{u₂ u₃} b _ (@has_coe_t_aux.coe a b _ x),
-  coe := λ x, coe_fn (@has_coe_t_aux.coe a b _ x) }
+instance coe_fn_trans {a : Sort u₁} {b : Sort u₂} {c : b → Sort v} [has_coe_to_fun b c]
+  [has_coe_t_aux a b] : has_coe_to_fun a (λ x, c (@has_coe_t_aux.coe a b _ x)) :=
+⟨λ x, coe_fn (@has_coe_t_aux.coe a b _ x)⟩
 
-instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_sort.{u₂ u₃} b] [has_coe_t_aux a b] : has_coe_to_sort.{u₁ u₃} a :=
-{ S   := has_coe_to_sort.S.{u₂ u₃} b,
-  coe := λ x, coe_sort (@has_coe_t_aux.coe a b _ x) }
+instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} {c : Sort v} [has_coe_to_sort b c] [has_coe_t_aux a b] :
+  has_coe_to_sort a c :=
+⟨λ x, coe_sort (@has_coe_t_aux.coe a b _ x)⟩
 
 /- Every coercion is also a lift -/
 
@@ -152,8 +157,8 @@ instance coe_bool_to_Prop : has_coe bool Prop :=
    In particular, when simplifying `p -> q`, the tactic `simp` only visits `p` if it can establish that it is a proposition.
    Thus, we mark the following instance as @[reducible], otherwise `simp` will not visit `↑p` when simplifying `↑p -> q`.
 -/
-@[reducible] instance coe_sort_bool : has_coe_to_sort bool :=
-⟨Prop, λ y, y = tt⟩
+@[reducible] instance coe_sort_bool : has_coe_to_sort bool Prop :=
+⟨λ y, y = tt⟩
 
 instance coe_decidable_eq (x : bool) : decidable (coe x) :=
 show decidable (x = tt), from bool.decidable_eq x tt

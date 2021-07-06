@@ -1,7 +1,7 @@
 inductive foo | bar
 
-instance : has_coe_to_sort foo :=
-⟨Type, λ _, unit⟩
+instance : has_coe_to_sort foo _ :=
+⟨λ _, unit⟩
 
 set_option pp.all true
 

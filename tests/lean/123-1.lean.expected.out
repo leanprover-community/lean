@@ -1,4 +1,4 @@
-123-1.lean:34:18: error: don't know how to synthesize placeholder
+123-1.lean:31:18: error: don't know how to synthesize placeholder
 context:
 G : Type,
 _inst_1 : has_mul G,

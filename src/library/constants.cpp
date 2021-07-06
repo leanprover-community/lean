@@ -74,6 +74,8 @@ name const * g_has_andthen_andthen = nullptr;
 name const * g_has_bind_and_then = nullptr;
 name const * g_has_bind_seq = nullptr;
 name const * g_has_coe_t = nullptr;
+name const * g_has_coe_to_fun = nullptr;
+name const * g_has_coe_to_sort = nullptr;
 name const * g_has_div_div = nullptr;
 name const * g_has_emptyc_emptyc = nullptr;
 name const * g_has_insert_insert = nullptr;
@@ -353,6 +355,8 @@ void initialize_constants() {
     g_has_bind_and_then = new name{"has_bind", "and_then"};
     g_has_bind_seq = new name{"has_bind", "seq"};
     g_has_coe_t = new name{"has_coe_t"};
+    g_has_coe_to_fun = new name{"has_coe_to_fun"};
+    g_has_coe_to_sort = new name{"has_coe_to_sort"};
     g_has_div_div = new name{"has_div", "div"};
     g_has_emptyc_emptyc = new name{"has_emptyc", "emptyc"};
     g_has_insert_insert = new name{"has_insert", "insert"};
@@ -633,6 +637,8 @@ void finalize_constants() {
     delete g_has_bind_and_then;
     delete g_has_bind_seq;
     delete g_has_coe_t;
+    delete g_has_coe_to_fun;
+    delete g_has_coe_to_sort;
     delete g_has_div_div;
     delete g_has_emptyc_emptyc;
     delete g_has_insert_insert;
@@ -912,6 +918,8 @@ name const & get_has_andthen_andthen_name() { return *g_has_andthen_andthen; }
 name const & get_has_bind_and_then_name() { return *g_has_bind_and_then; }
 name const & get_has_bind_seq_name() { return *g_has_bind_seq; }
 name const & get_has_coe_t_name() { return *g_has_coe_t; }
+name const & get_has_coe_to_fun_name() { return *g_has_coe_to_fun; }
+name const & get_has_coe_to_sort_name() { return *g_has_coe_to_sort; }
 name const & get_has_div_div_name() { return *g_has_div_div; }
 name const & get_has_emptyc_emptyc_name() { return *g_has_emptyc_emptyc; }
 name const & get_has_insert_insert_name() { return *g_has_insert_insert; }

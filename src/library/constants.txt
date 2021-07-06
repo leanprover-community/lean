@@ -69,6 +69,8 @@ has_andthen.andthen
 has_bind.and_then
 has_bind.seq
 has_coe_t
+has_coe_to_fun
+has_coe_to_sort
 has_div.div
 has_emptyc.emptyc
 has_insert.insert
