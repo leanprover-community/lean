@@ -62,13 +62,17 @@ meta instance : has_append format :=
 ⟨format.compose⟩
 
 meta instance : has_to_string format :=
-⟨λ f, f.to_string options.mk⟩
+⟨λ f, f.to_string⟩
 
 /-- Use this instead of `has_to_string` to enable prettier formatting.
 See docstring for `format` for more on the differences between `format` and `string`.
 Note that `format` is `meta` while `string` is not. -/
 meta class has_to_format (α : Type u) :=
 (to_format : α → format)
+
+@[priority 10] meta instance has_to_format_has_to_string {α} [has_to_format α]
+  : has_to_string α :=
+⟨has_to_string.to_string ∘ has_to_format.to_format⟩
 
 meta instance : has_to_format format :=
 ⟨id⟩
