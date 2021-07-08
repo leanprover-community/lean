@@ -4,7 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
 
-/-
+/-! # Coercions and lifts
+
 The elaborator tries to insert coercions automatically.
 Only instances of has_coe type class are considered in the process.
 
@@ -63,7 +64,7 @@ def coe_t {a : Sort u} {b : Sort v} [has_coe_t a b] : a → b :=
 def coe_fn_b {a : Sort u} [has_coe_to_fun.{u v} a] : Π x : a, has_coe_to_fun.F.{u v} x :=
 has_coe_to_fun.coe
 
-/- User level coercion operators -/
+/-! ## User level coercion operators -/
 
 @[reducible] def coe {a : Sort u} {b : Sort v} [has_lift_t a b] : a → b :=
 lift_t
@@ -74,7 +75,7 @@ has_coe_to_fun.coe
 @[reducible] def coe_sort {a : Sort u} [has_coe_to_sort.{u v} a] : a → has_coe_to_sort.S.{u v} a :=
 has_coe_to_sort.coe
 
-/- Notation -/
+/-! ## Notation -/
 
 notation `↑`:max x:max := coe x
 
@@ -84,7 +85,7 @@ notation `↥`:max x:max := coe_sort x
 
 universes u₁ u₂ u₃
 
-/- Transitive closure for has_lift, has_coe, has_coe_to_fun -/
+/-! ## Transitive closure for has_lift, has_coe, has_coe_to_fun -/
 
 instance lift_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_lift_t b c] [has_lift a b] : has_lift_t a c :=
 ⟨λ x, lift_t (lift x : b)⟩
@@ -98,7 +99,7 @@ instance coe_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_coe_t b 
 instance coe_base {a : Sort u} {b : Sort v} [has_coe a b] : has_coe_t a b :=
 ⟨coe_b⟩
 
-/- We add this instance directly into has_coe_t to avoid non-termination.
+/-- We add this instance directly into has_coe_t to avoid non-termination.
 
    Suppose coe_option had type (has_coe a (option a)).
    Then, we can loop when searching a coercion from α to β (has_coe_t α β)
@@ -110,16 +111,14 @@ instance coe_base {a : Sort u} {b : Sort v} [has_coe a b] : has_coe_t a b :=
           (has_coe (option α) ?b₂) and (has_coe_t ?b₂ β)
    4- coe_option at (has_coe (option α) ?b₂)
           ?b₂ := option (option α))
-   ...
--/
+   ... -/
 instance coe_option {a : Type u} : has_coe_t a (option a) :=
 ⟨λ x, some x⟩
 
-/- Auxiliary transitive closure for has_coe which does not contain
+/-- Auxiliary transitive closure for has_coe which does not contain
    instances such as coe_option.
 
-   They would produce non-termination when combined with coe_fn_trans and coe_sort_trans.
--/
+   They would produce non-termination when combined with coe_fn_trans and coe_sort_trans. -/
 class has_coe_t_aux (a : Sort u) (b : Sort v) :=
 (coe : a → b)
 
@@ -137,21 +136,19 @@ instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_sort.{u₂ u
 { S   := has_coe_to_sort.S.{u₂ u₃} b,
   coe := λ x, coe_sort (@has_coe_t_aux.coe a b _ x) }
 
-/- Every coercion is also a lift -/
-
+/-- Every coercion is also a lift -/
 instance coe_to_lift {a : Sort u} {b : Sort v} [has_coe_t a b] : has_lift_t a b :=
 ⟨coe_t⟩
 
-/- basic coercions -/
+/-! ## Basic coercions -/
 
 instance coe_bool_to_Prop : has_coe bool Prop :=
 ⟨λ y, y = tt⟩
 
-/- Tactics such as the simplifier only unfold reducible constants when checking whether two terms are definitionally
+/-- Tactics such as the simplifier only unfold reducible constants when checking whether two terms are definitionally
    equal or a term is a proposition. The motivation is performance.
    In particular, when simplifying `p -> q`, the tactic `simp` only visits `p` if it can establish that it is a proposition.
-   Thus, we mark the following instance as @[reducible], otherwise `simp` will not visit `↑p` when simplifying `↑p -> q`.
--/
+   Thus, we mark the following instance as @[reducible], otherwise `simp` will not visit `↑p` when simplifying `↑p -> q`. -/
 @[reducible] instance coe_sort_bool : has_coe_to_sort bool :=
 ⟨Prop, λ y, y = tt⟩
 
@@ -161,17 +158,20 @@ show decidable (x = tt), from bool.decidable_eq x tt
 instance coe_subtype {a : Sort u} {p : a → Prop} : has_coe {x // p x} a :=
 ⟨subtype.val⟩
 
-/- basic lifts -/
+/-! ## Basic lifts -/
 
 universes ua ua₁ ua₂ ub ub₁ ub₂
 
-/- Remark: we can't use [has_lift_t a₂ a₁] since it will produce non-termination whenever a type class resolution
+/-- Remark: we can't use [has_lift_t a₂ a₁] since it will produce non-termination whenever a type class resolution
    problem does not have a solution. -/
 instance lift_fn {a₁ : Sort ua₁} {a₂ : Sort ua₂} {b₁ : Sort ub₁} {b₂ : Sort ub₂} [has_lift a₂ a₁] [has_lift_t b₁ b₂] : has_lift (a₁ → b₁) (a₂ → b₂) :=
 ⟨λ f x, ↑(f ↑x)⟩
 
 instance lift_fn_range {a : Sort ua} {b₁ : Sort ub₁} {b₂ : Sort ub₂} [has_lift_t b₁ b₂] : has_lift (a → b₁) (a → b₂) :=
 ⟨λ f x, ↑(f x)⟩
+
+/-- A dependent version of `lift_fn_range`. -/
+instance lift_pi_range {α : Sort*} {A : α → Sort*} {B : α → Sort*} [Π i, has_lift_t (A i) (B i)] : has_lift (Π i, A i) (Π i, B i) := ⟨λ f i, ↑(f i)⟩
 
 instance lift_fn_dom {a₁ : Sort ua₁} {a₂ : Sort ua₂} {b : Sort ub} [has_lift a₂ a₁] : has_lift (a₁ → b) (a₂ → b) :=
 ⟨λ f x, f ↑x⟩
