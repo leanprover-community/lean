@@ -171,7 +171,7 @@ instance lift_fn_range {a : Sort ua} {b₁ : Sort ub₁} {b₂ : Sort ub₂} [ha
 ⟨λ f x, ↑(f x)⟩
 
 /-- A dependent version of `lift_fn_range`. -/
-instance lift_pi_range {α : Sort*} {A : α → Sort*} {B : α → Sort*} [Π i, has_lift_t (A i) (B i)] : has_lift (Π i, A i) (Π i, B i) := ⟨λ f i, ↑(f i)⟩
+instance lift_pi_range {α : Sort u} {A : α → Sort ua} {B : α → Sort ub} [Π i, has_lift_t (A i) (B i)] : has_lift (Π i, A i) (Π i, B i) := ⟨λ f i, ↑(f i)⟩
 
 instance lift_fn_dom {a₁ : Sort ua₁} {a₂ : Sort ua₂} {b : Sort ub} [has_lift a₂ a₁] : has_lift (a₁ → b) (a₂ → b) :=
 ⟨λ f x, f ↑x⟩
