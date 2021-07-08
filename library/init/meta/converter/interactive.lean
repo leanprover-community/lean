@@ -151,25 +151,32 @@ section rw
 open tactic.interactive (rw_rules rw_rule get_rule_eqn_lemmas to_expr')
 open tactic (rewrite_cfg)
 
-private meta def rw_lhs (h : expr) (cfg : rewrite_cfg) : conv unit :=
-do l ← conv.lhs,
-   (new_lhs, prf, _) ← tactic.rewrite h l cfg,
-   update_lhs new_lhs prf
+-- since we're in conv mode, we need to discharge all new goals immediately
+private meta def rw_lhs (h : expr) (cfg : rewrite_cfg) (tac : tactic unit) : conv unit :=
+tactic.solve1
+  (do l ← conv.lhs,
+      (new_lhs, prf, _) ← tactic.rewrite h l cfg,
+      update_lhs new_lhs prf,
+      gs' ← tactic.get_goals,
+      match gs' with
+      | [] := skip
+      | g::gs := tac
+      end)
 
-private meta def rw_core (rs : list rw_rule) (cfg : rewrite_cfg) : conv unit :=
+private meta def rw_core (rs : list rw_rule) (cfg : rewrite_cfg) (tac : tactic unit) : conv unit :=
 rs.mmap' $ λ r, do
  save_info r.pos,
  eq_lemmas ← get_rule_eqn_lemmas r,
  orelse'
-   (do h ← to_expr' r.rule, rw_lhs h {symm := r.symm, ..cfg})
-   (eq_lemmas.mfirst $ λ n, do e ← tactic.mk_const n, rw_lhs e {symm := r.symm, ..cfg})
+   (do h ← to_expr' r.rule, rw_lhs h {symm := r.symm, ..cfg} tac)
+   (eq_lemmas.mfirst $ λ n, do e ← tactic.mk_const n, rw_lhs e {symm := r.symm, ..cfg} tac)
    (eq_lemmas.empty)
 
 meta def rewrite (q : parse rw_rules) (cfg : rewrite_cfg := {}) : conv unit :=
-rw_core q.rules cfg
+rw_core q.rules cfg skip
 
 meta def rw (q : parse rw_rules) (cfg : rewrite_cfg := {}) : conv unit :=
-rw_core q.rules cfg
+rw_core q.rules cfg skip
 end rw
 
 end interactive
