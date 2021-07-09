@@ -4,6 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
 
+prelude
+
+import init.data.list.basic init.data.subtype.basic init.data.prod
+
 /-! # Coercions and lifts
 
 The elaborator tries to insert coercions automatically.
@@ -24,8 +28,7 @@ a type to a function space.
 We use the has_coe_to_sort type class for encoding coercions from
 a type to a sort.
 -/
-prelude
-import init.data.list.basic init.data.subtype.basic init.data.prod
+
 universes u v
 
 /-- Can perform a lifting operation `↑a`. -/
