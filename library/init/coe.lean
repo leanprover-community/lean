@@ -67,7 +67,7 @@ def coe_t {a : Sort u} {b : Sort v} [has_coe_t a b] : a → b :=
 def coe_fn_b {a : Sort u} [has_coe_to_fun.{u v} a] : Π x : a, has_coe_to_fun.F.{u v} x :=
 has_coe_to_fun.coe
 
-/-! ## User level coercion operators -/
+/-! ### User level coercion operators -/
 
 @[reducible] def coe {a : Sort u} {b : Sort v} [has_lift_t a b] : a → b :=
 lift_t
@@ -78,7 +78,7 @@ has_coe_to_fun.coe
 @[reducible] def coe_sort {a : Sort u} [has_coe_to_sort.{u v} a] : a → has_coe_to_sort.S.{u v} a :=
 has_coe_to_sort.coe
 
-/-! ## Notation -/
+/-! ### Notation -/
 
 notation `↑`:max x:max := coe x
 
@@ -88,7 +88,7 @@ notation `↥`:max x:max := coe_sort x
 
 universes u₁ u₂ u₃
 
-/-! ## Transitive closure for has_lift, has_coe, has_coe_to_fun -/
+/-! ### Transitive closure for `has_lift`, `has_coe`, `has_coe_to_fun` -/
 
 instance lift_trans {a : Sort u₁} {b : Sort u₂} {c : Sort u₃} [has_lift_t b c] [has_lift a b] : has_lift_t a c :=
 ⟨λ x, lift_t (lift x : b)⟩
@@ -143,7 +143,7 @@ instance coe_sort_trans {a : Sort u₁} {b : Sort u₂} [has_coe_to_sort.{u₂ u
 instance coe_to_lift {a : Sort u} {b : Sort v} [has_coe_t a b] : has_lift_t a b :=
 ⟨coe_t⟩
 
-/-! ## Basic coercions -/
+/-! ### Basic coercions -/
 
 instance coe_bool_to_Prop : has_coe bool Prop :=
 ⟨λ y, y = tt⟩
@@ -161,7 +161,7 @@ show decidable (x = tt), from bool.decidable_eq x tt
 instance coe_subtype {a : Sort u} {p : a → Prop} : has_coe {x // p x} a :=
 ⟨subtype.val⟩
 
-/-! ## Basic lifts -/
+/-! ### Basic lifts -/
 
 universes ua ua₁ ua₂ ub ub₁ ub₂
 
