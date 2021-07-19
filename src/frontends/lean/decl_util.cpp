@@ -132,7 +132,14 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     if (is_constant(arg_head)) {
         arg_name = const_name(arg_head);
     } else if (is_sort(arg_head) || is_sort_wo_universe(arg_head)) {
-        arg_name = sort_level(arg_head) == mk_level_zero() ? "Prop" : "sort";
+        level u = sort_level(arg_head);
+        if (u == mk_level_zero()) {
+            arg_name = "Prop";
+        } else if (dec_level(u)) {
+            arg_name = "Type";
+        } else {
+            arg_name = "sort";
+        }
     } else if (is_pi(arg_head)) {
         arg_name = "pi";
     } else if (is_field_notation(arg_head)) {
