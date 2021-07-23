@@ -33,7 +33,6 @@ class tlean_exporter {
     unsigned export_binding(expr const & e, char const * k);
     unsigned export_const(expr const & e);
     unsigned export_expr_core(expr const & e);
-    unsigned export_expr(expr const & e);
 
     void export_definition(declaration const & d);
     void export_axiom(declaration const & d);
@@ -42,6 +41,7 @@ class tlean_exporter {
 public:
     tlean_exporter(std::ostream & out, environment const & env);
     unsigned export_name(name const & n);
+    unsigned export_expr(expr const & e);
     void export_declaration(declaration const & d);
     void export_inductive(inductive::certified_inductive_decl const & d);
 
