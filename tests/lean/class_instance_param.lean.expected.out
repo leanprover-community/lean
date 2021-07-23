@@ -3,5 +3,5 @@ densely_ordered.mk :
   ∀ {α : Type u_1} [_inst_1 : preorder α],
     (∀ (a c : α), a < c → (∃ (b : α), a < b ∧ b < c)) → densely_ordered α
 densely_ordered.dense :
-  ∀ {α : Type u_1} [_inst_1 : preorder α] [c : densely_ordered α] (a c : α),
+  ∀ {α : Type u_1} [_inst_1 : preorder α] [self : densely_ordered α] (a c : α),
     a < c → (∃ (b : α), a < b ∧ b < c)
