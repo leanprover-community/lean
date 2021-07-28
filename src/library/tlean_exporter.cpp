@@ -170,12 +170,15 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
             for (auto const & arg : args) {
                 m_out << " " << arg << "\n";
             }
-        } else if (auto t = macro_def(e).expand(e, checker)) {
-            return export_expr_core(*t);
         } else {
-            throw exception("found macro that cannot textualize nor expand");
+            type_checker checker(m_env);
+            if (auto t = macro_def(e).expand(e, checker)) {
+                return export_expr_core(*t);
+            } else {
+                throw exception(sstream() << "found macro that cannot textualize nor expand\n" << e);
+            }
         }
-
+    }
     m_expr2idx[e] = i;
     return i;
 }
