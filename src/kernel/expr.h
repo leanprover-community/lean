@@ -366,6 +366,7 @@ public:
     virtual void display(std::ostream & out) const;
     virtual unsigned hash() const;
     virtual void write(serializer & s) const = 0;
+    virtual bool can_textualize() const { return false; }
     virtual void textualize(tlean_exporter & x) const { throw exception("macro::textualize not implemented by default"); }
     typedef std::function<expr(deserializer&, unsigned, expr const *)> reader;
 };
@@ -396,6 +397,7 @@ public:
     void display(std::ostream & out) const { return m_ptr->display(out); }
     unsigned hash() const { return m_ptr->hash(); }
     void write(serializer & s) const { return m_ptr->write(s); }
+    bool can_textualize() const { return m_ptr->can_textualize(); }
     void textualize(tlean_exporter & x) const { return m_ptr->textualize(x); };
     macro_definition_cell const * raw() const { return m_ptr; }
 

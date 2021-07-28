@@ -114,17 +114,6 @@ unsigned tlean_exporter::export_const(expr const & e) {
     return i;
 }
 
-static bool can_textualize(environment const & env, macro_definition const & mdef) {
-    try {
-        std::ostringstream os;
-        tlean_exporter tmp(os, env);
-        mdef.textualize(tmp);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
 unsigned tlean_exporter::export_expr_core(expr const & e) {
     auto it = m_expr2idx.find(e);
     if (it != m_expr2idx.end())
@@ -170,24 +159,23 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     case expr_kind::Local:
         throw exception("invalid 'export', local constants cannot be exported");
     case expr_kind::Macro:
-        if (!can_textualize(env(), macro_def(e))) {
-            type_checker checker(m_env);
-            if (auto t = macro_def(e).expand(e, checker))
-                return export_expr_core(*t);
-            else
-                throw exception("found macro that cannot textualize nor expand");
+        if (macro_def(e).can_textualize()) {
+            buffer<unsigned> args;
+            for (auto i = 0; i < macro_num_args(e); ++i) {
+                args.push_back(export_expr_core(macro_arg(e, i)));
+            }
+            i = static_cast<unsigned>(m_expr2idx.size());
+            m_out << i << " ";
+            macro_def(e).textualize(*this);
+            for (auto const & arg : args) {
+                m_out << " " << arg << "\n";
+            }
+        } else if (auto t = macro_def(e).expand(e, checker)) {
+            return export_expr_core(*t);
+        } else {
+            throw exception("found macro that cannot textualize nor expand");
         }
-        buffer<unsigned> args;
-        for (auto i = 0; i < macro_num_args(e); ++i) {
-            args.push_back(export_expr_core(macro_arg(e, i)));
-        }
-        i = static_cast<unsigned>(m_expr2idx.size());
-        m_out << i << " ";
-        macro_def(e).textualize(*this);
-        for (auto const & arg : args) {
-            m_out << " " << arg << "\n";
-        }
-    }
+
     m_expr2idx[e] = i;
     return i;
 }
