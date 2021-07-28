@@ -13,7 +13,7 @@ It is easy to install all dependencies, it produces native
 
 [The official webpage of msys2][msys2] provides one-click installers.
 We assume that you install [msys2][msys2] at `c:\msys64`.
-It has a package management system, [pacman][pacman], which is used in Arch Linux - you must update these and install all current dependencies. The Lean build that's used in CI currently uses this set of commands (in any of the many installed `msys` shells):
+It has a package management system, [pacman][pacman], which is used in Arch Linux - you must use this to update `msys2` and install all of Lean's dependencies. The Lean build that's used in CI currently uses this set of commands (in any of the many installed `msys` shells):
 
 ```bash
 pacman -Syu
