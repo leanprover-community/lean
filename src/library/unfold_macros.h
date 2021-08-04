@@ -16,6 +16,7 @@ namespace lean {
     macros with trust level higher than the one allowed.
 */
 expr unfold_untrusted_macros(environment const & env, expr const & e);
+expr unfold_untrusted_macros(environment const & env, expr const & e, optional<unsigned> const & trust_lvl);
 
 declaration unfold_untrusted_macros(environment const & env, declaration const & d);
 

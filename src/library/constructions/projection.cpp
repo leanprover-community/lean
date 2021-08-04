@@ -129,6 +129,15 @@ public:
         s << m_I_name << m_constructor_name << m_proj_name << m_idx << m_ps << m_type << m_val;
     }
 
+    virtual bool can_textualize() const { return true; }
+
+    virtual void textualize(tlean_exporter & x) const {
+      unsigned I_name           = x.export_name(m_I_name);
+      unsigned constructor_name = x.export_name(m_constructor_name);
+      unsigned proj_name        = x.export_name(m_proj_name);
+      x.out() << "#PROJ_MACRO " << I_name << " " << constructor_name << " " << proj_name << " " << m_idx;
+    }
+
     virtual bool operator==(macro_definition_cell const & other) const {
         if (auto other_ptr = dynamic_cast<projection_macro_definition_cell const *>(&other)) {
             return m_proj_name == other_ptr->m_proj_name;
