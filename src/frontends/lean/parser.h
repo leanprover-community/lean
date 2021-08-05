@@ -319,7 +319,11 @@ public:
     pos_info ast_pos(ast_id id) const { return m_ast[id]->m_start; }
     void push_from_vm_parse(ast_id id) { if (m_vm_parser_ast_id) get_ast(m_vm_parser_ast_id).push(id); }
     ast_id get_vm_parse_parent() { return m_vm_parser_ast_id; }
-    void set_vm_parse_parent(ast_id id) { m_vm_parser_ast_id = id; }
+    ast_id set_vm_parse_parent(ast_id id) {
+        auto old = m_vm_parser_ast_id;
+        m_vm_parser_ast_id = id;
+        return old;
+    }
     ast_data & new_modifiers(cmd_meta & meta);
     friend void export_ast(parser & p);
 

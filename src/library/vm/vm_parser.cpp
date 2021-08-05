@@ -48,9 +48,9 @@ typedef interaction_monad<lean_parser_state> lean_parser;
 pair<ast_id, vm_obj> run_parser(parser & p, expr const & spec, buffer<vm_obj> const & args, bool allow_profiler) {
     type_context_old ctx(p.env(), p.get_options());
     auto& data = p.new_ast("parse", p.pos());
-    p.set_vm_parse_parent(data.m_id);
+    auto old = p.set_vm_parse_parent(data.m_id);
     auto r = lean_parser::evaluator(ctx, p.get_options(), allow_profiler)(spec, args, {&p});
-    p.set_vm_parse_parent(0);
+    p.set_vm_parse_parent(old);
     return {data.m_id, lean_parser::get_success_value(r)};
 }
 
