@@ -577,7 +577,7 @@ end expr
 /-- An dictionary from `data` to expressions. -/
 @[reducible] meta def expr_map (data : Type) := rb_map expr data
 namespace expr_map
-export native.rb_map (hiding mk)
+export native.rb_map
 
 meta def mk (data : Type) : expr_map data := rb_map.mk expr data
 end expr_map

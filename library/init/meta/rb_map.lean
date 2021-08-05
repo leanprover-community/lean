@@ -79,7 +79,7 @@ rb_map.mk key data
 
 @[reducible] meta def nat_map (data : Type) := rb_map nat data
 namespace nat_map
-export rb_map (hiding mk)
+export rb_map
 
 meta def mk (data : Type) : nat_map data := rb_map.mk nat data
 end nat_map
@@ -176,7 +176,7 @@ end native
 open native
 @[reducible] meta def name_map (data : Type) := rb_map name data
 namespace name_map
-export native.rb_map (hiding mk)
+export native.rb_map
 
 meta def mk (data : Type) : name_map data := rb_map.mk_core data name.cmp
 end name_map
