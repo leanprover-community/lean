@@ -15,7 +15,7 @@ variables {α : Sort u} {β : α → Sort v}
 
 protected def equiv (f₁ f₂ : Π x : α, β x) : Prop := ∀ x, f₁ x = f₂ x
 
-local infix `~` := function.equiv
+local infix ` ~ `:50 := function.equiv
 
 protected theorem equiv.refl (f : Π x : α, β x) : f ~ f := assume x, rfl
 
@@ -55,7 +55,7 @@ end
 
 attribute [intro!] funext
 
-local infix `~` := function.equiv
+local infix ` ~ `:50 := function.equiv
 
 instance pi.subsingleton {α : Sort u} {β : α → Sort v} [∀ a, subsingleton (β a)] : subsingleton (Π a, β a) :=
 ⟨λ f₁ f₂, funext (λ a, subsingleton.elim (f₁ a) (f₂ a))⟩

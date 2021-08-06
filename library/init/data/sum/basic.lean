@@ -8,7 +8,7 @@ The sum type, aka disjoint union.
 prelude
 import init.logic
 
-notation α ⊕ β := sum α β
+infixr ` ⊕ `:30 := sum
 
 universes u v
 

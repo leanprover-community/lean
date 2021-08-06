@@ -367,7 +367,7 @@ public:
     virtual unsigned hash() const;
     virtual void write(serializer & s) const = 0;
     virtual bool can_textualize() const { return false; }
-    virtual void textualize(tlean_exporter & x) const { throw exception("macro::textualize not implemented by default"); }
+    virtual void textualize(tlean_exporter &) const { throw exception("macro::textualize not implemented by default"); }
     typedef std::function<expr(deserializer&, unsigned, expr const *)> reader;
 };
 
