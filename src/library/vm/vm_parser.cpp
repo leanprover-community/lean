@@ -352,9 +352,9 @@ vm_obj vm_parser_with_input(vm_obj const &, vm_obj const & vm_p, vm_obj const & 
     std::istringstream strm(input);
     vm_obj vm_state; pos_info pos;
     auto old_id = s.m_p->get_vm_parse_parent();
-    ast_id new_id = s.m_p->new_ast("with_input", s.m_p->pos()).m_id;
-    s.m_p->push_from_vm_parse(new_id);
-    s.m_p->set_vm_parse_parent(new_id);
+    auto& new_data = s.m_p->new_ast("with_input", s.m_p->pos());
+    s.m_p->push_from_vm_parse(new_data.m_id);
+    s.m_p->set_vm_parse_parent(new_data.m_id);
     auto _ = s.m_p->no_error_recovery_scope();
     TRY;
         std::tie(vm_state, pos) = s.m_p->with_input<vm_obj>(strm, [&]() {
@@ -381,7 +381,7 @@ vm_obj vm_parser_with_input(vm_obj const &, vm_obj const & vm_p, vm_obj const & 
         }
         spos += get_utf8_size(input[spos]);
     }
-
+    new_data.m_value = std::to_string(spos);
     vm_res = mk_vm_pair(vm_res, to_obj(input.substr(spos)));
     return lean_parser::mk_success(vm_res, lean_parser::get_success_state(vm_state));
 }
