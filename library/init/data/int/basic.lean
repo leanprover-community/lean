@@ -524,13 +524,13 @@ protected lemma distrib_left : ∀ a b c : ℤ, a * (b + c) = a * b + a * c
                                             rw ← sub_nat_nat_add, reflexivity end
 | (of_nat m) -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
-| (of_nat m) -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
+| (of_nat m) -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, add_succ, succ_add] end
 | -[1+ m]    (of_nat n) (of_nat k) := begin simp [nat.mul_comm], rw [← nat.right_distrib, nat.mul_comm] end
 | -[1+ m]    (of_nat n) -[1+ k]    := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [int.add_comm, ← sub_nat_nat_add], reflexivity end
 | -[1+ m]    -[1+ n]    (of_nat k) := begin simp [neg_of_nat_eq_sub_nat_nat_zero],
                                             rw [← sub_nat_nat_add], reflexivity end
-| -[1+ m]    -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, succ_add] end
+| -[1+ m]    -[1+ n]   -[1+ k]     := begin simp, rw [← nat.left_distrib, add_succ, succ_add] end
 
 protected lemma distrib_right (a b c : ℤ) : (a + b) * c = a * c + b * c :=
 begin rw [int.mul_comm, int.distrib_left], simp [int.mul_comm] end

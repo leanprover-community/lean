@@ -173,7 +173,7 @@ lt.elim ha (assume n, assume hn,
 lt.elim hb (assume m, assume hm,
   lt.intro (show 0 + ↑(nat.succ (nat.succ n * m + n)) = a * b,
     begin rw [← hn, ← hm], simp [int.coe_nat_zero],
-          rw [← int.coe_nat_mul], simp [nat.mul_succ, nat.succ_add] end)))
+          rw [← int.coe_nat_mul], simp [nat.mul_succ, nat.add_succ, nat.succ_add] end)))
 
 protected lemma zero_lt_one : (0 : ℤ) < 1 := trivial
 
