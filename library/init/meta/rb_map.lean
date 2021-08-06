@@ -79,7 +79,8 @@ rb_map.mk key data
 
 @[reducible] meta def nat_map (data : Type) := rb_map nat data
 namespace nat_map
-export rb_map
+export rb_map (mk_core size empty insert erase contains find min max fold
+  keys values to_list mfold of_list set_of_list map for filter)
 
 meta def mk (data : Type) : nat_map data := rb_map.mk nat data
 end nat_map
@@ -176,7 +177,8 @@ end native
 open native
 @[reducible] meta def name_map (data : Type) := rb_map name data
 namespace name_map
-export native.rb_map
+export native.rb_map (mk_core size empty insert erase contains find min max fold
+  keys values to_list mfold of_list set_of_list map for filter)
 
 meta def mk (data : Type) : name_map data := rb_map.mk_core data name.cmp
 end name_map

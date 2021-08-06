@@ -577,7 +577,8 @@ end expr
 /-- An dictionary from `data` to expressions. -/
 @[reducible] meta def expr_map (data : Type) := rb_map expr data
 namespace expr_map
-export native.rb_map
+export native.rb_map (mk_core size empty insert erase contains find min max fold
+  keys values to_list mfold of_list set_of_list map for filter)
 
 meta def mk (data : Type) : expr_map data := rb_map.mk expr data
 end expr_map
