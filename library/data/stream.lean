@@ -196,7 +196,7 @@ by rw [nth_succ, tail_iterate]
 
 section bisim
   variable (R : stream α → stream α → Prop)
-  local infix ~ := R
+  local infix ` ~ `:50 := R
 
   def is_bisimulation := ∀ ⦃s₁ s₂⦄, s₁ ~ s₂ → head s₁ = head s₂ ∧ tail s₁ ~ tail s₂
 

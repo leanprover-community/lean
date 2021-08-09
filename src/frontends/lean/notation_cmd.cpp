@@ -141,11 +141,6 @@ static auto parse_mixfix_notation(parser & p, mixfix_kind k, bool overload, nota
 
     pos_info prec_pos;
     if (p.curr_is_token(get_colon_tk())) {
-        // Remark: we do not throw an exception, if it is local notation.
-        // We allow local notation to override reserved one.
-        if (!g_allow_local && reserved_pt)
-            throw parser_error("invalid notation declaration, invalid ':' occurrence "
-                               "(declaration matches reserved notation)", p.pos());
         p.next();
         prec_pos = p.pos();
         prec = parse_precedence(p);

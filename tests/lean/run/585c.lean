@@ -6,7 +6,7 @@ inductive perm {α} : list α → list α → Prop
 | swap  : Π (x y : α) (l : list α), perm (y::x::l) (x::y::l)
 | trans : Π {l₁ l₂ l₃ : list α}, perm l₁ l₂ → perm l₂ l₃ → perm l₁ l₃
 
-infix ~ := perm
+infix ` ~ `:50 := perm
 
 @[refl] protected axiom perm.refl {α} : ∀ (l : list α), l ~ l
 

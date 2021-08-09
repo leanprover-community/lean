@@ -23,8 +23,8 @@ and type of `f (g x)` depends on `x` and `g x`. -/
   (f : Π {x : α} (y : β x), φ y) (g : Π x, β x) : Π x, φ (g x) :=
 λ x, f (g x)
 
-infixr  ` ∘ `      := function.comp
-infixr  ` ∘' `:80  := function.dcomp
+infixr ` ∘ `:90  := function.comp
+infixr ` ∘' `:80 := function.dcomp
 
 @[reducible] def comp_right (f : β → β → β) (g : α → β) : β → α → β :=
 λ b a, f b (g a)

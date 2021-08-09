@@ -10,77 +10,6 @@ prelude
 notation `Prop` := Sort 0
 notation f ` $ `:1 a:0 := f a
 
-/- Reserving notation. We do this so that the precedence of all of the operators
-can be seen in one place and to prevent core notation being accidentally overloaded later.  -/
-
-/- Notation for logical operations and relations -/
-
-reserve prefix `¬`:40
-reserve prefix `~`:40    -- not used
-reserve infixr ` ∧ `:35
-reserve infixr ` /\ `:35
-reserve infixr ` \/ `:30
-reserve infixr ` ∨ `:30
-reserve infix ` <-> `:20
-reserve infix ` ↔ `:20
-reserve infix ` = `:50   -- eq
-reserve infix ` == `:50  -- heq
-reserve infix ` ≠ `:50
-reserve infix ` ≈ `:50   -- has_equiv.equiv
-reserve infix ` ~ `:50   -- used as local notation for relations
-reserve infix ` ≡ `:50   -- not used
-reserve infixl ` ⬝ `:75  -- not used
-reserve infixr ` ▸ `:75  -- eq.subst
-reserve infixr ` ▹ `:75  -- not used
-
-/- types and type constructors -/
-
-reserve infixr ` ⊕ `:30  -- sum (defined in init/data/sum/basic.lean)
-reserve infixr ` × `:35
-
-/- arithmetic operations -/
-
-reserve infixl ` + `:65
-reserve infixl ` - `:65
-reserve infixl ` * `:70
-reserve infixl ` / `:70
-reserve infixl ` % `:70
-reserve prefix `-`:75
-reserve infixr ` ^ `:80
-
-reserve infixr ` ∘ `:90  -- function composition
-
-reserve infix ` <= `:50
-reserve infix ` ≤ `:50
-reserve infix ` < `:50
-reserve infix ` >= `:50
-reserve infix ` ≥ `:50
-reserve infix ` > `:50
-
-/- boolean operations -/
-
-reserve infixl ` && `:70
-reserve infixl ` || `:65
-
-/- set operations -/
-
-reserve infix ` ∈ `:50
-reserve infix ` ∉ `:50
-reserve infixl ` ∩ `:70
-reserve infixl ` ∪ `:65
-reserve infix ` ⊆ `:50
-reserve infix ` ⊇ `:50
-reserve infix ` ⊂ `:50
-reserve infix ` ⊃ `:50
-reserve infix ` \ `:70   -- symmetric difference
-
-/- other symbols -/
-
-reserve infix ` ∣ `:50   -- has_dvd.dvd. Note this is different to `|`.
-reserve infixl ` ++ `:65 -- has_append.append
-reserve infixr ` :: `:67 -- list.cons
-reserve infixl `; `:1    -- has_andthen.andthen
-
 universes u v w
 
 /--
@@ -154,7 +83,7 @@ A hypothesis `h : ¬ P` can be used in term mode as a function, so if `w : P` th
 Related mathlib tactic: `contrapose`.
 -/
 def not (a : Prop) := a → false
-prefix `¬` := not
+prefix `¬`:40 := not
 
 inductive eq {α : Sort u} (a : α) : α → Prop
 | refl [] : eq a
@@ -224,7 +153,7 @@ lemma and.elim_right {a b : Prop} (h : and a b) : b := h.2
 
 /- eq basic support -/
 
-infix = := eq
+infix ` = `:50 := eq
 
 attribute [refl] eq.refl
 
@@ -235,7 +164,7 @@ attribute [refl] eq.refl
 lemma eq.subst {α : Sort u} {P : α → Prop} {a b : α} (h₁ : a = b) (h₂ : P a) : P b :=
 eq.rec h₂ h₁
 
-notation h1 ▸ h2 := eq.subst h1 h2
+infixr ` ▸ `:75 := eq.subst
 
 @[trans] lemma eq.trans {α : Sort u} {a b c : α} (h₁ : a = b) (h₂ : b = c) : a = c :=
 h₂ ▸ h₁
@@ -243,7 +172,7 @@ h₂ ▸ h₁
 @[symm] lemma eq.symm {α : Sort u} {a b : α} (h : a = b) : b = a :=
 h ▸ rfl
 
-infix == := heq
+infix ` == `:50 := heq
 
 /- This is a `def`, so that it can be used as pattern in the equation compiler. -/
 @[pattern] def heq.rfl {α : Sort u} {a : α} : a == a := heq.refl a
@@ -347,7 +276,7 @@ inductive list (T : Type u)
 | nil : list
 | cons (hd : T) (tl : list) : list
 
-notation h :: t  := list.cons h t
+infixr ` :: `:67 := list.cons
 notation `[` l:(foldr `, ` (h t, list.cons h t) list.nil `]`) := l
 
 inductive nat
@@ -404,43 +333,43 @@ class has_pow (α : Type u) (β : Type v) :=
 export has_andthen (andthen)
 export has_pow (pow)
 
-infix ∈        := has_mem.mem
-notation a ∉ s := ¬ has_mem.mem a s
-infix +        := has_add.add
-infix *        := has_mul.mul
-infix -        := has_sub.sub
-infix /        := has_div.div
-infix ∣        := has_dvd.dvd
-infix %        := has_mod.mod
-prefix -       := has_neg.neg
-infix <=       := has_le.le
-infix ≤        := has_le.le
-infix <        := has_lt.lt
-infix ++       := has_append.append
-infix ;        := andthen
-notation `∅`   := has_emptyc.emptyc
-infix ∪        := has_union.union
-infix ∩        := has_inter.inter
-infix ⊆        := has_subset.subset
-infix ⊂        := has_ssubset.ssubset
-infix \        := has_sdiff.sdiff
-infix ≈        := has_equiv.equiv
-infixr ^       := has_pow.pow
+infix ` ∈ `:50   := has_mem.mem
+notation a ` ∉ `:50 s:50 := ¬ has_mem.mem a s
+infixl ` + `:65  := has_add.add
+infixl ` * `:70  := has_mul.mul
+infixl ` - `:65  := has_sub.sub
+infixl ` / `:70  := has_div.div
+infix ` ∣ `:50   := has_dvd.dvd -- Note this is different to `|`.
+infixl ` % `:70  := has_mod.mod
+prefix `-`:75    := has_neg.neg
+infix ` <= `:50  := has_le.le
+infix ` ≤ `:50   := has_le.le
+infix ` < `:50   := has_lt.lt
+infixl ` ++ `:65 := has_append.append
+infixl `; `:1    := andthen
+notation `∅`     := has_emptyc.emptyc
+infixl ` ∪ `:65  := has_union.union
+infixl ` ∩ `:70  := has_inter.inter
+infix ` ⊆ `:50   := has_subset.subset
+infix ` ⊂ `:50   := has_ssubset.ssubset
+infix ` \ `:70   := has_sdiff.sdiff
+infix ` ≈ `:50   := has_equiv.equiv
+infixr ` ^ `:80  := has_pow.pow
 
 export has_append (append)
 
 @[reducible] def ge {α : Type u} [has_le α] (a b : α) : Prop := has_le.le b a
 @[reducible] def gt {α : Type u} [has_lt α] (a b : α) : Prop := has_lt.lt b a
 
-infix >=       := ge
-infix ≥        := ge
-infix >        := gt
+infix ` >= `:50 := ge
+infix ` ≥ `:50  := ge
+infix ` > `:50  := gt
 
 @[reducible] def superset {α : Type u} [has_subset α] (a b : α) : Prop := has_subset.subset b a
 @[reducible] def ssuperset {α : Type u} [has_ssubset α] (a b : α) : Prop := has_ssubset.ssubset b a
 
-infix ⊇        := superset
-infix ⊃        := ssuperset
+infix ` ⊇ `:50 := superset
+infix ` ⊃ `:50 := ssuperset
 
 def bit0 {α : Type u} [s  : has_add α] (a  : α)                 : α := a + a
 def bit1 {α : Type u} [s₁ : has_one α] [s₂ : has_add α] (a : α) : α := (bit0 a) + 1
@@ -501,10 +430,9 @@ be stronger than application.
 
 def std.prec.max_plus : nat := std.prec.max + 10
 
-reserve postfix `⁻¹`:std.prec.max_plus  -- input with \sy or \-1 or \inv
-postfix ⁻¹     := has_inv.inv
+postfix `⁻¹`:std.prec.max_plus := has_inv.inv  -- input with \sy or \-1 or \inv
 
-notation α × β := prod α β
+infixr ` × `:35 := prod
 -- notation for n-ary tuples
 
 /- sizeof -/
