@@ -34,7 +34,7 @@ by unfold bodd bodd_div2; cases bodd_div2 n; cases fst; refl
 begin
     induction n with n IH,
     { simp, cases bodd m; refl },
-    { simp [IH], cases bodd m; cases bodd n; refl }
+    { simp [add_succ, IH], cases bodd m; cases bodd n; refl }
 end
 
 @[simp] lemma bodd_mul (m n : ℕ) : bodd (m * n) = bodd m && bodd n :=
