@@ -1,3 +1,18 @@
+3.32.0c (10 August 2021)
+------------------------
+
+Features:
+- Update Windows build instructions (#593)
+- `lift_pi_range` (#590)
+- Export `self_opt` flag in tlean files (#596)
+- Let macros textualize in tleans rather than unfold (#595)
+
+Changes:
+- Protect more lemmas (#589)
+- Use names `self` and `motive` in recursors (#594)
+- Remove uses of `export A (hiding B)` in the core library (#597)
+- Remove uses of `reserve notation` (#599)
+
 3.31.0c (29 June 2021)
 -----------------------
 
