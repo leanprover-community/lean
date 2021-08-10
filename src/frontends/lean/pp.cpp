@@ -1876,14 +1876,15 @@ auto pretty_fn<T>::pp_explicit_collection(buffer<subexpr> const & elems) -> resu
 bool is_set_of(expr const & e) {
     return
         is_constant(get_app_fn(e), get_set_of_name()) &&
-        get_app_num_args(e) == 2 &&
-        is_lambda(app_arg(e));
+        get_app_num_args(e) == 2;
 }
 template<class T>
 auto pretty_fn<T>::pp_set_of(expr const & e) -> result {
     lean_assert(is_set_of(e));
     expr pred = app_arg(e);
-    lean_assert(is_lambda(pred));
+    if (!is_lambda(pred)) {
+        pred = mk_lambda("x", app_arg(app_fn(e)), mk_app(pred, mk_var(0)));
+    }
     auto p     = binding_body_fresh(pred, true);
     expr body  = p.first;
     expr local = p.second;

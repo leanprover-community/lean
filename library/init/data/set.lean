@@ -30,11 +30,6 @@ instance : has_emptyc (set α) :=
 def univ : set α :=
 { a | true }
 
-instance : has_insert α (set α) :=
-⟨λ a s, { b | b = a ∨ b ∈ s }⟩
-
-instance : has_singleton α (set α) := ⟨λ a, { b | b = a }⟩
-
 protected lemma ext {a b : set α} (h : ∀ x, x ∈ a ↔ x ∈ b) : a = b :=
 begin
   cases a with a,
@@ -42,14 +37,18 @@ begin
   simp [show a = b, from funext (λ x, propext (h _))]
 end
 
-instance : is_lawful_singleton α (set α) :=
-⟨λ a, set.ext (λ x, or_false _)⟩
-
 instance : has_union (set α) :=
 ⟨λ s₁ s₂, { a | a ∈ s₁ ∨ a ∈ s₂ }⟩
 
 instance : has_inter (set α) :=
 ⟨λ s₁ s₂, { a | a ∈ s₁ ∧ a ∈ s₂ }⟩
+
+instance : has_singleton α (set α) := ⟨λ a, { b | b = a }⟩
+
+instance : has_insert α (set α) := ⟨λ a s, singleton a ∪ s⟩
+
+instance : is_lawful_singleton α (set α) :=
+⟨λ a, set.ext (λ x, or_false _)⟩
 
 def compl (s : set α) : set α :=
 {a | a ∉ s}
