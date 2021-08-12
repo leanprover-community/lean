@@ -1,3 +1,9 @@
+3.32.1c (12 August 2021)
+------------------------
+
+Changes:
+- Remove unification hint `add_succ_defeq_succ_add_hint` (#598)
+
 3.32.0c (10 August 2021)
 ------------------------
 
