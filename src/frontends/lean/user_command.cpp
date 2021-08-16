@@ -86,7 +86,7 @@ static environment add_user_command(environment const & env, name const & d) {
             args.push_back(to_obj(meta));
         }
         parser = p.elaborate("_user_command", {}, parser).first;
-        run_parser(p, parser, args, true);
+        data.push(run_parser(p, parser, args, true).first);
         return p.env();
     };
 
