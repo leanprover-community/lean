@@ -185,7 +185,7 @@ instance : linear_order ℕ :=
 protected lemma eq_zero_of_le_zero : ∀ {n : ℕ}, n ≤ 0 → n = 0
 | 0 _ := rfl
 
-lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
+protected lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
 ⟨λ h, nat.eq_zero_of_le_zero h, λ h, h ▸ nat.le_refl n⟩
 
 lemma lt_of_succ_lt {a b : ℕ} : succ a < b → a < b :=
