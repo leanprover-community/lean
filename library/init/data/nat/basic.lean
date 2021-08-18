@@ -18,12 +18,6 @@ protected def ble : ℕ → ℕ → bool
 
 protected def le (n m : ℕ) : Prop := nat.ble n m = true
 
--- protected def le : ℕ → ℕ → Prop
--- | 0     0     := true
--- | 0     (m+1) := true
--- | (n+1) 0     := false
--- | (n+1) (m+1) := le n m
-
 @[reducible] protected def lt (n m : ℕ) := nat.le (succ n) m
 
 instance : has_le ℕ :=
