@@ -114,7 +114,7 @@ by rw [nat.mul_comm, nat.mul_one]
 /- properties of inequality -/
 
 protected lemma le_of_eq {n m : ℕ} (p : n = m) : n ≤ m :=
-p ▸ less_than_or_equal.refl
+p ▸ nat.le_refl n
 
 lemma le_succ_of_le {n m : ℕ} (h : n ≤ m) : n ≤ succ m :=
 nat.le_trans h (le_succ m)
@@ -125,7 +125,8 @@ nat.le_trans (le_succ n) h
 protected lemma le_of_lt {n m : ℕ} (h : n < m) : n ≤ m :=
 le_of_succ_le h
 
-lemma lt.step {n m : ℕ} : n < m → n < succ m := less_than_or_equal.step
+lemma lt.step {n m : ℕ} : n < m → n < succ m :=
+λ h, nat.le_trans h (le_succ _)
 
 protected lemma eq_zero_or_pos (n : ℕ) : n = 0 ∨ 0 < n :=
 by {cases n, exact or.inl rfl, exact or.inr (succ_pos _)}
@@ -134,7 +135,7 @@ protected lemma pos_of_ne_zero {n : nat} : n ≠ 0 → 0 < n :=
 or.resolve_left n.eq_zero_or_pos
 
 protected lemma lt_trans {n m k : ℕ} (h₁ : n < m) : m < k → n < k :=
-nat.le_trans (less_than_or_equal.step h₁)
+nat.le_trans h₁.step
 
 protected lemma lt_of_le_of_lt {n m k : ℕ} (h₁ : n ≤ m) : m < k → n < k :=
 nat.le_trans (succ_le_succ h₁)
@@ -143,8 +144,9 @@ lemma lt.base (n : ℕ) : n < succ n := nat.le_refl (succ n)
 
 lemma lt_succ_self (n : ℕ) : n < succ n := lt.base n
 
-protected lemma le_antisymm {n m : ℕ} (h₁ : n ≤ m) : m ≤ n → n = m :=
-less_than_or_equal.cases_on h₁ (λ a, rfl) (λ a b c, absurd (nat.lt_of_le_of_lt b c) (nat.lt_irrefl n))
+protected lemma le_antisymm : ∀ {n m : ℕ}, n ≤ m → m ≤ n → n = m
+| 0     0     _  _  := rfl
+| (n+1) (m+1) h₁ h₂ := congr_arg nat.succ (@le_antisymm n m h₁ h₂)
 
 protected lemma lt_or_ge : ∀ (a b : ℕ), a < b ∨ b ≤ a
 | a 0     := or.inr a.zero_le
@@ -169,7 +171,7 @@ protected lemma lt_iff_le_not_le {m n : ℕ} : m < n ↔ (m ≤ n ∧ ¬ n ≤ m
  λ ⟨hmn, hnm⟩, nat.lt_of_le_and_ne hmn (λ heq, hnm (heq ▸ nat.le_refl _))⟩
 
 instance : linear_order ℕ :=
-{ le := nat.less_than_or_equal,
+{ le := nat.le,
   le_refl := @nat.le_refl,
   le_trans := @nat.le_trans,
   le_antisymm := @nat.le_antisymm,
@@ -182,9 +184,6 @@ instance : linear_order ℕ :=
 
 protected lemma eq_zero_of_le_zero {n : nat} (h : n ≤ 0) : n = 0 :=
 le_antisymm h n.zero_le
-
-lemma succ_lt_succ {a b : ℕ} : a < b → succ a < succ b :=
-succ_le_succ
 
 lemma lt_of_succ_lt {a b : ℕ} : succ a < b → a < b :=
 le_of_succ_le
@@ -209,10 +208,9 @@ protected lemma le_add_left (n m : ℕ): n ≤ m + n :=
 nat.add_comm n m ▸ n.le_add_right m
 
 lemma le.dest : ∀ {n m : ℕ}, n ≤ m → ∃ k, n + k = m
-| n _ less_than_or_equal.refl := ⟨0, rfl⟩
-| n _ (less_than_or_equal.step h) :=
-  match le.dest h with
-  | ⟨w, hw⟩ := ⟨succ w, hw ▸ add_succ n w⟩
+| 0 m h := ⟨m, nat.zero_add _⟩
+| (n+1) (m+1) h := match @le.dest n m h with
+  | ⟨w, hw⟩ := ⟨w, by rw [←hw, nat.add_assoc, nat.add_comm 1 w, nat.add_assoc]⟩
   end
 
 protected lemma le.intro {n m k : ℕ} (h : n + k = m) : n ≤ m :=
@@ -879,7 +877,7 @@ theorem eq_zero_of_mul_eq_zero : ∀ {n m : ℕ}, n * m = 0 → n = 0 ∨ m = 0
 /- properties of inequality -/
 
 theorem le_succ_of_pred_le {n m : ℕ} : pred n ≤ m → n ≤ succ m :=
-nat.cases_on n less_than_or_equal.step (λ a, succ_le_succ)
+nat.cases_on n le_succ_of_le (λ a, succ_le_succ)
 
 theorem le_lt_antisymm {n m : ℕ} (h₁ : n ≤ m) (h₂ : m < n) : false :=
 nat.lt_irrefl n (nat.lt_of_le_of_lt h₁ h₂)

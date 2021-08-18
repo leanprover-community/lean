@@ -10,15 +10,24 @@ notation `ℕ` := nat
 
 namespace nat
 
-inductive less_than_or_equal (a : ℕ) : ℕ → Prop
-| refl : less_than_or_equal a
-| step : Π {b}, less_than_or_equal b → less_than_or_equal (succ b)
+protected def ble : ℕ → ℕ → bool
+| 0     0     := tt
+| 0     (m+1) := tt
+| (n+1) 0     := ff
+| (n+1) (m+1) := ble n m
+
+protected def le (n m : ℕ) : Prop := nat.ble n m = true
+
+-- protected def le : ℕ → ℕ → Prop
+-- | 0     0     := true
+-- | 0     (m+1) := true
+-- | (n+1) 0     := false
+-- | (n+1) (m+1) := le n m
+
+@[reducible] protected def lt (n m : ℕ) := nat.le (succ n) m
 
 instance : has_le ℕ :=
-⟨nat.less_than_or_equal⟩
-
-@[reducible] protected def le (n m : ℕ) := nat.less_than_or_equal n m
-@[reducible] protected def lt (n m : ℕ) := nat.less_than_or_equal (succ n) m
+⟨nat.le⟩
 
 instance : has_lt ℕ :=
 ⟨nat.lt⟩
@@ -67,18 +76,20 @@ rfl
 
 /- properties of inequality -/
 
-@[refl] protected lemma le_refl (a : ℕ) : a ≤ a :=
-less_than_or_equal.refl
+@[refl] protected lemma le_refl : ∀ n : ℕ, n ≤ n
+| 0     := rfl
+| (n+1) := le_refl n
 
-lemma le_succ (n : ℕ) : n ≤ succ n :=
-less_than_or_equal.step (nat.le_refl n)
+lemma le_succ : ∀ n : ℕ, n ≤ succ n
+| 0     := rfl
+| (n+1) := le_succ n
 
 lemma succ_le_succ {n m : ℕ} : n ≤ m → succ n ≤ succ m :=
-λ h, less_than_or_equal.rec (nat.le_refl (succ n)) (λ a b, less_than_or_equal.step) h
+λ h, h
 
 protected lemma zero_le : ∀ (n : ℕ), 0 ≤ n
-| 0     := nat.le_refl 0
-| (n+1) := less_than_or_equal.step (zero_le n)
+| 0     := rfl
+| (n+1) := rfl
 
 lemma zero_lt_succ (n : ℕ) : 0 < succ n :=
 succ_le_succ n.zero_le
@@ -90,10 +101,11 @@ lemma not_succ_le_zero : ∀ (n : ℕ), succ n ≤ 0 → false
 
 protected lemma not_lt_zero (a : ℕ) : ¬ a < 0 := not_succ_le_zero a
 
-lemma pred_le_pred {n m : ℕ} : n ≤ m → pred n ≤ pred m :=
-λ h, less_than_or_equal.rec_on h
-  (nat.le_refl (pred n))
-  (λ n, nat.rec (λ a b, b) (λ a b c, less_than_or_equal.step) n)
+lemma pred_le_pred : ∀ {n m : ℕ}, n ≤ m → pred n ≤ pred m
+| 0     0     h := rfl
+| 0     1     h := rfl
+| 0     (m+2) h := rfl
+| (n+1) (m+1) h := h
 
 lemma le_of_succ_le_succ {n m : ℕ} : succ n ≤ succ m → n ≤ m :=
 pred_le_pred
@@ -110,8 +122,16 @@ instance decidable_le : ∀ a b : ℕ, decidable (a ≤ b)
 instance decidable_lt : ∀ a b : ℕ, decidable (a < b) :=
 λ a b, nat.decidable_le (succ a) b
 
-protected lemma eq_or_lt_of_le {a b : ℕ} (h : a ≤ b) : a = b ∨ a < b :=
-less_than_or_equal.cases_on h (or.inl rfl) (λ n h, or.inr (succ_le_succ h))
+lemma succ_lt_succ {n m : ℕ} : n < m → succ n < succ m :=
+λ h, h
+
+protected lemma eq_or_lt_of_le : ∀ {a b : ℕ} (h : a ≤ b), a = b ∨ a < b
+| 0     0     h := or.inl rfl
+| 0     (b+1) h := or.inr (zero_lt_succ b)
+| (a+1) (b+1) h := match @eq_or_lt_of_le a b h with
+  | or.inl w := or.inl (congr_arg nat.succ w)
+  | or.inr w := or.inr (succ_lt_succ w)
+  end
 
 lemma lt_succ_of_le {a b : ℕ} : a ≤ b → a < succ b :=
 succ_le_succ
@@ -127,16 +147,20 @@ lemma not_succ_le_self : ∀ n : ℕ, ¬succ n ≤ n :=
 protected lemma lt_irrefl (n : ℕ) : ¬n < n :=
 not_succ_le_self n
 
-protected lemma le_trans {n m k : ℕ} (h1 : n ≤ m) : m ≤ k → n ≤ k :=
-less_than_or_equal.rec h1 (λ p h2, less_than_or_equal.step)
+protected lemma le_trans : ∀ {n m k : ℕ}, n ≤ m → m ≤ k → n ≤ k
+| 0     0     0     _ _ := rfl
+| 0     0     (k+1) _ _ := rfl
+| 0     (m+1) (k+1) _ _ := rfl
+| (n+1) (m+1) (k+1) h₁ h₂ := @le_trans n m k h₁ h₂
 
 lemma pred_le : ∀ (n : ℕ), pred n ≤ n
-| 0        := less_than_or_equal.refl
-| (succ a) := less_than_or_equal.step less_than_or_equal.refl
+| 0     := rfl
+| 1     := rfl
+| (n+2) := pred_le (n+1)
 
 lemma pred_lt : ∀ {n : ℕ}, n ≠ 0 → pred n < n
 | 0        h := absurd rfl h
-| (succ a) h := lt_succ_of_le less_than_or_equal.refl
+| (succ a) h := lt_succ_of_le (nat.le_refl _)
 
 protected lemma sub_le (a b : ℕ) : a - b ≤ a :=
 nat.rec_on b (nat.le_refl (a - 0)) (λ b₁, nat.le_trans (pred_le (a - b₁)))
