@@ -182,8 +182,11 @@ instance : linear_order ℕ :=
   decidable_le               := nat.decidable_le,
   decidable_eq               := nat.decidable_eq }
 
-protected lemma eq_zero_of_le_zero {n : nat} (h : n ≤ 0) : n = 0 :=
-le_antisymm h n.zero_le
+protected lemma eq_zero_of_le_zero : ∀ {n : ℕ}, n ≤ 0 → n = 0
+| 0 _ := rfl
+
+lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
+⟨λ h, nat.eq_zero_of_le_zero h, λ h, h ▸ nat.le_refl n⟩
 
 lemma lt_of_succ_lt {a b : ℕ} : succ a < b → a < b :=
 le_of_succ_le
@@ -618,7 +621,8 @@ private lemma mod_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
   nat.mod_core y f1 x = nat.mod_core y f2 x :=
 begin
   cases y, { cases f1; cases f2; refl },
-  induction f1 with f1 ih generalizing x f2, { cases h1, cases f2; refl },
+  induction f1 with f1 ih generalizing x f2,
+    { cases nat.le_zero_iff.mp h1, cases f2; refl },
   cases x, { cases f1; cases f2; refl },
   cases f2, { cases h2 },
   refine if_congr iff.rfl _ rfl,
@@ -696,7 +700,8 @@ private lemma div_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
   nat.div_core y f1 x = nat.div_core y f2 x :=
 begin
   cases y, { cases f1; cases f2; refl },
-  induction f1 with f1 ih generalizing x f2, { cases h1, cases f2; refl },
+  induction f1 with f1 ih generalizing x f2,
+    { cases nat.le_zero_iff.mp h1, cases f2; refl },
   cases x, { cases f1; cases f2; refl },
   cases f2, { cases h2 },
   refine if_congr iff.rfl _ rfl,
@@ -908,8 +913,10 @@ lemma one_pos : 0 < 1 := nat.zero_lt_one
 
 /- subtraction -/
 
-protected theorem sub_le_sub_left {n m : ℕ} (k) (h : n ≤ m) : k - m ≤ k - n :=
-by induction h; [refl, exact le_trans (pred_le _) h_ih]
+protected theorem sub_le_sub_left : ∀ {n m : ℕ} (k), n ≤ m → k - m ≤ k - n
+| 0 0 k _ := le_refl k
+| 0 (m+1) k _ := le_trans (pred_le _) (sub_le_sub_left k m.zero_le)
+| (n+1) (m+1) k h := pred_le_pred (@sub_le_sub_left n m k h)
 
 theorem succ_sub_sub_succ (n m k : ℕ) : succ n - m - succ k = n - m - k :=
 by rw [nat.sub_sub, nat.sub_sub, add_succ, succ_sub_succ]
