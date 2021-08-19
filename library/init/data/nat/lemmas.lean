@@ -194,6 +194,18 @@ le_of_succ_le
 lemma lt_of_succ_lt_succ {a b : ℕ} : succ a < succ b → a < b :=
 le_of_succ_le_succ
 
+lemma lt_succ_iff {n m : ℕ} : n < m + 1 ↔ n = m ∨ n < m :=
+⟨λ h, begin
+    cases nat.eq_or_lt_of_le h with h h,
+    { left, cases h, refl, },
+    { right, exact lt_of_succ_lt_succ h, },
+  end,
+ λ h, begin
+    cases h,
+    { subst h, exact lt_succ_self _, },
+    { exact lt_trans h (lt_succ_self _) },
+  end⟩
+
 lemma pred_lt_pred : ∀ {n m : ℕ}, n ≠ 0 → n < m → pred n < pred m
 | 0         _       h₁ h := absurd rfl h₁
 | n         0       h₁ h := absurd h n.not_lt_zero
