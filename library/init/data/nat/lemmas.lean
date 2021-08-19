@@ -215,6 +215,21 @@ lemma lt_of_succ_le {a b : ℕ} (h : succ a ≤ b) : a < b := h
 
 lemma succ_le_of_lt {a b : ℕ} (h : a < b) : succ a ≤ b := h
 
+lemma le_of_lt_succ {m n : nat} : m < succ n → m ≤ n :=
+le_of_succ_le_succ
+
+protected lemma le.induction_on {a : ℕ} {motive : Π b, a ≤ b → Prop}
+  {b : ℕ} (k : a ≤ b) (h : motive a (le_refl a))
+  (w : ∀ {b : ℕ} (k : a ≤ b), motive b k → motive (b+1) (le_trans k (nat.le_succ b))) :
+  motive b k :=
+begin
+  induction b with b ih,
+  { cases nat.le_zero_iff.mp k, assumption, },
+  { cases nat.eq_or_lt_of_le k with k' k',
+    { subst k', assumption, },
+    { fapply w, apply nat.le_of_lt_succ k', apply ih, } }
+end
+
 protected lemma le_add_right : ∀ (n k : ℕ), n ≤ n + k
 | n 0     := nat.le_refl n
 | n (k+1) := le_succ_of_le (le_add_right n k)
@@ -310,9 +325,6 @@ not_lt.1
   (assume h1 : b < a,
    have h2 : c * b < c * a, from nat.mul_lt_mul_of_pos_left h1 hc,
    not_le_of_gt h2 h)
-
-lemma le_of_lt_succ {m n : nat} : m < succ n → m ≤ n :=
-le_of_succ_le_succ
 
 protected theorem eq_of_mul_eq_mul_left {m k n : ℕ} (Hn : 0 < n) (H : n * m = n * k) : m = k :=
 le_antisymm (nat.le_of_mul_le_mul_left (le_of_eq H) Hn)
@@ -925,10 +937,12 @@ lemma one_pos : 0 < 1 := nat.zero_lt_one
 
 /- subtraction -/
 
-protected theorem sub_le_sub_left : ∀ {n m : ℕ} (k), n ≤ m → k - m ≤ k - n
-| 0 0 k _ := le_refl k
-| 0 (m+1) k _ := le_trans (pred_le _) (sub_le_sub_left k m.zero_le)
-| (n+1) (m+1) k h := pred_le_pred (@sub_le_sub_left n m k h)
+protected theorem sub_le_sub_left {n m : ℕ} (k) (h : n ≤ m) : k - m ≤ k - n :=
+begin
+  apply nat.le.induction_on h,
+  { refl, },
+  { intros m h ih, exact le_trans (pred_le _) ih }
+end
 
 theorem succ_sub_sub_succ (n m k : ℕ) : succ n - m - succ k = n - m - k :=
 by rw [nat.sub_sub, nat.sub_sub, add_succ, succ_sub_succ]
