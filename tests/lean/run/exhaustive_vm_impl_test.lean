@@ -16,7 +16,7 @@ instance nat.decidable_ball (p : ℕ → Prop) [∀ i, decidable (p i)] : ∀ n,
         if h' : p n then
             decidable.is_true begin
                 intros x hx,
-                cases nat.lt_succ_iff.mp hx with h₁ h₂,
+                cases nat.lt_succ_iff_eq_or_lt.mp hx with h₁ h₂,
                 { exact h₁.symm ▸ h', },
                 { exact h _ h₂, },
             end

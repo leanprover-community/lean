@@ -194,7 +194,7 @@ le_of_succ_le
 lemma lt_of_succ_lt_succ {a b : ℕ} : succ a < succ b → a < b :=
 le_of_succ_le_succ
 
-lemma lt_succ_iff {n m : ℕ} : n < m + 1 ↔ n = m ∨ n < m :=
+lemma lt_succ_iff_eq_or_lt {n m : ℕ} : n < m + 1 ↔ n = m ∨ n < m :=
 ⟨λ h, begin
     cases nat.eq_or_lt_of_le h with h h,
     { left, cases h, refl, },
