@@ -433,7 +433,7 @@ vdom render_element(vm_obj const & elt, std::vector<component_instance*> & compo
                 if (key == "className" && attributes.find(key) != attributes.end()) {
                     std::string cn = attributes[key];
                     cn += " ";
-                    cn += value;
+                    cn += value.get<std::string>();
                     attributes[key] = cn;
                 } else {
                     attributes[key] = value;
