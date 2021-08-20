@@ -146,7 +146,10 @@ lemma lt_succ_self (n : ℕ) : n < succ n := lt.base n
 
 protected lemma le_antisymm : ∀ {n m : ℕ}, n ≤ m → m ≤ n → n = m
 | 0     0     _  _  := rfl
-| (n+1) (m+1) h₁ h₂ := congr_arg nat.succ (@le_antisymm n m h₁ h₂)
+| 0     (m+1) _  h₂ := by cases nat.eq_zero_of_le_zero h₂
+| (n+1) 0     h₁ _  := by cases nat.eq_zero_of_le_zero h₁
+| (n+1) (m+1) h₁ h₂ := congr_arg nat.succ
+    (@le_antisymm n m (nat.le_of_succ_le_succ h₁) (nat.le_of_succ_le_succ h₂))
 
 protected lemma lt_or_ge : ∀ (a b : ℕ), a < b ∨ b ≤ a
 | a 0     := or.inr a.zero_le
@@ -181,12 +184,6 @@ instance : linear_order ℕ :=
   decidable_lt               := nat.decidable_lt,
   decidable_le               := nat.decidable_le,
   decidable_eq               := nat.decidable_eq }
-
-protected lemma eq_zero_of_le_zero : ∀ {n : ℕ}, n ≤ 0 → n = 0
-| 0 _ := rfl
-
-lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
-⟨λ h, nat.eq_zero_of_le_zero h, λ h, h ▸ nat.le_refl n⟩
 
 lemma lt_of_succ_lt {a b : ℕ} : succ a < b → a < b :=
 le_of_succ_le
@@ -241,7 +238,8 @@ nat.add_comm n m ▸ n.le_add_right m
 
 lemma le.dest : ∀ {n m : ℕ}, n ≤ m → ∃ k, n + k = m
 | 0 m h := ⟨m, nat.zero_add _⟩
-| (n+1) (m+1) h := match @le.dest n m h with
+| (n+1) 0 h := by cases nat.le_zero_iff.mp h
+| (n+1) (m+1) h := match @le.dest n m (nat.le_of_succ_le_succ h) with
   | ⟨w, hw⟩ := ⟨w, by rw [←hw, nat.add_assoc, nat.add_comm 1 w, nat.add_assoc]⟩
   end
 
@@ -650,7 +648,7 @@ begin
   induction f1 with f1 ih generalizing x f2,
     { cases nat.le_zero_iff.mp h1, cases f2; refl },
   cases x, { cases f1; cases f2; refl },
-  cases f2, { cases h2 },
+  cases f2, { cases not_succ_le_zero _ h2 },
   refine if_congr iff.rfl _ rfl,
   simp only [succ_sub_succ],
   exact ih
@@ -729,7 +727,7 @@ begin
   induction f1 with f1 ih generalizing x f2,
     { cases nat.le_zero_iff.mp h1, cases f2; refl },
   cases x, { cases f1; cases f2; refl },
-  cases f2, { cases h2 },
+  cases f2, { cases not_succ_le_zero _ h2 },
   refine if_congr iff.rfl _ rfl,
   simp only [succ_sub_succ],
   refine congr_arg (+1) _,

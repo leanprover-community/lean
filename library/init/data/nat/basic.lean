@@ -152,6 +152,14 @@ lemma pred_le : ∀ (n : ℕ), pred n ≤ n
 | 1     := rfl
 | (n+2) := pred_le (n+1)
 
+protected lemma eq_zero_of_le_zero : ∀ {n : ℕ}, n ≤ 0 → n = 0
+| 0 _ := rfl
+
+lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
+⟨λ h, nat.eq_zero_of_le_zero h, λ h, h ▸ nat.le_refl n⟩
+
+attribute [irreducible] nat.le
+
 lemma pred_lt : ∀ {n : ℕ}, n ≠ 0 → pred n < n
 | 0        h := absurd rfl h
 | (succ a) h := lt_succ_of_le (nat.le_refl _)
