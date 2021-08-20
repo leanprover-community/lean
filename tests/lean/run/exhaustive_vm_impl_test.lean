@@ -2,7 +2,7 @@ instance my_pow : has_pow ℕ ℕ :=
 ⟨λ x n, nat.rec_on n 1 (λ _ ih, ih * x)⟩
 
 instance nat.decidable_ball (p : ℕ → Prop) [∀ i, decidable (p i)] : ∀ n, decidable (∀ x < n, p x)
-| 0 := decidable.is_true begin intros n h, cases h end
+| 0 := decidable.is_true begin intros n h, cases nat.not_lt_zero _ h end
 | (n+1) :=
     match nat.decidable_ball n with
     | (decidable.is_false h) :=
@@ -15,15 +15,16 @@ instance nat.decidable_ball (p : ℕ → Prop) [∀ i, decidable (p i)] : ∀ n,
     | (decidable.is_true h) :=
         if h' : p n then
             decidable.is_true begin
-                intros x hx, cases hx,
-                {assumption},
-                {apply h, assumption},
+                intros x hx,
+                cases nat.lt_succ_iff_eq_or_lt.mp hx with h₁ h₂,
+                { exact h₁.symm ▸ h', },
+                { exact h _ h₂, },
             end
         else
             decidable.is_false begin
                intro hpx,
                apply h', apply hpx,
-               constructor,
+               apply nat.lt_succ_self,
             end
     end
 
