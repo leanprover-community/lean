@@ -155,7 +155,7 @@ optional<expr> mk_is_valid_char_proof(expr const & v) {
 
 optional<expr> mk_char_val_ne_proof(expr const & a, expr const & b) {
     if (is_app_of(a, get_char_of_nat_name(), 1) &&
-        is_app_of(a, get_char_of_nat_name(), 1)) {
+        is_app_of(b, get_char_of_nat_name(), 1)) {
         expr const & v_a = app_arg(a);
         expr const & v_b = app_arg(b);
         if (auto h_1 = mk_nat_val_ne_proof(v_a, v_b)) {
