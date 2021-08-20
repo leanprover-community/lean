@@ -185,7 +185,7 @@ instance : linear_order ℕ :=
 protected lemma eq_zero_of_le_zero : ∀ {n : ℕ}, n ≤ 0 → n = 0
 | 0 _ := rfl
 
-protected lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
+lemma le_zero_iff {n : ℕ} : n ≤ 0 ↔ n = 0 :=
 ⟨λ h, nat.eq_zero_of_le_zero h, λ h, h ▸ nat.le_refl n⟩
 
 lemma lt_of_succ_lt {a b : ℕ} : succ a < b → a < b :=
@@ -218,16 +218,18 @@ lemma succ_le_of_lt {a b : ℕ} (h : a < b) : succ a ≤ b := h
 lemma le_of_lt_succ {m n : nat} : m < succ n → m ≤ n :=
 le_of_succ_le_succ
 
-protected lemma le.induction_on {a : ℕ} {motive : Π b, a ≤ b → Prop}
+protected def le.induction_on {a : ℕ} {motive : Π b, a ≤ b → Sort*}
   {b : ℕ} (k : a ≤ b) (h : motive a (le_refl a))
-  (w : ∀ {b : ℕ} (k : a ≤ b), motive b k → motive (b+1) (le_trans k (nat.le_succ b))) :
+  (w : ∀ {b : ℕ} (k : a ≤ b),
+    motive b k → motive (b+1) (le_trans k (nat.le_succ b))) :
   motive b k :=
 begin
   induction b with b ih,
   { cases nat.le_zero_iff.mp k, assumption, },
-  { cases nat.eq_or_lt_of_le k with k' k',
+  { by_cases k' : a = b + 1,
     { subst k', assumption, },
-    { fapply w, apply nat.le_of_lt_succ k', apply ih, } }
+    { exact w (nat.le_of_lt_succ ((nat.eq_or_lt_of_le k).resolve_left k'))
+        (ih _) } }
 end
 
 protected lemma le_add_right : ∀ (n k : ℕ), n ≤ n + k
