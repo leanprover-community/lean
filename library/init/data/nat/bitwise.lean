@@ -168,7 +168,6 @@ lemma shiftr_add (m n) : ∀ k, shiftr m (n + k) = shiftr (shiftr m n) k
 
 lemma shiftl'_sub (b m) : ∀ {n k}, k ≤ n → shiftl' b m (n - k) = shiftr (shiftl' b m n) k
 | n     0     h := rfl
-| 0     (k+1) h := by cases nat.not_succ_le_zero _ h
 | (n+1) (k+1) h := begin
   simp [shiftl'], rw [nat.add_comm, shiftr_add],
   simp [shiftr, div2_bit],
