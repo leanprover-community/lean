@@ -161,7 +161,7 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     case expr_kind::Macro:
         if (macro_def(e).can_textualize()) {
             buffer<unsigned> args;
-            for (auto i = 0; i < macro_num_args(e); ++i) {
+            for (unsigned i = 0; i < macro_num_args(e); ++i) {
                 args.push_back(export_expr_core(macro_arg(e, i)));
             }
             i = static_cast<unsigned>(m_expr2idx.size());
