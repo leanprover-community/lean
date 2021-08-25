@@ -45,13 +45,16 @@ typedef interaction_monad<lean_parser_state> lean_parser;
 #define CATCH } catch (break_at_pos_exception const & ex) { throw; }\
                 catch (exception const & ex) { return lean_parser::mk_exception(ex, s); }
 
-vm_obj run_parser(parser & p, expr const & spec, buffer<vm_obj> const & args, bool allow_profiler) {
+pair<ast_id, vm_obj> run_parser(parser & p, expr const & spec, buffer<vm_obj> const & args, bool allow_profiler) {
     type_context_old ctx(p.env(), p.get_options());
+    auto& data = p.new_ast("parse", p.pos());
+    auto old = p.set_vm_parse_parent(data.m_id);
     auto r = lean_parser::evaluator(ctx, p.get_options(), allow_profiler)(spec, args, {&p});
-    return lean_parser::get_success_value(r);
+    p.set_vm_parse_parent(old);
+    return {data.m_id, lean_parser::get_success_value(r)};
 }
 
-expr parse_interactive_param(parser & p, expr const & param_ty) {
+expr parse_interactive_param(parser & p, ast_data & parent, expr const & param_ty) {
     lean_assert(is_app_of(param_ty, get_interactive_parse_name()));
     buffer<expr> param_args;
     get_app_args(param_ty, param_args);
@@ -63,12 +66,16 @@ expr parse_interactive_param(parser & p, expr const & param_ty) {
     try {
         expr pr = mk_app({mk_constant(get_lean_parser_reflectable_expr_name()),
             param_args[0], param_args[1], param_args[2]});
-        expr r = to_expr(run_parser(p, pr));
-        if (is_app_of(r, get_expr_subst_name())) {
-            return r; // HACK
-        } else {
-            return mk_as_is(r);
+        ast_id id; vm_obj obj;
+        std::tie(id, obj) = run_parser(p, pr);
+        expr r = to_expr(obj);
+        if (!is_app_of(r, get_expr_subst_name())) { // HACK
+            r = mk_as_is(r);
         }
+        r.set_tag(nulltag);
+        p.set_ast_pexpr(id, r);
+        parent.push(id);
+        return r;
     } catch (exception & ex) {
         if (!p.has_error_recovery()) throw;
         p.mk_message(ERROR).set_exception(ex).report();
@@ -172,7 +179,9 @@ vm_obj vm_parser_ident(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
     TRY;
         auto _ = s.m_p->no_error_recovery_scope();
-        name ident = s.m_p->check_id_next("identifier expected");
+        ast_id id; name ident;
+        std::tie(id, ident) = s.m_p->check_id_next("identifier expected");
+        s.m_p->push_from_vm_parse(id);
         return lean_parser::mk_success(to_obj(ident), s);
     CATCH;
 }
@@ -181,7 +190,9 @@ vm_obj vm_parser_small_nat(vm_obj const & o) {
     auto const & s = lean_parser::to_state(o);
     TRY;
         auto _ = s.m_p->no_error_recovery_scope();
-        unsigned n = s.m_p->parse_small_nat();
+        ast_id id; unsigned n;
+        std::tie(id, n) = s.m_p->parse_small_nat();
+        s.m_p->push_from_vm_parse(id);
         return lean_parser::mk_success(mk_vm_nat(n), s);
     CATCH;
 }
@@ -192,6 +203,7 @@ vm_obj vm_parser_tk(vm_obj const & vm_tk, vm_obj const & o) {
         name tk = to_string(vm_tk);
         if (!s.m_p->curr_is_token(tk))
             throw parser_error(sstream() << "'" << tk << "' expected", s.m_p->pos());
+        s.m_p->push_from_vm_parse(s.m_p->new_ast("token", s.m_p->pos(), tk).m_id);
         s.m_p->next();
         return lean_parser::mk_success(s);
     CATCH;
@@ -286,6 +298,7 @@ vm_obj vm_parser_pexpr(vm_obj const & vm_rbp, vm_obj const & vm_pat, vm_obj cons
         restore_decl_meta_scope scope;
         auto rbp = to_unsigned(vm_rbp);
         auto pat = to_bool(vm_pat);
+        auto pos = s.m_p->pos();
         optional<expr> e;
         if (pat) {
             e = s.m_p->maybe_parse_pattern(rbp);
@@ -293,6 +306,8 @@ vm_obj vm_parser_pexpr(vm_obj const & vm_rbp, vm_obj const & vm_pat, vm_obj cons
             e = s.m_p->maybe_parse_expr(rbp);
         }
         if (e) {
+            auto id = s.m_p->new_ast(pat ? "pat" : "expr", pos).push(s.m_p->get_id(*e)).m_id;
+            s.m_p->push_from_vm_parse(id);
             return lean_parser::mk_success(to_obj(*e), s);
         } else {
             throw parser_error(sstream() << "expression expected", s.m_p->pos());
@@ -305,8 +320,8 @@ vm_obj vm_parser_itactic_reflected(vm_obj const & o) {
     TRY;
         metavar_context mctx;
         auto _ = s.m_p->no_error_recovery_scope();
-
         expr e = parse_nested_interactive_tactic(*s.m_p, get_tactic_name(), true);
+        s.m_p->push_from_vm_parse(s.m_p->get_id(e));
         vm_obj r = to_obj(s.m_p->elaborate({}, mctx, e, false).first);
         r = mk_vm_constructor(0, r, r);
         return lean_parser::mk_success(r, s);
@@ -336,12 +351,17 @@ vm_obj vm_parser_with_input(vm_obj const &, vm_obj const & vm_p, vm_obj const & 
     std::string input = to_string(vm_input);
     std::istringstream strm(input);
     vm_obj vm_state; pos_info pos;
+    auto old_id = s.m_p->get_vm_parse_parent();
+    auto& new_data = s.m_p->new_ast("with_input", s.m_p->pos());
+    s.m_p->push_from_vm_parse(new_data.m_id);
+    s.m_p->set_vm_parse_parent(new_data.m_id);
     auto _ = s.m_p->no_error_recovery_scope();
     TRY;
         std::tie(vm_state, pos) = s.m_p->with_input<vm_obj>(strm, [&]() {
             return invoke(vm_p, o);
         });
     CATCH;
+    s.m_p->set_vm_parse_parent(old_id);
 
     if (lean_parser::is_result_exception(vm_state)) {
         return vm_state;
@@ -361,14 +381,16 @@ vm_obj vm_parser_with_input(vm_obj const &, vm_obj const & vm_p, vm_obj const & 
         }
         spos += get_utf8_size(input[spos]);
     }
-
+    new_data.m_value = std::to_string(spos);
     vm_res = mk_vm_pair(vm_res, to_obj(input.substr(spos)));
     return lean_parser::mk_success(vm_res, lean_parser::get_success_state(vm_state));
 }
 static vm_obj vm_parser_command_like(vm_obj const & vm_s) {
     auto s = lean_parser::to_state(vm_s);
     TRY;
-        s.m_p->parse_command_like();
+        auto& data = s.m_p->new_ast("command", s.m_p->pos());
+        s.m_p->push_from_vm_parse(data.m_id);
+        s.m_p->parse_command_like(&data);
         return lean_parser::mk_success(s);
     CATCH;
 }
@@ -395,7 +417,9 @@ static vm_obj to_obj(inductive_decl const & d) {
 static vm_obj interactive_inductive_decl_parse(vm_obj const & vm_meta, vm_obj const & vm_s) {
     auto s = lean_parser::to_state(vm_s);
     TRY;
-        auto decl = parse_inductive_decl(*s.m_p, to_cmd_meta(vm_meta));
+        auto& data = s.m_p->new_ast("inductive", s.m_p->pos());
+        s.m_p->push_from_vm_parse(data.m_id);
+        auto decl = parse_inductive_decl(*s.m_p, data.m_id, to_cmd_meta(vm_meta));
         return lean_parser::mk_success(to_obj(decl), s);
     CATCH;
 }
@@ -404,7 +428,9 @@ static vm_obj interactive_parse_binders(vm_obj const & vm_rbp, vm_obj const & vm
     auto s = lean_parser::to_state(vm_s);
     TRY;
         buffer<expr> binders;
-        s.m_p->parse_binders(binders, to_unsigned(vm_rbp));
+        auto& data = s.m_p->new_ast("binders", s.m_p->pos());
+        s.m_p->push_from_vm_parse(data.m_id);
+        s.m_p->parse_binders(&data, binders, to_unsigned(vm_rbp));
         return lean_parser::mk_success(to_obj(binders), s);
     CATCH;
 }

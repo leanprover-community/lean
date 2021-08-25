@@ -8,7 +8,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/cmd_table.h"
 namespace lean {
 class parser;
-expr parse_calc(parser & p);
+expr parse_calc(parser & p, pos_info const & pos);
 bool is_calc_annotation(expr const & e);
 void initialize_calc();
 void finalize_calc();

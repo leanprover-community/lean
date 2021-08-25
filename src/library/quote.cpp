@@ -16,6 +16,7 @@ Author: Leonardo de Moura
 #include "library/util.h"
 #include "library/quote.h"
 #include "library/type_context.h"
+#include "library/ast_exporter.h"
 
 namespace lean {
 static std::string * g_expr_quote_opcode  = nullptr;
@@ -61,6 +62,12 @@ public:
     }
     virtual unsigned hash() const override { return m_value.hash(); }
     virtual void write(serializer & s) const override { s << *g_expr_quote_opcode << m_value << m_reflected; }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter & exp, json & j) const override {
+        j["value"] = exp.export_expr(m_value);
+        j["reflected"] = m_reflected;
+    }
+#endif
     expr const & get_value() const { return m_value; }
     bool const & is_reflected() const { return m_reflected; }
 };

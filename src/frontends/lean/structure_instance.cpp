@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #include <string>
 #include "util/sstream.h"
 #include "library/kernel_serializer.h"
+#include "frontends/lean/json.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/tokens.h"
 #include "frontends/lean/structure_instance.h"
@@ -42,6 +43,14 @@ public:
         s << *g_structure_instance_opcode << m_struct << m_catchall;
         write_list(s, m_fields);
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["struct"] = json_of_name(m_struct);
+        j["catchall"] = m_catchall;
+        auto& jl = j["fields"] = json::array();
+        for (auto& f : m_fields) jl += json_of_name(f);
+    }
+#endif
     name const & get_struct() const { return m_struct; }
     bool get_catchall() const { return m_catchall; }
     list<name> const & get_field_names() const { return m_fields; }

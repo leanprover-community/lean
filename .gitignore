@@ -3,6 +3,7 @@
 .#*
 *.olean
 *.tlean
+*.ast.json
 *.lock
 build
 GPATH

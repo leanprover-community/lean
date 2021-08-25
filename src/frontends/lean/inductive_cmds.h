@@ -20,8 +20,8 @@ struct inductive_decl {
     buffer<single_inductive_decl> m_decls;
 };
 
-inductive_decl parse_inductive_decl(parser & p, cmd_meta const & meta);
-environment inductive_cmd(parser & p, cmd_meta const & meta);
+inductive_decl parse_inductive_decl(parser & p, ast_id cmd_id, cmd_meta const & meta);
+environment inductive_cmd(parser & p, ast_id & cmd_id, cmd_meta const & meta);
 
 void register_inductive_cmds(cmd_table & r);
 void initialize_inductive_cmds();

@@ -10,6 +10,7 @@ Author: Leonardo de Moura
 #include "kernel/abstract_type_context.h"
 #include "library/replace_visitor.h"
 #include "library/metavar_context.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_delayed_abstraction_macro = nullptr;
@@ -55,6 +56,12 @@ public:
         return length(m_value);
     }
     virtual void write(serializer &) const override { lean_unreachable(); }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        auto& x = j["value"] = json::array();
+        for (auto& n : m_value) x += json_of_name(n);
+    }
+#endif
     list<name> const & get_names() const { return m_value; }
 };
 

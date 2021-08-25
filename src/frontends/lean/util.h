@@ -8,6 +8,7 @@ Author: Leonardo de Moura
 #include "kernel/expr.h"
 #include "kernel/expr_sets.h"
 #include "kernel/type_checker.h"
+#include "library/abstract_parser.h"
 #include "library/util.h"
 #include "library/locals.h"
 #include "library/vm/vm.h"
@@ -82,7 +83,7 @@ expr Pi_as_is(expr const & local, expr const & e);
 level mk_result_level(buffer<level> const & r_lvls);
 
 /** \brief Auxiliary function for check/eval/find_decl */
-std::tuple<expr, level_param_names> parse_local_expr(parser & p, name const & decl_name, bool relaxed = true);
+std::tuple<expr, level_param_names> parse_local_expr(parser & p, ast_data & parent, name const & decl_name, bool relaxed = true);
 
 optional<name> is_uniquely_aliased(environment const & env, name const & n);
 
@@ -99,7 +100,7 @@ char const * open_binder_string(binder_info const & bi, bool unicode);
 char const * close_binder_string(binder_info const & bi, bool unicode);
 
 /** \brief Parse option name */
-pair<name, option_kind> parse_option_name(parser & p, char const * error_msg);
+pair<name, option_kind> parse_option_name(parser & p, ast_data & parent, char const * error_msg);
 
 expr quote(unsigned u);
 expr quote(char const * str);
@@ -110,7 +111,7 @@ bool is_no_info(expr const & e);
 
 expr mk_opt_param(expr const & t, expr const & val);
 expr mk_auto_param(expr const & t, name const & tac_name);
-expr parse_auto_param(parser & p, expr const & type);
+pair<ast_id, expr> parse_auto_param(parser & p, expr const & type);
 
 /* Add frozen annotation around constants and local constants occurring in \c e.
    This annotation is used to prevent lean from resolving the names again

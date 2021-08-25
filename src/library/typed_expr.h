@@ -9,7 +9,7 @@ Author: Leonardo de Moura
 namespace lean {
 class expr;
 /** \brief Create an expression definitionally equal to \c e, but it must have type \c t. */
-expr mk_typed_expr(expr const & t, expr const & e);
+expr mk_typed_expr(expr const & t, expr const & e, tag g = nulltag);
 /** \brief Return true iff \c e was created using #mk_typed_expr */
 bool is_typed_expr(expr const & e);
 /** \brief Return the type of a typed expression

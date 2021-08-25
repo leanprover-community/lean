@@ -19,6 +19,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_expr.h"
 #include "library/tactic/tactic_state.h"
 #include "library/tactic/backward/backward_lemmas.h"
+#include "frontends/lean/parser.h"
 
 namespace lean {
 static optional<head_index> get_backward_target(type_context_old & ctx, expr type) {
@@ -51,11 +52,16 @@ struct intro_attr_data : public attr_data {
         m_eager = d.read_bool();
     }
 
-    void parse(abstract_parser & p) override {
+    ast_id parse(abstract_parser & p) override {
+        ast_id r = 0;
         if (p.curr_is_token("!")) {
-            p.next();
+            lean_assert(dynamic_cast<parser *>(&p));
+            auto& p2 = *static_cast<parser *>(&p);
+            r = p2.new_ast("!", p2.pos()).m_id;
+            p2.next();
             m_eager = true;
         }
+        return r;
     }
     virtual void print(std::ostream & out) override {
         if (m_eager)

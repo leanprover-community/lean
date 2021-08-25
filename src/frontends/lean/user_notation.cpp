@@ -67,12 +67,15 @@ static environment add_user_notation(environment const & env, name const & d, un
                     parser = mk_app(parser, mk_pexpr_quote(args[0]));
                 // `parse (tk c)` arg
                 parser = mk_app(parser, mk_constant(get_unit_star_name()));
+                auto& data = p.new_ast("user_notation", pos, d);
                 for (expr t = type; is_pi(t); t = binding_body(t)) {
                     expr arg_type = binding_domain(t);
                     if (is_app_of(arg_type, get_interactive_parse_name())) {
-                        parser = mk_app(parser, parse_interactive_param(p, arg_type));
+                        parser = mk_app(parser, parse_interactive_param(p, data, arg_type));
                     } else {
+                        auto pos = p.pos();
                         expr e = p.parse_expr(get_max_prec());
+                        data.push(p.new_ast("expr", pos).push(p.get_id(e)).m_id);
                         if (!closed(e) || has_local(e)) {
                             throw elaborator_exception(e, "invalid argument to user-defined notation, must be closed term");
                         }
@@ -81,7 +84,13 @@ static environment add_user_notation(environment const & env, name const & d, un
                 }
                 parser = p.elaborate("_user_notation", {}, parser).first;
                 try {
-                    return to_expr(run_parser(p, parser));
+                    ast_id id; vm_obj obj;
+                    std::tie(id, obj) = run_parser(p, parser);
+                    data.push(id);
+                    expr r = to_expr(obj);
+                    r.set_tag(nulltag);
+                    p.set_ast_pexpr(data.m_id, r);
+                    return r;
                 } catch (formatted_exception const & ex) {
                     if (ex.get_pos() && *ex.get_pos() >= pos) {
                         throw;

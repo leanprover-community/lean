@@ -210,6 +210,7 @@ static void display_help(std::ostream & out) {
     std::cout << "  --server           start lean in server mode\n";
     std::cout << "  --server=file      start lean in server mode, redirecting standard input from the specified file (for debugging)\n";
     // std::cout << "  --no-widgets       turn off reporting on widgets\n";
+    std::cout << "  --ast              export a .ast.json file for every .lean file\n";
 #endif
     std::cout << "  --profile          display elaboration/type checking time for each definition/theorem\n";
     DEBUG_CODE(
@@ -247,6 +248,7 @@ static struct option g_long_options[] = {
     {"path",         no_argument,       0, 'p'},
     {"server",       optional_argument, 0, 'S'},
     {"no-widgets",   no_argument,       0, 'W'},
+    {"ast",          no_argument,       0, 'X'},
 #endif
 #if defined(LEAN_MULTI_THREAD)
     {"tstack",       required_argument, 0, 's'},
@@ -431,6 +433,7 @@ int main(int argc, char ** argv) {
     ::initializer init;
     bool make_mode          = false;
     bool export_tlean       = false;
+    bool export_ast         = false;
     bool use_old_oleans     = false;
     bool report_widgets     = true;
     bool recursive          = false;
@@ -541,6 +544,9 @@ int main(int argc, char ** argv) {
             std::cout << std::setw(2) << out << std::endl;
             return 0;
         }
+        case 'X':
+            export_ast = true;
+            break;
 #endif
         case 'P':
             opts = opts.update("profiler", true);
@@ -634,6 +640,7 @@ int main(int argc, char ** argv) {
         fs_module_vfs vfs;
         module_mgr mod_mgr(&vfs, lt.get_root(), path.get_path(), env, ios);
         mod_mgr.set_use_old_oleans(use_old_oleans);
+        mod_mgr.set_export_ast(export_ast);
         set_global_module_mgr(mod_mgr);
 
         if (run_arg) {

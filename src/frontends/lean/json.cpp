@@ -105,20 +105,22 @@ json serialize_decl(name const & d, environment const & env, options const & o) 
 }
 
 json json_of_name(name const & n0) {
-    json j = json::array();
+    if (n0.is_atomic() && n0.is_string()) return n0.get_string();
 
-    name n = n0;
-    while (!n.is_anonymous()) {
+    buffer<json> js;
+    for (name n = n0; !n.is_anonymous();) {
         if (n.is_numeral()) {
-            j.push_back(n.get_numeral());
+            js.push_back(n.get_numeral());
         } else if (n.is_string()) {
-            j.push_back(n.get_string());
+            js.push_back(n.get_string());
         } else {
-            j.push_back(json());
+            js.push_back(json());
         }
         n = n.get_prefix();
     }
 
+    json j = json::array();
+    for (auto i = js.size(); i != 0;) j.push_back(js[--i]);
     return j;
 }
 

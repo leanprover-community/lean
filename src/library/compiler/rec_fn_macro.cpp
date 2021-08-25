@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include "library/kernel_serializer.h"
 #include "library/compiler/rec_fn_macro.h"
 #include "kernel/abstract_type_context.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_rec_fn_macro_id = nullptr;
@@ -50,6 +51,12 @@ public:
         s.write_string(get_rec_fn_opcode());
         s << m_name;
     }
+
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["name"] = json_of_name(m_name);
+    }
+#endif
 
     virtual bool operator==(macro_definition_cell const & other) const override {
         if (auto other_ptr = dynamic_cast<rec_fn_macro_definition_cell const *>(&other)) {

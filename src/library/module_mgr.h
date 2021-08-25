@@ -51,6 +51,7 @@ struct module_info {
     struct parse_result {
         options               m_opts;
         std::shared_ptr<loaded_module const> m_loaded_module;
+        std::function<void(std::ostream &)> m_ast_export_fn;
     };
     task<parse_result> m_result;
 
@@ -95,6 +96,7 @@ class module_mgr {
     bool m_save_olean = false;
     bool m_use_old_oleans = false;
     bool m_report_widgets = true;
+    bool m_export_ast = false;
 
     search_path m_path;
     environment m_initial_env;
@@ -141,6 +143,7 @@ public:
     bool get_use_old_oleans() const { return m_use_old_oleans; }
     void set_report_widgets(bool report_widgets) { m_report_widgets = report_widgets; }
     bool get_report_widgets() const { return m_report_widgets; }
+    void set_export_ast(bool export_ast) { m_export_ast = export_ast; }
 
     environment get_initial_env() const { return m_initial_env; }
     options get_options() const { return m_ios.get_options(); }
