@@ -187,6 +187,14 @@ section linear_order
 ### Definition of `linear_order` and lemmas about types with a linear order
 -/
 
+/-- Default definition of `max`. -/
+def max_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
+if b ≤ a then a else b
+
+/-- Default definition of `min`. -/
+def min_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
+if a ≤ b then a else b
+
 /-- A linear order is reflexive, transitive, antisymmetric and total relation `≤`.
 We assume that every linear ordered type has decidable `(≤)`, `(<)`, and `(=)`. -/
 class linear_order (α : Type u) extends partial_order α :=
@@ -195,6 +203,10 @@ class linear_order (α : Type u) extends partial_order α :=
 (decidable_eq : decidable_eq α := @decidable_eq_of_decidable_le _ _ decidable_le)
 (decidable_lt : decidable_rel ((<) : α → α → Prop) :=
     @decidable_lt_of_decidable_le _ _ decidable_le)
+(max : α → α → α := @max_default α _ _)
+(max_def : max = @max_default α _ decidable_le . tactic.reflexivity')
+(min : α → α → α := @min_default α _ _)
+(min_def : min = @min_default α _ decidable_le . tactic.reflexivity')
 
 variables [linear_order α]
 
