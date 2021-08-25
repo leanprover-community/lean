@@ -1,8 +1,8 @@
 open nat
 
-definition not_false' (a : nat) : ¬ false :=
-assume H : false,
+definition not_lt_zero (a : nat) : ¬ a < 0 :=
+assume H : a < 0,
 match H with
 end
 
-#check _root_.not_false'
+#check _root_.not_lt_zero
