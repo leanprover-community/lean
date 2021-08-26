@@ -96,14 +96,16 @@ module_loader mk_loader(module_id const & cur_mod, std::vector<module_info::depe
     };
 }
 
-static gtask compile_olean(std::shared_ptr<module_info const> const & mod, log_tree::node const & parsing_lt) {
-    auto errs = has_errors(parsing_lt);
-
-    gtask mod_dep = mk_deep_dependency(mod->m_result, [] (buffer<gtask> & deps, module_info::parse_result const & res) {
+static gtask module_deep_dependency(task<module_info::parse_result> const & result) {
+    return mk_deep_dependency(result, [] (buffer<gtask> & deps, module_info::parse_result const & res) {
         for (auto & mdf : res.m_loaded_module->m_modifications)
             mdf->get_task_dependencies(deps);
         deps.push_back(res.m_loaded_module->m_uses_sorry);
     });
+}
+
+static gtask compile_olean(std::shared_ptr<module_info const> const & mod, gtask const & mod_dep, log_tree::node const & parsing_lt) {
+    auto errs = has_errors(parsing_lt);
 
     std::vector<gtask> olean_deps;
     for (auto & dep : mod->m_deps)
@@ -280,15 +282,12 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
         mod->m_snapshots = snapshots;
     }
 
-    // make a copy of the mod_parser only if exporting AST
-    auto mod_parser_for_export = m_export_ast ? mod_parser_fn : nullptr;
-
     auto initial_env = m_initial_env;
     unsigned src_hash = mod->m_src_hash;
     unsigned trans_hash = mod->m_trans_hash;
     mod->m_result = map<module_info::parse_result>(
         get_end(snapshots),
-        [id, initial_env, ldr, src_hash, trans_hash, mod_parser_for_export]
+        [id, initial_env, ldr, src_hash, trans_hash]
         (module_parser_result const & res) {
             module_info::parse_result parse_res;
 
@@ -298,14 +297,25 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
                     initial_env, [=] { return ldr; });
 
             parse_res.m_opts = res.m_snapshot_at_end->m_options;
-            if (mod_parser_for_export) export_ast(mod_parser_for_export->get_parser());
             return parse_res;
         }).build();
 
+    gtask mod_dep = nullptr;
+
     if (m_save_olean && !m_use_old_oleans) {
+        if (!mod_dep) mod_dep = module_deep_dependency(mod->m_result);
         scope_log_tree_core lt3(&lt);
-        mod->m_olean_task = compile_olean(mod, lt2.get());
+        mod->m_olean_task = compile_olean(mod, mod_dep, lt2.get());
     }
+
+    if (m_export_ast) {
+        if (!mod_dep) mod_dep = module_deep_dependency(mod->m_result);
+        mod->m_ast_export = add_library_task(task_builder<unit>([mod_dep, mod_parser_fn] {
+            export_ast(mod_parser_fn->get_parser());
+            return unit();
+        }).depends_on(mod_dep), std::string("exporting AST"));
+    }
+
 }
 
 static optional<pos_info> get_first_diff_pos(std::string const & as, std::string const & bs) {

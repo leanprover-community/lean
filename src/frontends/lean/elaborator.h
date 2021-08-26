@@ -42,7 +42,7 @@ private:
     options           m_opts;
     context_cache     m_cache;
     name              m_decl_name;
-    type_context_old      m_ctx;
+    type_context_old  m_ctx;
     info_manager      m_info;
     unsigned          m_aux_meta_idx = 1;
     bool              m_recover_from_errors;

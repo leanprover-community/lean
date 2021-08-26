@@ -463,7 +463,7 @@ static vm_obj vm_parser_run(vm_obj const &/*α*/, vm_obj const & vm_p, vm_obj co
     try {
       std::string input = "";
       std::istringstream input_stream(input, std::ios_base::out);
-      parser p = parser(s.env(), ios, mk_dummy_loader(), input_stream, "dummy file");
+      parser p(s.env(), ios, mk_dummy_loader(), input_stream, "dummy file");
       lean_parser_state lps = {&p};
       vm_obj result = invoke(vm_p, interaction_monad<lean_parser_state>::to_obj(lps));
       if (lean_parser::is_result_success(result)) {

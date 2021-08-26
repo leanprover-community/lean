@@ -17,8 +17,8 @@ do s ← tactic.read,
 meta def step {α : Type} (c : conv α) : conv unit :=
 c >> return ()
 
-meta def istep {α : Type} (line0 col0 line col : nat) (c : conv α) : conv unit :=
-tactic.istep line0 col0 line col c
+meta def istep {α : Type} (line0 col0 line col ast : nat) (c : conv α) : conv unit :=
+tactic.istep line0 col0 line col ast c
 
 meta def execute (c : conv unit) : tactic unit :=
 c

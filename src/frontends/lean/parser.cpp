@@ -175,6 +175,7 @@ parser::parser(environment const & env, io_state const & ios,
 }
 
 parser::~parser() {
+    if (m_tactic_log) m_tactic_log->detach();
     for (auto p : m_ast) delete p;
 }
 
@@ -395,6 +396,11 @@ pos_info parser::pos_of(expr const & e, pos_info default_pos) const {
         return *it;
     else
         return default_pos;
+}
+
+std::shared_ptr<tactic_log> parser::get_tactic_log() {
+    if (!m_tactic_log) m_tactic_log = std::make_shared<tactic_log>();
+    return m_tactic_log;
 }
 
 bool parser::curr_is_token(name const & tk) const {
