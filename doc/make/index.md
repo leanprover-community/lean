@@ -19,7 +19,7 @@ Generic Build Instructions
 Setting up a basic release build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/release
 cd build/release
