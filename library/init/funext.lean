@@ -33,7 +33,7 @@ section
 open quotient
 variables {α : Sort u} {β : α → Sort v}
 
-@[instance]
+local attribute [instance]
 private def fun_setoid (α : Sort u) (β : α → Sort v) : setoid (Π x : α, β x) :=
 setoid.mk (@function.equiv α β) (function.equiv.is_equivalence α β)
 
