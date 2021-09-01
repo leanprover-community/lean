@@ -370,7 +370,8 @@ public:
     local_expr_decls const & get_local_expr_decls() const { return m_local_decls; }
 
     /** \brief Return the current position information */
-    virtual pos_info pos() const override final { return pos_info(m_scanner.get_line(), m_scanner.get_pos()); }
+    virtual pos_info pos() const override final { return m_scanner.get_pos_info(); }
+    pos_info end_pos() const { return m_scanner.get_last_end_pos_info(); }
     virtual expr save_pos(expr const & e, pos_info p) override final;
     expr rec_save_pos(expr const & e, pos_info p) override final;
     expr rec_save_pos(expr const & e, optional<pos_info> p) override final { return p ? rec_save_pos(e, *p) : e; }

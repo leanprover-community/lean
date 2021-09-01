@@ -294,6 +294,7 @@ struct parse_tactic_fn {
             if (m_use_istep) r = mk_tactic_istep(m_p, r, pos, pos, m_tac_class);
         }
         if (save_info) r = concat(mk_tactic_save_info(m_p, pos, m_tac_class), r, pos);
+        id_ast.m_end = m_p.end_pos();
         m_p.set_ast_pexpr(id, r);
         return r;
     }
@@ -371,6 +372,7 @@ struct parse_tactic_fn {
             data.push(m_p.get_id(curr));
             r         = orelse(r, curr, start_pos);
         }
+        data.m_end = m_p.end_pos();
         m_p.set_ast_pexpr(data.m_id, r);
         return r;
     }
@@ -395,6 +397,7 @@ struct parse_tactic_fn {
                 ex.report_goal_pos(*pos);
             throw;
         }
+        data.m_end = m_p.end_pos();
         m_p.set_ast_pexpr(data.m_id, r);
         return r;
     }
