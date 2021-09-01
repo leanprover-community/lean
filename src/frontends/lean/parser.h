@@ -309,7 +309,7 @@ public:
     void init_scanner();
 
     ast_data & new_ast(name type, pos_info start, name value = {});
-    void set_ast_pexpr(ast_id id, expr const & e);
+    void finalize_ast(ast_id id, expr const & e);
     bool is_ast_invalid() { return m_ast_invalid; }
     void set_ast_expr(ast_id id, expr e);
     ast_data & get_ast(ast_id id) { return *m_ast[id]; }

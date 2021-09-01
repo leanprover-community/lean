@@ -282,7 +282,8 @@ ast_data & parser::new_ast(name type, pos_info start, name value) {
     return *m_ast.back();
 }
 
-void parser::set_ast_pexpr(ast_id id, expr const & e) {
+void parser::finalize_ast(ast_id id, expr const & e) {
+    m_ast[id]->m_end = end_pos();
     m_ast[id]->m_pexpr = e;
     auto t = get_tag(e);
     // if (!m_tag_ast_table.contains(t))
@@ -503,7 +504,9 @@ expr parser::mk_app(std::initializer_list<expr> const & args, pos_info const & p
 static expr mk_app_ast(parser & p, expr left, expr right) {
     pos_info pos = p.pos_of(left);
     expr r = p.mk_app(left, right, pos);
-    p.set_ast_pexpr(p.new_ast("app", pos).push(p.get_id(left)).push(p.get_id(right)).m_id, r);
+    p.finalize_ast(
+        p.new_ast("app", pos).push(p.get_id(left)).push(p.get_id(right)).m_id,
+        r);
     return r;
 }
 
@@ -1008,7 +1011,7 @@ expr parser::parse_binder_core(binder_info const & bi, unsigned rbp) {
         ast.push(0);
     }
     expr r = save_pos(mk_local(id.second, type, bi), p);
-    set_ast_pexpr(ast.m_id, r);
+    finalize_ast(ast.m_id, r);
     return r;
 }
 
@@ -1608,7 +1611,7 @@ expr parser::parse_notation(parse_table t, expr * left) {
         data = &new_ast(get_notation_tk(), p, head(as).get_name());
     }
     for (auto id : ast_ids) data->push(id);
-    set_ast_pexpr(data->m_id, r);
+    finalize_ast(data->m_id, r);
     return r;
 }
 
@@ -1621,7 +1624,7 @@ expr parser::parse_inaccessible() {
     next();
     expr t = parse_expr(get_max_prec());
     t = save_pos(mk_inaccessible(t), p);
-    set_ast_pexpr(new_ast(".(", p).push(get_id(t)).m_id, t);
+    finalize_ast(new_ast(".(", p).push(get_id(t)).m_id, t);
     return t;
 }
 
@@ -1629,7 +1632,7 @@ expr parser::parse_placeholder() {
     auto p = pos();
     next();
     expr r = save_pos(mk_explicit_expr_placeholder(), p);
-    set_ast_pexpr(new_ast("_", p).m_id, r);
+    finalize_ast(new_ast("_", p).m_id, r);
     return r;
 }
 
@@ -2115,14 +2118,14 @@ optional<expr> parser::resolve_local(name const & id, pos_info const & p, list<n
 static expr mk_constant(parser & p, const name & id, const levels & ls, const ast_data & id_data, ast_id levels_id) {
     expr r = mk_constant(id, ls);
     ast_id c = p.new_ast("const", id_data.m_start).push(id_data.m_id).push(levels_id).m_id;
-    p.set_ast_pexpr(c, r);
+    p.finalize_ast(c, r);
     return r;
 }
 
 static expr mk_field_notation_ast(parser & p, const expr & s, const expr & r, ast_id field_id) {
     ast_id sid = p.get_id(s);
     ast_id ast = p.new_ast("field", p.ast_pos(sid)).push(sid).push(field_id).m_id;
-    p.set_ast_pexpr(ast, r);
+    p.finalize_ast(ast, r);
     return r;
 }
 
@@ -2176,26 +2179,26 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
     auto& p = id_data.m_start;
     if (!explicit_levels && m_id_behavior == id_behavior::AllLocal) {
         expr r = save_pos(mk_local(id, save_pos(mk_expr_placeholder(), p)), p);
-        set_ast_pexpr(id_data.m_id, r);
+        finalize_ast(id_data.m_id, r);
         return r;
     }
 
     if (auto r = resolve_local(id, p, extra_locals, allow_field_notation)) {
         check_no_levels(ls, p);
-        set_ast_pexpr(id_data.m_id, *r);
+        finalize_ast(id_data.m_id, *r);
         return *r;
     }
 
     if (!explicit_levels && m_id_behavior == id_behavior::AssumeLocalIfNotLocal) {
         expr r = save_pos(mk_local(id, save_pos(mk_expr_placeholder(), p)), p);
-        set_ast_pexpr(id_data.m_id, r);
+        finalize_ast(id_data.m_id, r);
         return r;
     }
 
     if (auto ref = get_local_ref(m_env, id)) {
         check_no_levels(ls, p);
         expr r = copy_with_new_pos(*ref, p);
-        set_ast_pexpr(id_data.m_id, r);
+        finalize_ast(id_data.m_id, r);
         return r;
     }
 
@@ -2232,13 +2235,13 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         r = save_pos(mk_choice(new_as.size(), new_as.data()), p);
         ast_id c = new_ast(new_as.size() == 1 ? "const" : "choice_const", id_data.m_start)
             .push(id_data.m_id).push(explicit_levels).m_id;
-        set_ast_pexpr(c, *r);
+        finalize_ast(c, *r);
     }
     if (!r) {
         if (m_id_behavior == id_behavior::AssumeLocalIfUndef) {
             expr local = mk_local(id, save_pos(mk_expr_placeholder(), p));
             r = save_pos(local, p);
-            set_ast_pexpr(id_data.m_id, *r);
+            finalize_ast(id_data.m_id, *r);
         }
     }
     if (!r && allow_field_notation && !id.is_atomic() && id.is_string()) {
@@ -2334,7 +2337,7 @@ expr parser::parse_id(bool allow_field_notation) {
     ast_id aid; name id;
     std::tie(aid, id) = check_id_next("", break_at_pos_exception::token_context::expr);
     expr e = id_to_expr(id, get_ast(aid), /* resolve_only */ false, allow_field_notation);
-    set_ast_pexpr(aid, e);
+    finalize_ast(aid, e);
     if (is_constant(e) && get_global_info_manager()) {
         get_global_info_manager()->add_const_info(m_env, p, const_name(e));
     }
@@ -2361,7 +2364,7 @@ expr parser::parse_numeral_expr(bool user_notation) {
         else
             r = save_pos(mk_choice(cs.size(), cs.data()), p);
     }
-    set_ast_pexpr(new_ast("nat", p, n.to_string()).m_id, r);
+    finalize_ast(new_ast("nat", p, n.to_string()).m_id, r);
     return r;
 }
 
@@ -2379,7 +2382,7 @@ expr parser::parse_decimal_expr() {
         r = save_pos(lean::mk_app(div, num, den), p);
     }
     std::ostringstream out; out << val;
-    set_ast_pexpr(new_ast("decimal", p, out.str()).m_id, r);
+    finalize_ast(new_ast("decimal", p, out.str()).m_id, r);
     return r;
 }
 
@@ -2388,7 +2391,7 @@ expr parser::parse_string_expr() {
     ast_id id = new_ast("string", pos(), v).m_id;
     next();
     expr r = from_string(v);
-    set_ast_pexpr(id, r);
+    finalize_ast(id, r);
     return r;
 }
 
@@ -2403,7 +2406,7 @@ expr parser::parse_char_expr() {
     expr r = mk_app(save_pos(mk_constant(get_char_of_nat_name()), p),
                     save_pos(mk_prenum(mpz(tmp[0])), p),
                     p);
-    set_ast_pexpr(id, r);
+    finalize_ast(id, r);
     return r;
 }
 
@@ -2430,7 +2433,7 @@ expr parser::parse_nud() {
                 auto pat = parse_expr(get_max_prec());
                 ast_id eid = new_ast("at_pat", id_pos).push(get_id(e)).push(get_id(pat)).m_id;
                 e = save_pos(mk_as_pattern(e, pat), id_pos);
-                set_ast_pexpr(eid, e);
+                finalize_ast(eid, e);
             }
         }
         return e;
@@ -2469,7 +2472,7 @@ expr parser::parse_led(expr left) {
         if (sort_level(left) == mk_level_one())
             l = mk_succ(l);
         expr r = copy_tag(left, update_sort(left, l));
-        set_ast_pexpr(data.m_id, r);
+        finalize_ast(data.m_id, r);
         return r;
     } else {
         switch (curr()) {

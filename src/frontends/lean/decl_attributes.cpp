@@ -56,7 +56,7 @@ ast_id decl_attributes::parse_core(parser & p, bool compact) {
             expr pre_val = p.parse_expr();
             pre_val = mk_typed_expr(mk_constant(get_nat_name()), pre_val, pre_val.get_tag());
             ast_id id = p.get_id(pre_val);
-            p.set_ast_pexpr(id, pre_val);
+            p.finalize_ast(id, pre_val);
             attr_ast.push(id);
             expr nat = mk_constant(get_nat_name());
             expr val = p.elaborate("_attribute", list<expr>(), pre_val).first;

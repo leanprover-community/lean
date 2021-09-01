@@ -69,7 +69,11 @@ static expr parse_set_replacement(parser & p, pos_info const & pos, expr const &
     pred = p.patexpr_to_expr_core(pred);
     // `{_x | ∃ p_1, ∃ p_2, ..., hole_expr[p_1, p_2, ...] = _x}`
     pred = p.mk_app(mk_constant(get_set_of_name()), pred, pos);
-    p.set_ast_pexpr(p.new_ast("set_replacement", pos).push(p.get_id(hole_expr)).push(bis.m_id).m_id, pred);
+    p.finalize_ast(p.new_ast("set_replacement", pos)
+                       .push(p.get_id(hole_expr))
+                       .push(bis.m_id)
+                       .m_id,
+                   pred);
     return pred;
 }
 
@@ -101,7 +105,7 @@ static expr parse_fin_set(parser & p, pos_info const & pos, expr const & e) {
         expr insert = p.save_pos(mk_constant(get_has_insert_insert_name()), e2.first);
         r = p.rec_save_pos(mk_app(insert, e2.second, r), e2.first);
     }
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -118,7 +122,7 @@ static expr parse_sep(parser & p, pos_info const & pos, name const & id, ast_dat
     bool use_cache = false;
     pred   = p.rec_save_pos(Fun(local, pred, use_cache), pos);
     expr r = p.rec_save_pos(mk_app(mk_constant(get_has_sep_sep_name()), pred, s), pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -169,7 +173,7 @@ static expr parse_structure_instance_core(parser & p, pos_info const & pos, opti
     data.push(catchall);
     p.check_token_next(get_rcurly_tk(), "invalid structure instance, '}' expected");
     expr r = mk_structure_instance(S, fns, fvs, sources, catchall);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -204,7 +208,7 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
     if (p.curr_is_token(get_rcurly_tk())) {
         p.next();
         expr r = p.save_pos(mk_constant(*g_emptyc_or_emptys), pos);
-        p.set_ast_pexpr(p.new_ast("{}", pos).m_id, r);
+        p.finalize_ast(p.new_ast("{}", pos).m_id, r);
         return r;
     } else if (p.curr_is_identifier()) {
         auto id_pos = p.pos();
@@ -217,7 +221,7 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
             p.next();
             auto& data = p.new_ast("subtype", pos).push(id_ast.m_id).push(0);
             expr r = parse_subtype(p, pos, data, local);
-            p.set_ast_pexpr(data.m_id, r);
+            p.finalize_ast(data.m_id, r);
             return r;
         } else if (p.curr_is_token(get_bar_tk())) {
             expr type  = p.save_pos(mk_expr_placeholder(), id_pos);
@@ -225,7 +229,7 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
             p.next();
             auto& data = p.new_ast("set_of", pos).push(id_ast.m_id).push(0);
             expr r = parse_set_of(p, pos, data, local);
-            p.set_ast_pexpr(data.m_id, r);
+            p.finalize_ast(data.m_id, r);
             return r;
 
         } else if (p.curr_is_token(get_colon_tk())) {
@@ -236,13 +240,13 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
                 p.next();
                 auto& data = p.new_ast("set_of", pos).push(id_ast.m_id).push(p.get_id(type));
                 expr r = parse_set_of(p, pos, data, local);
-                p.set_ast_pexpr(data.m_id, r);
+                p.finalize_ast(data.m_id, r);
                 return r;
             } else {
                 p.check_token_next(get_dslash_tk(), "invalid expression, '//' or '|' expected");
                 auto& data = p.new_ast("subtype", pos).push(id_ast.m_id).push(p.get_id(type));
                 expr r = parse_subtype(p, pos, data, local);
-                p.set_ast_pexpr(data.m_id, r);
+                p.finalize_ast(data.m_id, r);
                 return r;
             }
         } else if (p.curr_is_token(get_period_tk())) {
@@ -277,7 +281,7 @@ expr parse_curly_bracket(parser & p, unsigned, expr const *, pos_info const & po
             p.maybe_throw_error({"invalid set replacement notation, ',', '}', or `|` expected", p.pos()});
             ast_id id = p.new_ast("fin_set", pos).push(p.get_id(e)).m_id;
             expr r = mk_singleton(p, pos, p.patexpr_to_expr_core(e));
-            p.set_ast_pexpr(id, r);
+            p.finalize_ast(id, r);
             return r;
         }
     } else if (p.curr_is_token(get_period_tk())) {

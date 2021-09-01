@@ -89,7 +89,7 @@ static environment add_user_notation(environment const & env, name const & d, un
                     data.push(id);
                     expr r = to_expr(obj);
                     r.set_tag(nulltag);
-                    p.set_ast_pexpr(data.m_id, r);
+                    p.finalize_ast(data.m_id, r);
                     return r;
                 } catch (formatted_exception const & ex) {
                     if (ex.get_pos() && *ex.get_pos() >= pos) {

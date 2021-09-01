@@ -294,8 +294,7 @@ struct parse_tactic_fn {
             if (m_use_istep) r = mk_tactic_istep(m_p, r, pos, pos, m_tac_class);
         }
         if (save_info) r = concat(mk_tactic_save_info(m_p, pos, m_tac_class), r, pos);
-        id_ast.m_end = m_p.end_pos();
-        m_p.set_ast_pexpr(id, r);
+        m_p.finalize_ast(id, r);
         return r;
     }
 
@@ -318,7 +317,7 @@ struct parse_tactic_fn {
                 expr info_tac = mk_tactic_save_info(m_p, pos, m_tac_class);
                 next_tac = concat(info_tac, next_tac, pos);
             }
-            m_p.set_ast_pexpr(id, next_tac);
+            m_p.finalize_ast(id, next_tac);
             return next_tac;
         } else if (m_p.curr_is_token(get_lbracket_tk())) {
             auto pos = m_p.pos();
@@ -338,7 +337,7 @@ struct parse_tactic_fn {
             expr r = mk_lean_list(m_p, args, pos);
             expr type = mk_app(mk_constant(get_list_name()), mk_tactic_unit(m_tac_class));
             r = m_p.save_pos(mk_typed_expr(type, r), pos);
-            m_p.set_ast_pexpr(data.m_id, r);
+            m_p.finalize_ast(data.m_id, r);
             return r;
         } else {
             if (m_p.curr_is_token(get_by_tk())) {
@@ -354,7 +353,7 @@ struct parse_tactic_fn {
                     expr info_tac = mk_tactic_save_info(m_p, pos, m_tac_class);
                     tac = concat(info_tac, tac, pos);
                 }
-                m_p.set_ast_pexpr(data.m_id, tac);
+                m_p.finalize_ast(data.m_id, tac);
                 return tac;
             } else {
                 return parse_elem_core(save_info);
@@ -372,8 +371,7 @@ struct parse_tactic_fn {
             data.push(m_p.get_id(curr));
             r         = orelse(r, curr, start_pos);
         }
-        data.m_end = m_p.end_pos();
-        m_p.set_ast_pexpr(data.m_id, r);
+        m_p.finalize_ast(data.m_id, r);
         return r;
     }
 
@@ -397,8 +395,7 @@ struct parse_tactic_fn {
                 ex.report_goal_pos(*pos);
             throw;
         }
-        data.m_end = m_p.end_pos();
-        m_p.set_ast_pexpr(data.m_id, r);
+        m_p.finalize_ast(data.m_id, r);
         return r;
     }
 
@@ -585,7 +582,7 @@ struct parse_begin_end_block_fn {
                 r = copy_tag(r, mk_tactic_execute(r, m_tac_class));
             }
         }
-        m_p.set_ast_pexpr(group.m_id, r);
+        m_p.finalize_ast(group.m_id, r);
         return r;
     }
 };
@@ -629,7 +626,7 @@ expr parse_by(parser & p, unsigned, expr const *, pos_info const & pos) {
         expr type = mk_tactic_unit(get_tactic_name());
         expr r    = p.save_pos(mk_typed_expr(type, tac), tac_pos);
         r = p.save_pos(mk_by(r), pos);
-        p.set_ast_pexpr(id, r);
+        p.finalize_ast(id, r);
         return r;
     } catch (break_at_pos_exception & ex) {
         ex.report_goal_pos(tac_pos);
@@ -676,7 +673,7 @@ expr parse_interactive_tactic_block(parser & p, unsigned, expr const *, pos_info
         r = p.mk_app({p.save_pos(mk_constant(get_has_bind_and_then_name()), pos), r, next}, pos);
     }
     p.check_token_next(get_rbracket_tk(), "invalid auto-quote tactic block, ']' expected");
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
