@@ -713,7 +713,7 @@ void finalize_scanner() {
 auto scanner::scan(environment const & env) -> token_kind {
     m_tokens = &get_token_table(env);
     m_eline = m_line;
-    m_epos = m_spos;
+    m_epos = m_upos;
     while (true) {
         uchar c = curr();
         m_pos  = m_upos;
