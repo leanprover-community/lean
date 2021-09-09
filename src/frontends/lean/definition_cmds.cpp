@@ -66,7 +66,7 @@ expr parse_equation_lhs(parser & p, ast_data & parent, expr const & fn, buffer<e
     expr lhs = p.mk_app(p.save_pos(mk_explicit(fn), lhs_pos), lhs_args, lhs_pos);
     bool skip_main_fn = true;
     lhs = p.patexpr_to_pattern(lhs, skip_main_fn, locals);
-    p.set_ast_pexpr(data.m_id, lhs);
+    p.finalize_ast(data.m_id, lhs);
     return lhs;
 }
 

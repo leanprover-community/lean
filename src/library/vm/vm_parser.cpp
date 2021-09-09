@@ -73,7 +73,7 @@ expr parse_interactive_param(parser & p, ast_data & parent, expr const & param_t
             r = mk_as_is(r);
         }
         r.set_tag(nulltag);
-        p.set_ast_pexpr(id, r);
+        p.finalize_ast(id, r);
         parent.push(id);
         return r;
     } catch (exception & ex) {

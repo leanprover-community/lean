@@ -65,9 +65,9 @@ bool is_sort_wo_universe(expr const & e) {
 expr mk_sort_wo_universe(parser & p, ast_data & data, bool is_type) {
     level l = is_type ? mk_level_one() : mk_level_zero();
     expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), data.m_start);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     r = mk_annotation_with_pos(p, *g_no_universe_annotation, r, data.m_start);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -80,7 +80,7 @@ static expr parse_Type(parser & p, unsigned, expr const *, pos_info const & pos)
         p.check_token_next(get_rcurly_tk(), "invalid Type expression, '}' expected");
         l = mk_succ(l);
         expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
-        p.set_ast_pexpr(data.push(id).m_id, r);
+        p.finalize_ast(data.push(id).m_id, r);
         return r;
     } else {
         return mk_sort_wo_universe(p, data.push(0), true);
@@ -95,7 +95,7 @@ static expr parse_Sort(parser & p, unsigned, expr const *, pos_info const & pos)
         std::tie(id, l) = p.parse_level();
         p.check_token_next(get_rcurly_tk(), "invalid Sort expression, '}' expected");
         expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
-        p.set_ast_pexpr(data.push(id).m_id, r);
+        p.finalize_ast(data.push(id).m_id, r);
         return r;
     } else {
         return mk_sort_wo_universe(p, data.push(0), false);
@@ -105,14 +105,14 @@ static expr parse_Sort(parser & p, unsigned, expr const *, pos_info const & pos)
 static expr parse_Type_star(parser & p, unsigned, expr const *, pos_info const & pos) {
     level l = mk_succ(mk_level_placeholder());
     expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
-    p.set_ast_pexpr(p.new_ast("Type*", pos).m_id, r);
+    p.finalize_ast(p.new_ast("Type*", pos).m_id, r);
     return r;
 }
 
 static expr parse_Sort_star(parser & p, unsigned, expr const *, pos_info const & pos) {
     level l = mk_level_placeholder();
     expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
-    p.set_ast_pexpr(p.new_ast("Sort*", pos).m_id, r);
+    p.finalize_ast(p.new_ast("Sort*", pos).m_id, r);
     return r;
 }
 
@@ -242,7 +242,7 @@ static expr parse_let_expr(parser & p, unsigned, expr const *, pos_info const & 
     auto& group = p.new_ast("args", p.pos());
     ast_id id; expr r;
     std::tie(id, r) = parse_let(p, pos, group, in_do_block);
-    p.set_ast_pexpr(id, r);
+    p.finalize_ast(id, r);
     return r;
 }
 
@@ -425,13 +425,13 @@ static expr parse_do_expr(parser & p, unsigned, expr const *, pos_info const & p
         p.next();
     }
     expr r = parse_do(p, data, has_braces);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
 static expr parse_unit(parser & p, unsigned, expr const *, pos_info const & pos) {
     auto e = p.save_pos(mk_constant(get_unit_star_name()), pos);
-    p.set_ast_pexpr(p.new_ast("()", pos).m_id, e);
+    p.finalize_ast(p.new_ast("()", pos).m_id, e);
     return e;
 }
 
@@ -509,7 +509,7 @@ static expr parse_have(parser & p, unsigned, expr const *, pos_info const & pos)
         body = mk_checkpoint_annotation(body);
     expr r = p.save_pos(mk_have_annotation(p.save_pos(mk_lambda(id, prop, body), pos)), pos);
     r = p.mk_app(r, proof, pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -521,7 +521,8 @@ static expr parse_show(parser & p, unsigned, expr const *, pos_info const & pos)
     expr b = p.save_pos(mk_lambda(get_this_tk(), prop, Var(0)), pos);
     expr r = p.mk_app(b, proof, pos);
     r = p.save_pos(mk_show_annotation(r), pos);
-    p.set_ast_pexpr(p.new_ast("show", pos).push(p.get_id(prop)).push(id).m_id, r);
+    p.finalize_ast(p.new_ast("show", pos).push(p.get_id(prop)).push(id).m_id,
+                   r);
     return r;
 }
 
@@ -569,7 +570,7 @@ static expr parse_suffices(parser & p, unsigned, expr const *, pos_info const & 
     data.push(p.get_id(rest));
     expr r = p.mk_app(proof, rest, pos);
     r = p.save_pos(mk_suffices_annotation(r), pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -617,7 +618,7 @@ static expr parse_if_then_else(parser & p, unsigned, expr const *, pos_info cons
     std::tie(id, hyp, cond) = p.parse_qualified_expr();
     auto& data = p.new_ast("if", pos).push(id).push(p.get_id(cond));
     auto r = hyp ? parse_dite(p, data, *hyp, cond, pos) : parse_ite(p, data, cond, pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -653,7 +654,7 @@ static expr parse_explicit_core(parser & p, pos_info const & pos, bool partial) 
         r = p.save_pos(mk_partial_explicit(fn), pos);
     else
         r = p.save_pos(mk_explicit(fn), pos);
-    p.set_ast_pexpr(p.new_ast(sym, pos).push(p.get_id(fn)).m_id, r);
+    p.finalize_ast(p.new_ast(sym, pos).push(p.get_id(fn)).m_id, r);
     return r;
 }
 
@@ -667,13 +668,13 @@ static expr parse_partial_explicit_expr(parser & p, unsigned, expr const *, pos_
 
 static expr parse_sorry(parser & p, unsigned, expr const *, pos_info const & pos) {
     auto r = p.mk_sorry(pos);
-    p.set_ast_pexpr(p.new_ast("sorry", pos).m_id, r);
+    p.finalize_ast(p.new_ast("sorry", pos).m_id, r);
     return r;
 }
 
 static expr parse_pattern(parser & p, unsigned, expr const * args, pos_info const & pos) {
     auto r = p.save_pos(mk_pattern_hint(args[0]), pos);
-    p.set_ast_pexpr(p.new_ast("(:", pos).push(p.get_id(args[0])).m_id, r);
+    p.finalize_ast(p.new_ast("(:", pos).push(p.get_id(args[0])).m_id, r);
     return r;
 }
 
@@ -689,14 +690,14 @@ static expr parse_lazy_quoted_pexpr(parser & p, unsigned, expr const *, pos_info
         expr t = p.parse_expr();
         ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
         e = mk_typed_expr_distrib_choice(p, t, e, pos);
-        p.set_ast_pexpr(id, e);
+        p.finalize_ast(id, e);
         data.push(id);
     } else {
         data.push(p.get_id(e));
     }
     p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
     auto r = p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ false), pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -712,14 +713,14 @@ static expr parse_quoted_pexpr(parser & p, unsigned, expr const *, pos_info cons
         expr t = p.parse_expr();
         ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
         e = mk_typed_expr_distrib_choice(p, t, e, pos);
-        p.set_ast_pexpr(id, e);
+        p.finalize_ast(id, e);
         data.push(id);
     } else {
         data.push(p.get_id(e));
     }
     p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
     auto r = p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ true), pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -737,7 +738,7 @@ static expr parse_quoted_expr(parser & p, unsigned, expr const *, pos_info const
             expr t = p.parse_expr();
             ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
             e = mk_typed_expr_distrib_choice(p, t, e, pos);
-            p.set_ast_pexpr(id, e);
+            p.finalize_ast(id, e);
             data.push(id);
         } else {
             data.push(p.get_id(e));
@@ -745,7 +746,7 @@ static expr parse_quoted_expr(parser & p, unsigned, expr const *, pos_info const
         p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
     }
     auto r = p.save_pos(mk_unelaborated_expr_quote(e), pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -756,7 +757,7 @@ static expr parse_antiquote_expr(parser & p, unsigned, expr const *, pos_info co
     expr e = p.parse_expr(get_max_prec());
     ast_id id = p.new_ast("%%", pos).push(p.get_id(e)).m_id;
     e = p.save_pos(mk_antiquote(e), pos);
-    p.set_ast_pexpr(id, e);
+    p.finalize_ast(id, e);
     return e;
 }
 
@@ -806,7 +807,7 @@ static expr parse_quoted_name(parser & p, unsigned, expr const *, pos_info const
     lean_assert(id.is_string());
     expr e  = quote(id);
     e = p.rec_save_pos(e, pos);
-    p.set_ast_pexpr(data.m_id, e);
+    p.finalize_ast(data.m_id, e);
     return e;
 }
 
@@ -836,7 +837,7 @@ static expr parse_constructor_core(parser & p, pos_info const & pos) {
     p.check_token_next(get_rangle_tk(), "invalid constructor, `⟩` expected");
     expr fn = p.save_pos(mk_expr_placeholder(), pos);
     expr e = p.save_pos(mk_anonymous_constructor(p.save_pos(mk_app(fn, args), pos)), pos);
-    p.set_ast_pexpr(data.m_id, e);
+    p.finalize_ast(data.m_id, e);
     return e;
 }
 
@@ -910,7 +911,7 @@ static expr parse_lambda(parser & p, unsigned, expr const *, pos_info const & po
     auto& bis = p.new_ast("binders", p.pos());
     auto& fun = p.new_ast("fun", pos).push(bis.m_id);
     expr r = parse_lambda_core(p, fun, bis, pos);
-    p.set_ast_pexpr(fun.m_id, r);
+    p.finalize_ast(fun.m_id, r);
     return r;
 }
 
@@ -936,7 +937,7 @@ static expr parse_assume(parser & p, unsigned, expr const *, pos_info const & po
         id = fun.m_id;
         r = parse_lambda_core(p, fun, bis, pos);
     }
-    p.set_ast_pexpr(id, r);
+    p.finalize_ast(id, r);
     return r;
 }
 
@@ -1023,7 +1024,7 @@ static expr parse_infix_paren(parser & p, list<notation::accepting> const & accs
     } else {
         data.m_children[0] = p.new_ast(get_notation_tk(), pos, head(accs).get_name()).m_id;
     }
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -1048,7 +1049,7 @@ expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
         }
         auto& data = p.new_ast("tuple", pos);
         for (expr& e : args) data.push(p.get_id(e));
-        p.set_ast_pexpr(data.m_id, r);
+        p.finalize_ast(data.m_id, r);
         return r;
     } else if (p.curr_is_token(get_colon_tk())) {
         p.next();
@@ -1056,11 +1057,11 @@ expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
         consume_rparen(p);
         ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
         e = mk_typed_expr_distrib_choice(p, t, e, pos);
-        p.set_ast_pexpr(id, e);
+        p.finalize_ast(id, e);
         return e;
     } else {
         consume_rparen(p);
-        p.set_ast_pexpr(p.new_ast("(", pos).push(p.get_id(e)).m_id, e);
+        p.finalize_ast(p.new_ast("(", pos).push(p.get_id(e)).m_id, e);
         return e;
     }
 }
@@ -1096,7 +1097,7 @@ static expr parse_lambda_cons(parser & p, unsigned, expr const *, pos_info const
         data.push(p.new_ast(get_notation_tk(), pos, head(accs).get_name()).m_id);
     }
     data.push(0);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -1108,7 +1109,7 @@ static expr parse_inaccessible(parser & p, unsigned, expr const *, pos_info cons
     }
     p.check_token_next(get_rparen_tk(), "invalid inaccesible pattern, `)` expected");
     e = p.save_pos(mk_inaccessible(e), pos);
-    p.set_ast_pexpr(p.new_ast(".(", pos).push(p.get_id(e)).m_id, e);
+    p.finalize_ast(p.new_ast(".(", pos).push(p.get_id(e)).m_id, e);
     return e;
 }
 
@@ -1118,9 +1119,9 @@ static expr parse_atomic_inaccessible(parser & p, unsigned, expr const *, pos_in
     }
     expr e = p.save_pos(mk_expr_placeholder(), pos);
     ast_id id = p.new_ast("_", pos).m_id;
-    p.set_ast_pexpr(id, e);
+    p.finalize_ast(id, e);
     e = p.save_pos(mk_inaccessible(e), pos);
-    p.set_ast_pexpr(p.new_ast(".(", pos).push(id).m_id, e);
+    p.finalize_ast(p.new_ast(".(", pos).push(id).m_id, e);
     return e;
 }
 
@@ -1172,7 +1173,7 @@ static expr parse_hole(parser & p, unsigned, expr const *, pos_info const & begi
     p.check_token_next(get_rcurlybang_tk(), "invalid hole, `!}` expected");
     end_pos.second += 2;
     expr r = mk_hole(p, mk_lean_list(ps), begin_pos, end_pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -1209,7 +1210,7 @@ static expr parse_bin_tree(parser & p, unsigned, expr const *, pos_info const & 
     } else {
         r = mk_bin_tree(p, es, 0, es.size(), pos);
     }
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -1264,13 +1265,15 @@ static expr parse_field(parser & p, unsigned, expr const * args, pos_info const 
             ast_id id; unsigned fidx;
             std::tie(id, fidx) = p.parse_small_nat();
             expr r = p.save_pos(mk_field_notation(args[0], fidx), pos);
-            p.set_ast_pexpr(p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
+            p.finalize_ast(
+                p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
             return r;
         } else {
             ast_id id; name field;
             std::tie(id, field) = p.check_id_next("identifier or numeral expected");
             expr r = p.save_pos(mk_field_notation(args[0], field), pos);
-            p.set_ast_pexpr(p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
+            p.finalize_ast(
+                p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
             return r;
         }
     } catch (break_at_pos_exception & ex) {

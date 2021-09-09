@@ -57,7 +57,7 @@ expr parse_match(parser & p, unsigned, expr const *, pos_info const & pos) {
             eqns.push_back(Fun(fn, mk_no_equation()));
             expr f = p.save_pos(mk_equations(header, eqns.size(), eqns.data()), pos);
             expr r = p.mk_app(f, ts, pos);
-            p.set_ast_pexpr(data.m_id, r);
+            p.finalize_ast(data.m_id, r);
             return r;
         }
         if (is_eqn_prefix(p))
@@ -100,7 +100,7 @@ expr parse_match(parser & p, unsigned, expr const *, pos_info const & pos) {
     p.check_token_next(get_end_tk(), "invalid 'match' expression, 'end' expected");
     expr f = p.save_pos(mk_equations(header, eqns.size(), eqns.data()), pos);
     expr r = p.mk_app(f, ts, pos);
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 

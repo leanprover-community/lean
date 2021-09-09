@@ -134,10 +134,12 @@ static expr parse_next_pred(parser & p, expr const & dummy) {
         p.next();
         expr rhs  = p.parse_expr();
         expr r = mk_implies(p, dummy, rhs, pos);
-        p.set_ast_pexpr(p.new_ast(get_arrow_tk(), pos).push(id).push(p.get_id(rhs)).m_id, r);
+        p.finalize_ast(
+            p.new_ast(get_arrow_tk(), pos).push(id).push(p.get_id(rhs)).m_id,
+            r);
         return r;
     } else {
-        p.set_ast_pexpr(id, dummy);
+        p.finalize_ast(id, dummy);
         return p.parse_led(dummy);
     }
 }
@@ -176,7 +178,7 @@ expr parse_calc(parser & p, pos_info const & calc_pos) {
     } else {
         r = step_proof(step);
     }
-    p.set_ast_pexpr(data.m_id, r);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 

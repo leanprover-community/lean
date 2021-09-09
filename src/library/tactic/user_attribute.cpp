@@ -76,7 +76,7 @@ public:
         p2.get_ast(id).m_value = m_decl;
         expr param = to_expr(obj);
         param.set_tag(nulltag);
-        p2.set_ast_pexpr(id, param);
+        p2.finalize_ast(id, param);
         parent.push(id);
         return attr_data_ptr(new user_attribute_data(param));
     }
