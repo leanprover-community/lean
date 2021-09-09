@@ -153,12 +153,7 @@ struct ast_exporter : abstract_ast_exporter {
             }
             asts.push_back(j);
         }
-        json r = {
-            {"ast", asts},
-            {"file", AST_TOP_ID},
-            {"level", std::move(m_levels)},
-            {"expr", std::move(m_exprs)},
-        };
+        json r = {{"ast", asts}, {"file", AST_TOP_ID}};
         if (m_tactic_log) {
             lean_assert(!m_tactic_log->m_detached);
             m_tactic_log->m_exported.store(true);
@@ -186,6 +181,8 @@ struct ast_exporter : abstract_ast_exporter {
                 }
             }
         }
+        r["level"] = std::move(m_levels);
+        r["expr"] = std::move(m_exprs);
         out << r;
     }
 };

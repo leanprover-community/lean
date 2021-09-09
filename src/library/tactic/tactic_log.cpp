@@ -47,7 +47,7 @@ tactic_state_id tactic_log::push_invocation(ast_id id, tactic_state_id start, ta
 }
 
 void tactic_log::detach() const {
-    if (m_detached.exchange(true)) {
+    if (!m_detached.exchange(true)) {
         lock_guard<mutex> l(m_mutex);
         // reclaim memory
         m_invocs = std::vector<tactic_invocation>();
