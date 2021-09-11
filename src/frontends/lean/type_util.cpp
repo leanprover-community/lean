@@ -32,21 +32,24 @@ environment add_alias(parser & p, environment env, bool composite,
     return add_alias(p, env, id, full_id, ctx_levels, ctx_params);
 }
 
-implicit_infer_kind parse_implicit_infer_modifier(parser & p) {
+pair<ast_id, implicit_infer_kind> parse_implicit_infer_modifier(parser & p) {
     if (p.curr_is_token(get_lcurly_tk())) {
+        ast_id id = p.new_ast("{}", p.pos()).m_id;
         p.next();
         p.check_token_next(get_rcurly_tk(), "invalid introduction rule, '}' expected");
-        return implicit_infer_kind::RelaxedImplicit;
+        return {id, implicit_infer_kind::RelaxedImplicit};
     } else if (p.curr_is_token(get_lparen_tk())) {
+        ast_id id = p.new_ast("()", p.pos()).m_id;
         p.next();
         p.check_token_next(get_rparen_tk(), "invalid introduction rule, ')' expected");
-        return implicit_infer_kind::None;
+        return {id, implicit_infer_kind::None};
     } else if (p.curr_is_token(get_lbracket_tk())) {
+        ast_id id = p.new_ast("[]", p.pos()).m_id;
         p.next();
         p.check_token_next(get_rbracket_tk(), "invalid introduction rule, ']' expected");
-        return implicit_infer_kind::Implicit;
+        return {id, implicit_infer_kind::Implicit};
     } else {
-        return implicit_infer_kind::RelaxedImplicit;
+        return {0, implicit_infer_kind::RelaxedImplicit};
     }
 }
 }

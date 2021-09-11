@@ -88,10 +88,11 @@ static level subtract_from_max(level const & l, unsigned offset) {
 
 class inductive_cmd_fn {
     parser &                        m_p;
+    ast_data &                      m_cmd;
     environment                     m_env;
     cmd_meta                        m_meta_info;
     buffer<decl_attributes>         m_mut_attrs;
-    type_context_old                    m_ctx;
+    type_context_old                m_ctx;
     buffer<name>                    m_lp_names;
     pos_info                        m_pos;
     name_map<implicit_infer_kind>   m_implicit_infer_map;
@@ -361,20 +362,23 @@ class inductive_cmd_fn {
         }
     }
 
-    void parse_intro_rules(bool has_params, expr const & ind, buffer<expr> & intro_rules,
+    ast_id parse_intro_rules(bool has_params, expr const & ind, buffer<expr> & intro_rules,
                            buffer<optional<std::string>> & intro_rule_docs, bool prepend_ns) {
+        auto& asts = m_p.new_ast("intros", m_p.pos());
+
         // If the next token is neither `|` nor a doc block, then the inductive type has no constructors
         if (!m_p.curr_is_token(get_bar_tk()) && (m_p.curr() != token_kind::DocBlock)) {
-            return;
+            return asts.m_id;
         }
 
         while (true) {
+            ast_id doc_id = 0;
             optional<std::string> doc {};
             if (m_p.curr() == token_kind::DocBlock) {
                 // If the next token is a doc block, it applies to the following constructor, *if one exists*.
                 // Otherwise, it might be part of the next command.
                 if (m_p.ahead_is_token(get_bar_tk()) || m_p.ahead_is_token(get_comma_tk())) {
-                    doc = m_p.parse_doc_block();
+                    std::tie(doc_id, doc) = m_p.parse_doc_block();
                 } else {
                     break;
                 }
@@ -386,13 +390,20 @@ class inductive_cmd_fn {
             m_p.next();
 
             m_pos = m_p.pos();
-            name ir_name = mlocal_name(ind) + m_p.check_atomic_id_next("invalid introduction rule, atomic identifier expected");
+            auto& ast = m_p.new_ast("intro", m_pos);
+            asts.push(ast.m_id);
+            ast_id ir_ast; name ir_name;
+            std::tie(ir_ast, ir_name) = m_p.check_atomic_id_next("invalid introduction rule, atomic identifier expected");
+            ir_name = mlocal_name(ind) + ir_name;
             if (prepend_ns)
                 ir_name = get_namespace(m_env) + ir_name;
             parser::local_scope S(m_p);
             buffer<expr> params;
+            ast_id kind_id = 0;
             implicit_infer_kind kind = implicit_infer_kind::RelaxedImplicit;
-            m_p.parse_optional_binders(params, kind);
+            auto& bis = m_p.new_ast("binders", m_p.pos());
+            m_p.parse_optional_binders(&bis, params, kind_id, kind);
+            ast.push(doc_id).push(ir_ast).push(kind_id).push(bis.m_children.empty() ? 0 : bis.m_id);
             m_implicit_infer_map.insert(ir_name, kind);
             for (expr const & param : params)
                 m_p.add_local(param);
@@ -400,14 +411,17 @@ class inductive_cmd_fn {
             if (has_params || m_p.curr_is_token(get_colon_tk())) {
                 m_p.check_token_next(get_colon_tk(), "invalid introduction rule, ':' expected");
                 ir_type = m_p.parse_expr();
+                ast.push(m_p.get_id(ir_type));
             } else {
                 ir_type = ind;
+                ast.push(0);
             }
             ir_type = Pi(params, ir_type, m_p);
             intro_rules.push_back(mk_local(ir_name, ir_type));
             intro_rule_docs.push_back(doc);
             lean_trace(name({"inductive", "parse"}), tout() << ir_name << " : " << ir_type << "\n";);
         }
+        return asts.m_id;
     }
 
     /** \brief Add a namespace for each inductive datatype */
@@ -593,7 +607,7 @@ class inductive_cmd_fn {
         m_pos = m_p.pos();
 
         declaration_name_scope nscope;
-        expr ind = parse_single_header(m_p, nscope, m_lp_names, params);
+        expr ind = parse_single_header(m_p, m_cmd, nscope, m_lp_names, params);
         m_explicit_levels = !m_lp_names.empty();
         m_mut_attrs.push_back({});
 
@@ -603,9 +617,8 @@ class inductive_cmd_fn {
                    tout() << mlocal_name(ind) << " : " << mlocal_type(ind) << "\n";);
 
         m_p.add_local(ind);
-        m_p.parse_local_notation_decl();
-
-        parse_intro_rules(!params.empty(), ind, intro_rules, intro_rule_docs, false);
+        m_cmd.push(m_p.parse_local_notation_decl())
+            .push(parse_intro_rules(!params.empty(), ind, intro_rules, intro_rule_docs, false));
 
         buffer<expr> ind_intro_rules;
         ind_intro_rules.push_back(ind);
@@ -626,21 +639,24 @@ class inductive_cmd_fn {
         parser::local_scope scope(m_p);
 
         buffer<expr> pre_inds;
-        parse_mutual_header(m_p, m_lp_names, pre_inds, params);
+        parse_mutual_header(m_p, m_cmd, m_lp_names, pre_inds, params);
         m_explicit_levels = !m_lp_names.empty();
-        m_p.parse_local_notation_decl();
+        auto& ind_asts = m_p.new_ast("inds", m_p.pos());
+        m_cmd.push(m_p.parse_local_notation_decl()).push(ind_asts.m_id);
 
         for (expr const & pre_ind : pre_inds) {
             m_pos = m_p.pos();
+            auto& ind_ast = m_p.new_ast("ind", m_pos);
+            ind_asts.push(ind_ast.m_id);
             expr ind_type; decl_attributes attrs;
-            std::tie(ind_type, attrs) = parse_inner_header(m_p, mlocal_pp_name(pre_ind));
+            std::tie(ind_type, attrs) = parse_inner_header(m_p, ind_ast, mlocal_pp_name(pre_ind));
             check_attrs(attrs);
             m_mut_attrs.push_back(attrs);
             lean_trace(name({"inductive", "parse"}), tout() << mlocal_name(pre_ind) << " : " << ind_type << "\n";);
             intro_rules.emplace_back();
             intro_rule_docs.emplace_back();
             expr ind = mk_local(resolve_decl_name(m_p.env(), mlocal_name(pre_ind)), ind_type);
-            parse_intro_rules(!params.empty(), ind, intro_rules.back(), intro_rule_docs.back(), false);
+            ind_ast.push(parse_intro_rules(!params.empty(), ind, intro_rules.back(), intro_rule_docs.back(), false));
             inds.push_back(ind);
         }
 
@@ -672,8 +688,8 @@ class inductive_cmd_fn {
             throw_error("invalid 'protected' modifier for inductive type");
     }
 public:
-    inductive_cmd_fn(parser & p, cmd_meta const & meta):
-        m_p(p), m_env(p.env()), m_meta_info(meta), m_ctx(p.env()) {
+    inductive_cmd_fn(parser & p, ast_id cmd_id, cmd_meta const & meta):
+        m_p(p), m_cmd(p.get_ast(cmd_id)), m_env(p.env()), m_meta_info(meta), m_ctx(p.env()) {
         m_u_meta = m_ctx.mk_univ_metavar_decl();
         check_attrs(m_meta_info.m_attrs);
         check_modifiers();
@@ -728,9 +744,12 @@ public:
         buffer<buffer<expr> > intro_rules;
         // intro_rule_docs do not have to go through elaboration, so we don't need a temporary here.
 
+        auto& data = m_cmd.push(m_meta_info.m_modifiers_id);
         if (m_meta_info.m_modifiers.m_is_mutual) {
+            data.push(m_p.new_ast("mutual", m_pos).m_id);
             parse_mutual_inductive(params, inds, intro_rules, result.m_intro_rule_docs);
         } else {
+            data.push(0);
             intro_rules.emplace_back();
             result.m_intro_rule_docs.emplace_back();
             inds.push_back(parse_inductive(params, intro_rules.back(), result.m_intro_rule_docs.back()));
@@ -763,17 +782,17 @@ public:
     }
 };
 
-inductive_decl parse_inductive_decl(parser & p, cmd_meta const & meta) {
+inductive_decl parse_inductive_decl(parser & p, ast_id cmd_id, cmd_meta const & meta) {
     auto pos = p.pos();
     module::scope_pos_info scope_pos(pos);
-    return inductive_cmd_fn(p, meta).parse_and_elaborate();
+    return inductive_cmd_fn(p, cmd_id, meta).parse_and_elaborate();
 }
 
-environment inductive_cmd(parser & p, cmd_meta const & meta) {
+environment inductive_cmd(parser & p, ast_id & cmd_id, cmd_meta const & meta) {
     p.next();
     auto pos = p.pos();
     module::scope_pos_info scope_pos(pos);
-    return inductive_cmd_fn(p, meta).inductive_cmd();
+    return inductive_cmd_fn(p, cmd_id, meta).inductive_cmd();
 }
 
 void register_inductive_cmds(cmd_table & r) {

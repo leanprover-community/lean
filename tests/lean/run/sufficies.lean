@@ -6,4 +6,4 @@ nat.cases_on n
   (λ n h,
     suffices 1 ≤ succ (succ (bit0 n)), from
       eq.symm (nat.bit0_succ_eq n) ▸ this,
-    succ_le_succ (zero_le (succ (bit0 n))))
+    succ_le_succ (succ (bit0 n)).zero_le)

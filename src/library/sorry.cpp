@@ -12,6 +12,7 @@ Author: Leonardo de Moura
 #include "library/module.h"
 #include "kernel/for_each_fn.h"
 #include "library/kernel_serializer.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_sorry_name = nullptr;
@@ -36,6 +37,12 @@ public:
         return sorry_type(sry);
     }
 
+    virtual bool can_textualize() const { return true; }
+
+    virtual void textualize(tlean_exporter & x) const {
+        x.out() << "#SORRY_MACRO";
+    }
+
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override {
         return {};
     }
@@ -44,6 +51,11 @@ public:
         s.write_string(*g_sorry_opcode);
         s.write_bool(m_synthetic);
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["synthetic"] = m_synthetic;
+    }
+#endif
 };
 
 void initialize_sorry() {

@@ -23,8 +23,8 @@ and type of `f (g x)` depends on `x` and `g x`. -/
   (f : Π {x : α} (y : β x), φ y) (g : Π x, β x) : Π x, φ (g x) :=
 λ x, f (g x)
 
-infixr  ` ∘ `      := function.comp
-infixr  ` ∘' `:80  := function.dcomp
+infixr ` ∘ `:90  := function.comp
+infixr ` ∘' `:80 := function.dcomp
 
 @[reducible] def comp_right (f : β → β → β) (g : α → β) : β → α → β :=
 λ b a, f b (g a)
@@ -70,13 +70,13 @@ lemma comp.assoc (f : φ → δ) (g : β → φ) (h : α → β) : (f ∘ g) ∘
 lemma comp_const_right (f : β → φ) (b : β) : f ∘ (const α b) = const α (f b) := rfl
 
 /-- A function `f : α → β` is called injective if `f x = f y` implies `x = y`. -/
-@[reducible] def injective (f : α → β) : Prop := ∀ ⦃a₁ a₂⦄, f a₁ = f a₂ → a₁ = a₂
+def injective (f : α → β) : Prop := ∀ ⦃a₁ a₂⦄, f a₁ = f a₂ → a₁ = a₂
 
 lemma injective.comp {g : β → φ} {f : α → β} (hg : injective g) (hf : injective f) :
   injective (g ∘ f) :=
 assume a₁ a₂, assume h, hf (hg h)
 
-/-- A function `f : α → β` is calles surjective if every `b : β` is equal to `f a`
+/-- A function `f : α → β` is called surjective if every `b : β` is equal to `f a`
 for some `a : α`. -/
 @[reducible] def surjective (f : α → β) : Prop := ∀ b, ∃ a, f a = b
 

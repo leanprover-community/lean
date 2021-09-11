@@ -10,6 +10,7 @@ Author: Leonardo de Moura, Daniel Selsam
 #include "kernel/quotient/quotient.h"
 #include "kernel/for_each_fn.h"
 #include "kernel/instantiate.h"
+#include "kernel/type_checker.h"
 #include "kernel/inductive/inductive.h"
 #include "library/module.h"
 #include "library/class.h"
@@ -158,14 +159,32 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     case expr_kind::Local:
         throw exception("invalid 'export', local constants cannot be exported");
     case expr_kind::Macro:
-        throw exception("invalid 'export', macros cannot be exported");
+        if (macro_def(e).can_textualize()) {
+            buffer<unsigned> args;
+            for (unsigned i = 0; i < macro_num_args(e); ++i) {
+                args.push_back(export_expr_core(macro_arg(e, i)));
+            }
+            i = static_cast<unsigned>(m_expr2idx.size());
+            m_out << i << " ";
+            macro_def(e).textualize(*this);
+            for (auto const & arg : args) {
+                m_out << " " << arg << "\n";
+            }
+        } else {
+            type_checker checker(m_env);
+            if (auto t = macro_def(e).expand(e, checker)) {
+                return export_expr_core(*t);
+            } else {
+                throw exception(sstream() << "found macro that cannot textualize nor expand\n" << e);
+            }
+        }
     }
     m_expr2idx[e] = i;
     return i;
 }
 
 unsigned tlean_exporter::export_expr(expr const & e) {
-    return export_expr_core(unfold_all_macros(m_env, e));
+    return export_expr_core(e);
 }
 
 void tlean_exporter::export_definition(declaration const & d) {
@@ -181,7 +200,7 @@ void tlean_exporter::export_definition(declaration const & d) {
     } else if (hints.get_kind() == reducibility_hints::kind::Opaque) {
         m_out << "O ";
     } else {
-        m_out << hints.get_height() << " ";
+        m_out << hints.get_height() << "." << hints.use_self_opt() << " ";
     }
 
     m_out << t << " " << v;

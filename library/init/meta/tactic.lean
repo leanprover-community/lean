@@ -50,7 +50,8 @@ meta instance : has_to_string tactic_state :=
 @[reducible] meta def tactic_result := interaction_monad.result tactic_state
 
 namespace tactic
-  export interaction_monad (hiding failed fail)
+  export interaction_monad (result result.success result.exception result.cases_on
+    result_to_string mk_exception silent_fail orelse' bracket)
   /-- Cause the tactic to fail with no error message. -/
   meta def failed {α : Type} : tactic α := interaction_monad.failed
   meta def fail {α : Type u} {β : Type v} [has_to_format β] (msg : β) : tactic α :=

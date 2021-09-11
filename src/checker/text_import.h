@@ -23,6 +23,6 @@ struct lowlevel_notation_info {
 
 using lowlevel_notations = std::unordered_map<name, lowlevel_notation_info, name_hash>;
 
-void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations);
+void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations, bool verbose);
 
 }

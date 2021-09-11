@@ -98,7 +98,7 @@ lemma cast_eq {α : Sort u} (h : α = α) (a : α) : cast h a = a := rfl
 /- ne -/
 
 @[reducible] def ne {α : Sort u} (a b : α) := ¬(a = b)
-notation a ≠ b := ne a b
+infix ` ≠ `:50 := ne
 
 @[simp] lemma ne.def {α : Sort u} (a b : α) : a ≠ b = ¬ (a = b) := rfl
 
@@ -183,8 +183,8 @@ lemma cast_heq : ∀ {α β : Sort u} (h : α = β) (a : α), cast h a == a
 
 /- and -/
 
-notation a /\ b := and a b
-notation a ∧ b  := and a b
+infixr ` /\ `:35 := and
+infixr ` ∧ `:35 := and
 
 variables {a b c d : Prop}
 
@@ -198,8 +198,8 @@ lemma and.symm : a ∧ b → b ∧ a := and.swap
 
 /- or -/
 
-notation a \/ b := or a b
-notation a ∨ b := or a b
+infixr ` \/ `:30 := or
+infixr ` ∨ `:30 := or
 
 namespace or
   lemma elim (h₁ : a ∨ b) (h₂ : a → c) (h₃ : b → c) : c :=
@@ -225,8 +225,8 @@ that is, have the same truth value. -/
 structure iff (a b : Prop) : Prop :=
 intro :: (mp : a → b) (mpr : b → a)
 
-notation a <-> b := iff a b
-notation a ↔ b := iff a b
+infix ` <-> `:20 := iff
+infix ` ↔ `:20 := iff
 
 lemma iff.elim : ((a → b) → (b → a) → c) → (a ↔ b) → c := iff.rec
 
@@ -536,8 +536,8 @@ attribute [intro] Exists.intro
 notation `exists` binders `, ` r:(scoped P, Exists P) := r
 notation `∃` binders `, ` r:(scoped P, Exists P) := r
 
-@[pattern]
-lemma exists.intro {α : Sort u} {p : α → Prop} (w : α) (h : p w) : ∃ x, p x := ⟨w, h⟩
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
+@[pattern] def exists.intro {α : Sort u} {p : α → Prop} (w : α) (h : p w) : ∃ x, p x := ⟨w, h⟩
 
 lemma exists.elim {α : Sort u} {p : α → Prop} {b : Prop}
   (h₁ : ∃ x, p x) (h₂ : ∀ (a : α), p a → b) : b :=

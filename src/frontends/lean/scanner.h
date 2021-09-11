@@ -45,6 +45,9 @@ protected:
     int                 m_pos;   // start position of the token
     int                 m_line;  // line of the token
 
+    int                 m_epos;  // end position of the *last* token
+    int                 m_eline; // end line of the *last* token
+
     name                m_name_val;
     token_info          m_token_info;
     mpq                 m_num_val;
@@ -94,7 +97,9 @@ public:
 
     int get_line() const { return m_line; }
     int get_pos() const { return m_pos; }
-    pos_info get_pos_info() const { return pos_info(m_line, m_pos); }
+    int get_last_end_pos() const { return m_epos; }
+    pos_info get_pos_info() const { return {m_line, m_pos}; }
+    pos_info get_last_end_pos_info() const { return {m_eline, m_epos}; }
     token_kind scan(environment const & env);
 
     mpq const & get_num_val() const { return m_num_val; }

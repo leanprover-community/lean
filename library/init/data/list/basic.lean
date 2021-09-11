@@ -88,7 +88,7 @@ open option nat
 | (a :: l) (n+1) := nth l n
 
 @[simp] def nth_le : Π (l : list α) (n), n < l.length → α
-| []       n     h := absurd h (not_lt_zero n)
+| []       n     h := absurd h n.not_lt_zero
 | (a :: l) 0     h := a
 | (a :: l) (n+1) h := nth_le l n (le_of_succ_le_succ h)
 

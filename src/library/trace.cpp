@@ -14,8 +14,6 @@ Author: Leonardo de Moura
 #include "library/messages.h"
 
 namespace lean {
-static name_set *            g_trace_classes = nullptr;
-static name_map<name_set>  * g_trace_aliases = nullptr;
 static name *                g_trace_as_messages = nullptr;
 MK_THREAD_LOCAL_GET_DEF(std::vector<name>, get_enabled_trace_classes);
 MK_THREAD_LOCAL_GET_DEF(std::vector<name>, get_disabled_trace_classes);
@@ -31,15 +29,6 @@ LEAN_THREAD_VALUE(unsigned,  g_depth, 0);
 void register_trace_class(name const & n) {
     register_option(name("trace") + n, BoolOption, "false",
                     "(trace) enable/disable tracing for the given module and submodules");
-    g_trace_classes->insert(n);
-}
-
-void register_trace_class_alias(name const & n, name const & alias) {
-    name_set new_s;
-    if (auto s = g_trace_aliases->find(n))
-        new_s = *s;
-    new_s.insert(alias);
-    g_trace_aliases->insert(n, new_s);
 }
 
 bool is_trace_enabled() {
@@ -60,33 +49,13 @@ static void disable_trace_class(name const & c) {
     update_class(get_disabled_trace_classes(), c);
 }
 
-static bool is_trace_class_set_core(std::vector<name> const & cs, name const & n) {
+static bool is_trace_class_set(std::vector<name> const & cs, name const & n) {
     for (name const & p : cs) {
         if (is_prefix_of(p, n)) {
             return true;
         }
     }
     return false;
-}
-
-static bool is_trace_class_set(std::vector<name> const & cs, name const & n) {
-    if (is_trace_class_set_core(cs, n))
-        return true;
-    auto it = n;
-    while (true) {
-        if (auto s = g_trace_aliases->find(it)) {
-            bool found = false;
-            s->for_each([&](name const & alias) {
-                    if (!found && is_trace_class_set_core(cs, alias))
-                        found = true;
-                });
-            if (found)
-                return true;
-        }
-        if (it.is_atomic())
-            return false;
-        it = it.get_prefix();
-    }
 }
 
 bool is_trace_class_enabled(name const & n) {
@@ -208,16 +177,12 @@ io_state_stream const & operator<<(io_state_stream const & ios, tclass const & c
 }
 
 void initialize_trace() {
-    g_trace_classes = new name_set();
-    g_trace_aliases = new name_map<name_set>();
     g_trace_as_messages = new name {"trace", "as_messages"};
 
     register_trace_class(name{"debug"});
 }
 
 void finalize_trace() {
-    delete g_trace_classes;
-    delete g_trace_aliases;
     delete g_trace_as_messages;
 }
 

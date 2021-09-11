@@ -1,5 +1,72 @@
-3.28.0c (15 March 20201)
+3.32.1c (12 August 2021)
 ------------------------
+
+Changes:
+- Remove unification hint `add_succ_defeq_succ_add_hint` (#598)
+
+3.32.0c (10 August 2021)
+------------------------
+
+Features:
+- Update Windows build instructions (#593)
+- `lift_pi_range` (#590)
+- Export `self_opt` flag in tlean files (#596)
+- Let macros textualize in tleans rather than unfold (#595)
+
+Changes:
+- Protect more lemmas (#589)
+- Use names `self` and `motive` in recursors (#594)
+- Remove uses of `export A (hiding B)` in the core library (#597)
+- Remove uses of `reserve notation` (#599)
+
+3.31.0c (29 June 2021)
+-----------------------
+
+Features:
+- `apply`: produce a better error for missing typeclasses (#577)
+
+Bug fixes:
+- Spelling (#573)
+- `cases`: fix segfault with equalities of subtypes (#580)
+- `cc`: partly disable broken support for symmetric relations (#579)
+- Make `trace` thread-safe (#583)
+- `simp`: fix segfault with ← and custom relation (#587)
+
+Changes:
+- Make `exists.intro` a def again (#582)
+- Delete `lazy_list` (#581)
+
+3.30.0c (30 April 2021)
+-----------------------
+
+Features:
+- Add a brief docstring about unbundled classes (#568)
+- Add timing info to verbose output for leanchecker (#567)
+- Add docstring for `nat.find` (#566)
+
+Bug fixes:
+- Bug with custom recursors on `add_monoid_algebra` (#569)
+
+Changes:
+- Avoid well-founded recursion in `nat.mod` and `nat.div` (#570)
+
+3.29.0c (19 April 2021)
+-----------------------
+
+Features:
+- `leanchecker`: add -v flag to print declaration names (#564)
+- `#print` universe parameters of declarations (#558)
+
+Bug fixes:
+- Fix let with `coe_sort` (#555)
+
+Changes:
+- `acc.rec` should not aggressively reduce proof (#562)
+- Use name `self` for argument in structure projections (#561)
+- Reduce use of choice (#560)
+
+3.28.0c (15 March 2021)
+-----------------------
 
 Features:
 - `leanchecker` prints error messages (#548)

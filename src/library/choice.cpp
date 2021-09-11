@@ -31,6 +31,9 @@ public:
         // we should be able to write choice expressions because of notation declarations
         s.write_string(*g_choice_opcode);
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const override {}
+#endif
 };
 
 static macro_definition * g_choice = nullptr;

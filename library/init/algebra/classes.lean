@@ -7,6 +7,18 @@ prelude
 import init.logic init.data.ordering.basic
 universes u v
 
+/-!
+# Unbundled algebra classes
+
+These classes and the `@[algebra]` attribute are part of an incomplete refactor described
+[here on the github Wiki](https://github.com/leanprover/lean/wiki/Refactoring-structures#encoding-the-algebraic-hierarchy-1).
+
+By themselves, these classes are not good replacements for the `monoid` / `group` etc structures
+provided by mathlib, as they are not discoverable by `simp` unlike the current lemmas due to there
+being little to index on. The Wiki page linked above describes an algebraic normalizer, but it is not
+implemented.
+-/
+
 @[algebra] class is_symm_op (α : Type u) (β : out_param (Type v)) (op : α → α → β) : Prop :=
 (symm_op : ∀ a b, op a b = op b a)
 

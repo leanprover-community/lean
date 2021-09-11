@@ -50,76 +50,107 @@ bool get_parser_checkpoint_have(options const & opts) {
 
 using namespace notation; // NOLINT
 
+expr mk_annotation_with_pos(parser & p, name const & a, expr const & e, pos_info const & pos) {
+    expr r = mk_annotation(a, e);
+    r.set_tag(nulltag); // mk_annotation copies e's tag
+    return p.save_pos(r, pos);
+}
+
 static name * g_no_universe_annotation = nullptr;
 
 bool is_sort_wo_universe(expr const & e) {
     return is_annotation(e, *g_no_universe_annotation);
 }
 
-expr mk_sort_wo_universe(parser & p, pos_info const & pos, bool is_type) {
-    expr r = p.save_pos(mk_sort(is_type ? mk_level_one() : mk_level_zero()), pos);
-    return p.save_pos(mk_annotation(*g_no_universe_annotation, r), pos);
+expr mk_sort_wo_universe(parser & p, ast_data & data, bool is_type) {
+    level l = is_type ? mk_level_one() : mk_level_zero();
+    expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), data.m_start);
+    p.finalize_ast(data.m_id, r);
+    r = mk_annotation_with_pos(p, *g_no_universe_annotation, r, data.m_start);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_Type(parser & p, unsigned, expr const *, pos_info const & pos) {
+    auto& data = p.new_ast("Type", pos);
     if (p.curr_is_token(get_llevel_curly_tk())) {
         p.next();
-        level l = mk_succ(p.parse_level());
+        ast_id id; level l;
+        std::tie(id, l) = p.parse_level();
         p.check_token_next(get_rcurly_tk(), "invalid Type expression, '}' expected");
-        return p.save_pos(mk_sort(l), pos);
+        l = mk_succ(l);
+        expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
+        p.finalize_ast(data.push(id).m_id, r);
+        return r;
     } else {
-        return mk_sort_wo_universe(p, pos, true);
+        return mk_sort_wo_universe(p, data.push(0), true);
     }
 }
 
 static expr parse_Sort(parser & p, unsigned, expr const *, pos_info const & pos) {
+    auto& data = p.new_ast("Sort", pos);
     if (p.curr_is_token(get_llevel_curly_tk())) {
         p.next();
-        level l = p.parse_level();
+        ast_id id; level l;
+        std::tie(id, l) = p.parse_level();
         p.check_token_next(get_rcurly_tk(), "invalid Sort expression, '}' expected");
-        return p.save_pos(mk_sort(l), pos);
+        expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
+        p.finalize_ast(data.push(id).m_id, r);
+        return r;
     } else {
-        return mk_sort_wo_universe(p, pos, false);
+        return mk_sort_wo_universe(p, data.push(0), false);
     }
 }
 
 static expr parse_Type_star(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return p.save_pos(mk_sort(mk_succ(mk_level_placeholder())), pos);
+    level l = mk_succ(mk_level_placeholder());
+    expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
+    p.finalize_ast(p.new_ast("Type*", pos).m_id, r);
+    return r;
 }
 
 static expr parse_Sort_star(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return p.save_pos(mk_sort(mk_level_placeholder()), pos);
+    level l = mk_level_placeholder();
+    expr r = p.save_pos((scoped_expr_caching(false), mk_sort(l)), pos);
+    p.finalize_ast(p.new_ast("Sort*", pos).m_id, r);
+    return r;
 }
 
 static name * g_let_match_name = nullptr;
 
-static expr parse_let(parser & p, pos_info const & pos, bool in_do_block);
-static expr parse_do(parser & p, bool has_braces);
-static expr parse_let_body(parser & p, pos_info const & pos, bool in_do_block) {
+static pair<ast_id, expr> parse_let(parser & p, pos_info const & pos, ast_data & group, bool in_do_block);
+static expr parse_do(parser & p, ast_data & group, bool has_braces);
+static pair<ast_id, expr> parse_let_body(parser & p, pos_info const & pos, ast_id last, ast_data & group, bool in_do_block) {
     if (in_do_block) {
         if (p.curr_is_token(get_in_tk())) {
             p.next();
-            return p.parse_expr();
+            ast_id args = p.new_ast("args", pos).push(last).m_id;
+            expr e = p.parse_expr();
+            ast_id let = p.new_ast(get_let_tk(), pos).push(args).push(p.get_id(e)).m_id;
+            group.push(p.new_ast("eval", pos).push(let).m_id);
+            return {0, e};
         } else {
             p.check_token_next(get_comma_tk(), "invalid 'do' block 'let' declaration, ',' or 'in' expected");
+            group.push(p.new_ast(get_let_tk(), pos).push(last).m_id);
             if (p.curr_is_token(get_let_tk())) {
                 p.next();
-                return parse_let(p, pos, in_do_block);
+                return parse_let(p, pos, group, in_do_block);
             } else {
-                return parse_do(p, false);
+                return {0, parse_do(p, group, false)};
             }
         }
     } else {
+        group.push(last);
         if (p.curr_is_token(get_comma_tk())) {
             p.next();
-            return parse_let(p, pos, in_do_block);
+            return parse_let(p, pos, group, in_do_block);
         } else if (p.curr_is_token(get_in_tk())) {
             p.next();
-            return p.parse_expr();
         } else {
             p.maybe_throw_error({"invalid let declaration, 'in' or ',' expected", p.pos()});
-            return p.parse_expr();
         }
+        expr e = p.parse_expr();
+        return {p.new_ast(get_let_tk(), pos).push(group.m_id).push(p.get_id(e)).m_id, e};
     }
 }
 
@@ -137,71 +168,91 @@ static expr mk_typed_expr_distrib_choice(parser & p, expr const & type, expr con
     }
 }
 
-static expr parse_let(parser & p, pos_info const & pos, bool in_do_block) {
+static pair<ast_id, expr> parse_let(parser & p, pos_info const & pos, ast_data & group, bool in_do_block) {
     parser::local_scope scope1(p);
-    if (!in_do_block && p.parse_local_notation_decl()) {
-        return parse_let_body(p, pos, in_do_block);
+    ast_id nota;
+    if (!in_do_block && (nota = p.parse_local_notation_decl())) {
+        return parse_let_body(p, pos, nota, group, in_do_block);
     } else if (p.curr_is_identifier()) {
         auto id_pos     = p.pos();
-        name id         = p.check_atomic_id_next("invalid let declaration, atomic identifier expected");
+        ast_id id_ast; name id;
+        std::tie(id_ast, id) = p.check_atomic_id_next("invalid let declaration, atomic identifier expected");
+        auto& var = p.new_ast("var", id_pos).push(id_ast);
         expr type;
         expr value;
         if (p.curr_is_token(get_assign_tk())) {
             p.next();
             type  = p.save_pos(mk_expr_placeholder(), id_pos);
             value = p.parse_expr();
+            var.push(0).push(0).push(p.get_id(value));
         } else if (p.curr_is_token(get_colon_tk())) {
             p.next();
             type = p.parse_expr();
             p.check_token_next(get_assign_tk(), "invalid declaration, ':=' expected");
             value = p.parse_expr();
+            var.push(0).push(p.get_id(type)).push(p.get_id(value));
         } else {
             parser::local_scope scope2(p);
             buffer<expr> ps;
             unsigned rbp = 0;
-            auto lenv = p.parse_binders(ps, rbp);
+            auto& bis = p.new_ast("binders", p.pos());
+            auto lenv = p.parse_binders(&bis, ps, rbp);
+            var.push(bis.m_id);
             if (p.curr_is_token(get_colon_tk())) {
                 p.next();
                 type  = p.parse_scoped_expr(ps, lenv);
+                var.push(p.get_id(type));
                 type  = Pi(ps, type, p);
             } else {
                 type  = p.save_pos(mk_expr_placeholder(), id_pos);
+                var.push(0);
             }
             p.check_token_next(get_assign_tk(), "invalid let declaration, ':=' expected");
             value = p.parse_scoped_expr(ps, lenv);
+            var.push(p.get_id(value));
             value = Fun(ps, value, p);
         }
         expr x = p.save_pos(mk_local(id, type), id_pos);
         p.add_local_expr(id, x);
-        expr b = parse_let_body(p, pos, in_do_block);
-        return p.save_pos(mk_let(id, type, value, abstract_local(b, x)), pos);
+        auto r = parse_let_body(p, pos, var.m_id, group, in_do_block);
+        r.second = p.save_pos(mk_let(id, type, value, abstract_local(r.second, x)), pos);
+        return r;
     } else {
         buffer<expr> new_locals;
+        auto& var = p.new_ast("pat", p.pos());
         expr lhs = p.parse_pattern(new_locals);
         p.check_token_next(get_assign_tk(), "invalid let declaration, ':=' expected");
         expr value = p.parse_expr();
+        var.push(p.get_id(lhs)).push(p.get_id(value));
         for (expr const & l : new_locals)
             p.add_local(l);
-        expr body  = parse_let_body(p, pos, in_do_block);
+        ast_id ast; expr body;
+        std::tie(ast, body) = parse_let_body(p, pos, var.m_id, group, in_do_block);
         match_definition_scope match_scope(p.env());
         expr fn = p.save_pos(mk_local(p.next_name(), *g_let_match_name, mk_expr_placeholder(), mk_rec_info(true)), pos);
         expr eqn = Fun(fn, Fun(new_locals, p.save_pos(mk_equation(p.rec_save_pos(mk_app(fn, lhs), pos), body), pos), p), p);
         equations_header h = mk_match_header(match_scope.get_name(), match_scope.get_actual_name());
         expr eqns  = p.save_pos(mk_equations(h, 1, &eqn), pos);
-        return p.save_pos(mk_app(eqns, value), pos);
+        return {ast, p.save_pos(mk_app(eqns, value), pos)};
     }
 }
 
 static expr parse_let_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
     bool in_do_block = false;
-    return parse_let(p, pos, in_do_block);
+    auto& group = p.new_ast("args", p.pos());
+    ast_id id; expr r;
+    std::tie(id, r) = parse_let(p, pos, group, in_do_block);
+    p.finalize_ast(id, r);
+    return r;
 }
 
 static name * g_do_match_name = nullptr;
 
-static std::tuple<optional<expr>, expr, expr, optional<expr>> parse_do_action(parser & p, buffer<expr> & new_locals) {
+static std::tuple<optional<expr>, expr, expr, optional<expr>>
+parse_do_action(parser & p, ast_data & parent, buffer<expr> & new_locals) {
     auto lhs_pos = p.pos();
     optional<expr> lhs = some(p.parse_pattern_or_expr());
+    ast_id lhs_id = p.get_id(*lhs);
     expr type, curr;
     optional<expr> else_case;
     if (p.curr_is_token(get_colon_tk())) {
@@ -219,26 +270,33 @@ static std::tuple<optional<expr>, expr, expr, optional<expr>> parse_do_action(pa
         new_locals.push_back(*lhs);
         p.check_token_next(get_larrow_tk(), "invalid 'do' block, '←' expected");
         curr = p.parse_expr();
+        parent.push(p.new_ast(get_larrow_tk(), lhs_pos)
+            .push(lhs_id).push(p.get_id(type)).push(p.get_id(curr)).push(0).m_id);
     } else if (p.curr_is_token(get_larrow_tk())) {
         p.next();
         type = p.save_pos(mk_expr_placeholder(), lhs_pos);
         bool skip_main_fn = false;
         lhs = p.patexpr_to_pattern(*lhs, skip_main_fn, new_locals);
         curr = p.parse_expr();
+        ast_id else_id = 0;
         if (p.curr_is_token(get_bar_tk())) {
             p.next();
             else_case = p.parse_expr();
+            else_id = p.get_id(*else_case);
         }
+        parent.push(p.new_ast(get_larrow_tk(), lhs_pos)
+            .push(lhs_id).push(0).push(p.get_id(curr)).push(else_id).m_id);
     } else {
         curr = p.patexpr_to_expr(*lhs);
         type = p.save_pos(mk_expr_placeholder(), lhs_pos);
         lhs  = none_expr();
+        parent.push(p.new_ast("eval", lhs_pos).push(lhs_id).m_id);
     }
     return std::make_tuple(lhs, type, curr, else_case);
 }
 
 static expr mk_bind_fn(parser & p) {
-    return mk_no_info(p.id_to_expr("bind", pos_info {}, /* resolve_only */ true));
+    return mk_no_info(p.id_to_expr("bind", p.new_ast("bind", {}), /* resolve_only */ true));
 }
 
 static name * g_do_failure_eq = nullptr;
@@ -256,7 +314,7 @@ bool is_do_failure_eq(expr const & e) {
     return is_annotation(equation_rhs(it), *g_do_failure_eq);
 }
 
-static expr parse_do(parser & p, bool has_braces) {
+static expr parse_do(parser & p, ast_data & group, bool has_braces) {
     parser::local_scope scope(p);
     buffer<expr>               es;
     buffer<pos_info>           ps;
@@ -268,7 +326,7 @@ static expr parse_do(parser & p, bool has_braces) {
             auto pos = p.pos();
             p.next();
             bool in_do_block = true;
-            es.push_back(parse_let(p, pos, in_do_block));
+            es.push_back(parse_let(p, pos, group, in_do_block).second);
             break;
         } else {
             auto lhs_pos = p.pos();
@@ -276,7 +334,7 @@ static expr parse_do(parser & p, bool has_braces) {
             buffer<expr> new_locals;
             optional<expr> lhs, else_case;
             expr type, curr;
-            std::tie(lhs, type, curr, else_case) = parse_do_action(p, new_locals);
+            std::tie(lhs, type, curr, else_case) = parse_do_action(p, group, new_locals);
             es.push_back(curr);
             if (p.curr_is_token(get_comma_tk())) {
                 p.next();
@@ -358,114 +416,143 @@ static expr parse_do(parser & p, bool has_braces) {
     return r;
 }
 
-static expr parse_do_expr(parser & p, unsigned, expr const *, pos_info const &) {
+static expr parse_do_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
     bool has_braces = false;
+    auto& data = p.new_ast("do", pos);
     if (p.curr_is_token(get_lcurly_tk())) {
         has_braces = true;
+        data.m_value = "{";
         p.next();
     }
-    return parse_do(p, has_braces);
+    expr r = parse_do(p, data, has_braces);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_unit(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return p.save_pos(mk_constant(get_unit_star_name()), pos);
+    auto e = p.save_pos(mk_constant(get_unit_star_name()), pos);
+    p.finalize_ast(p.new_ast("()", pos).m_id, e);
+    return e;
 }
 
-static expr parse_proof(parser & p);
-
-static expr parse_proof(parser & p) {
+static pair<ast_id, expr> parse_proof(parser & p) {
+    expr e;
     if (p.curr_is_token(get_from_tk())) {
+        auto& data = p.new_ast(get_from_tk(), p.pos());
         // parse: 'from' expr
         p.next();
-        return p.parse_expr();
+        e = p.parse_expr();
+        data.push(p.get_id(e));
+        return {data.m_id, e};
     } else if (p.curr_is_token(get_begin_tk())) {
         auto pos = p.pos();
-        return parse_begin_end_expr(p, pos);
+        e = parse_begin_end_expr(p, pos);
     } else if (p.curr_is_token(get_lcurly_tk())) {
         auto pos = p.pos();
-        return parse_curly_begin_end_expr(p, pos);
+        e = parse_curly_begin_end_expr(p, pos);
     } else if (p.curr_is_token(get_by_tk())) {
         auto pos = p.pos();
-        return parse_by(p, 0, nullptr, pos);
+        e = parse_by(p, 0, nullptr, pos);
     } else {
-        return p.parser_error_or_expr({"invalid expression, 'by', 'begin', '{', or 'from' expected", p.pos()});
+        e = p.parser_error_or_expr({"invalid expression, 'by', 'begin', '{', or 'from' expected", p.pos()});
     }
+    return {p.get_id(e), e};
 }
 
 static expr parse_have(parser & p, unsigned, expr const *, pos_info const & pos) {
-    auto id_pos       = p.pos();
     name id;
     expr prop;
+    auto& data = p.new_ast("have", pos);
     if (p.curr_is_identifier()) {
         id = p.get_name_val();
+        auto& id_ast = p.new_ast("ident", p.pos(), id);
         p.next();
         if (p.curr_is_token(get_colon_tk())) {
             p.next();
             prop      = p.parse_expr();
+            data.push(id_ast.m_id).push(p.get_id(prop));
         } else {
-            expr left = p.id_to_expr(id, id_pos);
+            expr left = p.id_to_expr(id, id_ast);
             id        = get_this_tk();
             unsigned rbp = 0;
             while (rbp < p.curr_lbp()) {
                 left = p.parse_led(left);
             }
             prop      = left;
+            data.push(0).push(p.get_id(prop));
         }
     } else {
         id            = get_this_tk();
         prop          = p.parse_expr();
+        data.push(0).push(p.get_id(prop));
     }
     expr proof;
     if (p.curr_is_token(get_assign_tk())) {
+        auto& ast = p.new_ast(get_assign_tk(), p.pos());
         p.next();
         proof = p.parse_expr();
+        data.push(ast.push(p.get_id(proof)).m_id);
     } else {
         p.check_token_next(get_comma_tk(), "invalid 'have' declaration, ',' expected");
-        proof = parse_proof(p);
+        ast_id id;
+        std::tie(id, proof) = parse_proof(p);
+        data.push(id);
     }
     p.check_token_next(get_comma_tk(), "invalid 'have' declaration, ',' expected");
     parser::local_scope scope(p);
     expr l = p.save_pos(mk_local(id, prop), pos);
     p.add_local(l);
     expr body = p.parse_expr();
+    data.push(p.get_id(body));
     body = abstract(body, l);
     if (get_parser_checkpoint_have(p.get_options()))
         body = mk_checkpoint_annotation(body);
     expr r = p.save_pos(mk_have_annotation(p.save_pos(mk_lambda(id, prop, body), pos)), pos);
-    return p.mk_app(r, proof, pos);
+    r = p.mk_app(r, proof, pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_show(parser & p, unsigned, expr const *, pos_info const & pos) {
     expr prop  = p.parse_expr();
     p.check_token_next(get_comma_tk(), "invalid 'show' declaration, ',' expected");
-    expr proof = parse_proof(p);
+    ast_id id; expr proof;
+    std::tie(id, proof) = parse_proof(p);
     expr b = p.save_pos(mk_lambda(get_this_tk(), prop, Var(0)), pos);
     expr r = p.mk_app(b, proof, pos);
-    return p.save_pos(mk_show_annotation(r), pos);
+    r = p.save_pos(mk_show_annotation(r), pos);
+    p.finalize_ast(p.new_ast("show", pos).push(p.get_id(prop)).push(id).m_id,
+                   r);
+    return r;
 }
 
 static expr parse_suffices(parser & p, unsigned, expr const *, pos_info const & pos) {
     auto prop_pos = p.pos();
     name id;
     expr from;
+    auto& data = p.new_ast("suffices", pos);
     if (p.curr_is_identifier()) {
         id = p.get_name_val();
+        auto& id_ast = p.new_ast("ident", prop_pos, id);
         p.next();
         if (p.curr_is_token(get_colon_tk())) {
             p.next();
             from = p.parse_expr();
+            data.push(id_ast.m_id).push(p.get_id(from));
         } else {
-            expr left = p.id_to_expr(id, prop_pos);
+            expr left = p.id_to_expr(id, id_ast);
             id        = get_this_tk();
             unsigned rbp = 0;
             while (rbp < p.curr_lbp()) {
                 left = p.parse_led(left);
             }
             from = left;
+            data.push(0).push(p.get_id(from));
         }
     } else {
         id    = get_this_tk();
         from  = p.parse_expr();
+        data.push(0).push(p.get_id(from));
     }
     expr local = p.save_pos(mk_local(id, from), prop_pos);
     p.check_token_next(get_comma_tk(), "invalid 'suffices' declaration, ',' expected");
@@ -473,29 +560,35 @@ static expr parse_suffices(parser & p, unsigned, expr const *, pos_info const & 
     {
         parser::local_scope scope(p);
         p.add_local(local);
-        body = parse_proof(p);
+        ast_id id;
+        std::tie(id, body) = parse_proof(p);
+        data.push(id);
     }
     expr proof = p.save_pos(Fun(local, body, p), pos);
     p.check_token_next(get_comma_tk(), "invalid 'suffices' declaration, ',' expected");
     expr rest  = p.parse_expr();
+    data.push(p.get_id(rest));
     expr r = p.mk_app(proof, rest, pos);
-    return p.save_pos(mk_suffices_annotation(r), pos);
+    r = p.save_pos(mk_suffices_annotation(r), pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr * g_not  = nullptr;
 static unsigned g_then_else_prec = 0;
 
-static expr parse_ite(parser & p, expr const & c, pos_info const & pos) {
+static expr parse_ite(parser & p, ast_data & parent, expr const & c, pos_info const & pos) {
     if (!p.env().find(get_ite_name()))
         throw parser_error("invalid use of 'if-then-else' expression, environment does not contain 'ite' definition", pos);
     p.check_token_next(get_then_tk(), "invalid 'if-then-else' expression, 'then' expected");
     expr t = p.parse_expr(g_then_else_prec);
     p.check_token_next(get_else_tk(), "invalid 'if-then-else' expression, 'else' expected");
     expr e = p.parse_expr(g_then_else_prec);
+    parent.push(p.get_id(t)).push(p.get_id(e));
     return p.save_pos(mk_app(mk_constant(get_ite_name()), c, t, e), pos);
 }
 
-static expr parse_dite(parser & p, name const & H_name, expr const & c, pos_info const & pos) {
+static expr parse_dite(parser & p, ast_data & parent, name const & H_name, expr const & c, pos_info const & pos) {
     p.check_token_next(get_then_tk(), "invalid 'if-then-else' expression, 'then' expected");
     expr t, e;
     {
@@ -503,7 +596,9 @@ static expr parse_dite(parser & p, name const & H_name, expr const & c, pos_info
         expr H = mk_local(H_name, c);
         p.add_local(H);
         auto pos = p.pos();
-        t = p.save_pos(Fun(H, p.parse_expr(g_then_else_prec), p), pos);
+        t = p.parse_expr(g_then_else_prec);
+        parent.push(p.get_id(t));
+        t = p.save_pos(Fun(H, t, p), pos);
     }
     p.check_token_next(get_else_tk(), "invalid 'if-then-else' expression, 'else' expected");
     {
@@ -511,30 +606,34 @@ static expr parse_dite(parser & p, name const & H_name, expr const & c, pos_info
         expr H = mk_local(H_name, mk_app(*g_not, c));
         p.add_local(H);
         auto pos = p.pos();
-        e = p.save_pos(Fun(H, p.parse_expr(g_then_else_prec), p), pos);
+        e = p.parse_expr(g_then_else_prec);
+        parent.push(p.get_id(e));
+        e = p.save_pos(Fun(H, e, p), pos);
     }
     return p.save_pos(mk_app(p.save_pos(mk_constant(get_dite_name()), pos), c, t, e), pos);
 }
 
 static expr parse_if_then_else(parser & p, unsigned, expr const *, pos_info const & pos) {
-    pair<optional<name>, expr> ie = p.parse_qualified_expr();
-    if (ie.first)
-        return parse_dite(p, *ie.first, ie.second, pos);
-    else
-        return parse_ite(p, ie.second, pos);
+    ast_id id; optional<name> hyp; expr cond;
+    std::tie(id, hyp, cond) = p.parse_qualified_expr();
+    auto& data = p.new_ast("if", pos).push(id).push(p.get_id(cond));
+    auto r = hyp ? parse_dite(p, data, *hyp, cond, pos) : parse_ite(p, data, cond, pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
-static expr parse_calc_expr(parser & p, unsigned, expr const *, pos_info const &) {
-    return parse_calc(p);
+static expr parse_calc_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
+    return parse_calc(p, pos);
 }
 
 static expr parse_explicit_core(parser & p, pos_info const & pos, bool partial) {
+    auto sym = partial ? "@@" : "@";
     if (!p.curr_is_identifier())
-        return p.parser_error_or_expr({sstream() << "invalid '" << (partial ? "@@" : "@") << "', identifier expected", p.pos()});
+        return p.parser_error_or_expr({sstream() << "invalid '" << sym << "', identifier expected", p.pos()});
     expr fn = p.parse_id(/* allow_field_notation */ false);
     if (is_choice(fn)) {
         sstream s;
-        s << "invalid '" << (partial ? "@@" : "@") << "', function is overloaded, use fully qualified names (overloads: ";
+        s << "invalid '" << sym << "', function is overloaded, use fully qualified names (overloads: ";
         for (unsigned i = 0; i < get_num_choices(fn); i++) {
             if (i > 0) s << ", ";
             expr const & c = get_choice(fn, i);
@@ -548,12 +647,15 @@ static expr parse_explicit_core(parser & p, pos_info const & pos, bool partial) 
         s << ")";
         return p.parser_error_or_expr({s, pos});
     } else if (!is_as_atomic(fn) && !is_constant(fn) && !is_local(fn)) {
-        return p.parser_error_or_expr({sstream() << "invalid '" << (partial ? "@@" : "@") << "', function must be a constant or variable", pos});
+        return p.parser_error_or_expr({sstream() << "invalid '" << sym << "', function must be a constant or variable", pos});
     }
+    expr r;
     if (partial)
-        return p.save_pos(mk_partial_explicit(fn), pos);
+        r = p.save_pos(mk_partial_explicit(fn), pos);
     else
-        return p.save_pos(mk_explicit(fn), pos);
+        r = p.save_pos(mk_explicit(fn), pos);
+    p.finalize_ast(p.new_ast(sym, pos).push(p.get_id(fn)).m_id, r);
+    return r;
 }
 
 static expr parse_explicit_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -565,11 +667,15 @@ static expr parse_partial_explicit_expr(parser & p, unsigned, expr const *, pos_
 }
 
 static expr parse_sorry(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return p.mk_sorry(pos);
+    auto r = p.mk_sorry(pos);
+    p.finalize_ast(p.new_ast("sorry", pos).m_id, r);
+    return r;
 }
 
 static expr parse_pattern(parser & p, unsigned, expr const * args, pos_info const & pos) {
-    return p.save_pos(mk_pattern_hint(args[0]), pos);
+    auto r = p.save_pos(mk_pattern_hint(args[0]), pos);
+    p.finalize_ast(p.new_ast("(:", pos).push(p.get_id(args[0])).m_id, r);
+    return r;
 }
 
 static expr parse_lazy_quoted_pexpr(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -578,13 +684,21 @@ static expr parse_lazy_quoted_pexpr(parser & p, unsigned, expr const *, pos_info
     parser::quote_scope scope1(p, true);
     restore_decl_meta_scope scope2;
     expr e = p.parse_expr();
+    auto& data = p.new_ast("```()", pos);
     if (p.curr_is_token(get_colon_tk())) {
         p.next();
         expr t = p.parse_expr();
+        ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
         e = mk_typed_expr_distrib_choice(p, t, e, pos);
+        p.finalize_ast(id, e);
+        data.push(id);
+    } else {
+        data.push(p.get_id(e));
     }
     p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
-    return p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ false), pos);
+    auto r = p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ false), pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_quoted_pexpr(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -593,18 +707,27 @@ static expr parse_quoted_pexpr(parser & p, unsigned, expr const *, pos_info cons
     parser::quote_scope scope1(p, true, id_behavior::ErrorIfUndef);
     restore_decl_meta_scope scope2;
     expr e = p.parse_expr();
+    auto& data = p.new_ast("``()", pos);
     if (p.curr_is_token(get_colon_tk())) {
         p.next();
         expr t = p.parse_expr();
+        ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
         e = mk_typed_expr_distrib_choice(p, t, e, pos);
+        p.finalize_ast(id, e);
+        data.push(id);
+    } else {
+        data.push(p.get_id(e));
     }
     p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
-    return p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ true), pos);
+    auto r = p.save_pos(mk_pexpr_quote_and_substs(e, /* is_strict */ true), pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_quoted_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
     if (p.in_quote())
         return p.parser_error_or_expr({"invalid nested quoted expression", pos});
+    auto& data = p.new_ast("`()", pos);
     expr e;
     {
         parser::quote_scope scope1(p, true, id_behavior::ErrorIfUndef);
@@ -613,11 +736,18 @@ static expr parse_quoted_expr(parser & p, unsigned, expr const *, pos_info const
         if (p.curr_is_token(get_colon_tk())) {
             p.next();
             expr t = p.parse_expr();
+            ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
             e = mk_typed_expr_distrib_choice(p, t, e, pos);
+            p.finalize_ast(id, e);
+            data.push(id);
+        } else {
+            data.push(p.get_id(e));
         }
         p.check_token_next(get_rparen_tk(), "invalid quoted expression, `)` expected");
     }
-    return p.save_pos(mk_unelaborated_expr_quote(e), pos);
+    auto r = p.save_pos(mk_unelaborated_expr_quote(e), pos);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_antiquote_expr(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -625,17 +755,22 @@ static expr parse_antiquote_expr(parser & p, unsigned, expr const *, pos_info co
         return p.parser_error_or_expr({"invalid antiquotation, occurs outside of quoted expressions", pos});
     parser::quote_scope scope(p, false);
     expr e = p.parse_expr(get_max_prec());
-    return p.save_pos(mk_antiquote(e), pos);
+    ast_id id = p.new_ast("%%", pos).push(p.get_id(e)).m_id;
+    e = p.save_pos(mk_antiquote(e), pos);
+    p.finalize_ast(id, e);
+    return e;
 }
 
 static expr parse_quoted_name(parser & p, unsigned, expr const *, pos_info const & pos) {
     bool resolve = false;
     name id;
+    auto& data = p.new_ast("`", pos);
     if (p.curr_is_token(get_placeholder_tk())) {
         p.next();
         id = "_";
     } else {
         if (p.curr_is_token(get_backtick_tk())) {
+            data.m_type = "``";
             p.next();
             resolve = true;
         }
@@ -645,13 +780,14 @@ static expr parse_quoted_name(parser & p, unsigned, expr const *, pos_info const
             id = p.get_token_info().token();
             p.next();
         } else {
-            id = p.check_id_next("invalid quoted name, identifier expected");
+            id = p.check_id_next("invalid quoted name, identifier expected").second;
         }
     }
+    data.m_value = id;
     if (resolve) {
         parser::error_if_undef_scope scope(p);
         bool resolve_only = true;
-        expr e = p.id_to_expr(id, pos, resolve_only);
+        expr e = p.id_to_expr(id, p.new_ast("ident", pos, id), resolve_only);
         if (is_constant(e)) {
             id = const_name(e);
         } else if (is_local(e)) {
@@ -670,7 +806,9 @@ static expr parse_quoted_name(parser & p, unsigned, expr const *, pos_info const
     }
     lean_assert(id.is_string());
     expr e  = quote(id);
-    return p.rec_save_pos(e, pos);
+    e = p.rec_save_pos(e, pos);
+    p.finalize_ast(data.m_id, e);
+    return e;
 }
 
 static name * g_anonymous_constructor = nullptr;
@@ -686,8 +824,10 @@ expr const & get_anonymous_constructor_arg(expr const & e) {
 
 static expr parse_constructor_core(parser & p, pos_info const & pos) {
     buffer<expr> args;
+    auto& data = p.new_ast(get_langle_tk(), pos);
     while (!p.curr_is_token(get_rangle_tk())) {
         args.push_back(p.parse_expr());
+        data.push(p.get_id(args.back()));
         if (p.curr_is_token(get_comma_tk())) {
             p.next();
         } else {
@@ -696,19 +836,21 @@ static expr parse_constructor_core(parser & p, pos_info const & pos) {
     }
     p.check_token_next(get_rangle_tk(), "invalid constructor, `⟩` expected");
     expr fn = p.save_pos(mk_expr_placeholder(), pos);
-    return p.save_pos(mk_anonymous_constructor(p.save_pos(mk_app(fn, args), pos)), pos);
+    expr e = p.save_pos(mk_anonymous_constructor(p.save_pos(mk_app(fn, args), pos)), pos);
+    p.finalize_ast(data.m_id, e);
+    return e;
 }
 
 static expr parse_constructor(parser & p, unsigned, expr const *, pos_info const & pos) {
     return parse_constructor_core(p, pos);
 }
 
-static expr parse_lambda_core(parser & p, pos_info const & pos);
+static expr parse_lambda_core(parser & p, ast_data & fun, ast_data & bis, pos_info const & pos);
 
-static expr parse_lambda_binder(parser & p, pos_info const & pos) {
+static expr parse_lambda_binder(parser & p, ast_data & fun, ast_data & bis, pos_info const & pos) {
     parser::local_scope scope1(p);
     buffer<expr> locals;
-    auto new_env = p.parse_binders(locals, 0);
+    auto new_env = p.parse_binders(&bis, locals, 0);
     for (expr const & local : locals)
         p.add_local(local);
     parser::local_scope scope2(p, new_env);
@@ -716,11 +858,13 @@ static expr parse_lambda_binder(parser & p, pos_info const & pos) {
     if (p.curr_is_token(get_comma_tk())) {
         p.next();
         body = p.parse_expr();
+        fun.push(p.get_id(body));
     } else if (p.curr_is_token(get_langle_tk())) {
-        body = parse_lambda_core(p, pos);
+        body = parse_lambda_core(p, fun, bis, pos);
     } else {
         p.maybe_throw_error({"invalid lambda expression, ',' or '⟨' expected", p.pos()});
         body = p.parse_expr();
+        fun.push(p.get_id(body));
     }
     bool use_cache = false;
     return p.rec_save_pos(Fun(locals, body, use_cache), pos);
@@ -728,21 +872,23 @@ static expr parse_lambda_binder(parser & p, pos_info const & pos) {
 
 static name * g_lambda_match_name = nullptr;
 
-static expr parse_lambda_constructor(parser & p, pos_info const & ini_pos) {
+static expr parse_lambda_constructor(parser & p, ast_data & fun, ast_data & bis, pos_info const & ini_pos) {
     lean_assert(p.curr_is_token(get_langle_tk()));
     parser::local_scope scope(p);
     auto pos = p.pos();
     p.next();
     buffer<expr> locals;
     expr pattern = p.parse_pattern([&](parser & p) { return parse_constructor_core(p, pos); }, locals);
+    bis.push(p.get_id(pattern));
     for (expr const & local : locals)
         p.add_local(local);
     expr body;
     if (p.curr_is_token(get_comma_tk())) {
         p.next();
         body = p.parse_expr();
+        fun.push(p.get_id(body));
     } else {
-        body = parse_lambda_core(p, ini_pos);
+        body = parse_lambda_core(p, fun, bis, ini_pos);
     }
     match_definition_scope match_scope(p.env());
     expr fn  = p.save_pos(mk_local(p.next_name(), *g_lambda_match_name, mk_expr_placeholder(), mk_rec_info(true)), pos);
@@ -753,32 +899,46 @@ static expr parse_lambda_constructor(parser & p, pos_info const & ini_pos) {
     return p.rec_save_pos(Fun(x, mk_app(mk_equations(h, 1, &eqn), x), use_cache), pos);
 }
 
-static expr parse_lambda_core(parser & p, pos_info const & pos) {
+static expr parse_lambda_core(parser & p, ast_data & fun, ast_data & bis, pos_info const & pos) {
     if (p.curr_is_token(get_langle_tk())) {
-        return parse_lambda_constructor(p, pos);
+        return parse_lambda_constructor(p, fun, bis, pos);
     } else {
-        return parse_lambda_binder(p, pos);
+        return parse_lambda_binder(p, fun, bis, pos);
     }
 }
 
 static expr parse_lambda(parser & p, unsigned, expr const *, pos_info const & pos) {
-    return parse_lambda_core(p, pos);
+    auto& bis = p.new_ast("binders", p.pos());
+    auto& fun = p.new_ast("fun", pos).push(bis.m_id);
+    expr r = parse_lambda_core(p, fun, bis, pos);
+    p.finalize_ast(fun.m_id, r);
+    return r;
 }
 
 static expr parse_assume(parser & p, unsigned, expr const *, pos_info const & pos) {
+    ast_id id; expr r;
     if (p.curr_is_token(get_colon_tk())) {
         // anonymous `assume`
         p.next();
         expr prop = p.parse_expr();
+        auto& binder = p.new_ast(name("binder").append_after(0U), p.pos())
+            .push(0).push(0).push(p.get_id(prop));
+        auto& bis = p.new_ast("binders", p.pos()).push(binder.m_id);
         p.check_token_next(get_comma_tk(), "invalid 'assume', ',' expected");
         parser::local_scope scope(p);
         expr l = p.save_pos(mk_local(get_this_tk(), prop), pos);
         p.add_local(l);
         expr body = p.parse_expr();
-        return p.save_pos(Fun(l, body, p), pos);
+        id = p.new_ast("assume", pos).push(bis.m_id).push(p.get_id(body)).m_id;
+        r = p.save_pos(Fun(l, body, p), pos);
     } else {
-        return parse_lambda_core(p, pos);
+        auto& bis = p.new_ast("binders", p.pos());
+        auto& fun = p.new_ast("assume", pos).push(bis.m_id);
+        id = fun.m_id;
+        r = parse_lambda_core(p, fun, bis, pos);
     }
+    p.finalize_ast(id, r);
+    return r;
 }
 
 static void consume_rparen(parser & p) {
@@ -829,13 +989,16 @@ static expr parse_infix_paren(parser & p, list<notation::accepting> const & accs
     args[0] = mk_local(p.next_name(), "_x", mk_expr_placeholder(), binder_info());
     vars.push_back(args[0]);
     p.next();
+    auto& data = p.new_ast(*g_infix_function, pos).push(0);
     if (p.curr_is_token(get_rparen_tk())) {
+        data.push(0);
         p.next();
         args[1] = mk_local(p.next_name(), "_y", mk_expr_placeholder(), binder_info());
         vars.push_back(args[1]);
     } else {
         fixed_second_arg = true;
         args[1] = p.parse_expr();
+        data.push(p.get_id(args[1]));
         consume_rparen(p);
     }
     buffer<expr> cs;
@@ -851,7 +1014,18 @@ static expr parse_infix_paren(parser & p, list<notation::accepting> const & accs
             cs.push_back(r);
         }
     }
-    return p.save_pos(mk_choice(cs.size(), cs.data()), pos);
+    expr r = p.save_pos(mk_choice(cs.size(), cs.data()), pos);
+    lean_assert(data.m_children.size() > 0);
+    if (length(accs) > 1) {
+        auto& choice = p.new_ast("choice", pos);
+        data.m_children[0] = choice.m_id;
+        for (auto& a : accs)
+            choice.push(p.new_ast(get_notation_tk(), pos, a.get_name()).m_id);
+    } else {
+        data.m_children[0] = p.new_ast(get_notation_tk(), pos, head(accs).get_name()).m_id;
+    }
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -873,14 +1047,21 @@ expr parse_lparen(parser & p, unsigned, expr const *, pos_info const & pos) {
             r = p.save_pos(mk_app(p.save_pos(mk_constant(get_prod_mk_name()), pos),
                                   args[i], r), pos);
         }
+        auto& data = p.new_ast("tuple", pos);
+        for (expr& e : args) data.push(p.get_id(e));
+        p.finalize_ast(data.m_id, r);
         return r;
     } else if (p.curr_is_token(get_colon_tk())) {
         p.next();
         expr t = p.parse_expr();
         consume_rparen(p);
-        return mk_typed_expr_distrib_choice(p, t, e, pos);
+        ast_id id = p.new_ast(get_colon_tk(), p.pos_of(e)).push(p.get_id(e)).push(p.get_id(t)).m_id;
+        e = mk_typed_expr_distrib_choice(p, t, e, pos);
+        p.finalize_ast(id, e);
+        return e;
     } else {
         consume_rparen(p);
+        p.finalize_ast(p.new_ast("(", pos).push(p.get_id(e)).m_id, e);
         return e;
     }
 }
@@ -899,12 +1080,25 @@ static expr parse_lambda_cons(parser & p, unsigned, expr const *, pos_info const
     args[1] = mk_local(p.next_name(), "_y", mk_expr_placeholder(), binder_info());
     vars.push_back(args[1]);
     buffer<expr> cs;
-    for (notation::accepting const & acc : head(ts).second.is_accepting()) {
+    auto& accs = head(ts).second.is_accepting();
+    for (notation::accepting const & acc : accs) {
         expr r = p.copy_with_new_pos(acc.get_expr(), pos);
         r = p.save_pos(mk_infix_function(Fun(vars, instantiate_rev(r, 2, args), p)), pos);
         cs.push_back(r);
     }
-    return p.save_pos(mk_choice(cs.size(), cs.data()), pos);
+    expr r = p.save_pos(mk_choice(cs.size(), cs.data()), pos);
+    auto& data = p.new_ast(*g_infix_function, pos);
+    if (length(accs) > 1) {
+        auto& choice = p.new_ast("choice", pos);
+        data.push(choice.m_id);
+        for (auto& a : accs)
+            choice.push(p.new_ast(get_notation_tk(), pos, a.get_name()).m_id);
+    } else {
+        data.push(p.new_ast(get_notation_tk(), pos, head(accs).get_name()).m_id);
+    }
+    data.push(0);
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 static expr parse_inaccessible(parser & p, unsigned, expr const *, pos_info const & pos) {
@@ -914,24 +1108,25 @@ static expr parse_inaccessible(parser & p, unsigned, expr const *, pos_info cons
         return e;
     }
     p.check_token_next(get_rparen_tk(), "invalid inaccesible pattern, `)` expected");
-    return p.save_pos(mk_inaccessible(e), pos);
+    e = p.save_pos(mk_inaccessible(e), pos);
+    p.finalize_ast(p.new_ast(".(", pos).push(p.get_id(e)).m_id, e);
+    return e;
 }
 
 static expr parse_atomic_inaccessible(parser & p, unsigned, expr const *, pos_info const & pos) {
     if (!p.in_pattern()) {
         return p.parser_error_or_expr({"inaccesible pattern notation `._` can only be used in patterns", pos});
     }
-    return p.save_pos(mk_inaccessible(p.save_pos(mk_expr_placeholder(), pos)), pos);
+    expr e = p.save_pos(mk_expr_placeholder(), pos);
+    ast_id id = p.new_ast("_", pos).m_id;
+    p.finalize_ast(id, e);
+    e = p.save_pos(mk_inaccessible(e), pos);
+    p.finalize_ast(p.new_ast(".(", pos).push(id).m_id, e);
+    return e;
 }
 
 static name * g_begin_hole = nullptr;
 static name * g_end_hole   = nullptr;
-
-expr mk_annotation_with_pos(parser & p, name const & a, expr const & e, pos_info const & pos) {
-    expr r = mk_annotation(a, e);
-    r.set_tag(nulltag); // mk_annotation copies e's tag
-    return p.save_pos(r, pos);
-}
 
 expr mk_hole(parser & p, expr const & e, pos_info const & begin_pos, pos_info const & end_pos) {
     return mk_annotation_with_pos(p, *g_begin_hole, mk_annotation_with_pos(p, *g_end_hole, e, end_pos), begin_pos);
@@ -959,6 +1154,7 @@ expr update_hole_args(expr const & e, expr const & new_args) {
 
 static expr parse_hole(parser & p, unsigned, expr const *, pos_info const & begin_pos) {
     buffer<expr> ps;
+    auto& data = p.new_ast("{!", begin_pos);
     while (!p.curr_is_token(get_rcurlybang_tk())) {
         expr e;
         if (p.in_quote()) {
@@ -967,6 +1163,7 @@ static expr parse_hole(parser & p, unsigned, expr const *, pos_info const & begi
             parser::quote_scope scope(p, false);
             e = p.parse_expr();
         }
+        data.push(p.get_id(e));
         ps.push_back(copy_tag(e, mk_pexpr_quote(e)));
         if (!p.curr_is_token(get_comma_tk()))
             break;
@@ -976,6 +1173,7 @@ static expr parse_hole(parser & p, unsigned, expr const *, pos_info const & begi
     p.check_token_next(get_rcurlybang_tk(), "invalid hole, `!}` expected");
     end_pos.second += 2;
     expr r = mk_hole(p, mk_lean_list(ps), begin_pos, end_pos);
+    p.finalize_ast(data.m_id, r);
     return r;
 }
 
@@ -996,18 +1194,24 @@ static expr mk_bin_tree(parser & p, buffer<expr> const & args, unsigned start, u
 
 static expr parse_bin_tree(parser & p, unsigned, expr const *, pos_info const & pos) {
     buffer<expr> es;
+    auto& data = p.new_ast("#[", pos);
     while (!p.curr_is_token(get_rbracket_tk())) {
-        es.push_back(p.parse_expr());
+        expr e = p.parse_expr();
+        es.push_back(e);
+        data.push(p.get_id(e));
         if (!p.curr_is_token(get_comma_tk()))
             break;
         p.next();
     }
     p.check_token_next(get_rbracket_tk(), "invalid `#[...]`, `]` expected");
+    expr r;
     if (es.empty()) {
-        return p.save_pos(mk_constant(get_bin_tree_empty_name()), pos);
+        r = p.save_pos(mk_constant(get_bin_tree_empty_name()), pos);
     } else {
-        return mk_bin_tree(p, es, 0, es.size(), pos);
+        r = mk_bin_tree(p, es, 0, es.size(), pos);
     }
+    p.finalize_ast(data.m_id, r);
+    return r;
 }
 
 parse_table init_nud_table() {
@@ -1058,11 +1262,19 @@ parse_table init_nud_table() {
 static expr parse_field(parser & p, unsigned, expr const * args, pos_info const & pos) {
     try {
         if (p.curr_is_numeral()) {
-            unsigned fidx = p.parse_small_nat();
-            return p.save_pos(mk_field_notation(args[0], fidx), pos);
+            ast_id id; unsigned fidx;
+            std::tie(id, fidx) = p.parse_small_nat();
+            expr r = p.save_pos(mk_field_notation(args[0], fidx), pos);
+            p.finalize_ast(
+                p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
+            return r;
         } else {
-            name field = p.check_id_next("identifier or numeral expected");
-            return p.save_pos(mk_field_notation(args[0], field), pos);
+            ast_id id; name field;
+            std::tie(id, field) = p.check_id_next("identifier or numeral expected");
+            expr r = p.save_pos(mk_field_notation(args[0], field), pos);
+            p.finalize_ast(
+                p.new_ast("^.", pos).push(p.get_id(args[0])).push(id).m_id, r);
+            return r;
         }
     } catch (break_at_pos_exception & ex) {
         if (!p.get_complete()) {

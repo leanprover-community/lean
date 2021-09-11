@@ -50,37 +50,50 @@ environment ensure_decl_namespaces(environment const & env, name const & full_n)
     return add_namespace(env, full_n.get_prefix());
 }
 
-expr parse_equation_lhs(parser & p, expr const & fn, buffer<expr> & locals) {
+expr parse_equation_lhs(parser & p, ast_data & parent, expr const & fn, buffer<expr> & locals) {
     auto lhs_pos = p.pos();
     buffer<expr> lhs_args;
+    auto& data = p.new_ast("lhs", lhs_pos);
+    parent.push(data.m_id);
     lhs_args.push_back(p.parse_pattern_or_expr(get_max_prec()));
+    data.push(p.get_id(lhs_args.back()));
     while (!p.curr_is_token(get_assign_tk())) {
         auto pos0 = p.pos();
         lhs_args.push_back(p.parse_pattern_or_expr(get_max_prec()));
+        data.push(p.get_id(lhs_args.back()));
         if (p.pos() == pos0) break;
     }
     expr lhs = p.mk_app(p.save_pos(mk_explicit(fn), lhs_pos), lhs_args, lhs_pos);
     bool skip_main_fn = true;
-    return p.patexpr_to_pattern(lhs, skip_main_fn, locals);
+    lhs = p.patexpr_to_pattern(lhs, skip_main_fn, locals);
+    p.finalize_ast(data.m_id, lhs);
+    return lhs;
 }
 
-expr parse_equation(parser & p, expr const & fn) {
+expr parse_equation(parser & p, ast_data & parent, expr const & fn) {
+    auto& data = p.new_ast("eqn", p.pos());
+    parent.push(data.m_id);
     p.check_token_next(get_bar_tk(), "invalid equation, '|' expected");
     buffer<expr> locals;
-    expr lhs = parse_equation_lhs(p, fn, locals);
+    expr lhs = parse_equation_lhs(p, data, fn, locals);
     auto assign_pos = p.pos();
     p.check_token_next(get_assign_tk(), "invalid equation, ':=' expected");
     expr rhs = p.parse_scoped_expr(locals);
+    data.push(p.get_id(rhs));
     return Fun(locals, p.save_pos(mk_equation(lhs, rhs), assign_pos), p);
 }
 
-optional<expr> parse_using_well_founded(parser & p) {
+optional<expr> parse_using_well_founded(parser & p, ast_data & parent) {
     if (p.curr_is_token(get_using_well_founded_tk())) {
+        auto& data = p.new_ast(get_using_well_founded_tk(), p.pos());
         parser::local_scope _(p);
         p.clear_expr_locals();
         p.next();
-        return some_expr(p.parse_expr(get_max_prec()));
+        expr e = p.parse_expr(get_max_prec());
+        data.push(p.get_id(e));
+        return some_expr(e);
     } else {
+        parent.push(0);
         return none_expr();
     }
 }
@@ -118,30 +131,36 @@ void check_valid_end_of_equations(parser & p) {
     }
 }
 
-static expr parse_mutual_definition(parser & p, buffer<name> & lp_names, buffer<expr> & fns, buffer<name> & prv_names,
+static expr parse_mutual_definition(parser & p, ast_data & parent, buffer<name> & lp_names, buffer<expr> & fns, buffer<name> & prv_names,
                                     buffer<expr> & params) {
     parser::local_scope scope1(p);
     auto header_pos = p.pos();
     buffer<expr> pre_fns;
-    parse_mutual_header(p, lp_names, pre_fns, params);
+    parse_mutual_header(p, parent, lp_names, pre_fns, params);
     buffer<expr> eqns;
     buffer<name> full_names;
     buffer<name> full_actual_names;
+    auto& fn_asts = p.new_ast("bodies", p.pos());
+    parent.push(fn_asts.m_id);
     for (expr const & pre_fn : pre_fns) {
         // TODO(leo, dhs): make use of attributes
-        expr fn_type = parse_inner_header(p, mlocal_pp_name(pre_fn)).first;
+        auto& fn_ast = p.new_ast("body", p.pos());
+        fn_asts.push(fn_ast.m_id);
+        expr fn_type = parse_inner_header(p, fn_ast, mlocal_pp_name(pre_fn)).first;
         declaration_name_scope scope2(mlocal_pp_name(pre_fn));
         declaration_name_scope scope3("_main");
         full_names.push_back(scope3.get_name());
         full_actual_names.push_back(scope3.get_actual_name());
         prv_names.push_back(scope2.get_actual_name());
+        auto& eqn_asts = p.new_ast("eqns", p.pos());
+        fn_ast.push(eqn_asts.m_id);
         if (p.curr_is_token(get_period_tk())) {
             auto period_pos = p.pos();
             p.next();
             eqns.push_back(p.save_pos(mk_no_equation(), period_pos));
         } else {
             while (p.curr_is_token(get_bar_tk())) {
-                eqns.push_back(parse_equation(p, pre_fn));
+                eqns.push_back(parse_equation(p, eqn_asts, pre_fn));
             }
             check_valid_end_of_equations(p);
         }
@@ -150,7 +169,7 @@ static expr parse_mutual_definition(parser & p, buffer<name> & lp_names, buffer<
     }
     if (p.curr_is_token(get_with_tk()))
         p.maybe_throw_error({"unexpected 'with' clause", p.pos()});
-    optional<expr> wf_tacs = parse_using_well_founded(p);
+    optional<expr> wf_tacs = parse_using_well_founded(p, parent);
     for (expr & eq : eqns) {
         eq = replace_locals_preserving_pos_info(eq, pre_fns, fns);
     }
@@ -458,7 +477,7 @@ static environment copy_equation_lemmas(environment const & env, name const & d_
     return copy_equation_lemmas(env, d_names);
 }
 
-static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cmd_meta const & meta) {
+static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, ast_data & parent, cmd_meta const & meta) {
     buffer<name> lp_names;
     buffer<expr> fns, params;
     declaration_info_scope scope(p, kind, meta.m_modifiers);
@@ -468,7 +487,7 @@ static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cm
     environment env = p.env();
     private_name_scope prv_scope(meta.m_modifiers.m_is_private, env);
     buffer<name> prv_names;
-    expr val = parse_mutual_definition(p, lp_names, fns, prv_names, params);
+    expr val = parse_mutual_definition(p, parent, lp_names, fns, prv_names, params);
 
     // skip elaboration of definitions during reparsing
     if (p.get_break_at_pos())
@@ -521,14 +540,16 @@ static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cm
      Note that mlocal_pp_name(fn) and actual_name are different for scoped/private declarations.
 */
 std::tuple<expr, expr, name>
-parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
+parser::parse_definition(ast_data * _parent, buffer<name> & lp_names, buffer<expr> & params,
                          bool is_example, bool is_instance, bool is_meta, bool is_abbrev) {
     parser & p = *this;
+    lean_always_assert(_parent);
+    auto& parent = *_parent;
     parser::local_scope scope1(p);
     auto header_pos = p.pos();
     time_task _("parsing", p.mk_message(header_pos, INFORMATION), p.get_options());
     declaration_name_scope scope2;
-    expr fn = parse_single_header(p, scope2, lp_names, params, is_example, is_instance);
+    expr fn = parse_single_header(p, parent, scope2, lp_names, params, is_example, is_instance);
     expr val;
     if (p.curr_is_token(get_assign_tk())) {
         p.next();
@@ -537,6 +558,7 @@ parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
             fn = mk_local(mlocal_name(fn), mlocal_pp_name(fn), mlocal_type(fn), mk_rec_info(true));
             p.add_local(fn);
             val = p.parse_expr();
+            parent.push(p.get_id(val));
             /* add fake equation */
             expr eqn = copy_tag(val, mk_equation(fn, val));
             buffer<expr> eqns;
@@ -544,10 +566,13 @@ parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
             val = mk_equations(p, fn, scope2.get_name(), scope2.get_actual_name(), eqns, {}, header_pos);
         } else {
             val = p.parse_expr();
+            parent.push(p.get_id(val));
         }
     } else if (p.curr_is_token(get_bar_tk()) || p.curr_is_token(get_period_tk())) {
         if (is_abbrev)
             throw exception("invalid abbreviation, abbreviations should not be defined using pattern matching");
+        auto& eqn_asts = p.new_ast("eqns", p.pos());
+        parent.push(eqn_asts.m_id);
         declaration_name_scope scope2("_main");
         fn = mk_local(mlocal_name(fn), mlocal_pp_name(fn), mlocal_type(fn), mk_rec_info(true));
         p.add_local(fn);
@@ -558,11 +583,11 @@ parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
             eqns.push_back(p.save_pos(mk_no_equation(), period_pos));
         } else {
             while (p.curr_is_token(get_bar_tk())) {
-                eqns.push_back(parse_equation(p, fn));
+                eqns.push_back(parse_equation(p, eqn_asts, fn));
             }
             check_valid_end_of_equations(p);
         }
-        optional<expr> wf_tacs = parse_using_well_founded(p);
+        optional<expr> wf_tacs = parse_using_well_founded(p, parent);
         val = mk_equations(p, fn, scope2.get_name(), scope2.get_actual_name(), eqns, wf_tacs, header_pos);
     } else {
         val = p.parser_error_or_expr({"invalid definition, '|' or ':=' expected", p.pos()});
@@ -572,7 +597,7 @@ parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
 }
 
 std::tuple<expr, expr, name>
-dummy_def_parser::parse_definition(buffer<name> & lp_names, buffer<expr> & params,
+dummy_def_parser::parse_definition(ast_data *, buffer<name> & lp_names, buffer<expr> & params,
                                    bool is_example, bool is_instance, bool, bool) {
     dummy_def_parser & p = *this;
     parser::local_scope scope1(p);
@@ -761,7 +786,7 @@ static bool is_rfl_preexpr(expr const & e) {
     return is_constant(e, get_rfl_name());
 }
 
-environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_meta meta) {
+environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_data * parent, cmd_meta meta) {
     buffer<name> lp_names;
     buffer<expr> params;
     expr fn, val;
@@ -782,7 +807,7 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
         meta.m_attrs.set_attribute(env, "reducible");
     }
     name prv_name;
-    std::tie(fn, val, prv_name) = p.parse_definition(lp_names, params, is_example, is_instance, meta.m_modifiers.m_is_meta, is_abbrev);
+    std::tie(fn, val, prv_name) = p.parse_definition(parent, lp_names, params, is_example, is_instance, meta.m_modifiers.m_is_meta, is_abbrev);
 
     auto begin_pos = p.cmd_pos();
     auto end_pos = p.pos();
@@ -910,10 +935,14 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
     }
 }
 
-environment definition_cmd_core(parser & p, decl_cmd_kind kind, cmd_meta const & meta) {
-    if (meta.m_modifiers.m_is_mutual)
-        return mutual_definition_cmd_core(p, kind, meta);
-    else
-        return single_definition_cmd_core(p, kind, meta);
+environment definition_cmd_core(parser & p, decl_cmd_kind kind, ast_id cmd_id, cmd_meta const & meta) {
+    auto& data = p.get_ast(cmd_id).push(meta.m_modifiers_id);
+    if (meta.m_modifiers.m_is_mutual) {
+        data.push(p.new_ast("mutual", p.pos()).m_id);
+        return mutual_definition_cmd_core(p, kind, data, meta);
+    } else {
+        data.push(0);
+        return single_definition_cmd_core(p, kind, &data, meta);
+    }
 }
 }

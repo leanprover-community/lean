@@ -9,7 +9,8 @@ vm_override.lean:40:0: error: unknown declaration 'native.float.mk'
 vm_override.lean:45:5: warning: declaration 'native.float₁.mk' uses sorry
 vm_override.lean:54:0: error: type mismatch with override:
 
-float₁.rec : Π {C : native.float → Sort l}, (Π (ᾰ : ℕ), C (native.float₁.mk ᾰ)) → Π (n : native.float), C n
+float₁.rec : Π {motive : native.float → Sort l},
+  (Π (ᾰ : ℕ), motive (native.float₁.mk ᾰ)) → Π (n : native.float), motive n
 native.float₁.rec : ℕ
 vm_override.lean:62:5: warning: declaration 'native.float.rec' uses sorry
 vm_override.lean:64:5: warning: declaration 'native.float.cases_on' uses sorry

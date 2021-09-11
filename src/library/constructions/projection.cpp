@@ -12,6 +12,7 @@ Author: Leonardo de Moura
 #include "kernel/instantiate.h"
 #include "kernel/kernel_exception.h"
 #include "kernel/inductive/inductive.h"
+#include "library/ast_exporter.h"
 #include "library/reducible.h"
 #include "library/projection.h"
 #include "library/module.h"
@@ -22,6 +23,7 @@ Author: Leonardo de Moura
 #include "library/class.h"
 #include "library/constructions/projection.h"
 #include "library/constructions/util.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 [[ noreturn ]] static void throw_ill_formed(name const & n) {
@@ -129,6 +131,28 @@ public:
         s << m_I_name << m_constructor_name << m_proj_name << m_idx << m_ps << m_type << m_val;
     }
 
+    virtual bool can_textualize() const { return true; }
+
+    virtual void textualize(tlean_exporter & x) const {
+      unsigned I_name           = x.export_name(m_I_name);
+      unsigned constructor_name = x.export_name(m_constructor_name);
+      unsigned proj_name        = x.export_name(m_proj_name);
+      x.out() << "#PROJ_MACRO " << I_name << " " << constructor_name << " " << proj_name << " " << m_idx;
+    }
+
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter & exp, json & j) const override {
+        j["I"] = json_of_name(m_I_name);
+        j["constr"] = json_of_name(m_constructor_name);
+        j["proj"] = json_of_name(m_proj_name);
+        j["idx"] = m_idx;
+        auto& jl = j["params"] = json::array();
+        for (auto& p : m_ps) jl += json_of_name(p);
+        j["type"] = exp.export_expr(m_type);
+        j["val"] = exp.export_expr(m_val);
+    }
+#endif
+
     virtual bool operator==(macro_definition_cell const & other) const {
         if (auto other_ptr = dynamic_cast<projection_macro_definition_cell const *>(&other)) {
             return m_proj_name == other_ptr->m_proj_name;
@@ -211,7 +235,7 @@ environment mk_projections(environment const & env, name const & n, buffer<name>
     }
     expr C_A                     = mk_app(mk_constant(n, lvls), params);
     binder_info c_bi             = inst_implicit ? mk_inst_implicit_binder_info() : binder_info();
-    expr c                       = mk_local(ngen.next(), name("c"), C_A, c_bi);
+    expr c                       = mk_local(ngen.next(), name("self"), C_A, c_bi);
     buffer<expr> intro_type_args; // arguments that are not parameters
     expr it = intro_type;
     while (is_pi(it)) {

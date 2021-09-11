@@ -38,16 +38,15 @@ std::string notation_entry_group_to_string (notation_entry_group const & g) {
 
 notation_entry replace(notation_entry const & e, std::function<expr(expr const &)> const & f) {
     if (e.is_numeral())
-        return notation_entry(e.get_num(), f(e.get_expr()), e.overload(), e.parse_only());
+        return notation_entry(e.get_num(), f(e.get_expr()), e.overload(), e.parse_only(), e.get_name());
     else
         return notation_entry(e.is_nud(),
                               map(e.get_transitions(), [&](transition const & t) { return notation::replace(t, f); }),
-                              f(e.get_expr()), e.overload(), e.priority(), e.group(), e.parse_only());
+                              f(e.get_expr()), e.overload(), e.priority(), e.group(), e.parse_only(), e.get_name());
 }
 
-notation_entry::notation_entry():m_kind(notation_entry_kind::NuD) {}
 notation_entry::notation_entry(notation_entry const & e):
-    m_kind(e.m_kind), m_expr(e.m_expr), m_overload(e.m_overload),
+    m_kind(e.m_kind), m_name(e.m_name), m_expr(e.m_expr), m_overload(e.m_overload),
     m_safe_ascii(e.m_safe_ascii), m_group(e.m_group), m_parse_only(e.m_parse_only),
     m_priority(e.m_priority) {
     if (is_numeral())
@@ -57,19 +56,22 @@ notation_entry::notation_entry(notation_entry const & e):
 }
 
 notation_entry::notation_entry(bool is_nud, list<transition> const & ts, expr const & e, bool overload,
-                               unsigned priority, notation_entry_group g, bool parse_only):
+                               unsigned priority, notation_entry_group g, bool parse_only, name const & n):
     m_kind(is_nud ? notation_entry_kind::NuD : notation_entry_kind::LeD),
-    m_expr(e), m_overload(overload), m_group(g), m_parse_only(parse_only), m_priority(priority) {
+    m_name(n), m_expr(e), m_overload(overload), m_group(g), m_parse_only(parse_only), m_priority(priority) {
     new (&m_transitions) list<transition>(ts);
     m_safe_ascii = std::all_of(ts.begin(), ts.end(), [](transition const & t) { return t.is_safe_ascii(); });
+    if (n.is_anonymous()) m_name = heuristic_name();
 }
 notation_entry::notation_entry(notation_entry const & e, bool overload):
     notation_entry(e) {
     m_overload = overload;
 }
-notation_entry::notation_entry(mpz const & val, expr const & e, bool overload, bool parse_only):
-    m_kind(notation_entry_kind::Numeral), m_expr(e), m_overload(overload), m_safe_ascii(true), m_group(notation_entry_group::Main), m_parse_only(parse_only) {
+notation_entry::notation_entry(mpz const & val, expr const & e, bool overload, bool parse_only, name const & n):
+    m_kind(notation_entry_kind::Numeral), m_name(n), m_expr(e), m_overload(overload),
+    m_safe_ascii(true), m_group(notation_entry_group::Main), m_parse_only(parse_only) {
     new (&m_num) mpz(val);
+    if (n.is_anonymous()) m_name = heuristic_name();
 }
 
 notation_entry::~notation_entry() {
@@ -87,6 +89,29 @@ bool operator==(notation_entry const & e1, notation_entry const & e2) {
         return e1.get_num() == e2.get_num();
     else
         return e1.get_transitions() == e2.get_transitions();
+}
+
+name notation_entry::heuristic_name() const {
+    std::ostringstream out;
+    out << "expr";
+    if (m_kind == notation_entry_kind::Numeral) {
+        out << m_num;
+    } else {
+        if (m_kind == notation_entry_kind::LeD) out << " ";
+        for (auto& t : m_transitions) {
+            t.get_token().display(out, false);
+            auto& a = t.get_action();
+            switch (a.kind()) {
+                case action_kind::Skip: break;
+                case action_kind::Exprs:
+                    a.get_sep().display(out << " ", false);
+                    if (auto term = a.get_terminator()) term->display(out, false);
+                    break;
+                default: out << " "; break;
+            }
+        }
+    }
+    return out.str();
 }
 
 struct token_state {
@@ -286,7 +311,7 @@ struct notation_config {
             if (auto idx = get_head_index(ts.size(), ts.data(), e.get_expr()))
                 updt_inv_map(s, *idx, e);
             parse_table & nud = s.nud(e.group());
-            nud = nud.add(ts.size(), ts.data(), e.get_expr(), e.priority(), e.overload());
+            nud = nud.add(ts.size(), ts.data(), e.get_name(), e.get_expr(), e.priority(), e.overload());
             break;
         }
         case notation_entry_kind::LeD: {
@@ -294,7 +319,7 @@ struct notation_config {
             if (auto idx = get_head_index(ts.size(), ts.data(), e.get_expr()))
                 updt_inv_map(s, *idx, e);
             parse_table & led = s.led(e.group());
-            led = led.add(ts.size(), ts.data(), e.get_expr(), e.priority(), e.overload());
+            led = led.add(ts.size(), ts.data(), e.get_name(), e.get_expr(), e.priority(), e.overload());
             break;
         }
         case notation_entry_kind::Numeral:

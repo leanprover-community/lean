@@ -549,7 +549,7 @@ struct add_inductive_fn {
         if (m_dep_elim)
             C_ty = Pi(m_elim_info.m_major_premise, C_ty);
         C_ty = Pi(m_elim_info.m_indices, C_ty);
-        name C_name("C");
+        name C_name("motive");
         m_elim_info.m_C = mk_local(m_name_generator.next(), C_name, C_ty, binder_info());
 
         // Populate the field m_minor_premises

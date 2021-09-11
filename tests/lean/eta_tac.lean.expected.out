@@ -1,4 +1,4 @@
-λ {α : Type ?} [c : has_add α] (ᾰ ᾰ_1 : α), @has_add.add α c ᾰ ᾰ_1
+λ {α : Type ?} [self : has_add α] (ᾰ ᾰ_1 : α), @has_add.add α self ᾰ ᾰ_1
 λ (n : nat), n.succ
 λ (ᾰ : nat), @has_add.add nat nat.has_add a ᾰ
 λ (x ᾰ : nat), @has_add.add nat nat.has_add x ᾰ

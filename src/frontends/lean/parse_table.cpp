@@ -369,13 +369,13 @@ static void validate_transitions(bool nud, unsigned num, transition const * ts, 
         throw exception("invalid notation declaration, expression template has more free variables than arguments");
 }
 
-static list<accepting> insert(list<accepting> const & l, unsigned priority, list<action> const & p, expr const & a) {
+static list<accepting> insert(list<accepting> const & l, unsigned priority, list<action> const & p, name const & n, expr const & a) {
     if (!l) {
-        return to_list(accepting(priority, p, a));
+        return to_list(accepting(priority, p, n, a));
     } else if (priority <= head(l).get_prio()) {
-        return cons(accepting(priority, p, a), l);
+        return cons(accepting(priority, p, n, a), l);
     } else {
-        return cons(head(l), insert(tail(l), priority, p, a));
+        return cons(head(l), insert(tail(l), priority, p, n, a));
     }
 }
 
@@ -387,18 +387,18 @@ static bool contains_equivalent_action(list<pair<transition, parse_table>> const
     return false;
 }
 
-parse_table parse_table::add_core(unsigned num, transition const * ts, expr const & a,
+parse_table parse_table::add_core(unsigned num, transition const * ts, name const & n, expr const & a,
                                   unsigned priority, bool overload, buffer<action> & post_buffer) const {
     parse_table r(new cell(*m_ptr));
     if (num == 0) {
         list<action> postponed = to_list(post_buffer);
         if (!overload) {
-            r.m_ptr->m_accept = to_list(accepting(priority, postponed, a));
+            r.m_ptr->m_accept = to_list(accepting(priority, postponed, n, a));
         } else {
             auto new_accept   = filter(r.m_ptr->m_accept, [&](accepting const & p) {
                     return p.get_expr() != a || p.get_postponed() != postponed;
                 });
-            r.m_ptr->m_accept = insert(new_accept, priority, postponed, a);
+            r.m_ptr->m_accept = insert(new_accept, priority, postponed, n, a);
         }
     } else {
         list<pair<transition, parse_table>> const * it = r.m_ptr->m_children.find(ts->get_token());
@@ -413,7 +413,7 @@ parse_table parse_table::add_core(unsigned num, transition const * ts, expr cons
                 to_buffer(*it, tmp);
                 for (pair<transition, parse_table> & p : tmp) {
                     if (p.first.get_action().is_equivalent(ts_act)) {
-                        p.second = p.second.add_core(num-1, ts+1, a, priority, overload, post_buffer);
+                        p.second = p.second.add_core(num-1, ts+1, n, a, priority, overload, post_buffer);
                         break;
                     }
                 }
@@ -423,11 +423,11 @@ parse_table parse_table::add_core(unsigned num, transition const * ts, expr cons
                 new_lst = filter(*it, [&](pair<transition, parse_table> const & p) {
                         return p.first.get_action().is_compatible(ts_act);
                     });
-                parse_table new_child = parse_table().add_core(num-1, ts+1, a, priority, overload, post_buffer);
+                parse_table new_child = parse_table().add_core(num-1, ts+1, n, a, priority, overload, post_buffer);
                 new_lst   = cons(mk_pair(*ts, new_child), new_lst);
             }
         } else {
-            parse_table new_child = parse_table().add_core(num-1, ts+1, a, priority, overload, post_buffer);
+            parse_table new_child = parse_table().add_core(num-1, ts+1, n, a, priority, overload, post_buffer);
             new_lst   = to_list(mk_pair(*ts, new_child));
         }
         r.m_ptr->m_children.insert(ts->get_token(), new_lst);
@@ -497,11 +497,11 @@ optional<head_index> get_head_index(unsigned num, transition const * ts, expr co
     return optional<head_index>();
 }
 
-parse_table parse_table::add(unsigned num, transition const * ts, expr const & a, unsigned priority, bool overload) const {
+parse_table parse_table::add(unsigned num, transition const * ts, name const & n, expr const & a, unsigned priority, bool overload) const {
     buffer<action> postponed;
     expr new_a = annotate_macro_subterms(a);
     validate_transitions(is_nud(), num, ts, new_a);
-    return add_core(num, ts, new_a, priority, overload, postponed);
+    return add_core(num, ts, n, new_a, priority, overload, postponed);
 }
 
 void parse_table::for_each(buffer<transition> & ts,
@@ -530,7 +530,7 @@ parse_table parse_table::merge(parse_table const & s, bool overload) const {
     parse_table r(*this);
     s.for_each([&](unsigned num, transition const * ts, list<accepting> const & accept) {
             for (accepting const & acc : accept) {
-                r = r.add(num, ts, acc.get_expr(), acc.get_prio(), overload);
+                r = r.add(num, ts, acc.get_name(), acc.get_expr(), acc.get_prio(), overload);
             }
         });
     return r;

@@ -143,7 +143,6 @@ public:
 
         entry m_entry;
 
-        modification() {}
         modification(entry const & e) : m_entry(e) {}
 
         void perform(environment & env) const override {

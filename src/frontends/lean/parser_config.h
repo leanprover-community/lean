@@ -33,18 +33,19 @@ class notation_entry {
         list<transition> m_transitions;
         mpz              m_num;
     };
+    name                 m_name;
     expr                 m_expr;
     bool                 m_overload;
     bool                 m_safe_ascii;
     notation_entry_group m_group;
     bool                 m_parse_only;
     unsigned             m_priority;
+    name heuristic_name() const;
 public:
-    notation_entry();
     notation_entry(notation_entry const & e);
     notation_entry(bool is_nud, list<transition> const & ts, expr const & e, bool overload, unsigned priority,
-                   notation_entry_group g, bool parse_only);
-    notation_entry(mpz const & val, expr const & e, bool overload, bool parse_only);
+                   notation_entry_group g, bool parse_only, name const & n = {});
+    notation_entry(mpz const & val, expr const & e, bool overload, bool parse_only, name const & n = {});
     notation_entry(notation_entry const & e, bool overload);
     ~notation_entry();
     notation_entry_kind kind() const { return m_kind; }
@@ -52,6 +53,7 @@ public:
     bool is_nud() const { return m_kind == notation_entry_kind::NuD; }
     list<transition> const & get_transitions() const { lean_assert(!is_numeral()); return m_transitions; }
     mpz const & get_num() const { lean_assert(is_numeral()); return m_num; }
+    name const & get_name() const { return m_name; }
     expr const & get_expr() const { return m_expr; }
     bool overload() const { return m_overload; }
     bool is_safe_ascii() const { return m_safe_ascii; }

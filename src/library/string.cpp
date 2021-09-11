@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/constants.h"
 #include "library/num.h"
 #include "library/trace.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_string_macro         = nullptr;
@@ -109,6 +110,11 @@ public:
     virtual unsigned hash() const { return std::hash<std::string>()(m_value); }
     virtual void write(serializer & s) const { s << *g_string_opcode << m_value; }
     std::string const & get_value() const { return m_value; }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["value"] = m_value;
+    }
+#endif
 };
 
 expr mk_string_macro(std::string const & v) {

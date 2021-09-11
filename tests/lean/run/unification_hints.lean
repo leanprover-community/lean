@@ -37,3 +37,8 @@ by assumption
 #print ex2
 
 end add
+
+/- Basic unification hints -/
+@[unify] def add_succ_defeq_succ_add_hint (x y z : nat) : unification_hint :=
+{ pattern     := x + nat.succ y ≟ nat.succ z,
+  constraints := [z ≟ x + y] }

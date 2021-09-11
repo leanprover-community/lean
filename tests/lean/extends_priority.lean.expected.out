@@ -1,18 +1,18 @@
 @[instance, priority 100, reducible]
-def B.to_A : Π {α : Type} [c : B α], A α :=
-λ (α : Type) [c : B α], [B.to_A c]
+def B.to_A : Π {α : Type} [self : B α], A α :=
+λ (α : Type) [self : B α], [B.to_A self]
 @[instance, priority 37, reducible]
-def C.to_B : Π {α : Type} [c : C α], B α :=
-λ (α : Type) [c : C α], [C.to_B c]
+def C.to_B : Π {α : Type} [self : C α], B α :=
+λ (α : Type) [self : C α], [C.to_B self]
 @[instance, priority 100, reducible]
-def D.to_C : Π {α : Type} [c : D α], C α :=
-λ (α : Type) [c : D α], [D.to_C c]
+def D.to_C : Π {α : Type} [self : D α], C α :=
+λ (α : Type) [self : D α], [D.to_C self]
 @[instance, priority 100]
-def B'.to_A' : Π (α : Type) [s : B' α], A' α :=
-λ (α : Type) [s : B' α], A'.mk
+def B'.to_A' : Π (α : Type) [self : B' α], A' α :=
+λ (α : Type) [self : B' α], A'.mk
 @[instance, priority 37]
-def C'.to_B' : Π (α : Type) [s : C' α], B' α :=
-λ (α : Type) [s : C' α], B'.mk
+def C'.to_B' : Π (α : Type) [self : C' α], B' α :=
+λ (α : Type) [self : C' α], B'.mk
 @[instance, priority 100]
-def D'.to_C' : Π (α : Type) [s : D' α], C' α :=
-λ (α : Type) [s : D' α], C'.mk
+def D'.to_C' : Π (α : Type) [self : D' α], C' α :=
+λ (α : Type) [self : D' α], C'.mk

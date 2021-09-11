@@ -4306,7 +4306,7 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
             to_buffer_expr(cfield(o, 0), pat);
             p.m_val.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
         }
-        return mk_vm_exceptional_success(to_obj(single_definition_cmd_core(p, kind, meta)));
+        return mk_vm_exceptional_success(to_obj(single_definition_cmd_core(p, kind, nullptr, meta)));
     } catch (throwable & ex) {
         return mk_vm_exceptional_exception(ex);
     }

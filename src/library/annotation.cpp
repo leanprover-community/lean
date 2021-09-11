@@ -11,6 +11,7 @@ Author: Leonardo de Moura
 #include "kernel/abstract_type_context.h"
 #include "library/kernel_serializer.h"
 #include "library/annotation.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_annotation = nullptr;
@@ -45,6 +46,11 @@ public:
         s.write_string(get_annotation_opcode());
         s << m_name;
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["name"] = json_of_name(m_name);
+    }
+#endif
     virtual bool operator==(macro_definition_cell const & other) const override {
         if (auto other_ptr = dynamic_cast<annotation_macro_definition_cell const *>(&other)) {
             return m_name == other_ptr->m_name;
