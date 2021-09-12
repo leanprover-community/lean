@@ -204,9 +204,9 @@ class linear_order (α : Type u) extends partial_order α :=
 (decidable_lt : decidable_rel ((<) : α → α → Prop) :=
     @decidable_lt_of_decidable_le _ _ decidable_le)
 (max : α → α → α := @max_default α _ _)
-(max_def : max = @max_default α _ decidable_le . tactic.reflexivity')
+(max_def : max = @max_default α _ decidable_le . tactic.interactive.reflexivity)
 (min : α → α → α := @min_default α _ _)
-(min_def : min = @min_default α _ decidable_le . tactic.reflexivity')
+(min_def : min = @min_default α _ decidable_le . tactic.interactive.reflexivity)
 
 variables [linear_order α]
 
