@@ -38,6 +38,7 @@ Author: Leonardo de Moura
 #include "library/vm/interaction_state_imp.h"
 #include "library/compiler/vm_compiler.h"
 #include "library/tactic/tactic_state.h"
+#include "library/tactic/tactic_log.h"
 #include "library/tactic/simp_lemmas.h"
 
 namespace lean {
@@ -1077,6 +1078,26 @@ vm_obj tactic_frozen_local_instances(vm_obj const & s0) {
     }
 }
 
+/*
+meta constant with_ast {α : Type u} (ast : ℕ) (t : tactic α) : tactic α
+*/
+vm_obj tactic_with_ast(vm_obj const &, vm_obj const & ast0, vm_obj const & tac, vm_obj const & s0) {
+    tactic_state s = tactic::to_state(s0);
+    // TODO(Mario): not sure if this can be called from another file,
+    // we should suppress collection in that case
+    if (optional<unsigned> ast = try_to_unsigned(ast0)) {
+        vm_obj r = invoke(tac, s0);
+        if (*ast) {
+            bool success = tactic::is_result_success(r);
+            auto s2 = success ? tactic::get_success_state(r) : tactic::get_exception_state(r);
+            log_tactic(*ast, s, tactic::to_state(s2), success);
+        }
+        return r;
+    } else {
+        return tactic::mk_exception("with_ast failed, bad AST argument", s);
+    }
+}
+
 void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic_state", "env"}),            tactic_state_env);
     DECLARE_VM_BUILTIN(name({"tactic_state", "format_expr"}),    tactic_state_format_expr);
@@ -1134,6 +1155,7 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "unfreeze_local_instances"}), tactic_unfreeze_local_instances);
     DECLARE_VM_BUILTIN(name({"tactic", "freeze_local_instances"}),   tactic_freeze_local_instances);
     DECLARE_VM_BUILTIN(name({"tactic", "frozen_local_instances"}),   tactic_frozen_local_instances);
+    DECLARE_VM_BUILTIN(name({"tactic", "with_ast"}),             tactic_with_ast);
     DECLARE_VM_BUILTIN(name({"io", "run_tactic"}),               io_run_tactic);
 }
 

@@ -51,9 +51,9 @@ struct module_info {
     struct parse_result {
         options               m_opts;
         std::shared_ptr<loaded_module const> m_loaded_module;
-        std::function<void(std::ostream &)> m_ast_export_fn;
     };
     task<parse_result> m_result;
+    gtask m_ast_export;
 
     optional<module_parser_result> m_snapshots;
 

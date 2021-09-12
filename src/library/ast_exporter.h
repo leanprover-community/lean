@@ -16,6 +16,6 @@ public:
     virtual unsigned export_expr(const expr & l) = 0;
 };
 
-void export_ast(parser & p);
+void export_ast(parser const &);
 
 }

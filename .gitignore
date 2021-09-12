@@ -27,3 +27,4 @@ CppProperties.json
 /build
 /_cache/
 /.ccls-cache
+*.ast.json
