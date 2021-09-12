@@ -21,8 +21,6 @@ do tgt   ← target >>= instantiate_mvars,
 meta def reflexivity (md := semireducible) : tactic unit :=
 relation_tactic md environment.refl_for "reflexivity"
 
-meta def reflexivity' : tactic unit := reflexivity
-
 meta def symmetry (md := semireducible) : tactic unit :=
 relation_tactic md environment.symm_for "symmetry"
 
