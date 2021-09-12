@@ -1083,7 +1083,7 @@ meta constant with_ast {α : Type u} (ast : ℕ) (t : tactic α) : tactic α
 */
 vm_obj tactic_with_ast(vm_obj const &, vm_obj const & ast0, vm_obj const & tac, vm_obj const & s0) {
     tactic_state s = tactic::to_state(s0);
-    // TODO: not sure if this can be called from another file,
+    // TODO(Mario): not sure if this can be called from another file,
     // we should suppress collection in that case
     if (optional<unsigned> ast = try_to_unsigned(ast0)) {
         vm_obj r = invoke(tac, s0);

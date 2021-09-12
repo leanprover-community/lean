@@ -315,7 +315,6 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
             return unit();
         }).depends_on(mod_dep), std::string("exporting AST"));
     }
-
 }
 
 static optional<pos_info> get_first_diff_pos(std::string const & as, std::string const & bs) {
