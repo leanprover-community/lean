@@ -40,6 +40,9 @@ bool has_open_scopes(environment const & env);
 /** \brief Add a new namespace (if it does not exist) */
 environment add_namespace(environment const & env, name const & ns);
 
+/** \brief Add all parents of a given name as new namespaces */
+environment add_parent_namespaces(environment const & env, name const & full_n);
+
 name const & get_namespace(environment const & env);
 name const & get_scope_header(environment const & env);
 /** \brief Return the current stack of namespaces.
