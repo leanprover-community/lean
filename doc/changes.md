@@ -1,3 +1,23 @@
+3.33.0c (13 September 2021)
+------------------------
+
+Features:
+- Allow sorry macro to textualize (#602)
+- AST tracking and export (#608)
+- Add end-pos support to scanner (#612)
+- Log tactic invocations in AST (#614)
+
+Bug fixes:
+- Make `injective` semireducible (#604)
+- Fix compilation on MacOS 10.14 (#606)
+- Fix `elan override` instructions (#605)
+- Replace `leanprover` with `leanprover-community` in release build instructions (#610)
+- Make `fun_setoid` instance local and not private (#611)
+- Rename `int.sub_one_le_of_lt` and `int.lt_of_sub_one_le` (#616)
+
+Changes:
+- add `max` / `min` fields to `linear_order` (#609, fixup #615)
+
 3.32.1c (12 August 2021)
 ------------------------
 
