@@ -38,7 +38,7 @@ meta instance : interactive.executor smt_tactic :=
 
 namespace interactive
 open lean.parser
-open interactive
+open _root_.interactive
 open interactive.types
 local postfix `?`:9001 := optional
 local postfix *:9001 := many

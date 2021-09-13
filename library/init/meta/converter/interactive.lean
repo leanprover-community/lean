@@ -29,7 +29,7 @@ tactic.solve1 $ c >> tactic.try (tactic.any_goals tactic.reflexivity)
 namespace interactive
 open lean
 open lean.parser
-open interactive
+open _root_.interactive
 open interactive.types
 open tactic_result
 
@@ -179,7 +179,7 @@ namespace tactic
 namespace interactive
 open lean
 open lean.parser
-open interactive
+open _root_.interactive
 open interactive.types
 open tactic
 local postfix `?`:9001 := optional
