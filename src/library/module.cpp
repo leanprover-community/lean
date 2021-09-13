@@ -18,6 +18,7 @@ Author: Leonardo de Moura
 #include "util/sstream.h"
 #include "util/buffer.h"
 #include "util/interrupt.h"
+#include "util/name.h"
 #include "util/name_map.h"
 #include "util/file_lock.h"
 #include "kernel/type_checker.h"
@@ -530,7 +531,7 @@ environment add(environment const & env, certified_declaration const & d) {
     if (!check_computable(new_env, _d.get_name()))
         new_env = mark_noncomputable(new_env, _d.get_name());
     if (!is_private(new_env, _d.get_name()))
-        new_env = add_parent_namespaces(new_env, _d.get_name());
+        new_env = add_parent_namespaces(new_env, strip_internal_suffixes(_d.get_name()));
     new_env = update_module_defs(new_env, _d);
     new_env = add(new_env, std::make_shared<decl_modification>(_d, env.trust_lvl()));
 

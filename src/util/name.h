@@ -271,6 +271,9 @@ inline deserializer & operator>>(deserializer & d, name & n) { n = read_name(d);
 /** \brief Return true if it is a lean internal name, i.e., the name starts with a `_` */
 bool is_internal_name(name const & n);
 
+/** \brief Remove internal suffixes from the name (non-string components or names starting with `_`) */
+name strip_internal_suffixes(name const & n);
+
 void initialize_name();
 void finalize_name();
 }

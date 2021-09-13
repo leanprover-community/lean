@@ -558,11 +558,24 @@ name read_name(deserializer & d) {
 bool is_internal_name(name const & n) {
     name it = n;
     while (!it.is_anonymous()) {
-        if (!it.is_anonymous() && it.is_string() && it.get_string() && it.get_string()[0] == '_')
+        if (it.is_string() && it.get_string() && it.get_string()[0] == '_')
             return true;
         it = it.get_prefix();
     }
     return false;
+}
+
+name strip_internal_suffixes(name const & n) {
+    name it = n;
+    bool is_internal = false;
+    while (!it.is_anonymous() && !(it.is_string() && it.get_string() &&
+        !(it.get_string()[0] == '_' ||
+            // HACK(Mario): foo.equations._eqn_1 ~> foo
+            (is_internal && strcmp(it.get_string(), "equations") == 0)))) {
+        it = it.get_prefix();
+        is_internal = true;
+    }
+    return it;
 }
 
 void initialize_name() {

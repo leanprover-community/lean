@@ -144,7 +144,7 @@ environment add_namespace(environment const & env, name const & ns) {
 }
 
 environment add_parent_namespaces(environment const & env, name const & full_n) {
-    if (full_n.is_atomic())
+    if (full_n.is_anonymous() || full_n.is_atomic())
         return env;
     return add_namespace(env, full_n.get_prefix());
 }
