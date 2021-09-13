@@ -901,10 +901,10 @@ int.add_le_add_right H 1
 theorem le_of_lt_add_one {a b : ℤ} (H : a < b + 1) : a ≤ b :=
 int.le_of_add_le_add_right H
 
-theorem sub_one_le_of_lt {a b : ℤ} (H : a ≤ b) : a - 1 < b :=
+theorem sub_one_lt_of_le {a b : ℤ} (H : a ≤ b) : a - 1 < b :=
 int.sub_right_lt_of_lt_add $ lt_add_one_of_le H
 
-theorem lt_of_sub_one_le {a b : ℤ} (H : a - 1 < b) : a ≤ b :=
+theorem le_of_sub_one_lt {a b : ℤ} (H : a - 1 < b) : a ≤ b :=
 le_of_lt_add_one $ int.lt_add_of_sub_right_lt H
 
 theorem le_sub_one_of_lt {a b : ℤ} (H : a < b) : a ≤ b - 1 :=
