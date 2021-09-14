@@ -51,7 +51,7 @@ meta def assumption : mytac unit :=
 tactic.assumption
 
 open lean.parser
-open interactive
+open _root_.interactive
 open interactive.types
 
 meta def add (n : parse ident) (v : nat) : mytac punit :=
