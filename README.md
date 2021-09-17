@@ -16,7 +16,7 @@
 About
 -----
 
-- **Important**: This is Lean 3.32.1c, a fork of Lean 3 maintained and updated by the Lean community. The last official release of Lean 3.x was Lean 3.4.2, which can be found [here](https://github.com/leanprover/lean). The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
+- **Important**: This is Lean 3.33.0c, a fork of Lean 3 maintained and updated by the Lean community. The last official release of Lean 3.x was Lean 3.4.2, which can be found [here](https://github.com/leanprover/lean). The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
 - [Lean Homepage](http://leanprover.github.io)
 - [Lean Prover Community Homepage](https://leanprover-community.github.io)
 - [Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/index.html)
@@ -35,7 +35,7 @@ If you want to modify *a single file* in the core library (not the C++ source), 
 ```
 git checkout v3.xx.x
 git checkout -b my-branch-name
-elan override set leanprover-community-lean-3.xx.x
+elan override set leanprover-community/lean:3.xx.x
 ```
 You can now build the core library with `lean --make library` or open any Lean file is VSCode / Emacs and it will use the version of Lean you specified. You might have to restart Lean (in VScode: `ctrl+shift+P Lean: Restart`). Warning: all imported Lean files will be from the downloaded community version, *not* the version of the files in this repository. Therefore, this setup is not recommended if you modify more than one file. Moreover, editor features like `Go to Definition` will not behave correctly with this setup. For the best experience, [build Lean from source](doc/make/index.md).
 

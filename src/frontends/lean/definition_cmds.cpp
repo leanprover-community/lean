@@ -706,16 +706,19 @@ static expr elaborate_proof(
         expr const & fn, expr const & val0, elaborator::theorem_finalization_info const & finfo,
         bool is_rfl_lemma, expr const & final_type,
         metavar_context const & mctx, local_context const & lctx,
-        parser_pos_provider pos_provider, bool use_info_manager, std::string const & file_name) {
+        parser_pos_provider pos_provider, std::shared_ptr<tactic_log> log,
+        bool use_info_manager, std::string const & file_name) {
     auto tc = std::make_shared<type_context_old>(decl_env, opts, mctx, lctx);
     scope_trace_env scope2(decl_env, opts, *tc);
     scope_traces_as_messages scope2a(file_name, header_pos);
     scope_pos_info_provider scope3(pos_provider);
     auto_reporting_info_manager_scope scope4(file_name, use_info_manager);
+    scope_tactic_log scope5(log.get());
 
     try {
         bool recover_from_errors = true;
-        elaborator elab(decl_env, opts, resolve_decl_name(decl_env, fn), mctx, lctx, recover_from_errors);
+        auto decl_name = resolve_decl_name(decl_env, fn);
+        elaborator elab(decl_env, opts, decl_name, mctx, lctx, recover_from_errors);
 
         expr val, type;
         {
@@ -845,12 +848,14 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_
             auto mctx = elab.mctx();
             auto lctx = elab.lctx();
             auto pos_provider = p.get_parser_pos_provider(header_pos);
+            auto tactic_log = p.get_tactic_log();
             bool use_info_manager = get_global_info_manager() != nullptr;
             std::string file_name = p.get_file_name();
             auto proof = add_library_task(task_builder<expr>([=] {
                 return elaborate_proof(decl_env, opts, header_pos, new_params_list,
                                        new_fn, val, thm_finfo, is_rfl, type,
-                                       mctx, lctx, pos_provider, use_info_manager, file_name);
+                                       mctx, lctx, pos_provider, tactic_log,
+                                       use_info_manager, file_name);
             }), log_tree::ElaborationLevel);
             env_n = declare_definition(p, elab.env(), kind, lp_names, c_name, prv_name, type, opt_val, proof, meta, is_abbrev, header_pos);
         } else if (kind == decl_cmd_kind::Example) {

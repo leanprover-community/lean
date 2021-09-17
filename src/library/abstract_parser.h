@@ -9,6 +9,7 @@ Author: Sebastian Ullrich
 #include <vector>
 #include "util/name_map.h"
 #include "util/exception_with_pos.h"
+#include "util/task.h"
 #include "kernel/pos_info_provider.h"
 
 namespace lean {

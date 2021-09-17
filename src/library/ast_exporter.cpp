@@ -19,6 +19,7 @@ namespace lean {
 struct ast_exporter : abstract_ast_exporter {
     std::vector<ast_data*> const & m_ast;
     tag_ast_table const & m_tag_ast_table;
+    tactic_log const * m_tactic_log;
     std::vector<bool> m_reachable;
     json m_levels;
     json m_exprs = {nullptr};
@@ -32,8 +33,8 @@ struct ast_exporter : abstract_ast_exporter {
         }
     }
 
-    ast_exporter(std::vector<ast_data*> const & ast, tag_ast_table const & tag_ast_table):
-        m_ast(ast), m_tag_ast_table(tag_ast_table),
+    ast_exporter(std::vector<ast_data*> const & ast, tag_ast_table const & tag_ast_table, tactic_log const * log):
+        m_ast(ast), m_tag_ast_table(tag_ast_table), m_tactic_log(log),
         m_reachable(ast.size(), false) {
         m_levels.push_back("0");
         m_level2idx.emplace(mk_level_zero(), 0);
@@ -152,12 +153,36 @@ struct ast_exporter : abstract_ast_exporter {
             }
             asts.push_back(j);
         }
-        json r = {
-            {"ast", asts},
-            {"file", AST_TOP_ID},
-            {"level", std::move(m_levels)},
-            {"expr", std::move(m_exprs)},
-        };
+        json r = {{"ast", asts}, {"file", AST_TOP_ID}};
+        if (m_tactic_log) {
+            lean_assert(!m_tactic_log->m_detached);
+            m_tactic_log->m_exported.store(true);
+            lock_guard<mutex> l(m_tactic_log->m_mutex);
+            auto& invocs = m_tactic_log->get_invocs(l);
+            if (!invocs.empty()) {
+                r["tactics"] = invocs;
+                auto& ss = r["states"] = json::array();
+                for (auto& s : m_tactic_log->get_states(l)) {
+                    auto gs = json::array();
+                    for (auto& g : s.goals()) {
+                        auto hs = json::array();
+                        for (auto& h : g.m_hyps) {
+                            json j = {
+                                {"name", json_of_name(h.m_name)},
+                                {"pp", json_of_name(h.m_pp_name)},
+                                {"type", export_expr(h.m_type)}
+                            };
+                            if (h.m_value) j["value"] = export_expr(*h.m_value);
+                            hs.push_back(j);
+                        }
+                        gs.push_back({hs, export_expr(g.m_target_type)});
+                    }
+                    ss.push_back({{"decl", json_of_name(s.decl_name())}, {"goals", gs}});
+                }
+            }
+        }
+        r["level"] = std::move(m_levels);
+        r["expr"] = std::move(m_exprs);
         out << r;
     }
 };
@@ -170,19 +195,19 @@ std::string json_of_lean(std::string const & lean_fn) {
     }
 }
 
-void export_ast(parser & p) {
+void export_ast(parser const & p) {
     if (p.m_ast.empty() || p.m_ast_invalid) return;
     auto ast_fn = json_of_lean(p.m_file_name);
     std::cerr << "exporting " << ast_fn << std::endl;
     exclusive_file_lock output_lock(ast_fn);
     std::ofstream out(ast_fn);
-    ast_exporter(p.m_ast, p.m_tag_ast_table).write_ast(out);
+    ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get()).write_ast(out);
     out.close();
     if (!out) throw exception(sstream() << "failed to write ast file: " << ast_fn);
 }
 
 #else
-void export_ast(parser &) {}
+void export_ast(parser const &) {}
 #endif // LEAN_JSON
 
 }

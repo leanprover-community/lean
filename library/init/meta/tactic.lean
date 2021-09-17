@@ -779,6 +779,9 @@ meta constant freeze_local_instances : tactic unit
 /- Return the list of frozen local instances. Return `none` if local instances were not frozen. -/
 meta constant frozen_local_instances : tactic (option (list expr))
 
+/-- Run the provided tactic, associating it to the given AST node. -/
+meta constant with_ast {α : Type u} (ast : ℕ) (t : tactic α) : tactic α
+
 meta def induction' (h : expr) (ns : list name := []) (rec : option name := none) (md := semireducible) : tactic unit :=
 induction h ns rec md >> return ()
 
@@ -790,8 +793,8 @@ get_goals >>= set_goals
 meta def step {α : Type u} (t : tactic α) : tactic unit :=
 t >>[tactic] cleanup
 
-meta def istep {α : Type u} (line0 col0 : ℕ) (line col : ℕ) (t : tactic α) : tactic unit :=
-λ s, (@scope_trace _ line col (λ _, step t s)).clamp_pos line0 line col
+meta def istep {α : Type u} (line0 col0 line col ast : ℕ) (t : tactic α) : tactic unit :=
+λ s, (@scope_trace _ line col (λ _, with_ast ast (step t) s)).clamp_pos line0 line col
 
 meta def is_prop (e : expr) : tactic bool :=
 do t ← infer_type e,

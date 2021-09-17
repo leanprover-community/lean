@@ -115,7 +115,7 @@ bool ac_lt(expr const & e1, expr const & e2);
 void ac_intersection(expr const & e1, expr const & e2, buffer<expr> & r);
 /* Create a flat AC application for e1 and e2.
 
-   Example: op := *, (a*a*b*c) (a*c*c) ==> (a*a*a*c*b*c*c*c)
+   Example: op := *, (a*a*b*c) (a*c*c) ==> (a*a*a*b*c*c*c)
    Example: op := *, (a*a*b*c) a       ==> (a*a*a*b*c)
    Example: op := *, a         b       ==> (a*b)
 */

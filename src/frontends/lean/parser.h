@@ -20,6 +20,7 @@ Author: Leonardo de Moura
 #include "library/io_state.h"
 #include "library/io_state_stream.h"
 #include "library/message_builder.h"
+#include "library/tactic/tactic_log.h"
 #include "library/tactic/tactic_state.h"
 #include "frontends/lean/parser_state.h"
 #include "frontends/lean/local_decls.h"
@@ -147,6 +148,7 @@ public:
     virtual pos_info cmd_pos() const = 0;
     virtual optional<pos_info> const & get_break_at_pos() const = 0;
     virtual parser_pos_provider get_parser_pos_provider(pos_info const & some_pos) const = 0;
+    virtual std::shared_ptr<tactic_log> get_tactic_log() { return nullptr; }
     expr mk_sorry(pos_info const & p, bool synthetic = false);
     bool has_error_recovery() const { return m_error_recovery; }
 };
@@ -171,6 +173,7 @@ class parser : public abstract_parser, public parser_info {
     std::vector<ast_data*>  m_ast;
     bool                    m_ast_invalid = false;
     ast_id                  m_commands = 0;
+    std::shared_ptr<tactic_log> m_tactic_log;
     // By default, when the parser finds a unknown identifier, it signs an error.
     // When the following flag is true, it creates a constant.
     // This flag is when we are trying to parse mutually recursive declarations.
@@ -304,6 +307,7 @@ public:
            module_loader const & import_fn,
            std::istream & strm, std::string const & file_name,
            bool use_exceptions = false);
+    parser(parser const &) = delete;
     ~parser();
 
     void init_scanner();
@@ -325,7 +329,7 @@ public:
         return old;
     }
     ast_data & new_modifiers(cmd_meta & meta);
-    friend void export_ast(parser & p);
+    friend void export_ast(parser const &);
 
     void from_snapshot(snapshot const & snap);
 
@@ -384,6 +388,8 @@ public:
     parser_pos_provider get_parser_pos_provider(pos_info const & some_pos) const override {
         return parser_pos_provider(m_pos_table, m_file_name, some_pos, m_next_tag_idx);
     }
+
+    std::shared_ptr<tactic_log> get_tactic_log() override;
 
     expr mk_app(expr fn, expr arg, pos_info const & p);
     expr mk_app(expr fn, buffer<expr> const & args, pos_info const & p);
