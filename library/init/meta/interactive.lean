@@ -881,8 +881,8 @@ end
 
 /--
 `repeat { t }` applies `t` to each goal. If the application succeeds,
-the tactic is applied recursively to all the generated subgoals until it eventually fails or `t` 
-closes the goal.
+the tactic is applied recursively to all the generated subgoals until it eventually fails or
+there are no more subgoals.
 The tactic `repeat { t }` never fails.
 -/
 meta def repeat : itactic → tactic unit :=
