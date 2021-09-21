@@ -1480,9 +1480,10 @@ notation `dec_trivial` := of_as_true (by tactic.triv)
 
 meta def by_contradiction (H : name) : tactic expr :=
 do tgt ← target,
-  (match_not tgt $> ()) <|>
+  tgt_wh ← whnf tgt, -- to ensure that `not` in `ne` is found
+  (match_not tgt_wh $> ()) <|>
   (mk_mapp `decidable.by_contradiction [some tgt, none] >>= eapply >> skip) <|>
-  applyc ``classical.by_contradiction <|>
+  (mk_mapp `classical.by_contradiction [some tgt] >>= eapply >> skip) <|>
   fail "tactic by_contradiction failed, target is not a proposition",
   intro H
 
