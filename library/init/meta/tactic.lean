@@ -1480,7 +1480,7 @@ notation `dec_trivial` := of_as_true (by tactic.triv)
 
 meta def by_contradiction (H : name) : tactic expr :=
 do tgt ← target,
-  tgt_wh ← whnf tgt, -- to ensure that `not` in `ne` is found
+  tgt_wh ← whnf tgt reducible, -- to ensure that `not` in `ne` is found
   (match_not tgt_wh $> ()) <|>
   (mk_mapp `decidable.by_contradiction [some tgt, none] >>= eapply >> skip) <|>
   (mk_mapp `classical.by_contradiction [some tgt] >>= eapply >> skip) <|>
