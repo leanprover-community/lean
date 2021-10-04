@@ -189,5 +189,5 @@ instance lift_pair₁ {a₁ : Type ua₁} {a₂ : Type ua₂} {b : Type ub} [has
 instance lift_pair₂ {a : Type ua} {b₁ : Type ub₁} {b₂ : Type ub₂} [has_lift_t b₁ b₂] : has_lift (a × b₁) (a × b₂) :=
 ⟨λ p, prod.cases_on p (λ x y, (x, ↑y))⟩
 
-instance lift_list {a : Type u} {b : Type v} [has_lift_t a b] : has_lift (list a) (list b) :=
-⟨λ l, list.map (@coe a b _) l⟩
+instance lift_list {a : Type u} {b : Type v} [has_lift a b] : has_lift (list a) (list b) :=
+⟨λ l, list.map coe l⟩
