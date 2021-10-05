@@ -132,7 +132,7 @@ do focus1 $ using_smt_with {em_attr := cfg.attr_name} $
 meta def rsimplify_goal (ccs : cc_state) (m : option repr_map := none) : tactic unit :=
 do t           ← target,
    (new_t, pr) ← rsimplify ccs t m,
-   try (replace_target new_t pr)
+   try (replace_target new_t pr "rsimp")
 
 meta def rsimplify_at (ccs : cc_state) (h : expr) (m : option repr_map := none) : tactic unit :=
 do when (expr.is_local_constant h = ff) (tactic.fail "tactic rsimplify_at failed, the given expression is not a hypothesis"),

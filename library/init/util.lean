@@ -49,3 +49,6 @@ meta def undefined {α : Sort u} : α := undefined_core "undefined"
 
 meta def unchecked_cast {α : Sort u} {β : Sort u} : α → β :=
 cast undefined
+
+/-- For tactics to tag proofs -/
+@[reducible] def id_tag {α : Sort u} (tag : string) (x : α) : α := x

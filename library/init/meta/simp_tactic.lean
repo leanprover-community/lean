@@ -294,14 +294,14 @@ meta constant simplify (s : simp_lemmas) (to_unfold : list name := []) (e : expr
 meta def simp_target (s : simp_lemmas) (to_unfold : list name := []) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic name_set :=
 do t ← target >>= instantiate_mvars,
    (new_t, pr, lms) ← simplify s to_unfold t cfg `eq discharger,
-   replace_target new_t pr,
+   replace_target new_t pr "simp",
    return lms
 
 meta def simp_hyp (s : simp_lemmas) (to_unfold : list name := []) (h : expr) (cfg : simp_config := {}) (discharger : tactic unit := failed) : tactic (expr × name_set) :=
 do when (expr.is_local_constant h = ff) (fail "tactic simp_at failed, the given expression is not a hypothesis"),
    htype ← infer_type h,
    (h_new_type, pr, lms) ← simplify s to_unfold htype cfg `eq discharger,
-   new_hyp ← replace_hyp h h_new_type pr,
+   new_hyp ← replace_hyp h h_new_type pr "simp_at",
    return (new_hyp, lms)
 
 /--
@@ -471,7 +471,7 @@ ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)
 meta def simp_top_down (pre : expr → tactic (expr × expr)) (cfg : simp_config := {}) : tactic unit :=
 do t                   ← target,
    (_, new_target, pr) ← simplify_top_down () (λ _ e, do (new_e, pr) ← pre e, return ((), new_e, pr)) t cfg,
-   replace_target new_target pr
+   replace_target new_target pr "simp"
 
 meta def simplify_bottom_up {α} (a : α) (post : α → expr → tactic (α × expr × expr)) (e : expr) (cfg : simp_config := {}) : tactic (α × expr × expr) :=
 ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)
@@ -482,7 +482,7 @@ ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)
 meta def simp_bottom_up (post : expr → tactic (expr × expr)) (cfg : simp_config := {}) : tactic unit :=
 do t                   ← target,
    (_, new_target, pr) ← simplify_bottom_up () (λ _ e, do (new_e, pr) ← post e, return ((), new_e, pr)) t cfg,
-   replace_target new_target pr
+   replace_target new_target pr "simp"
 
 private meta def remove_deps (s : name_set) (h : expr) : name_set :=
 if s.empty then s

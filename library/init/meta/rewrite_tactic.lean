@@ -38,11 +38,11 @@ do (new_t, prf, metas) ← rewrite_core h e cfg,
 meta def rewrite_target (h : expr) (cfg : rewrite_cfg := {}) : tactic unit :=
 do t ← target,
    (new_t, prf, _) ← rewrite h t cfg,
-   replace_target new_t prf
+   replace_target new_t prf "rw"
 
 meta def rewrite_hyp (h : expr) (hyp : expr) (cfg : rewrite_cfg := {}) : tactic expr :=
 do hyp_type ← infer_type hyp,
    (new_hyp_type, prf, _) ← rewrite h hyp_type cfg,
-   replace_hyp hyp new_hyp_type prf
+   replace_hyp hyp new_hyp_type prf "rw_at"
 
 end tactic
