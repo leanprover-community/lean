@@ -46,7 +46,7 @@ jobs:
         run: |
           find -name \*.olean | xargs rm
           ../bin/lean --tlean --recursive .
-          test -f library/init/data/nat/basic.tlean
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -69,7 +69,7 @@ jobs:
         run: |
           find -name \*.olean | xargs rm
           ../bin/lean --tlean --recursive .
-          test -f library/init/data/nat/basic.tlean
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -113,7 +113,7 @@ jobs:
         run: |
           find -name \*.olean | xargs rm
           ../bin/lean --tlean --recursive .
-          test -f library/init/data/nat/basic.tlean
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -162,7 +162,7 @@ jobs:
         run: |
           find -name \*.olean | xargs rm
           ../bin/lean --tlean --recursive .
-          test -f library/init/data/nat/basic.tlean
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: |
