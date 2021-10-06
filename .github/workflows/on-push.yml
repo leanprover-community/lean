@@ -43,7 +43,10 @@ jobs:
           name: lean-nightly-linux-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+        run: |
+          find -name \*.olean | xargs rm
+          ../bin/lean --tlean --recursive .
+          test -f library/init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -63,7 +66,10 @@ jobs:
         run: make -j2
         working-directory: ./build
       - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+        run: |
+          find -name \*.olean | xargs rm
+          ../bin/lean --tlean --recursive .
+          test -f library/init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -104,7 +110,10 @@ jobs:
           name: lean-nightly-macos-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+        run: |
+          find -name \*.olean | xargs rm
+          ../bin/lean --tlean --recursive .
+          test -f library/init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -150,7 +159,10 @@ jobs:
           name: lean-nightly-windows-${{ matrix.build_type }}
           path: ./build/lean-*
       - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+        run: |
+          find -name \*.olean | xargs rm
+          ../bin/lean --tlean --recursive .
+          test -f library/init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: |
