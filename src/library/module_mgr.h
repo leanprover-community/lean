@@ -54,6 +54,7 @@ struct module_info {
     };
     task<parse_result> m_result;
     gtask m_ast_export;
+    gtask m_tlean_export;
 
     optional<module_parser_result> m_snapshots;
 
@@ -97,6 +98,7 @@ class module_mgr {
     bool m_use_old_oleans = false;
     bool m_report_widgets = true;
     bool m_export_ast = false;
+    bool m_export_tlean = false;
 
     search_path m_path;
     environment m_initial_env;
@@ -144,6 +146,7 @@ public:
     void set_report_widgets(bool report_widgets) { m_report_widgets = report_widgets; }
     bool get_report_widgets() const { return m_report_widgets; }
     void set_export_ast(bool export_ast) { m_export_ast = export_ast; }
+    void set_export_tlean(bool export_tlean) { m_export_tlean = export_tlean; }
 
     environment get_initial_env() const { return m_initial_env; }
     options get_options() const { return m_ios.get_options(); }

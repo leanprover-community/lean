@@ -198,7 +198,6 @@ std::string json_of_lean(std::string const & lean_fn) {
 void export_ast(parser const & p) {
     if (p.m_ast.empty() || p.m_ast_invalid) return;
     auto ast_fn = json_of_lean(p.m_file_name);
-    std::cerr << "exporting " << ast_fn << std::endl;
     exclusive_file_lock output_lock(ast_fn);
     std::ofstream out(ast_fn);
     ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get()).write_ast(out);
