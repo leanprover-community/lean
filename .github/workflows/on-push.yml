@@ -42,8 +42,11 @@ jobs:
         with:
           name: lean-nightly-linux-${{ matrix.build_type }}
           path: ./build/lean-*
-      - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+      - name: Generate tleans and ast
+        run: |
+          find -name \*.olean -delete
+          ../bin/lean --tlean --ast --make --recursive .
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -62,8 +65,11 @@ jobs:
       - name: Build
         run: make -j2
         working-directory: ./build
-      - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+      - name: Generate tleans and ast
+        run: |
+          find -name \*.olean -delete
+          ../bin/lean --tlean --ast --make --recursive .
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -103,8 +109,11 @@ jobs:
         with:
           name: lean-nightly-macos-${{ matrix.build_type }}
           path: ./build/lean-*
-      - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+      - name: Generate tleans and ast
+        run: |
+          find . -name \*.olean -delete
+          ../bin/lean --tlean --ast --make --recursive .
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: ctest -j2 --output-on-failure
@@ -149,8 +158,11 @@ jobs:
         with:
           name: lean-nightly-windows-${{ matrix.build_type }}
           path: ./build/lean-*
-      - name: Generate tleans
-        run: ../bin/lean --tlean --recursive .
+      - name: Generate tleans and ast
+        run: |
+          find -name \*.olean -delete
+          ../bin/lean --tlean --ast --make --recursive .
+          test -f init/data/nat/basic.tlean
         working-directory: ./library
       - name: Test
         run: |
