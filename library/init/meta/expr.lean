@@ -550,7 +550,10 @@ meta def extract_opt_auto_param : expr → expr
 
 open format
 
-private meta def p := λ xs, paren (format.join (list.intersperse " " xs))
+private meta def p : list format → format
+| [] := ""
+| [x] := x.paren
+| (x::y::xs) := p ((x ++ format.line ++ y).group :: xs)
 
 meta def to_raw_fmt : expr elab → format
 | (var n) := p ["var", to_fmt n]
@@ -574,7 +577,8 @@ end expr
 /-- An dictionary from `data` to expressions. -/
 @[reducible] meta def expr_map (data : Type) := rb_map expr data
 namespace expr_map
-export native.rb_map (hiding mk)
+export native.rb_map (mk_core size empty insert erase contains find min max fold
+  keys values to_list mfold of_list set_of_list map for filter)
 
 meta def mk (data : Type) : expr_map data := rb_map.mk expr data
 end expr_map

@@ -51,20 +51,29 @@ static environment add_user_command(environment const & env, name const & d) {
 
     expr dummy = mk_true();
 
-    auto run = [=](parser & p, cmd_meta const & meta) {
+    auto run = [=](parser & p, ast_id & cmd_id, cmd_meta const & meta) {
+        auto& data = p.get_ast(cmd_id);
+        data.m_value = data.m_type;
+        data.m_type = "user_command";
+
         expr parser = mk_constant(d);
         // we don't want to reflect `meta` into an expr, so abstract the parameter and pass it as a vm_obj arg
         if (takes_meta_infos) {
             parser = mk_app(parser, mk_var(0));
+            data.push(meta.m_modifiers_id);
+        } else {
+            data.push(0);
         }
         // `parse (tk c)` arg
         parser = mk_app(parser, mk_constant(get_unit_star_name()));
         for (expr t = type; is_pi(t); t = binding_body(t)) {
             expr arg_type = binding_domain(t);
             if (is_app_of(arg_type, get_interactive_parse_name())) {
-                parser = mk_app(parser, parse_interactive_param(p, arg_type));
+                parser = mk_app(parser, parse_interactive_param(p, data, arg_type));
             } else {
+                auto pos = p.pos();
                 expr e = p.parse_expr(get_max_prec());
+                data.push(p.new_ast("expr", pos).push(p.get_id(e)).m_id);
                 if (!closed(e) || has_local(e)) {
                     throw elaborator_exception(e, "invalid argument to user-defined command, must be closed term");
                 }
@@ -77,14 +86,14 @@ static environment add_user_command(environment const & env, name const & d) {
             args.push_back(to_obj(meta));
         }
         parser = p.elaborate("_user_command", {}, parser).first;
-        run_parser(p, parser, args, true);
+        data.push(run_parser(p, parser, args, true).first);
         return p.env();
     };
 
     if (takes_meta_infos) {
         return add_command(env, tk, cmd_info(tk, "description", run));
     } else {
-        return add_command(env, tk, cmd_info(tk, "description", [=](parser & p) { return run(p, {}); }));
+        return add_command(env, tk, cmd_info(tk, "description", [=](parser & p, ast_id & cmd_id) { return run(p, cmd_id, {}); }));
     }
 }
 

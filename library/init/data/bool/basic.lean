@@ -35,5 +35,5 @@ import init.core
 | ff tt  := tt
 | _  _   := ff
 
-notation x || y := bor x y
-notation x && y := band x y
+infixl ` || `:65 := bor
+infixl ` && `:70 := band

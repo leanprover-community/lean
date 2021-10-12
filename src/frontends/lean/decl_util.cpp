@@ -31,20 +31,23 @@ Author: Leonardo de Moura
 #include "frontends/lean/builtin_exprs.h"
 
 namespace lean {
-bool parse_univ_params(parser & p, buffer<name> & lp_names) {
+ast_id parse_univ_params(parser & p, buffer<name> & lp_names) {
     if (p.curr_is_token(get_lcurly_tk())) {
+        auto& data = p.new_ast("levels", p.pos());
         p.next();
         while (!p.curr_is_token(get_rcurly_tk())) {
             auto pos0 = p.pos();
-            name l = p.check_atomic_id_next("invalid declaration, identifier expected");
+            ast_id id; name l;
+            std::tie(id, l) = p.check_atomic_id_next("invalid declaration, identifier expected");
+            data.push(id);
             lp_names.push_back(l);
             p.add_local_level(l, mk_param_univ(l));
             if (p.pos() == pos0) break;
         }
         p.next();
-        return true;
+        return data.m_id;
     } else {
-        return false;
+        return 0;
     }
 }
 
@@ -173,7 +176,7 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     }
 }
 
-expr parse_single_header(parser & p, declaration_name_scope & scope,
+expr parse_single_header(parser & p, ast_data & parent, declaration_name_scope & scope,
                          buffer <name> & lp_names, buffer <expr> & params,
                          bool is_example, bool is_instance) {
     auto c_pos  = p.pos();
@@ -181,23 +184,31 @@ expr parse_single_header(parser & p, declaration_name_scope & scope,
     if (is_example) {
         c_name = "_example";
         scope.set_name(c_name);
+        parent.push(0).push(0);
     } else {
-        if (!is_instance)
-            parse_univ_params(p, lp_names);
+        parent.push(is_instance ? 0 : parse_univ_params(p, lp_names));
         if (!is_instance || p.curr_is_identifier()) {
-            c_name = p.check_decl_id_next("invalid declaration, identifier expected");
+            ast_id id;
+            std::tie(id, c_name) = p.check_decl_id_next("invalid declaration, identifier expected");
+            parent.push(id);
             scope.set_name(c_name);
+        } else {
+            parent.push(0);
         }
     }
-    p.parse_optional_binders(params, /* allow_default */ true, /* explicit delimiters */ true);
+    auto& bis = p.new_ast("binders", p.pos());
+    p.parse_optional_binders(&bis, params, /* allow_default */ true, /* explicit delimiters */ true);
+    parent.push(bis.m_children.empty() ? 0 : bis.m_id);
     for (expr const & param : params)
         p.add_local(param);
     expr type;
     if (p.curr_is_token(get_colon_tk())) {
         p.next();
         type = p.parse_expr();
+        parent.push(p.get_id(type));
     } else {
         type = p.save_pos(mk_expr_placeholder(), c_pos);
+        parent.push(0);
     }
     if (is_instance && c_name.is_anonymous()) {
         if (used_match_idx())
@@ -247,11 +258,14 @@ expr parse_single_header(dummy_def_parser & p, declaration_name_scope & scope, b
     return mk_local(c_name, type);
 }
 
-void parse_mutual_header(parser & p, buffer <name> & lp_names, buffer <expr> & cs, buffer <expr> & params) {
-    parse_univ_params(p, lp_names);
+void parse_mutual_header(parser & p, ast_data & parent, buffer <name> & lp_names, buffer <expr> & cs, buffer <expr> & params) {
+    auto& names = p.new_ast("mutuals", p.pos());
+    parent.push(parse_univ_params(p, lp_names)).push(names.m_id);
     while (true) {
         auto c_pos  = p.pos();
-        name c_name = p.check_decl_id_next("invalid mutual declaration, identifier expected");
+        ast_id c_id; name c_name;
+        std::tie(c_id, c_name) = p.check_decl_id_next("invalid mutual declaration, identifier expected");
+        names.push(c_id);
         cs.push_back(p.save_pos(mk_local(c_name, mk_expr_placeholder()), c_pos));
         if (!p.curr_is_token(get_comma_tk()))
             break;
@@ -260,19 +274,23 @@ void parse_mutual_header(parser & p, buffer <name> & lp_names, buffer <expr> & c
     if (cs.size() < 2) {
         throw parser_error("invalid mutual declaration, must provide more than one identifier (separated by commas)", p.pos());
     }
-    p.parse_optional_binders(params, /* allow_default */ true, /* explicit delimiters */ true);
+    auto& bis = p.new_ast("binders", p.pos());
+    p.parse_optional_binders(&bis, params, /* allow_default */ true, /* explicit delimiters */ true);
+    parent.push(bis.m_children.empty() ? 0 : bis.m_id);
     for (expr const & param : params)
         p.add_local(param);
     for (expr const & c : cs)
         p.add_local(c);
 }
 
-pair<expr, decl_attributes> parse_inner_header(parser & p, name const & c_expected) {
+pair<expr, decl_attributes> parse_inner_header(parser & p, ast_data & parent, name const & c_expected) {
     decl_attributes attrs;
     p.check_token_next(get_with_tk(), "invalid mutual declaration, 'with' expected");
-    attrs.parse(p);
+    parent.push(attrs.parse(p));
     auto id_pos = p.pos();
-    name n = p.check_decl_id_next("invalid mutual declaration, identifier expected");
+    ast_id n_id; name n;
+    std::tie(n_id, n) = p.check_decl_id_next("invalid mutual declaration, identifier expected");
+    parent.push(n_id);
     if (c_expected != n)
         throw parser_error(sstream() << "invalid mutual declaration, '" << c_expected << "' expected",
                            id_pos);
@@ -280,7 +298,9 @@ pair<expr, decl_attributes> parse_inner_header(parser & p, name const & c_expect
        before invoking this procedure. */
     declaration_name_scope scope(n);
     p.check_token_next(get_colon_tk(), "invalid mutual declaration, ':' expected");
-    return mk_pair(p.parse_expr(), attrs);
+    expr e = p.parse_expr();
+    parent.push(p.get_id(e));
+    return {e, attrs};
 }
 
 /** \brief Version of collect_locals(expr const & e, collected_locals & ls) that ignores local constants occurring in

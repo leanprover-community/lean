@@ -35,6 +35,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/parser.h"
 #include "frontends/lean/tokens.h"
 #include "frontends/lean/decl_util.h" // TODO(Leo): remove
+#include "frontends/lean/json.h"
 #include "frontends/lean/prenum.h"
 
 #ifndef LEAN_DEFAULT_AUTO_PARAM_CHECK_EXISTS
@@ -87,6 +88,18 @@ bool is_root_namespace(name const & n) {
 
 name remove_root_prefix(name const & n) {
     return n.replace_prefix(get_root_tk(), name());
+}
+
+name resolve_decl_name(environment const & env, name const & n) {
+    if (n.get_root() == get_root_tk()) {
+        return remove_root_prefix(n);
+    } else {
+        return get_namespace(env) + n;
+    }
+}
+
+name resolve_decl_name(environment const & env, expr const & mlocal) {
+    return resolve_decl_name(env, mlocal_pp_name(mlocal));
 }
 
 bool is_eqn_prefix(parser & p, bool bar_only = false) {
@@ -242,8 +255,9 @@ level mk_result_level(buffer<level> const & r_lvls) {
     }
 }
 
-std::tuple<expr, level_param_names> parse_local_expr(parser & p, name const & decl_name, metavar_context & mctx, bool relaxed) {
+std::tuple<expr, level_param_names> parse_local_expr(parser & p, ast_data & parent, name const & decl_name, metavar_context & mctx, bool relaxed) {
     expr e = p.parse_expr();
+    parent.push(p.get_id(e));
     bool check_unassigend = !relaxed;
     expr new_e; level_param_names ls;
     std::tie(new_e, ls) = p.elaborate(decl_name, mctx, e, check_unassigend);
@@ -251,9 +265,9 @@ std::tuple<expr, level_param_names> parse_local_expr(parser & p, name const & de
     return std::make_tuple(new_e, new_ls);
 }
 
-std::tuple<expr, level_param_names> parse_local_expr(parser & p, name const & decl_name, bool relaxed) {
+std::tuple<expr, level_param_names> parse_local_expr(parser & p, ast_data & parent, name const & decl_name, bool relaxed) {
     metavar_context mctx;
-    return parse_local_expr(p, decl_name, mctx, relaxed);
+    return parse_local_expr(p, parent, decl_name, mctx, relaxed);
 }
 
 optional<name> is_uniquely_aliased(environment const & env, name const & n) {
@@ -298,9 +312,11 @@ char const * close_binder_string(binder_info const & bi, bool unicode) {
     else return ")";
 }
 
-pair<name, option_kind> parse_option_name(parser & p, char const * error_msg) {
+pair<name, option_kind> parse_option_name(parser & p, ast_data & parent, char const * error_msg) {
     auto id_pos  = p.pos();
-    name id = p.check_id_next(error_msg, break_at_pos_exception::token_context::option);
+    ast_id id_ast; name id;
+    std::tie(id_ast, id) = p.check_id_next(error_msg, break_at_pos_exception::token_context::option);
+    parent.push(id_ast);
     option_declarations decls = get_option_declarations();
     auto it = decls.find(id);
     if (!it) {
@@ -356,17 +372,18 @@ static bool is_tactic_unit(environment const & env, expr const & c) {
     return tc.is_def_eq(tc.infer(c), mk_tactic_unit());
 }
 
-expr parse_auto_param(parser & p, expr const & type) {
+pair<ast_id, expr> parse_auto_param(parser & p, expr const & type) {
     p.next();
     auto pos      = p.pos();
-    name tac_id   = p.check_decl_id_next("invalid auto_param, identifier expected");
+    ast_id id; name tac_id;
+    std::tie(id, tac_id) = p.check_decl_id_next("invalid auto_param, identifier expected");
     if (get_auto_param_check_exists(p.get_options())) {
-        expr tac_expr = p.id_to_expr(tac_id, pos, true);
+        expr tac_expr = p.id_to_expr(tac_id, p.get_ast(id), true);
         if (!is_tactic_unit(p.env(), tac_expr))
             throw parser_error(sstream() << "invalid auto_param, '" << tac_id << "' must have type (tactic unit)", pos);
-        return mk_auto_param(type, const_name(tac_expr));
+        return {id, mk_auto_param(type, const_name(tac_expr))};
     } else {
-        return mk_auto_param(type, tac_id);
+        return {id, mk_auto_param(type, tac_id)};
     }
 }
 
@@ -404,6 +421,12 @@ public:
     virtual expr check_type(expr const &, abstract_type_context &, bool) const override { throw_pn_ex(); }
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override { throw_pn_ex(); }
     virtual void write(serializer & s) const override { s << *g_field_notation_opcode << m_field << m_field_idx; }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["field"] = json_of_name(m_field);
+        j["idx"] = m_field_idx;
+    }
+#endif
     bool is_anonymous() const { return m_field.is_anonymous(); }
     name const & get_field_name() const { lean_assert(!is_anonymous()); return m_field; }
     unsigned get_field_idx() const { lean_assert(is_anonymous()); return m_field_idx; }

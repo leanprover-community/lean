@@ -126,8 +126,8 @@ end state_t
 
 instance (m : Type u → Type v) [monad m] [is_lawful_monad m] (σ : Type u) : is_lawful_monad (state_t σ m) :=
 { id_map := by intros; apply state_t.ext; intro; simp; erw id_map,
-  pure_bind := by intros; apply state_t.ext; simp,
-  bind_assoc := by intros; apply state_t.ext; simp [bind_assoc] }
+  pure_bind := by { intros, apply state_t.ext, simp },
+  bind_assoc := by { intros, apply state_t.ext, simp [bind_assoc] } }
 
 
 namespace except_t

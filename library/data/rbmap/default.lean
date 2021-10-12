@@ -57,14 +57,15 @@ begin
   apply eqv_entries
 end
 
-lemma eq_some_of_to_value_eq_some {e : option (α × β)} {v : β} : to_value e = some v → ∃ k, e = some (k, v) :=
+lemma eq_some_of_to_value_eq_some {e : option (α × β)} {v : β} :
+  to_value e = some v → ∃ k, e = some (k, v) :=
 begin
-  cases e with val; simp [to_value],
+  cases e with val; simp [to_value, false_implies_iff],
     { cases val, simp, intro h, subst v, constructor, refl }
 end
 
 lemma eq_none_of_to_value_eq_none {e : option (α × β)} : to_value e = none → e = none :=
-by cases e; simp [to_value]
+by cases e; simp [to_value, false_implies_iff]
 
 /- Lemmas -/
 
@@ -72,31 +73,36 @@ lemma not_mem_mk_rbmap : ∀ (k : α), k ∉ mk_rbmap α β lt :=
 by simp [has_mem.mem, mk_rbmap, mk_rbtree, rbmap.mem]
 
 lemma not_mem_of_empty {m : rbmap α β lt} (k : α) : m.empty = tt → k ∉ m :=
-by cases m with n p; cases n; simp [has_mem.mem, mk_rbmap, mk_rbtree, rbmap.mem, rbmap.empty, rbtree.empty]
+by cases m with n p; cases n;
+  simp [has_mem.mem, mk_rbmap, mk_rbtree, rbmap.mem, rbmap.empty, rbtree.empty, false_implies_iff]
 
 variables [decidable_rel lt]
 
-lemma not_mem_of_find_entry_none [is_strict_weak_order α lt] {k : α} {m : rbmap α β lt} : m.find_entry k = none → k ∉ m :=
+lemma not_mem_of_find_entry_none [is_strict_weak_order α lt] {k : α} {m : rbmap α β lt} :
+  m.find_entry k = none → k ∉ m :=
 begin
   cases m with t p, cases t; simp [find_entry],
   { intros, simp [has_mem.mem, rbmap.mem] },
   all_goals { intro h, exact rbtree.not_mem_of_find_none h, }
 end
 
-lemma not_mem_of_find_none [is_strict_weak_order α lt] {k : α} {m : rbmap α β lt} : m.find k = none → k ∉ m :=
+lemma not_mem_of_find_none [is_strict_weak_order α lt] {k : α} {m : rbmap α β lt} :
+  m.find k = none → k ∉ m :=
 begin
   simp [find], intro h,
   have := eq_none_of_to_value_eq_none h,
   exact not_mem_of_find_entry_none this
 end
 
-lemma mem_of_find_entry_some [is_strict_weak_order α lt] {k₁ : α} {e : α × β} {m : rbmap α β lt} : m.find_entry k₁ = some e → k₁ ∈ m :=
+lemma mem_of_find_entry_some [is_strict_weak_order α lt] {k₁ : α} {e : α × β} {m : rbmap α β lt} :
+  m.find_entry k₁ = some e → k₁ ∈ m :=
 begin
-  cases m with t p, cases t; simp [find_entry],
+  cases m with t p, cases t; simp [find_entry, false_implies_iff],
   all_goals { intro h, exact rbtree.mem_of_find_some h }
 end
 
-lemma mem_of_find_some [is_strict_weak_order α lt] {k : α} {v : β} {m : rbmap α β lt} : m.find k = some v → k ∈ m :=
+lemma mem_of_find_some [is_strict_weak_order α lt] {k : α} {v : β} {m : rbmap α β lt} :
+  m.find k = some v → k ∈ m :=
 begin
   simp [find], intro h,
   have := eq_some_of_to_value_eq_some h,
@@ -104,16 +110,19 @@ begin
   exact mem_of_find_entry_some he
 end
 
-lemma find_entry_eq_find_entry_of_eqv [is_strict_weak_order α lt] {m : rbmap α β lt} {k₁ k₂ : α} : k₁ ≈[lt] k₂ → m.find_entry k₁ = m.find_entry k₂ :=
+lemma find_entry_eq_find_entry_of_eqv [is_strict_weak_order α lt] {m : rbmap α β lt} {k₁ k₂ : α} :
+  k₁ ≈[lt] k₂ → m.find_entry k₁ = m.find_entry k₂ :=
 begin
   intro h, cases m with t p, cases t; simp [find_entry],
   all_goals { apply rbtree.find_eq_find_of_eqv, apply eqv_entries_of_eqv_keys, assumption }
 end
 
-lemma find_eq_find_of_eqv [is_strict_weak_order α lt] {k₁ k₂ : α} (m : rbmap α β lt) : k₁ ≈[lt] k₂ → m.find k₁ = m.find k₂ :=
+lemma find_eq_find_of_eqv [is_strict_weak_order α lt] {k₁ k₂ : α} (m : rbmap α β lt) :
+  k₁ ≈[lt] k₂ → m.find k₁ = m.find k₂ :=
 begin intro h, simp [find], apply congr_arg, apply find_entry_eq_find_entry_of_eqv, assumption end
 
-lemma find_entry_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) : k ∈ m ↔ (∃ e, m.find_entry k = some e ∧ k ≈[lt] e.1) :=
+lemma find_entry_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) :
+  k ∈ m ↔ (∃ e, m.find_entry k = some e ∧ k ≈[lt] e.1) :=
 begin
   apply iff.intro; cases m with t p,
   { intro h,
@@ -122,11 +131,13 @@ begin
     existsi e, cases t; simp [find_entry] at ⊢ h₂,
     { simp [rbtree.find, rbnode.find] at h₂, cases h₂ },
     { cases h₂ with h₂₁ h₂₂, split,
-      { have := rbtree.find_eq_find_of_eqv ⟨rbnode.red_node t_lchild t_val t_rchild, p⟩ (eqv_entries k v t_val.2),
+      { have := rbtree.find_eq_find_of_eqv ⟨rbnode.red_node t_lchild t_val t_rchild, p⟩
+          (eqv_entries k v t_val.2),
         rw [←this], exact h₂₁ },
       { cases e, apply eqv_keys_of_eqv_entries h₂₂ } },
     { cases h₂ with h₂₁ h₂₂, split,
-      { have := rbtree.find_eq_find_of_eqv ⟨rbnode.black_node t_lchild t_val t_rchild, p⟩ (eqv_entries k v t_val.2),
+      { have := rbtree.find_eq_find_of_eqv ⟨rbnode.black_node t_lchild t_val t_rchild, p⟩
+          (eqv_entries k v t_val.2),
         rw [←this], exact h₂₁ },
       { cases e, apply eqv_keys_of_eqv_entries h₂₂ } } },
   { intro h, cases h with e h,
@@ -135,17 +146,20 @@ begin
     all_goals { exact to_rbmap_mem (rbtree.mem_of_find_some h₁) } }
 end
 
-lemma eqv_of_find_entry_some [is_strict_weak_order α lt] {k₁ k₂ : α} {v : β} {m : rbmap α β lt} : m.find_entry k₁ = some (k₂, v) → k₁ ≈[lt] k₂ :=
+lemma eqv_of_find_entry_some [is_strict_weak_order α lt] {k₁ k₂ : α} {v : β} {m : rbmap α β lt} :
+  m.find_entry k₁ = some (k₂, v) → k₁ ≈[lt] k₂ :=
 begin
-  cases m with t p, cases t; simp [find_entry],
+  cases m with t p, cases t; simp [find_entry, false_implies_iff],
   all_goals { intro h, exact eqv_keys_of_eqv_entries (rbtree.eqv_of_find_some h) }
 end
 
-lemma eq_of_find_entry_some [is_strict_total_order α lt] {k₁ k₂ : α} {v : β} {m : rbmap α β lt} : m.find_entry k₁ = some (k₂, v) → k₁ = k₂ :=
+lemma eq_of_find_entry_some [is_strict_total_order α lt] {k₁ k₂ : α} {v : β} {m : rbmap α β lt} :
+  m.find_entry k₁ = some (k₂, v) → k₁ = k₂ :=
 λ h, suffices k₁ ≈[lt] k₂, from eq_of_eqv_lt this,
      eqv_of_find_entry_some h
 
-lemma find_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) : k ∈ m ↔ ∃ v, m.find k = some v :=
+lemma find_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) :
+  k ∈ m ↔ ∃ v, m.find k = some v :=
 begin
   apply iff.intro,
   { intro h,
@@ -161,7 +175,8 @@ begin
     exact iff.mpr (find_entry_correct k m) ⟨(k', v), ⟨h, heqv⟩⟩ }
 end
 
-lemma constains_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) : k ∈ m ↔ m.contains k = tt :=
+lemma constains_correct [is_strict_weak_order α lt] (k : α) (m : rbmap α β lt) :
+  k ∈ m ↔ m.contains k = tt :=
 begin
    apply iff.intro,
    { intro h,

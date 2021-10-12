@@ -85,7 +85,8 @@ let ⟨n, (h : ↑(1+n) = a)⟩ := le.dest h in
 ⟨n, by rw nat.add_comm at h; exact h.symm⟩
 
 lemma lt_add_succ (a : ℤ) (n : ℕ) : a < a + ↑(nat.succ n) :=
-le.intro (show a + 1 + n = a + nat.succ n, begin simp [int.coe_nat_eq, int.add_comm, int.add_left_comm], reflexivity end)
+le.intro (show a + 1 + n = a + nat.succ n,
+  by { simp [int.coe_nat_eq, int.add_comm, int.add_left_comm], reflexivity })
 
 lemma lt.intro {a b : ℤ} {n : ℕ} (h : a + nat.succ n = b) : a < b :=
 h ▸ lt_add_succ a n
@@ -172,7 +173,7 @@ lt.elim ha (assume n, assume hn,
 lt.elim hb (assume m, assume hm,
   lt.intro (show 0 + ↑(nat.succ (nat.succ n * m + n)) = a * b,
     begin rw [← hn, ← hm], simp [int.coe_nat_zero],
-          rw [← int.coe_nat_mul], simp [nat.mul_succ, nat.succ_add] end)))
+          rw [← int.coe_nat_mul], simp [nat.mul_succ, nat.add_succ, nat.succ_add] end)))
 
 protected lemma zero_lt_one : (0 : ℤ) < 1 := trivial
 
@@ -256,11 +257,13 @@ protected lemma neg_mul_eq_mul_neg (a b : ℤ) : -(a * b) = a * -b :=
 int.neg_eq_of_add_eq_zero
   begin rw [← int.distrib_left, int.add_right_neg, int.mul_zero] end
 
-@[simp] lemma neg_mul_eq_neg_mul_symm (a b : ℤ) : - a * b = - (a * b) :=
+lemma neg_mul_eq_neg_mul_symm (a b : ℤ) : - a * b = - (a * b) :=
 eq.symm (int.neg_mul_eq_neg_mul a b)
 
-@[simp] lemma mul_neg_eq_neg_mul_symm (a b : ℤ) : a * - b = - (a * b) :=
+lemma mul_neg_eq_neg_mul_symm (a b : ℤ) : a * - b = - (a * b) :=
 eq.symm (int.neg_mul_eq_mul_neg a b)
+
+local attribute [simp] neg_mul_eq_neg_mul_symm mul_neg_eq_neg_mul_symm
 
 protected lemma neg_mul_neg (a b : ℤ) : -a * -b = a * b :=
 by simp
@@ -300,11 +303,11 @@ end
 protected lemma add_le_add {a b c d : ℤ} (h₁ : a ≤ b) (h₂ : c ≤ d) : a + c ≤ b + d :=
 le_trans (int.add_le_add_right h₁ c) (int.add_le_add_left h₂ b)
 
-protected lemma le_add_of_nonneg_right {a b : ℤ} (h : b ≥ 0) : a ≤ a + b :=
+protected lemma le_add_of_nonneg_right {a b : ℤ} (h : 0 ≤ b) : a ≤ a + b :=
 have a + b ≥ a + 0, from int.add_le_add_left h a,
 by rwa int.add_zero at this
 
-protected lemma le_add_of_nonneg_left {a b : ℤ} (h : b ≥ 0) : a ≤ b + a :=
+protected lemma le_add_of_nonneg_left {a b : ℤ} (h : 0 ≤ b) : a ≤ b + a :=
 have 0 + a ≤ b + a, from int.add_le_add_right h a,
 by rwa int.zero_add at this
 
@@ -317,11 +320,11 @@ lt_of_le_of_lt (int.add_le_add_right h₁ c) (int.add_lt_add_left h₂ b)
 protected lemma add_lt_add_of_lt_of_le {a b c d : ℤ} (h₁ : a < b) (h₂ : c ≤ d) : a + c < b + d :=
 lt_of_lt_of_le (int.add_lt_add_right h₁ c) (int.add_le_add_left h₂ b)
 
-protected lemma lt_add_of_pos_right (a : ℤ) {b : ℤ} (h : b > 0) : a < a + b :=
+protected lemma lt_add_of_pos_right (a : ℤ) {b : ℤ} (h : 0 < b) : a < a + b :=
 have a + 0 < a + b, from int.add_lt_add_left h a,
 by rwa [int.add_zero] at this
 
-protected lemma lt_add_of_pos_left (a : ℤ) {b : ℤ} (h : b > 0) : a < b + a :=
+protected lemma lt_add_of_pos_left (a : ℤ) {b : ℤ} (h : 0 < b) : a < b + a :=
 have 0 + a < b + a, from int.add_lt_add_right h a,
 by rwa [int.zero_add] at this
 
@@ -744,13 +747,13 @@ int.add_lt_add_of_le_of_lt hab (int.neg_lt_neg hcd)
 protected lemma sub_lt_sub_of_lt_of_le {a b c d : ℤ} (hab : a < b) (hcd : c ≤ d) : a - d < b - c :=
 int.add_lt_add_of_lt_of_le hab (int.neg_le_neg hcd)
 
-protected lemma sub_le_self (a : ℤ) {b : ℤ} (h : b ≥ 0) : a - b ≤ a :=
+protected lemma sub_le_self (a : ℤ) {b : ℤ} (h : 0 ≤ b) : a - b ≤ a :=
 calc
   a - b = a + -b : rfl
     ... ≤ a + 0  : int.add_le_add_left (int.neg_nonpos_of_nonneg h) _
     ... = a      : by rw int.add_zero
 
-protected lemma sub_lt_self (a : ℤ) {b : ℤ} (h : b > 0) : a - b < a :=
+protected lemma sub_lt_self (a : ℤ) {b : ℤ} (h : 0 < b) : a - b < a :=
 calc
   a - b = a + -b : rfl
     ... < a + 0  : int.add_lt_add_left (int.neg_neg_of_pos h) _
@@ -800,7 +803,8 @@ protected lemma mul_le_mul_of_nonneg_right {a b c : ℤ} (h₁ : a ≤ b) (h₂ 
 begin
   by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
   by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 h₂, int.mul_zero] },
-  exact (le_not_le_of_lt (int.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
+  exact (le_not_le_of_lt
+    (int.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le h₂ hc0))).left,
 end
 
 -- TODO: there are four variations, depending on which variables we assume to be nonneg
@@ -810,30 +814,31 @@ calc
   a * b ≤ c * b : int.mul_le_mul_of_nonneg_right hac nn_b
     ... ≤ c * d : int.mul_le_mul_of_nonneg_left hbd nn_c
 
-protected lemma mul_nonpos_of_nonneg_of_nonpos {a b : ℤ} (ha : a ≥ 0) (hb : b ≤ 0) : a * b ≤ 0 :=
+protected lemma mul_nonpos_of_nonneg_of_nonpos {a b : ℤ} (ha : 0 ≤ a) (hb : b ≤ 0) : a * b ≤ 0 :=
 have h : a * b ≤ a * 0, from int.mul_le_mul_of_nonneg_left hb ha,
 by rwa int.mul_zero at h
 
-protected lemma mul_nonpos_of_nonpos_of_nonneg {a b : ℤ} (ha : a ≤ 0) (hb : b ≥ 0) : a * b ≤ 0 :=
+protected lemma mul_nonpos_of_nonpos_of_nonneg {a b : ℤ} (ha : a ≤ 0) (hb : 0 ≤ b) : a * b ≤ 0 :=
 have h : a * b ≤ 0 * b, from int.mul_le_mul_of_nonneg_right ha hb,
 by rwa int.zero_mul at h
 
-protected lemma mul_lt_mul {a b c d : ℤ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) (nn_c : 0 ≤ c) :  a * b < c * d :=
+protected lemma mul_lt_mul {a b c d : ℤ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b)
+  (nn_c : 0 ≤ c) : a * b < c * d :=
 calc
   a * b < c * b : int.mul_lt_mul_of_pos_right hac pos_b
     ... ≤ c * d : int.mul_le_mul_of_nonneg_left hbd nn_c
 
-protected lemma mul_lt_mul' {a b c d : ℤ} (h1 : a ≤ c) (h2 : b < d) (h3 : b ≥ 0) (h4 : c > 0) :
+protected lemma mul_lt_mul' {a b c d : ℤ} (h1 : a ≤ c) (h2 : b < d) (h3 : 0 ≤ b) (h4 : 0 < c) :
        a * b < c * d :=
 calc
    a * b ≤ c * b : int.mul_le_mul_of_nonneg_right h1 h3
      ... < c * d : int.mul_lt_mul_of_pos_left h2 h4
 
-protected lemma mul_neg_of_pos_of_neg {a b : ℤ} (ha : a > 0) (hb : b < 0) : a * b < 0 :=
+protected lemma mul_neg_of_pos_of_neg {a b : ℤ} (ha : 0 < a) (hb : b < 0) : a * b < 0 :=
 have h : a * b < a * 0, from int.mul_lt_mul_of_pos_left hb ha,
 by rwa int.mul_zero at h
 
-protected lemma mul_neg_of_neg_of_pos {a b : ℤ} (ha : a < 0) (hb : b > 0) : a * b < 0 :=
+protected lemma mul_neg_of_neg_of_pos {a b : ℤ} (ha : a < 0) (hb : 0 < b) : a * b < 0 :=
 have h : a * b < 0 * b, from int.mul_lt_mul_of_pos_right ha hb,
 by rwa int.zero_mul at  h
 
@@ -873,14 +878,14 @@ int.mul_lt_mul' (le_of_lt h2) h2 h1 (lt_of_le_of_lt h1 h2)
 
 theorem of_nat_nonneg (n : ℕ) : 0 ≤ of_nat n := trivial
 
-theorem coe_succ_pos (n : nat) : (nat.succ n : ℤ) > 0 :=
+theorem coe_succ_pos (n : nat) : 0 < (nat.succ n : ℤ) :=
 coe_nat_lt_coe_nat_of_lt (nat.succ_pos _)
 
 theorem exists_eq_neg_of_nat {a : ℤ} (H : a ≤ 0) : ∃n : ℕ, a = -n :=
 let ⟨n, h⟩ := eq_coe_of_zero_le (int.neg_nonneg_of_nonpos H) in
 ⟨n, int.eq_neg_of_eq_neg h.symm⟩
 
-theorem nat_abs_of_nonneg {a : ℤ} (H : a ≥ 0) : (nat_abs a : ℤ) = a :=
+theorem nat_abs_of_nonneg {a : ℤ} (H : 0 ≤ a) : (nat_abs a : ℤ) = a :=
 match a, eq_coe_of_zero_le H with ._, ⟨n, rfl⟩ := rfl end
 
 theorem of_nat_nat_abs_of_nonpos {a : ℤ} (H : a ≤ 0) : (nat_abs a : ℤ) = -a :=
@@ -896,10 +901,10 @@ int.add_le_add_right H 1
 theorem le_of_lt_add_one {a b : ℤ} (H : a < b + 1) : a ≤ b :=
 int.le_of_add_le_add_right H
 
-theorem sub_one_le_of_lt {a b : ℤ} (H : a ≤ b) : a - 1 < b :=
+theorem sub_one_lt_of_le {a b : ℤ} (H : a ≤ b) : a - 1 < b :=
 int.sub_right_lt_of_lt_add $ lt_add_one_of_le H
 
-theorem lt_of_sub_one_le {a b : ℤ} (H : a - 1 < b) : a ≤ b :=
+theorem le_of_sub_one_lt {a b : ℤ} (H : a - 1 < b) : a ≤ b :=
 le_of_lt_add_one $ int.lt_add_of_sub_right_lt H
 
 theorem le_sub_one_of_lt {a b : ℤ} (H : a < b) : a ≤ b - 1 :=
@@ -938,9 +943,9 @@ theorem sign_eq_zero_iff_zero (a : ℤ) : sign a = 0 ↔ a = 0 :=
 
 protected lemma eq_zero_or_eq_zero_of_mul_eq_zero
         {a b : ℤ} (h : a * b = 0) : a = 0 ∨ b = 0 :=
-match decidable.lt_trichotomy 0 a with
+match lt_trichotomy 0 a with
 | or.inl hlt₁          :=
-  match decidable.lt_trichotomy 0 b with
+  match lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 < a * b, from int.mul_pos hlt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _) end
@@ -951,7 +956,7 @@ match decidable.lt_trichotomy 0 a with
   end
 | or.inr (or.inl heq₁) := or.inl heq₁.symm
 | or.inr (or.inr hgt₁) :=
-  match decidable.lt_trichotomy 0 b with
+  match lt_trichotomy 0 b with
   | or.inl hlt₂          :=
     have 0 > a * b, from int.mul_neg_of_neg_of_pos hgt₁ hlt₂,
     begin rw h at this, exact absurd this (lt_irrefl _)  end

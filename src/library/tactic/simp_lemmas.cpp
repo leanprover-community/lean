@@ -770,7 +770,14 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
         expr rel, lhs, rhs;
         if (is_simp_relation(env, rule, rel, lhs, rhs) && is_constant(rel)) {
             if (symm) {
-              proof = mk_symm(ctx, const_name(rel), proof);
+              name rel_name = const_name(rel);
+              if (rel_name != get_eq_name() && rel_name != get_heq_name() && rel_name != get_iff_name()) {
+                // ← is not supported for custom simp relations,
+                // because in that case mk_symm segfaults
+                // when proof contains a metavariable
+                throw exception(sstream() << "simp ← not supported for custom simp relation '" << rel_name << "'");
+              }
+              proof = mk_symm(ctx, rel_name, proof);
               std::swap(lhs, rhs);
             }
             if (is_refl_app(proof)) {

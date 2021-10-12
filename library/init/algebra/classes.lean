@@ -7,13 +7,27 @@ prelude
 import init.logic init.data.ordering.basic
 universes u v
 
+/-!
+# Unbundled algebra classes
+
+These classes and the `@[algebra]` attribute are part of an incomplete refactor described
+[here on the github Wiki](https://github.com/leanprover/lean/wiki/Refactoring-structures#encoding-the-algebraic-hierarchy-1).
+
+By themselves, these classes are not good replacements for the `monoid` / `group` etc structures
+provided by mathlib, as they are not discoverable by `simp` unlike the current lemmas due to there
+being little to index on. The Wiki page linked above describes an algebraic normalizer, but it is not
+implemented.
+-/
+
 @[algebra] class is_symm_op (α : Type u) (β : out_param (Type v)) (op : α → α → β) : Prop :=
 (symm_op : ∀ a b, op a b = op b a)
 
 @[algebra] class is_commutative (α : Type u) (op : α → α → α) : Prop :=
 (comm : ∀ a b, op a b = op b a)
 
-instance is_symm_op_of_is_commutative (α : Type u) (op : α → α → α) [is_commutative α op] : is_symm_op α α op :=
+@[priority 100]
+instance is_symm_op_of_is_commutative (α : Type u) (op : α → α → α) [is_commutative α op] :
+  is_symm_op α α op :=
 {symm_op := is_commutative.comm}
 
 @[algebra] class is_associative (α : Type u) (op : α → α → α) : Prop :=
@@ -85,7 +99,8 @@ holds). -/
 (symm : ∀ a b, r a b → r b a)
 
 /-- The opposite of a symmetric relation is symmetric. -/
-instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm α r] : is_symm_op α Prop r :=
+@[priority 100] instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm α r] :
+  is_symm_op α Prop r :=
 {symm_op := λ a b, propext $ iff.intro (is_symm.symm a b) (is_symm.symm b a)}
 
 /-- `is_asymm X r` means that the binary relation `r` on `X` is asymmetric, that is,
@@ -108,30 +123,38 @@ instance is_symm_op_of_is_symm (α : Type u) (r : α → α → Prop) [is_symm �
 
 /-- `is_preorder X r` means that the binary relation `r` on `X` is a pre-order, that is, reflexive
 and transitive. -/
-@[algebra] class is_preorder (α : Type u) (r : α → α → Prop) extends is_refl α r, is_trans α r : Prop.
+@[algebra] class is_preorder (α : Type u) (r : α → α → Prop) extends
+  is_refl α r, is_trans α r : Prop.
 
 /-- `is_total_preorder X r` means that the binary relation `r` on `X` is total and a preorder. -/
-@[algebra] class is_total_preorder (α : Type u) (r : α → α → Prop) extends is_trans α r, is_total α r : Prop.
+@[algebra] class is_total_preorder (α : Type u) (r : α → α → Prop) extends
+  is_trans α r, is_total α r : Prop.
 
 /-- Every total pre-order is a pre-order. -/
-instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s : is_total_preorder α r] : is_preorder α r :=
+instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s : is_total_preorder α r] :
+  is_preorder α r :=
 {trans := s.trans,
  refl  := λ a, or.elim (@is_total.total _ r _ a a) id id}
 
-@[algebra] class is_partial_order (α : Type u) (r : α → α → Prop) extends is_preorder α r, is_antisymm α r : Prop.
+@[algebra] class is_partial_order (α : Type u) (r : α → α → Prop) extends
+  is_preorder α r, is_antisymm α r : Prop.
 
-@[algebra] class is_linear_order (α : Type u) (r : α → α → Prop) extends is_partial_order α r, is_total α r : Prop.
+@[algebra] class is_linear_order (α : Type u) (r : α → α → Prop) extends
+  is_partial_order α r, is_total α r : Prop.
 
-@[algebra] class is_equiv (α : Type u) (r : α → α → Prop) extends is_preorder α r, is_symm α r : Prop.
+@[algebra] class is_equiv (α : Type u) (r : α → α → Prop) extends
+  is_preorder α r, is_symm α r : Prop.
 
 @[algebra] class is_per (α : Type u) (r : α → α → Prop) extends is_symm α r, is_trans α r : Prop.
 
-@[algebra] class is_strict_order (α : Type u) (r : α → α → Prop) extends is_irrefl α r, is_trans α r : Prop.
+@[algebra] class is_strict_order (α : Type u) (r : α → α → Prop) extends
+  is_irrefl α r, is_trans α r : Prop.
 
 @[algebra] class is_incomp_trans (α : Type u) (lt : α → α → Prop) : Prop :=
 (incomp_trans : ∀ a b c, (¬ lt a b ∧ ¬ lt b a) → (¬ lt b c ∧ ¬ lt c b) → (¬ lt a c ∧ ¬ lt c a))
 
-@[algebra] class is_strict_weak_order (α : Type u) (lt : α → α → Prop) extends is_strict_order α lt, is_incomp_trans α lt : Prop.
+@[algebra] class is_strict_weak_order (α : Type u) (lt : α → α → Prop) extends
+  is_strict_order α lt, is_incomp_trans α lt : Prop.
 
 @[algebra] class is_trichotomous (α : Type u) (lt : α → α → Prop) : Prop :=
 (trichotomous : ∀ a b, lt a b ∨ a = b ∨ lt b a)
@@ -170,6 +193,7 @@ is_trichotomous.trichotomous
 lemma incomp_trans [is_incomp_trans α r] {a b c : α} : (¬ a ≺ b ∧ ¬ b ≺ a) → (¬ b ≺ c ∧ ¬ c ≺ b) → (¬ a ≺ c ∧ ¬ c ≺ a) :=
 is_incomp_trans.incomp_trans _ _ _
 
+@[priority 90]
 instance is_asymm_of_is_trans_of_is_irrefl [is_trans α r] [is_irrefl α r] : is_asymm α r :=
 ⟨λ a b h₁ h₂, absurd (trans h₁ h₂) (irrefl a)⟩
 

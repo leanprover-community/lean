@@ -4,32 +4,27 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
 -/
 prelude
-import init.wf init.data.nat.basic
+import init.data.nat.basic
 namespace nat
 
-private def div_rec_lemma {x y : nat} : 0 < y ∧ y ≤ x → x - y < x :=
-λ h, and.rec (λ ypos ylex, sub_lt (nat.lt_of_lt_of_le ypos ylex) ypos) h
+protected def div_core (y : ℕ) : ℕ → ℕ → ℕ
+| 0 _ := 0
+| (fuel+1) x := if h : 0 < y ∧ y ≤ x then div_core fuel (x - y) + 1 else 0
 
-private def div.F (x : nat) (f : Π x₁, x₁ < x → nat → nat) (y : nat) : nat :=
-if h : 0 < y ∧ y ≤ x then f (x - y) (div_rec_lemma h) y + 1 else zero
-
-protected def div := well_founded.fix lt_wf div.F
+protected def div (x y : ℕ) : ℕ :=
+nat.div_core y x x
 
 instance : has_div nat :=
 ⟨nat.div⟩
 
-lemma div_def_aux (x y : nat) : x / y = if h : 0 < y ∧ y ≤ x then (x - y) / y + 1 else 0 :=
-congr_fun (well_founded.fix_eq lt_wf div.F x) y
+protected def mod_core (y : ℕ) : ℕ → ℕ → ℕ
+| 0 x := x
+| (fuel+1) x := if h : 0 < y ∧ y ≤ x then mod_core fuel (x - y) else x
 
-private def mod.F (x : nat) (f : Π x₁, x₁ < x → nat → nat) (y : nat) : nat :=
-if h : 0 < y ∧ y ≤ x then f (x - y) (div_rec_lemma h) y else x
-
-protected def mod := well_founded.fix lt_wf mod.F
+protected def mod (x y : ℕ) : ℕ :=
+nat.mod_core y x x
 
 instance : has_mod nat :=
 ⟨nat.mod⟩
-
-lemma mod_def_aux (x y : nat) : x % y = if h : 0 < y ∧ y ≤ x then (x - y) % y else x :=
-congr_fun (well_founded.fix_eq lt_wf mod.F x) y
 
 end nat

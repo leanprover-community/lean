@@ -210,6 +210,7 @@ static void display_help(std::ostream & out) {
     std::cout << "  --server           start lean in server mode\n";
     std::cout << "  --server=file      start lean in server mode, redirecting standard input from the specified file (for debugging)\n";
     // std::cout << "  --no-widgets       turn off reporting on widgets\n";
+    std::cout << "  --ast              export a .ast.json file for every .lean file\n";
 #endif
     std::cout << "  --profile          display elaboration/type checking time for each definition/theorem\n";
     DEBUG_CODE(
@@ -247,6 +248,7 @@ static struct option g_long_options[] = {
     {"path",         no_argument,       0, 'p'},
     {"server",       optional_argument, 0, 'S'},
     {"no-widgets",   no_argument,       0, 'W'},
+    {"ast",          no_argument,       0, 'X'},
 #endif
 #if defined(LEAN_MULTI_THREAD)
     {"tstack",       required_argument, 0, 's'},
@@ -431,6 +433,7 @@ int main(int argc, char ** argv) {
     ::initializer init;
     bool make_mode          = false;
     bool export_tlean       = false;
+    bool export_ast         = false;
     bool use_old_oleans     = false;
     bool report_widgets     = true;
     bool recursive          = false;
@@ -541,6 +544,9 @@ int main(int argc, char ** argv) {
             std::cout << std::setw(2) << out << std::endl;
             return 0;
         }
+        case 'X':
+            export_ast = true;
+            break;
 #endif
         case 'P':
             opts = opts.update("profiler", true);
@@ -634,6 +640,8 @@ int main(int argc, char ** argv) {
         fs_module_vfs vfs;
         module_mgr mod_mgr(&vfs, lt.get_root(), path.get_path(), env, ios);
         mod_mgr.set_use_old_oleans(use_old_oleans);
+        mod_mgr.set_export_ast(export_ast);
+        mod_mgr.set_export_tlean(export_tlean);
         set_global_module_mgr(mod_mgr);
 
         if (run_arg) {
@@ -752,19 +760,6 @@ int main(int argc, char ** argv) {
         //     // this code is now broken
         //     env = lean::set_native_module_path(env, lean::name(native_output));
         // }
-
-        if (export_tlean) {
-            for (auto & mod : mods) {
-                auto res = get(mod.m_mod_info->m_result);
-                auto tlean_fn = tlean_of_lean(mod.m_id);
-                std::cerr << "exporting " << tlean_fn << std::endl;
-                exclusive_file_lock output_lock(tlean_fn);
-                std::ofstream out(tlean_fn);
-                write_module_tlean(*res.m_loaded_module, out);
-                out.close();
-                if (!out) throw exception(sstream() << "failed to write tlean file: " << tlean_fn);
-            }
-        }
 
         if (export_txt && !mods.empty()) {
             buffer<std::shared_ptr<module_info const>> mod_infos;

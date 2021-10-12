@@ -6,6 +6,7 @@ Author: Leonardo de Moura
 */
 #pragma once
 #include "library/util.h"
+#include "library/abstract_parser.h"
 
 namespace lean {
 class parser;
@@ -28,5 +29,5 @@ environment add_alias(parser & p, environment env, name const & id, name const &
 environment add_alias(parser & p, environment env, bool composite,
                       name const & full_id, levels const & ctx_levels, buffer<expr> const & ctx_params);
 
-implicit_infer_kind parse_implicit_infer_modifier(parser & p);
+pair<ast_id, implicit_infer_kind> parse_implicit_infer_modifier(parser & p);
 }

@@ -12,7 +12,7 @@ universes u v
 /- the axiom -/
 axiom choice {α : Sort u} : nonempty α → α
 
-noncomputable theorem indefinite_description {α : Sort u} (p : α → Prop)
+@[irreducible] noncomputable def indefinite_description {α : Sort u} (p : α → Prop)
   (h : ∃ x, p x) : {x // p x} :=
 choice $ let ⟨x, px⟩ := h in ⟨⟨x, px⟩⟩
 
@@ -102,7 +102,7 @@ match (prop_decidable (nonempty α)) with
 | (is_false hn) := psum.inr (λ a, absurd (nonempty.intro a) hn)
 end
 
-noncomputable theorem strong_indefinite_description {α : Sort u} (p : α → Prop)
+@[irreducible] noncomputable def strong_indefinite_description {α : Sort u} (p : α → Prop)
   (h : nonempty α) : {x : α // (∃ y : α, p y) → p x} :=
 if hp : ∃ x : α, p x then
   let xp := indefinite_description _ hp in
@@ -114,7 +114,7 @@ else ⟨choice h, λ h, absurd h hp⟩
 noncomputable def epsilon {α : Sort u} [h : nonempty α] (p : α → Prop) : α :=
 (strong_indefinite_description p h).val
 
-theorem epsilon_spec_aux {α : Sort u} (h : nonempty α) (p : α → Prop) 
+theorem epsilon_spec_aux {α : Sort u} (h : nonempty α) (p : α → Prop)
   : (∃ y, p y) → p (@epsilon α h p) :=
 (strong_indefinite_description p h).property
 
@@ -140,8 +140,6 @@ or.elim (em a)
   (λ t, or.inl (eq_true_intro t))
   (λ f, or.inr (eq_false_intro f))
 
-def eq_true_or_eq_false := prop_complete
-
 section aux
 attribute [elab_as_eliminator]
 theorem cases_true_false (p : Prop → Prop) (h1 : p true) (h2 : p false) (a : Prop) : p a :=
@@ -153,7 +151,7 @@ theorem cases_on (a : Prop) {p : Prop → Prop} (h1 : p true) (h2 : p false) : p
 cases_true_false p h1 h2 a
 
 -- this supercedes by_cases in decidable
-def by_cases {p q : Prop} (hpq : p → q) (hnpq : ¬p → q) : q :=
+lemma by_cases {p q : Prop} (hpq : p → q) (hnpq : ¬p → q) : q :=
 decidable.by_cases hpq hnpq
 
 -- this supercedes by_contradiction in decidable

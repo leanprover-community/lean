@@ -336,7 +336,7 @@ struct cases_tactic_fn {
         local_context lctx   = g.get_context();
         /* Normalize next equation lhs and rhs if needed */
         expr target          = g.get_type();
-        lean_assert(is_pi(target) && is_arrow(target));
+        lean_always_assert(is_pi(target) && is_arrow(target));
         if (is_eq(binding_domain(target), lhs, rhs)) {
             type_context_old ctx     = mk_type_context_for(mvar);
             expr lhs_n = whnf_gintro_rule(ctx, lhs);
@@ -526,7 +526,20 @@ struct cases_tactic_fn {
                         m_mctx.assign(*mvar1, val);
                         unsigned A_nparams = *inductive::get_num_params(m_env, const_name(A_fn));
                         lean_assert(get_app_num_args(lhs) >= A_nparams);
-                        return unify_eqs(input_H, mvar2, num_eqs - 1 + get_app_num_args(lhs) - A_nparams,
+
+                        // Count number of prop arguments, because they are skipped by no_confusion
+                        unsigned prop_args = 0;
+                        {
+                            type_context_old::tmp_locals lcs(ctx);
+                            expr ty = ctx.whnf(ctx.infer(mk_constant(*c1, const_levels(A_fn))));
+                            for (unsigned i = 0; is_binding(ty); i++) {
+                                expr x = lcs.push_local_from_binding(ty);
+                                if (i >= A_nparams && ctx.is_proof(x)) prop_args++;
+                                ty = ctx.whnf(instantiate(binding_body(ty), x));
+                            }
+                        }
+
+                        return unify_eqs(input_H, mvar2, num_eqs - 1 + get_app_num_args(lhs) - A_nparams - prop_args,
                                          updating, new_intros, subst);
                     } else {
                         lean_assert(*c1 != *c2);

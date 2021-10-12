@@ -74,7 +74,7 @@ lt_irrefl
 lemma ne_of_lt {a b : α} (h : a < b) : a ≠ b :=
 λ he, absurd h (he ▸ lt_irrefl a)
 
-lemma ne_of_gt {a b : α} (h : a > b) : a ≠ b :=
+lemma ne_of_gt {a b : α} (h : b < a) : a ≠ b :=
 λ he, absurd h (he ▸ lt_irrefl a)
 
 lemma lt_asymm {a b : α} (h : a < b) : ¬ b < a :=
@@ -143,14 +143,6 @@ partial_order.le_antisymm
 lemma le_antisymm_iff {a b : α} : a = b ↔ a ≤ b ∧ b ≤ a :=
 ⟨λe, ⟨le_of_eq e, le_of_eq e.symm⟩, λ⟨h1, h2⟩, le_antisymm h1 h2⟩
 
-lemma lt_or_eq_of_le : ∀ {a b : α}, a ≤ b → a < b ∨ a = b
-| a b hab := classical.by_cases
-  (λ hba : b ≤ a, or.inr (le_antisymm hab hba))
-  (λ hba, or.inl (lt_of_le_not_le hab hba))
-
-lemma le_iff_lt_or_eq : ∀ {a b : α}, a ≤ b ↔ a < b ∨ a = b
-| a b := ⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
-
 lemma lt_of_le_of_ne {a b : α} : a ≤ b → a ≠ b → a < b :=
 λ h₁ h₂, lt_of_le_not_le h₁ $ mt (le_antisymm h₁) h₂
 
@@ -165,6 +157,28 @@ instance decidable_eq_of_decidable_le [decidable_rel ((≤) : α → α → Prop
   else
     is_false (λ heq, hab (heq ▸ le_refl _))
 
+namespace decidable
+
+variables [@decidable_rel α (≤)]
+
+lemma lt_or_eq_of_le {a b : α} (hab : a ≤ b) : a < b ∨ a = b :=
+if hba : b ≤ a then or.inr (le_antisymm hab hba)
+else or.inl (lt_of_le_not_le hab hba)
+
+lemma eq_or_lt_of_le {a b : α} (hab : a ≤ b) : a = b ∨ a < b :=
+(lt_or_eq_of_le hab).swap
+
+lemma le_iff_lt_or_eq {a b : α} : a ≤ b ↔ a < b ∨ a = b :=
+⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
+
+end decidable
+
+local attribute [instance] classical.prop_decidable
+
+lemma lt_or_eq_of_le {a b : α} : a ≤ b → a < b ∨ a = b := decidable.lt_or_eq_of_le
+
+lemma le_iff_lt_or_eq {a b : α} : a ≤ b ↔ a < b ∨ a = b := decidable.le_iff_lt_or_eq
+
 end partial_order
 
 section linear_order
@@ -172,6 +186,14 @@ section linear_order
 /-!
 ### Definition of `linear_order` and lemmas about types with a linear order
 -/
+
+/-- Default definition of `max`. -/
+def max_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
+if b ≤ a then a else b
+
+/-- Default definition of `min`. -/
+def min_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
+if a ≤ b then a else b
 
 /-- A linear order is reflexive, transitive, antisymmetric and total relation `≤`.
 We assume that every linear ordered type has decidable `(≤)`, `(<)`, and `(=)`. -/
@@ -181,8 +203,14 @@ class linear_order (α : Type u) extends partial_order α :=
 (decidable_eq : decidable_eq α := @decidable_eq_of_decidable_le _ _ decidable_le)
 (decidable_lt : decidable_rel ((<) : α → α → Prop) :=
     @decidable_lt_of_decidable_le _ _ decidable_le)
+(max : α → α → α := @max_default α _ _)
+(max_def : max = @max_default α _ decidable_le . tactic.interactive.reflexivity)
+(min : α → α → α := @min_default α _ _)
+(min_def : min = @min_default α _ decidable_le . tactic.interactive.reflexivity)
 
 variables [linear_order α]
+
+local attribute [instance] linear_order.decidable_le
 
 lemma le_total : ∀ a b : α, a ≤ b ∨ b ≤ a :=
 linear_order.le_total
@@ -198,32 +226,33 @@ lt_asymm h
 
 lemma lt_trichotomy (a b : α) : a < b ∨ a = b ∨ b < a :=
 or.elim (le_total a b)
-  (λ h : a ≤ b, or.elim (lt_or_eq_of_le h)
+  (λ h : a ≤ b, or.elim (decidable.lt_or_eq_of_le h)
     (λ h : a < b, or.inl h)
     (λ h : a = b, or.inr (or.inl h)))
-  (λ h : b ≤ a, or.elim (lt_or_eq_of_le h)
+  (λ h : b ≤ a, or.elim (decidable.lt_or_eq_of_le h)
     (λ h : b < a, or.inr (or.inr h))
     (λ h : b = a, or.inr (or.inl h.symm)))
 
-lemma le_of_not_gt {a b : α} (h : ¬ a > b) : a ≤ b :=
+lemma le_of_not_lt {a b : α} (h : ¬ b < a) : a ≤ b :=
 match lt_trichotomy a b with
 | or.inl hlt          := le_of_lt hlt
 | or.inr (or.inl heq) := heq ▸ le_refl a
 | or.inr (or.inr hgt) := absurd hgt h
 end
 
+lemma le_of_not_gt {a b : α} : ¬ a > b → a ≤ b := le_of_not_lt
+
 lemma lt_of_not_ge {a b : α} (h : ¬ a ≥ b) : a < b :=
 lt_of_le_not_le ((le_total _ _).resolve_right h) h
 
-lemma lt_or_ge (a b : α) : a < b ∨ a ≥ b :=
-match lt_trichotomy a b with
-| or.inl hlt          := or.inl hlt
-| or.inr (or.inl heq) := or.inr (heq ▸ le_refl a)
-| or.inr (or.inr hgt) := or.inr (le_of_lt hgt)
-end
+lemma lt_or_le (a b : α) : a < b ∨ b ≤ a :=
+if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
 
-lemma le_or_gt (a b : α) : a ≤ b ∨ a > b :=
-or.swap (lt_or_ge b a)
+lemma le_or_lt (a b : α) : a ≤ b ∨ b < a :=
+(lt_or_le b a).swap
+
+lemma lt_or_ge : ∀ (a b : α), a < b ∨ a ≥ b := lt_or_le
+lemma le_or_gt : ∀ (a b : α), a ≤ b ∨ a > b := le_or_lt
 
 lemma lt_or_gt_of_ne {a b : α} (h : a ≠ b) : a < b ∨ a > b :=
 match lt_trichotomy a b with
@@ -266,51 +295,15 @@ is_strict_weak_order_of_is_total_preorder lt_iff_not_ge
 instance is_strict_total_order_of_linear_order : is_strict_total_order α (<) :=
 { trichotomous := lt_trichotomy }
 
-end linear_order
-
-
-namespace decidable
-
-lemma lt_or_eq_of_le [partial_order α] [@decidable_rel α (≤)] {a b : α} (hab : a ≤ b) : a < b ∨ a = b :=
-if hba : b ≤ a then or.inr (le_antisymm hab hba)
-else or.inl (lt_of_le_not_le hab hba)
-
-lemma eq_or_lt_of_le [partial_order α] [@decidable_rel α (≤)] {a b : α} (hab : a ≤ b) : a = b ∨ a < b :=
-(lt_or_eq_of_le hab).swap
-
-lemma le_iff_lt_or_eq [partial_order α] [@decidable_rel α (≤)] {a b : α} : a ≤ b ↔ a < b ∨ a = b :=
-⟨lt_or_eq_of_le, le_of_lt_or_eq⟩
-
-lemma le_of_not_lt [linear_order α] {a b : α} (h : ¬ b < a) : a ≤ b :=
-decidable.by_contradiction $ λ h', h $ lt_of_le_not_le ((le_total _ _).resolve_right h') h'
-
-lemma not_lt [linear_order α] {a b : α} : ¬ a < b ↔ b ≤ a :=
-⟨le_of_not_lt, not_lt_of_ge⟩
-
-lemma lt_or_le [linear_order α] (a b : α) : a < b ∨ b ≤ a :=
-if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
-
-lemma le_or_lt [linear_order α] (a b : α) : a ≤ b ∨ b < a :=
-(lt_or_le b a).swap
-
-lemma lt_trichotomy [linear_order α] (a b : α) : a < b ∨ a = b ∨ b < a :=
-(lt_or_le _ _).imp_right $ λ h, (eq_or_lt_of_le h).imp_left eq.symm
-
-lemma lt_or_gt_of_ne [linear_order α] {a b : α} (h : a ≠ b) : a < b ∨ b < a :=
-(lt_trichotomy a b).imp_right $ λ h', h'.resolve_left h
-
 /-- Perform a case-split on the ordering of `x` and `y` in a decidable linear order. -/
-def lt_by_cases [linear_order α] (x y : α) {P : Sort*}
+def lt_by_cases (x y : α) {P : Sort*}
   (h₁ : x < y → P) (h₂ : x = y → P) (h₃ : y < x → P) : P :=
 if h : x < y then h₁ h else
 if h' : y < x then h₃ h' else
 h₂ (le_antisymm (le_of_not_gt h') (le_of_not_gt h))
 
-lemma ne_iff_lt_or_gt [linear_order α] {a b : α} : a ≠ b ↔ a < b ∨ b < a :=
-⟨lt_or_gt_of_ne, λo, o.elim ne_of_lt ne_of_gt⟩
-
 lemma le_imp_le_of_lt_imp_lt {β} [preorder α] [linear_order β]
   {a b : α} {c d : β} (H : d < c → b < a) (h : a ≤ b) : c ≤ d :=
 le_of_not_lt $ λ h', not_le_of_gt (H h') h
 
-end decidable
+end linear_order

@@ -936,7 +936,7 @@ do t ← target,
     t ← target,
     when (not $ t.is_pi ∨ t.is_let) $
       fail "assume tactic failed, Pi/let expression expected",
-    ty ← i_to_expr ty,
+    ty ← i_to_expr ``(%%ty : Sort*),
     unify ty t.binding_domain,
     intro_core n >> skip
 
@@ -961,13 +961,13 @@ meta def «have» (h : parse ident?) (q₁ : parse (tk ":" *> texpr)?) (q₂ : p
 let h := h.get_or_else `this in
 match q₁, q₂ with
 | some e, some p := do
-  t ← i_to_expr e,
+  t ← i_to_expr ``(%%e : Sort*),
   v ← i_to_expr ``(%%p : %%t),
   tactic.assertv h t v
 | none, some p := do
   p ← i_to_expr p,
   tactic.note h none p
-| some e, none := i_to_expr e >>= tactic.assert h
+| some e, none := i_to_expr ``(%%e : Sort*) >>= tactic.assert h
 | none, none := do
   u ← mk_meta_univ,
   e ← mk_meta_var (sort u),
@@ -985,13 +985,13 @@ meta def «let» (h : parse ident?) (q₁ : parse (tk ":" *> texpr)?) (q₂ : pa
 let h := h.get_or_else `this in
 match q₁, q₂ with
 | some e, some p := do
-  t ← i_to_expr e,
+  t ← i_to_expr ``(%%e : Sort*),
   v ← i_to_expr ``(%%p : %%t),
   tactic.definev h t v
 | none, some p := do
   p ← i_to_expr p,
   tactic.pose h none p
-| some e, none := i_to_expr e >>= tactic.define h
+| some e, none := i_to_expr ``(%%e : Sort*) >>= tactic.define h
 | none, none := do
   u ← mk_meta_univ,
   e ← mk_meta_var (sort u),

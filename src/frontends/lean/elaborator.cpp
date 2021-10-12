@@ -3405,6 +3405,7 @@ expr elaborator::visit_pi(expr const & e) {
 expr elaborator::visit_let(expr const & e, optional<expr> const & expected_type) {
     expr ref = e;
     expr new_type  = visit(let_type(e), none_expr());
+    new_type = ensure_type(new_type, get_ref_for_child(let_type(e), ref));
     synthesize_no_tactics();
     expr new_value = visit(let_value(e), some_expr(new_type));
     expr ref_value = get_ref_for_child(let_value(e), ref);
@@ -4301,7 +4302,7 @@ static vm_obj environment_add_defn_eqns(vm_obj const &_env, vm_obj const &_opts,
             to_buffer_expr(cfield(o, 0), pat);
             p.m_val.push_back(std::pair<buffer<expr>, expr>(std::move(pat), mk_as_is(abstract(to_expr(cfield(o, 1)), sig))));
         }
-        return mk_vm_exceptional_success(to_obj(single_definition_cmd_core(p, kind, meta)));
+        return mk_vm_exceptional_success(to_obj(single_definition_cmd_core(p, kind, nullptr, meta)));
     } catch (throwable & ex) {
         return mk_vm_exceptional_exception(ex);
     }

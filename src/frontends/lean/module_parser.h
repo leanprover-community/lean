@@ -48,6 +48,7 @@ public:
 
     void use_separate_tasks(bool separate_tasks) { m_separate_tasks = separate_tasks; }
     void save_info(bool save) { m_save_info = save; }
+    parser & get_parser() { return m_parser; }
     void break_at_pos(pos_info const & pos, bool complete);
 
     pair<cancellation_token, task<module_parser_result>>

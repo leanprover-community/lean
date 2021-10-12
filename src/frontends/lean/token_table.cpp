@@ -15,6 +15,7 @@ static unsigned g_arrow_prec      = 25;
 static unsigned g_max_prec        = 1024;
 static unsigned g_Max_prec        = 1024*1024;
 static unsigned g_plus_prec       = 65;
+static unsigned g_dcolon_prec     = 67;
 unsigned get_max_prec() { return g_max_prec; }
 unsigned get_Max_prec() { return g_Max_prec; }
 unsigned get_arrow_prec() { return g_arrow_prec; }
@@ -94,7 +95,7 @@ void init_token_table(token_table & t) {
          {"//", 0}, {"|", 0}, {"with", 0}, {"without", 0}, {"..", 0}, {"...", 0}, {",", 0},
          {".", 0}, {":", 0}, {"!", 0}, {"calc", 0}, {":=", 0}, {"--", 0}, {"#", g_max_prec},
          {"/-", 0}, {"/--", 0}, {"/-!", 0}, {"/-\"", 0}, {"begin", g_max_prec}, {"using", 0},
-         {"@@", g_max_prec}, {"@", g_max_prec},
+         {"@@", g_max_prec}, {"@", g_max_prec}, {"::", g_dcolon_prec},
          {"sorry", g_max_prec}, {"+", g_plus_prec}, {"->", g_arrow_prec}, {"<-", 0},
          {"match", 0}, {"^.", g_max_prec+1},
          {"renaming", 0}, {"extends", 0}, {nullptr, 0}};

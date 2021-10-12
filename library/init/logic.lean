@@ -24,7 +24,7 @@ def implies (a b : Prop) := a → b
 @[trans] lemma implies.trans {p q r : Prop} (h₁ : implies p q) (h₂ : implies q r) : implies p r :=
 assume hp, h₂ (h₁ hp)
 
-def trivial : true := ⟨⟩
+lemma trivial : true := ⟨⟩
 
 /-- We can't have `a` and `¬a`, that would be absurd!-/
 @[inline] def absurd {a : Prop} {b : Sort v} (h₁ : a) (h₂ : ¬a) : b :=
@@ -98,7 +98,7 @@ lemma cast_eq {α : Sort u} (h : α = α) (a : α) : cast h a = a := rfl
 /- ne -/
 
 @[reducible] def ne {α : Sort u} (a b : α) := ¬(a = b)
-notation a ≠ b := ne a b
+infix ` ≠ `:50 := ne
 
 @[simp] lemma ne.def {α : Sort u} (a b : α) : a ≠ b = ¬ (a = b) := rfl
 
@@ -136,8 +136,8 @@ attribute [refl] heq.refl
 section
 variables {α β φ : Sort u} {a a' : α} {b b' : β} {c : φ}
 
-lemma heq.elim {α : Sort u} {a : α} {p : α → Sort v} {b : α} (h₁ : a == b)
-: p a → p b := eq.rec_on (eq_of_heq h₁)
+def heq.elim {α : Sort u} {a : α} {p : α → Sort v} {b : α} (h₁ : a == b) : p a → p b :=
+eq.rec_on (eq_of_heq h₁)
 
 lemma heq.subst {p : ∀ T : Sort u, T → Prop} : a == b → p α a → p β b :=
 heq.rec_on
@@ -157,7 +157,7 @@ heq.trans h₁ (heq_of_eq h₂)
 @[trans] lemma heq_of_eq_of_heq (h₁ : a = a') (h₂ : a' == b) : a == b :=
 heq.trans (heq_of_eq h₁) h₂
 
-def type_eq_of_heq (h : a == b) : α = β :=
+lemma type_eq_of_heq (h : a == b) : α = β :=
 heq.rec_on h (eq.refl α)
 end
 
@@ -183,8 +183,8 @@ lemma cast_heq : ∀ {α β : Sort u} (h : α = β) (a : α), cast h a == a
 
 /- and -/
 
-notation a /\ b := and a b
-notation a ∧ b  := and a b
+infixr ` /\ `:35 := and
+infixr ` ∧ `:35 := and
 
 variables {a b c d : Prop}
 
@@ -194,12 +194,12 @@ and.rec h₂ h₁
 lemma and.swap : a ∧ b → b ∧ a :=
 assume ⟨ha, hb⟩, ⟨hb, ha⟩
 
-def and.symm := @and.swap
+lemma and.symm : a ∧ b → b ∧ a := and.swap
 
 /- or -/
 
-notation a \/ b := or a b
-notation a ∨ b := or a b
+infixr ` \/ `:30 := or
+infixr ` ∨ `:30 := or
 
 namespace or
   lemma elim (h₁ : a ∨ b) (h₂ : a → c) (h₃ : b → c) : c :=
@@ -212,11 +212,9 @@ assume not_em : ¬(a ∨ ¬a),
     assume pos_a : a, absurd (or.inl pos_a) not_em,
   absurd (or.inr neg_a) not_em
 
-def not_not_em := non_contradictory_em
-
 lemma or.swap : a ∨ b → b ∨ a := or.rec or.inr or.inl
 
-def or.symm := @or.swap
+lemma or.symm : a ∨ b → b ∨ a := or.swap
 
 /- xor -/
 def xor (a b : Prop) := (a ∧ ¬ b) ∨ (b ∧ ¬ a)
@@ -227,8 +225,8 @@ that is, have the same truth value. -/
 structure iff (a b : Prop) : Prop :=
 intro :: (mp : a → b) (mpr : b → a)
 
-notation a <-> b := iff a b
-notation a ↔ b := iff a b
+infix ` <-> `:20 := iff
+infix ` ↔ `:20 := iff
 
 lemma iff.elim : ((a → b) → (b → a) → c) → (a ↔ b) → c := iff.rec
 
@@ -292,8 +290,6 @@ iff.intro
   (λ (hl : ¬¬¬a) (ha : a), hl (non_contradictory_intro ha))
   absurd
 
-def not_not_not_iff := not_non_contradictory_iff_absurd
-
 lemma imp_congr (h₁ : a ↔ c) (h₂ : b ↔ d) : (a → b) ↔ (c → d) :=
 iff.intro
   (λ hab hc, iff.mp h₂ (hab (iff.mpr h₁ hc)))
@@ -322,21 +318,19 @@ lemma not_of_not_not_not (h : ¬¬¬a) : ¬a :=
 @[simp] lemma not_true : (¬ true) ↔ false :=
 iff_false_intro (not_not_intro trivial)
 
-def not_true_iff := not_true
-
 @[simp] lemma not_false_iff : (¬ false) ↔ true :=
 iff_true_intro not_false
 
 @[congr] lemma not_congr (h : a ↔ b) : ¬a ↔ ¬b :=
 iff.intro (λ h₁ h₂, h₁ (iff.mpr h h₂)) (λ h₁ h₂, h₁ (iff.mp h h₂))
 
-@[simp] lemma ne_self_iff_false {α : Sort u} (a : α) : (not (a = a)) ↔ false :=
+lemma ne_self_iff_false {α : Sort u} (a : α) : (not (a = a)) ↔ false :=
 iff.intro false_of_ne false.elim
 
 @[simp] lemma eq_self_iff_true {α : Sort u} (a : α) : (a = a) ↔ true :=
 iff_true_intro rfl
 
-@[simp] lemma heq_self_iff_true {α : Sort u} (a : α) : (a == a) ↔ true :=
+lemma heq_self_iff_true {α : Sort u} (a : α) : (a == a) ↔ true :=
 iff_true_intro (heq.refl a)
 
 @[simp] lemma iff_not_self (a : Prop) : (a ↔ ¬a) ↔ false :=
@@ -349,10 +343,10 @@ iff_false_intro (λ h,
    have h' : ¬a, from (λ ha, (iff.mpr h ha) ha),
    h' (iff.mp h h'))
 
-@[simp] lemma true_iff_false : (true ↔ false) ↔ false :=
+lemma true_iff_false : (true ↔ false) ↔ false :=
 iff_false_intro (λ h, iff.mp h trivial)
 
-@[simp] lemma false_iff_true : (false ↔ true) ↔ false :=
+lemma false_iff_true : (false ↔ true) ↔ false :=
 iff_false_intro (λ h, iff.mpr h trivial)
 
 lemma false_of_true_iff_false : (true ↔ false) → false :=
@@ -371,7 +365,7 @@ lemma eq_comm {α : Sort u} {a b : α} : a = b ↔ b = a :=
 lemma and.imp (hac : a → c) (hbd : b → d) : a ∧ b → c ∧ d :=
 assume ⟨ha, hb⟩, ⟨hac ha, hbd hb⟩
 
-def and_implies := @and.imp
+lemma and_implies (hac : a → c) (hbd : b → d) : a ∧ b → c ∧ d := and.imp hac hbd
 
 @[congr] lemma and_congr (h₁ : a ↔ c) (h₂ : b ↔ d) : (a ∧ b) ↔ (c ∧ d) :=
 iff.intro (and.imp (iff.mp h₁) (iff.mp h₂)) (and.imp (iff.mpr h₁) (iff.mpr h₂))
@@ -479,16 +473,16 @@ lemma not_or {a b : Prop} : ¬ a → ¬ b → ¬ (a ∨ b)
 
 /- or resolution rulse -/
 
-def or.resolve_left {a b : Prop} (h : a ∨ b) (na : ¬ a) : b :=
+lemma or.resolve_left {a b : Prop} (h : a ∨ b) (na : ¬ a) : b :=
   or.elim h (λ ha, absurd ha na) id
 
-def or.neg_resolve_left {a b : Prop} (h : ¬ a ∨ b) (ha : a) : b :=
+lemma or.neg_resolve_left {a b : Prop} (h : ¬ a ∨ b) (ha : a) : b :=
   or.elim h (λ na, absurd ha na) id
 
-def or.resolve_right {a b : Prop} (h : a ∨ b) (nb : ¬ b) : a :=
+lemma or.resolve_right {a b : Prop} (h : a ∨ b) (nb : ¬ b) : a :=
   or.elim h id (λ hb, absurd hb nb)
 
-def or.neg_resolve_right {a b : Prop} (h : a ∨ ¬ b) (hb : b) : a :=
+lemma or.neg_resolve_right {a b : Prop} (h : a ∨ ¬ b) (hb : b) : a :=
   or.elim h id (λ nb, absurd hb nb)
 
 /- iff simp rules -/
@@ -517,10 +511,10 @@ iff_true_intro iff.rfl
 @[simp] lemma implies_true_iff (α : Sort u) : (α → true) ↔ true :=
 iff.intro (λ h, trivial) (λ ha h, trivial)
 
-@[simp] lemma false_implies_iff (a : Prop) : (false → a) ↔ true :=
+lemma false_implies_iff (a : Prop) : (false → a) ↔ true :=
 iff.intro (λ h, trivial) (λ ha h, false.elim h)
 
-@[simp] theorem true_implies_iff (α : Prop) : (true → α) ↔ α :=
+theorem true_implies_iff (α : Prop) : (true → α) ↔ α :=
 iff.intro (λ h, h trivial) (λ h h', h)
 
 /--
@@ -539,11 +533,11 @@ inductive Exists {α : Sort u} (p : α → Prop) : Prop
 
 attribute [intro] Exists.intro
 
-@[pattern]
-def exists.intro := @Exists.intro
-
 notation `exists` binders `, ` r:(scoped P, Exists P) := r
 notation `∃` binders `, ` r:(scoped P, Exists P) := r
+
+/- This is a `def`, so that it can be used as pattern in the equation compiler. -/
+@[pattern] def exists.intro {α : Sort u} {p : α → Prop} (w : α) (h : p w) : ∃ x, p x := ⟨w, h⟩
 
 lemma exists.elim {α : Sort u} {p : α → Prop} {b : Prop}
   (h₁ : ∃ x, p x) (h₂ : ∀ (a : α), p a → b) : b :=
@@ -799,9 +793,10 @@ instance : inhabited true := ⟨trivial⟩
 class inductive nonempty (α : Sort u) : Prop
 | intro (val : α) : nonempty
 
-protected def nonempty.elim {α : Sort u} {p : Prop} (h₁ : nonempty α) (h₂ : α → p) : p :=
+protected lemma nonempty.elim {α : Sort u} {p : Prop} (h₁ : nonempty α) (h₂ : α → p) : p :=
 nonempty.rec h₂ h₁
 
+@[priority 100]
 instance nonempty_of_inhabited {α : Sort u} [inhabited α] : nonempty α :=
 ⟨default α⟩
 
@@ -813,10 +808,11 @@ lemma nonempty_of_exists {α : Sort u} {p : α → Prop} : (∃ x, p x) → none
 class inductive subsingleton (α : Sort u) : Prop
 | intro (h : ∀ a b : α, a = b) : subsingleton
 
-protected def subsingleton.elim {α : Sort u} [h : subsingleton α] : ∀ (a b : α), a = b :=
+protected lemma subsingleton.elim {α : Sort u} [h : subsingleton α] : ∀ (a b : α), a = b :=
 subsingleton.rec (λ p, p) h
 
-protected def subsingleton.helim {α β : Sort u} [h : subsingleton α] (h : α = β) : ∀ (a : α) (b : β), a == b :=
+protected lemma subsingleton.helim {α β : Sort u} [h : subsingleton α] (h : α = β) :
+  ∀ (a : α) (b : β), a == b :=
 eq.rec_on h (λ a b : α, heq_of_eq (subsingleton.elim a b))
 
 instance subsingleton_prop (p : Prop) : subsingleton p :=
@@ -982,7 +978,7 @@ if c then true else false
 def as_false (c : Prop) [decidable c] : Prop :=
 if c then false else true
 
-def of_as_true {c : Prop} [h₁ : decidable c] (h₂ : as_true c) : c :=
+lemma of_as_true {c : Prop} [h₁ : decidable c] (h₂ : as_true c) : c :=
 match h₁, h₂ with
 | (is_true h_c),  h₂ := h_c
 | (is_false h_c), h₂ := false.elim h₂
@@ -1043,7 +1039,8 @@ def equivalence := reflexive r ∧ symmetric r ∧ transitive r
 
 def total := ∀ x y, x ≺ y ∨ y ≺ x
 
-def mk_equivalence (rfl : reflexive r) (symm : symmetric r) (trans : transitive r) : equivalence r :=
+lemma mk_equivalence (rfl : reflexive r) (symm : symmetric r) (trans : transitive r) :
+  equivalence r :=
 ⟨rfl, symm, trans⟩
 
 def irreflexive := ∀ x, ¬ x ≺ x

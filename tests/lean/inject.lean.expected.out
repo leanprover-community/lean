@@ -1,7 +1,8 @@
 lift.equations._eqn_1 : ∀ {m k : ℕ} (f : fi m → fi k) (v : fi (m + 0)), @lift m k f 0 v = f v
-lift.equations._eqn_2 : ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ), @lift m k f n.succ (@f0 (m + n)) = @f0 (k + n)
+lift.equations._eqn_2 :
+  ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ), @lift m k f n.succ (@f0 (m.add n)) = @f0 (k.add n)
 lift.equations._eqn_3 :
-  ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ) (i : fi (m + n)), @lift m k f n.succ i.fs = (@lift m k f n i).fs
+  ∀ {m k : ℕ} (f : fi m → fi k) (n : ℕ) (i : fi (m.add n)), @lift m k f n.succ i.fs = (@lift m k f n i).fs
 to_nat.equations._eqn_1 : ∀ (n : ℕ), (@f0 n).to_nat = 0
 to_nat.equations._eqn_2 : ∀ (n : ℕ) (i : fi n), i.fs.to_nat = i.to_nat.succ
 inject.equations._eqn_1 : ∀ (n : ℕ) (i : fi n), @inject n.succ i.fs (@f0 i.to_nat) = @f0 n

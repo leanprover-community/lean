@@ -5,6 +5,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Gabriel Ebner
 */
 #include <fstream>
+#include <iomanip>
+#include <list>
+#include <string>
 #include "kernel/init_module.h"
 #include "util/init_module.h"
 #include "util/test.h"
@@ -86,8 +89,13 @@ int main(int argc, char ** argv) {
     LEAN_EMSCRIPTEN_FS
 #endif
 
-    if (argc < 2) {
-        std::cout << "usage: leanchecker export.out lemma_to_print" << std::endl;
+    std::list<std::string> args(argv+1, argv+argc);
+
+    bool verbose = !args.empty() && args.front() == "-v";
+    if (verbose) args.pop_front();
+
+    if (args.empty()) {
+        std::cout << "usage: leanchecker [-v] export.out [lemma_to_print...]" << std::endl;
         return 1;
     }
 
@@ -116,22 +124,25 @@ int main(int argc, char ** argv) {
             out << "!!!" << e.what() << "!!!";
         }
     });
+    if (verbose) std::cerr << std::fixed << std::setprecision(6);
 
     dummy_task_queue tq;
     set_task_queue(&tq);
 
     try {
-        std::ifstream in(argv[1]);
-        if (!in) throw exception(sstream() << "file not found: " << argv[1]);
+        std::string fn = args.front();
+        args.pop_front();
+        std::ifstream in(fn);
+        if (!in) throw exception(sstream() << "file not found: " << fn);
 
         unsigned trust_lvl = 0;
         auto env = mk_environment(trust_lvl);
         lowlevel_notations notations;
-        import_from_text(in, env, notations);
+        import_from_text(in, env, notations, verbose);
 
         buffer<name> to_print;
-        for (int i = 2; i < argc; i++)
-            to_print.push_back(string_to_name(argv[i]));
+        for (auto & arg : args)
+            to_print.push_back(string_to_name(arg));
 
         checker_print_fn(std::cout, env, notations).handle_cmdline_args(to_print);
 

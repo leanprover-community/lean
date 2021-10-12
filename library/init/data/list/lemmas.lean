@@ -82,18 +82,19 @@ by simp [join, list.bind]
 @[simp] lemma cons_bind (x xs) (f : α → list β) : list.bind (x :: xs) f = f x ++ list.bind xs f :=
 by simp [join, list.bind]
 
-@[simp] lemma append_bind (xs ys) (f : α → list β) : list.bind (xs ++ ys) f = list.bind xs f ++ list.bind ys f :=
+@[simp] lemma append_bind (xs ys) (f : α → list β) :
+  list.bind (xs ++ ys) f = list.bind xs f ++ list.bind ys f :=
 by induction xs; [refl, simp [*, cons_bind]]
 
 /- mem -/
 
-@[simp] lemma mem_nil_iff (a : α) : a ∈ ([] : list α) ↔ false :=
+lemma mem_nil_iff (a : α) : a ∈ ([] : list α) ↔ false :=
 iff.rfl
 
 @[simp] lemma not_mem_nil (a : α) : a ∉ ([] : list α) :=
-iff.mp $ mem_nil_iff a
+not_false
 
-@[simp] lemma mem_cons_self (a : α) (l : list α) : a ∈ a :: l :=
+lemma mem_cons_self (a : α) (l : list α) : a ∈ a :: l :=
 or.inl rfl
 
 @[simp] lemma mem_cons_iff (a y : α) (l : list α) : a ∈ y :: l ↔ (a = y ∨ a ∈ l) :=
@@ -120,19 +121,21 @@ mem_append.2 (or.inl h)
 lemma mem_append_right {a : α} (l₁ : list α) {l₂ : list α} (h : a ∈ l₂) : a ∈ l₁ ++ l₂ :=
 mem_append.2 (or.inr h)
 
-@[simp] lemma not_bex_nil (p : α → Prop) : ¬ (∃ x ∈ @nil α, p x) :=
+lemma not_bex_nil (p : α → Prop) : ¬ (∃ x ∈ @nil α, p x) :=
 λ⟨x, hx, px⟩, hx
 
-@[simp] lemma ball_nil (p : α → Prop) : ∀ x ∈ @nil α, p x :=
+lemma ball_nil (p : α → Prop) : ∀ x ∈ @nil α, p x :=
 λx, false.elim
 
-@[simp] lemma bex_cons (p : α → Prop) (a : α) (l : list α) : (∃ x ∈ (a :: l), p x) ↔ (p a ∨ ∃ x ∈ l, p x) :=
+lemma bex_cons (p : α → Prop) (a : α) (l : list α) :
+  (∃ x ∈ (a :: l), p x) ↔ (p a ∨ ∃ x ∈ l, p x) :=
 ⟨λ⟨x, h, px⟩, by {
   simp at h, cases h with h h, {cases h, exact or.inl px}, {exact or.inr ⟨x, h, px⟩}},
 λo, o.elim (λpa, ⟨a, mem_cons_self _ _, pa⟩)
   (λ⟨x, h, px⟩, ⟨x, mem_cons_of_mem _ h, px⟩)⟩
 
-@[simp] lemma ball_cons (p : α → Prop) (a : α) (l : list α) : (∀ x ∈ (a :: l), p x) ↔ (p a ∧ ∀ x ∈ l, p x) :=
+lemma ball_cons (p : α → Prop) (a : α) (l : list α) :
+  (∀ x ∈ (a :: l), p x) ↔ (p a ∧ ∀ x ∈ l, p x) :=
 ⟨λal, ⟨al a (mem_cons_self _ _), λx h, al x (mem_cons_of_mem _ h)⟩,
  λ⟨pa, al⟩ x o, o.elim (λe, e.symm ▸ pa) (al x)⟩
 
@@ -178,11 +181,11 @@ theorem ne_nil_of_length_eq_succ {l : list α} : ∀ {n : nat}, length l = succ 
 by induction l; intros; contradiction
 
 @[simp] theorem length_map₂ (f : α → β → γ) (l₁) : ∀ l₂, length (map₂ f l₁ l₂) = min (length l₁) (length l₂) :=
-by {induction l₁; intro l₂; cases l₂; simp [*, add_one, min_succ_succ]}
+by { induction l₁; intro l₂; cases l₂; simp [*, add_one, min_succ_succ, nat.zero_min, nat.min_zero] }
 
 @[simp] theorem length_take : ∀ (i : ℕ) (l : list α), length (take i l) = min i (length l)
-| 0        l      := by simp
-| (succ n) []     := by simp
+| 0        l      := by simp [nat.zero_min]
+| (succ n) []     := by simp [nat.min_zero]
 | (succ n) (a::l) := by simp [*, nat.min_succ_succ, add_one]
 
 theorem length_take_le (n) (l : list α) : length (take n l) ≤ n :=

@@ -78,14 +78,17 @@ struct print_axioms_deps {
     }
 };
 
-static void print_axioms(parser & p, message_builder & out) {
+static void print_axioms(parser & p, ast_data & parent, message_builder & out) {
     if (p.curr_is_identifier()) {
-        name c = p.check_constant_next("invalid '#print axioms', constant expected");
+        ast_id id; name c;
+        std::tie(id, c) = p.check_constant_next("invalid '#print axioms', constant expected");
+        parent.push(id);
         auto env = p.env();
         type_context_old tc(env, p.get_options());
         auto new_out = io_state_stream(env, p.ios(), tc, out.get_text_stream().get_channel());
         print_axioms_deps(env, new_out)(c);
     } else {
+        parent.push(0);
         bool has_axioms = false;
         p.env().for_each_declaration([&](declaration const & d) {
                 name const & n = d.get_name();
@@ -99,8 +102,10 @@ static void print_axioms(parser & p, message_builder & out) {
     }
 }
 
-static void print_prefix(parser & p, message_builder & out) {
-    name prefix = p.check_id_next("invalid '#print prefix' command, identifier expected");
+static void print_prefix(parser & p, ast_data & parent, message_builder & out) {
+    ast_id id; name prefix;
+    std::tie(id, prefix) = p.check_id_next("invalid '#print prefix' command, identifier expected");
+    parent.push(id);
     buffer<declaration> to_print;
     p.env().for_each_declaration([&](declaration const & d) {
             if (is_prefix_of(prefix, d.get_name())) {
@@ -158,10 +163,11 @@ static bool print_parse_table(parser const & p, message_builder & rep, parse_tab
     return found;
 }
 
-static void print_notation(parser & p, message_builder & out) {
+static void print_notation(parser & p, ast_data & parent, message_builder & out) {
     buffer<name> tokens;
     while (p.curr_is_keyword()) {
         tokens.push_back(p.get_token_info().token());
+        parent.push(p.new_ast("token", p.pos(), tokens.back()).m_id);
         p.next();
     }
     bool found = false;
@@ -257,16 +263,29 @@ static void print_attributes(parser const & p, message_builder & out, name const
         out << "]\n";
 }
 
+static void print_level_params(message_builder & out, level_param_names const & params) {
+    if (params && get_pp_universes(out.get_text_stream().get_options())) {
+        out << "{";
+        bool first = true;
+        for (auto u : params) {
+            if (first) first = false; else out << " ";
+            out << u;
+        }
+        out << "} ";
+    }
+}
+
 static void print_inductive(parser const & p, message_builder & out, name const & n, pos_info const & pos) {
     environment const & env = p.env();
     if (auto idecl = inductive::is_inductive_decl(env, n)) {
         level_param_names ls = idecl->m_level_params;
         print_attributes(p, out, n);
         if (is_structure(env, n))
-            out << "structure";
+            out << "structure ";
         else
-            out << "inductive";
-        out << " " << n;
+            out << "inductive ";
+        print_level_params(out, ls);
+        out << n;
         out << " : " << env.get(n).get_type() << "\n";
         if (is_structure(env, n)) {
             out << "fields:\n";
@@ -284,8 +303,10 @@ static void print_inductive(parser const & p, message_builder & out, name const 
     }
 }
 
-static void print_recursor_info(parser & p, message_builder & out) {
-    name c = p.check_constant_next("invalid '#print [recursor]', constant expected");
+static void print_recursor_info(parser & p, ast_data & parent, message_builder & out) {
+    ast_id id; name c;
+    std::tie(id, c) = p.check_constant_next("invalid '#print [recursor]', constant expected");
+    parent.push(id);
     recursor_info info = get_recursor_info(p.env(), c);
     out << "recursor information\n"
         << "  num. parameters:          " << info.get_num_params() << "\n"
@@ -331,7 +352,9 @@ static bool print_constant(parser const & p, message_builder & out, char const *
         out << "noncomputable ";
     if (!d.is_trusted())
         out << "meta ";
-    out << kind << " " << to_user_name(p.env(), d.get_name());
+    out << kind << " ";
+    print_level_params(out, d.get_univ_params());
+    out << to_user_name(p.env(), d.get_name());
     out.get_text_stream().update_options(out.get_text_stream().get_options().update((name {"pp", "binder_types"}), true))
             << " : " << d.get_type();
     if (is_def)
@@ -433,19 +456,22 @@ bool print_token_info(parser const & p, message_builder & out, name const & tk) 
     return found;
 }
 
-void print_polymorphic(parser & p, message_builder & out) {
+void print_polymorphic(parser & p, ast_data & data, message_builder & out) {
     auto pos = p.pos();
 
     // notation
     if (p.curr_is_keyword()) {
         name tk = p.get_token_info().token();
         if (print_token_info(p, out, tk)) {
+            data.push(p.new_ast("token", pos, tk).m_id);
             p.next();
             return;
         }
     }
 
-    name id = p.check_id_next("invalid #print command", break_at_pos_exception::token_context::expr);
+    ast_id aid; name id;
+    std::tie(aid, id) = p.check_id_next("invalid #print command", break_at_pos_exception::token_context::expr);
+    data.push(aid);
     bool show_value = true;
     print_id_info(p, out, id, show_value, pos);
 }
@@ -454,14 +480,18 @@ static void print_unification_hints(parser & p, message_builder & out) {
     out << pp_unification_hints(get_unification_hints(p.env()), out.get_formatter());
 }
 
-static void print_simp_rules(parser & p, message_builder & out) {
-    name attr = p.check_id_next("invalid '#print [simp]' command, identifier expected");
+static void print_simp_rules(parser & p, ast_data & parent, message_builder & out) {
+    ast_id id; name attr;
+    std::tie(id, attr) = p.check_id_next("invalid '#print [simp]' command, identifier expected");
+    parent.push(id);
     simp_lemmas slss = get_simp_lemmas(p.env(), attr);
     out << slss.pp_simp(out.get_formatter());
 }
 
-static void print_congr_rules(parser & p, message_builder & out) {
-    name attr = p.check_id_next("invalid '#print [congr]' command, identifier expected");
+static void print_congr_rules(parser & p, ast_data & parent, message_builder & out) {
+    ast_id id; name attr;
+    std::tie(id, attr) = p.check_id_next("invalid '#print [congr]' command, identifier expected");
+    parent.push(id);
     simp_lemmas slss = get_simp_lemmas(p.env(), attr);
     out << slss.pp_congr(out.get_formatter());
 }
@@ -501,36 +531,46 @@ static void print_attribute(parser & p, message_builder & out, attribute const &
     }
 }
 
-environment print_cmd(parser & p) {
+environment print_cmd(parser & p, ast_id & cmd_id) {
     // Fallbacks are handled via exceptions.
     auto _ = p.no_error_recovery_scope();
+    auto& data = p.get_ast(cmd_id);
 
-    auto out = p.mk_message(p.cmd_pos(), INFORMATION);
+    auto out = p.mk_message(data.m_start, INFORMATION);
     out.set_caption("print result");
     auto env = p.env();
     if (p.curr() == token_kind::String) {
         out << p.get_str_val() << endl;
+        data.push(p.new_ast("string", p.pos(), p.get_str_val()).m_id);
         p.next();
     } else if (p.curr_is_token_or_id(get_raw_tk())) {
+        data.push(p.new_ast(get_raw_tk(), p.pos()).m_id);
         p.next();
         auto _ = p.error_recovery_scope(true);
         expr e = p.parse_expr();
+        data.push(p.get_id(e));
         options opts = out.get_text_stream().get_options();
         opts = opts.update(get_pp_notation_name(), false);
         out.get_text_stream().update_options(opts) << e << endl;
     } else if (p.curr_is_token_or_id(get_options_tk())) {
+        data.push(p.new_ast(get_options_tk(), p.pos()).m_id);
         p.next();
         out << p.ios().get_options() << endl;
     } else if (p.curr_is_token_or_id(get_trust_tk())) {
+        data.push(p.new_ast(get_trust_tk(), p.pos()).m_id);
         p.next();
         out << "trust level: " << p.env().trust_lvl() << endl;
     } else if (p.curr_is_token_or_id(get_key_equivalences_tk())) {
+        data.push(p.new_ast(get_key_equivalences_tk(), p.pos()).m_id);
         p.next();
         print_key_equivalences(p, out);
     } else if (p.curr_is_token_or_id(get_definition_tk())) {
+        data.push(p.new_ast(get_definition_tk(), p.pos()).m_id);
         p.next();
         auto pos = p.pos();
-        name id  = p.check_id_next("invalid '#print definition', constant expected");
+        ast_id id_ast; name id;
+        std::tie(id_ast, id) = p.check_id_next("invalid '#print definition', constant expected");
+        data.push(id_ast);
         list<name> cs = p.to_constants(id, "invalid '#print definition', constant expected", pos);
         bool first = true;
         for (name const & c : cs) {
@@ -550,12 +590,16 @@ environment print_cmd(parser & p) {
             }
         }
     } else if (p.curr_is_token_or_id(get_instances_tk())) {
+        data.push(p.new_ast(get_instances_tk(), p.pos()).m_id);
         p.next();
-        name c = p.check_constant_next("invalid '#print instances', constant expected");
+        ast_id cid; name c;
+        std::tie(cid, c) = p.check_constant_next("invalid '#print instances', constant expected");
+        data.push(cid);
         for (name const & i : get_class_instances(env, c)) {
             out << i << " : " << env.get(i).get_type() << endl;
         }
     } else if (p.curr_is_token_or_id(get_classes_tk())) {
+        data.push(p.new_ast(get_classes_tk(), p.pos()).m_id);
         p.next();
         buffer<name> classes;
         get_classes(env, classes);
@@ -564,6 +608,7 @@ environment print_cmd(parser & p) {
             out << c << " : " << env.get(c).get_type() << endl;
         }
     } else if (p.curr_is_token_or_id(get_attributes_tk())) {
+        data.push(p.new_ast(get_attributes_tk(), p.pos()).m_id);
         p.next();
         buffer<attribute const *> attrs;
         get_attributes(p.env(), attrs);
@@ -574,49 +619,64 @@ environment print_cmd(parser & p) {
             out << "[" << attr->get_name() << "] " << attr->get_description() << endl;
         }
     } else if (p.curr_is_token_or_id(get_prefix_tk())) {
+        data.push(p.new_ast(get_prefix_tk(), p.pos()).m_id);
         p.next();
-        print_prefix(p, out);
+        print_prefix(p, data, out);
     } else if (p.curr_is_token_or_id(get_aliases_tk())) {
+        data.push(p.new_ast(get_aliases_tk(), p.pos()).m_id);
         p.next();
         print_aliases(p, out);
     } else if (p.curr_is_token_or_id(get_axioms_tk())) {
+        data.push(p.new_ast(get_axioms_tk(), p.pos()).m_id);
         p.next();
-        print_axioms(p, out);
+        print_axioms(p, data, out);
     } else if (p.curr_is_token_or_id(get_fields_tk())) {
+        data.push(p.new_ast(get_fields_tk(), p.pos()).m_id);
         p.next();
         auto pos = p.pos();
-        name S = p.check_constant_next("invalid '#print fields' command, constant expected");
+        ast_id id; name S;
+        std::tie(id, S) = p.check_constant_next("invalid '#print fields' command, constant expected");
+        data.push(id);
         print_fields(p, out, S, pos);
     } else if (p.curr_is_token_or_id(get_notation_tk())) {
+        data.push(p.new_ast(get_notation_tk(), p.pos()).m_id);
         p.next();
-        print_notation(p, out);
+        print_notation(p, data, out);
     } else if (p.curr_is_token_or_id(get_inductive_tk())) {
+        data.push(p.new_ast(get_inductive_tk(), p.pos()).m_id);
         p.next();
         auto pos = p.pos();
-        name c = p.check_constant_next("invalid '#print inductive', constant expected");
+        ast_id id; name c;
+        std::tie(id, c) = p.check_constant_next("invalid '#print inductive', constant expected");
+        data.push(id);
         print_inductive(p, out, c, pos);
     } else if (p.curr_is_token(get_lbracket_tk())) {
+        data.push(p.new_ast(get_attribute_tk(), p.pos()).m_id);
         p.next();
         auto pos = p.pos();
-        auto name = p.check_id_next("invalid attribute declaration, identifier expected");
+        auto name = p.check_id_next("invalid attribute declaration, identifier expected").second;
         p.check_token_next(get_rbracket_tk(), "invalid '#print [<attr>]', ']' expected");
-
         if (name == "recursor") {
-            print_recursor_info(p, out);
+            data.push(p.new_ast(name, pos).m_id);
+            print_recursor_info(p, data, out);
         } else if (name == "unify") {
+            data.push(p.new_ast(name, pos).m_id);
             print_unification_hints(p, out);
         } else if (name == "simp") {
-            print_simp_rules(p, out);
+            data.push(p.new_ast(name, pos).m_id);
+            print_simp_rules(p, data, out);
         } else if (name == "congr") {
-            print_congr_rules(p, out);
+            data.push(p.new_ast(name, pos).m_id);
+            print_congr_rules(p, data, out);
         } else {
             if (!is_attribute(p.env(), name))
                 throw parser_error(sstream() << "unknown attribute [" << name << "]", pos);
+            data.push(p.new_ast("attr", pos, name).m_id);
             auto const & attr = get_attribute(p.env(), name);
             print_attribute(p, out, attr);
         }
     } else {
-        print_polymorphic(p, out);
+        print_polymorphic(p, data, out);
     }
     out.set_end_pos(p.pos());
     out.report();

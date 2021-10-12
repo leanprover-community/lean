@@ -24,7 +24,7 @@ section
   parameters {r  : α → α → Prop} {s : Π a : α, β a → β a → Prop}
   local infix `≺`:50 := lex r s
 
-  def lex_accessible {a} (aca : acc r a) (acb : ∀ a, well_founded (s a))
+  lemma lex_accessible {a} (aca : acc r a) (acb : ∀ a, well_founded (s a))
                      : ∀ (b : β a), acc (lex r s) ⟨a, b⟩ :=
   acc.rec_on aca
     (λ xa aca (iha : ∀ y, r y xa → ∀ b : β y, acc (lex r s) ⟨y, b⟩),
@@ -47,7 +47,7 @@ section
             aux rfl (heq.refl xb))))
 
   -- The lexicographical order of well founded relations is well-founded
-  def lex_wf (ha : well_founded r) (hb : ∀ x, well_founded (s x)) : well_founded (lex r s) :=
+  lemma lex_wf (ha : well_founded r) (hb : ∀ x, well_founded (s x)) : well_founded (lex r s) :=
   well_founded.intro $ λ ⟨a, b⟩, lex_accessible (well_founded.apply ha a) hb b
 end
 
@@ -57,8 +57,8 @@ section
   def lex_ndep (r : α → α → Prop) (s : β → β → Prop) :=
   lex r (λ a : α, s)
 
-  def lex_ndep_wf {r  : α → α → Prop} {s : β → β → Prop} (ha : well_founded r) (hb : well_founded s)
-                  : well_founded (lex_ndep r s) :=
+  lemma lex_ndep_wf {r  : α → α → Prop} {s : β → β → Prop} (ha : well_founded r)
+    (hb : well_founded s) : well_founded (lex_ndep r s) :=
   well_founded.intro $ λ ⟨a, b⟩, lex_accessible (well_founded.apply ha a) (λ x, hb) b
 end
 
@@ -79,7 +79,8 @@ section
   parameters {r  : α → α → Prop} {s : β → β → Prop}
   local infix `≺`:50 := rev_lex r s
 
-  def rev_lex_accessible {b} (acb : acc s b) (aca : ∀ a, acc r a): ∀ a, acc (rev_lex r s) ⟨a, b⟩ :=
+  lemma rev_lex_accessible {b} (acb : acc s b) (aca : ∀ a, acc r a) :
+    ∀ a, acc (rev_lex r s) ⟨a, b⟩ :=
   acc.rec_on acb
     (λ xb acb (ihb : ∀ y, s y xb → ∀ a, acc (rev_lex r s) ⟨a, y⟩),
       λ a, acc.rec_on (aca a)
@@ -99,18 +100,20 @@ section
                  ihb b₁ s₁ a₁),
             aux rfl rfl)))
 
-  def rev_lex_wf (ha : well_founded r) (hb : well_founded s) : well_founded (rev_lex r s) :=
+  lemma rev_lex_wf (ha : well_founded r) (hb : well_founded s) : well_founded (rev_lex r s) :=
   well_founded.intro $ λ ⟨a, b⟩, rev_lex_accessible (apply hb b) (well_founded.apply ha) a
 end
 
 section
-  def skip_left (α : Type u) {β : Type v} (s : β → β → Prop) : @psigma α (λ a, β) → @psigma α (λ a, β) → Prop :=
+  def skip_left (α : Type u) {β : Type v} (s : β → β → Prop) :
+    @psigma α (λ a, β) → @psigma α (λ a, β) → Prop :=
   rev_lex empty_relation s
 
-  def skip_left_wf (α : Type u) {β : Type v} {s : β → β → Prop} (hb : well_founded s) : well_founded (skip_left α s) :=
+  lemma skip_left_wf (α : Type u) {β : Type v} {s : β → β → Prop} (hb : well_founded s) :
+    well_founded (skip_left α s) :=
   rev_lex_wf empty_wf hb
 
-  def mk_skip_left {α : Type u} {β : Type v} {b₁ b₂ : β} {s : β → β → Prop}
+  lemma mk_skip_left {α : Type u} {β : Type v} {b₁ b₂ : β} {s : β → β → Prop}
                    (a₁ a₂ : α) (h : s b₁ b₂) : skip_left α s ⟨a₁, b₁⟩ ⟨a₂, b₂⟩ :=
   rev_lex.right _ _ h
 end

@@ -8,5 +8,5 @@ Author: Leonardo de Moura
 #include "kernel/environment.h"
 namespace lean {
 class parser;
-environment print_cmd(parser & p);
+environment print_cmd(parser & p, ast_id &);
 }

@@ -19,7 +19,7 @@ Generic Build Instructions
 Setting up a basic release build using `make`:
 
 ```bash
-git clone https://github.com/leanprover/lean
+git clone https://github.com/leanprover-community/lean
 cd lean
 mkdir -p build/release
 cd build/release
@@ -93,7 +93,8 @@ Further Tips For Developers
 
 In the below tips you can replace `make` with `ninja` as needed.
 
-* To save some time when compiling: use `make bin_lean` to only compile the things needed to run lean (no tests are built).
+* The `-j` flag specifies how many compilation threads to use. Setting an appropriate value for your hardware can massively speedup compilation times.
+* `make bin_lean` only compiles the things needed to run lean (no tests are built), which speeds up compilation.
 * Use `ctest` to run Lean's test suite. Use the flag `--output-on-failure` to output the diff of expected and produced results. Use the flag `--rerun-failed` to only run the tests that failed previously.
 * Once you have run `ctest`, you can go in `build/Debug/Testing/Temporary` and open `LastTest.log` to see a detailed report of the tests including why the style check failed.
 * Run the style check on a single file using `python src/cmake/Modules/cpplint.py my_source_file.cpp`
@@ -107,6 +108,6 @@ In the below tips you can replace `make` with `ninja` as needed.
 * [Using CCache](ccache.md) to avoid recompilation
 * [Measuring Code Coverage](coverage.md)
 * [Compiling Lean with Split Stacks](split-stack.md)
-* To speed up interactive development, you can use `make -j<nthreads> bin_lean` or `ninja bin_lean`, which will build the Lean executable (into `bin/`), but not all the tests.
-* To build Lean and the standard library, use `make -j<nthreads> standard_lib` or `ninja standard_lib`.
+* To build Lean and the standard library, use `make standard_lib` or `ninja standard_lib`.
+* `elan` lets you use custom-built Lean installations, using `elan toolchain link` and `elan override set`.
 

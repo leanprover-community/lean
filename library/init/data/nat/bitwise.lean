@@ -24,8 +24,8 @@ def div2 (n : ℕ) : ℕ := (bodd_div2 n).2
 def bodd (n : ℕ) : bool := (bodd_div2 n).1
 
 @[simp] lemma bodd_zero : bodd 0 = ff := rfl
-@[simp] lemma bodd_one : bodd 1 = tt := rfl
-@[simp] lemma bodd_two : bodd 2 = ff := rfl
+lemma bodd_one : bodd 1 = tt := rfl
+lemma bodd_two : bodd 2 = ff := rfl
 
 @[simp] lemma bodd_succ (n : ℕ) : bodd (succ n) = bnot (bodd n) :=
 by unfold bodd bodd_div2; cases bodd_div2 n; cases fst; refl
@@ -34,7 +34,7 @@ by unfold bodd bodd_div2; cases bodd_div2 n; cases fst; refl
 begin
     induction n with n IH,
     { simp, cases bodd m; refl },
-    { simp [IH], cases bodd m; cases bodd n; refl }
+    { simp [add_succ, IH], cases bodd m; cases bodd n; refl }
 end
 
 @[simp] lemma bodd_mul (m n : ℕ) : bodd (m * n) = bodd m && bodd n :=
@@ -55,8 +55,8 @@ begin
 end
 
 @[simp] lemma div2_zero : div2 0 = 0 := rfl
-@[simp] lemma div2_one : div2 1 = 0 := rfl
-@[simp] lemma div2_two : div2 2 = 1 := rfl
+lemma div2_one : div2 1 = 0 := rfl
+lemma div2_two : div2 2 = 1 := rfl
 
 @[simp] lemma div2_succ (n : ℕ) : div2 (succ n) = cond (bodd n) (succ (div2 n)) (div2 n) :=
 by unfold bodd div2 bodd_div2; cases bodd_div2 n; cases fst; refl
@@ -75,7 +75,7 @@ end
 
 theorem div2_val (n) : div2 n = n / 2 :=
 begin
-  refine eq_of_mul_eq_mul_left dec_trivial
+  refine nat.eq_of_mul_eq_mul_left dec_trivial
       (nat.add_left_cancel (eq.trans _ (nat.mod_add_div n 2).symm)),
   rw [mod_two_of_bodd, bodd_add_div2]
 end
@@ -98,7 +98,7 @@ lemma bit_decomp (n : nat) : bit (bodd n) (div2 n) = n :=
 def bit_cases_on {C : nat → Sort u} (n) (h : ∀ b n, C (bit b n)) : C n :=
 by rw [← bit_decomp n]; apply h
 
-@[simp] lemma bit_zero : bit ff 0 = 0 := rfl
+lemma bit_zero : bit ff 0 = 0 := rfl
 
 def shiftl' (b : bool) (m : ℕ) : ℕ → ℕ
 | 0     := m
@@ -121,7 +121,7 @@ def binary_rec {C : nat → Sort u} (z : C 0) (f : ∀ b n, C n → C (bit b n))
       change div2 n < n, rw div2_val,
       apply (div_lt_iff_lt_mul _ _ (succ_pos 1)).2,
       have := nat.mul_lt_mul_of_pos_left (lt_succ_self 1)
-        (lt_of_le_of_ne (zero_le _) (ne.symm n0)),
+        (lt_of_le_of_ne n.zero_le (ne.symm n0)),
       rwa nat.mul_one at this
     end,
     by rw [← show bit (bodd n) n' = n, from bit_decomp n]; exact

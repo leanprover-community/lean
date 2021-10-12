@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #include <string>
 #include "library/kernel_serializer.h"
 #include "util/numerics/mpz.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_prenum_name = nullptr;
@@ -26,6 +27,11 @@ public:
         s.write_string(*g_prenum_opcode);
         s << m_value;
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["value"] = m_value.to_string();
+    }
+#endif
     virtual bool operator==(macro_definition_cell const & other) const {
         if (auto other_ptr = dynamic_cast<prenum_macro_definition_cell const *>(&other)) {
             return m_value == other_ptr->m_value;

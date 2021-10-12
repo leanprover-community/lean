@@ -9,16 +9,20 @@ import init.algebra.order init.meta
 
 universe u
 
-definition min {α : Type u} [linear_order α] (a b : α) : α := if a ≤ b then a else b
-definition max {α : Type u} [linear_order α] (a b : α) : α := if b ≤ a then a else b
+export linear_order (min max)
 
 section
 open decidable tactic
 variables {α : Type u} [linear_order α]
 
+lemma min_def (a b : α) : min a b = if a ≤ b then a else b :=
+by rw [congr_fun linear_order.min_def a, min_default]
+lemma max_def (a b : α) : max a b = if b ≤ a then a else b :=
+by rw [congr_fun linear_order.max_def a, max_default]
+
 private meta def min_tac_step : tactic unit :=
 solve1 $ intros
->> `[unfold min max]
+>> `[simp only [min_def, max_def]]
 >> try `[simp [*, if_pos, if_neg]]
 >> try `[apply le_refl]
 >> try `[apply le_of_not_le, assumption]

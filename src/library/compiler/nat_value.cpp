@@ -12,6 +12,7 @@ Author: Leonardo de Moura
 #include "library/util.h"
 #include "library/kernel_serializer.h"
 #include "library/replace_visitor_with_tc.h"
+#include "frontends/lean/json.h"
 
 namespace lean {
 static name * g_nat_macro         = nullptr;
@@ -65,6 +66,11 @@ public:
     virtual void write(serializer & s) const override {
         s << *g_nat_opcode << m_value;
     }
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json & j) const override {
+        j["value"] = m_value.to_string();
+    }
+#endif
     mpz const & get_value() const { return m_value; }
 };
 

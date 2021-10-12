@@ -31,7 +31,7 @@ namespace PropF
   notation `⊥`           := Bot
 
   def Neg (A)      := A ⇒ ⊥
-  notation ~ A     := Neg A
+  notation `~` A   := Neg A
   def Top          := ~⊥
   notation `⊤`     := Top
   def BiImpl (A B) := A ⇒ B ∧ B ⇒ A

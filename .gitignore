@@ -3,6 +3,7 @@
 .#*
 *.olean
 *.tlean
+*.ast.json
 *.lock
 build
 GPATH
@@ -26,3 +27,4 @@ CppProperties.json
 /build
 /_cache/
 /.ccls-cache
+*.ast.json

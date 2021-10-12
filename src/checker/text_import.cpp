@@ -13,8 +13,22 @@ Author: Gabriel Ebner
 #include <iostream>
 #include <unordered_map>
 #include "kernel/quotient/quotient.h"
+#include "checker/simple_pp.h"
+#include "kernel/ext_exception.h"
 
 namespace lean {
+
+template <typename Fn>
+void wrap_exception(name const & decl_name, environment const & env, Fn const & fn) {
+    try {
+        fn();
+    } catch (ext_exception & ex) {
+        throw throwable(sstream() << decl_name << ": " <<
+            ex.pp(formatter(options(), [&] (expr const & e, options const &) {
+                return simple_pp(env, e, lowlevel_notations());
+            })));
+    }
+}
 
 struct text_importer {
     std::unordered_map<unsigned, expr> m_expr;
@@ -25,7 +39,9 @@ struct text_importer {
 
     environment m_env;
 
-    text_importer(environment const & env) : m_env(env) {
+    bool m_verbose;
+
+    text_importer(environment const & env, bool verbose) : m_env(env), m_verbose(verbose) {
         m_level[0] = {};
         m_name[0] = {};
     }
@@ -36,6 +52,7 @@ struct text_importer {
         while (in >> idx) {
             ls.push_back(m_level.at(idx));
         }
+        in.clear();
         return to_list(ls);
     }
 
@@ -45,10 +62,12 @@ struct text_importer {
         while (in >> idx) {
             ls.push_back(m_name.at(idx));
         }
+        in.clear();
         return to_list(ls);
     }
 
     void handle_ind(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned num_params, name_idx, type_idx, num_intros;
         in >> num_params >> name_idx >> type_idx >> num_intros;
 
@@ -61,27 +80,52 @@ struct text_importer {
         auto ls = read_level_params(in);
 
         inductive::inductive_decl decl(m_name.at(name_idx), ls, num_params, m_expr.at(type_idx), to_list(intros));
-        m_env = inductive::add_inductive(m_env, decl, true).first;
+        wrap_exception(decl.m_name, m_env, [&] {
+            m_env = inductive::add_inductive(m_env, decl, true).first;
+        });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << decl.m_name << std::endl;
+        }
     }
 
     void handle_def(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned name_idx, type_idx, val_idx;
         in >> name_idx >> type_idx >> val_idx;
         auto ls = read_level_params(in);
+        name n = m_name.at(name_idx);
 
-        auto decl =
-            type_checker(m_env).is_prop(m_expr.at(type_idx)) ?
-                mk_theorem(m_name.at(name_idx), ls, m_expr.at(type_idx), m_expr.at(val_idx)) :
-                mk_definition(m_env, m_name.at(name_idx), ls, m_expr.at(type_idx), m_expr.at(val_idx), true, true);
+        wrap_exception(n, m_env, [&] {
+            auto decl =
+                type_checker(m_env).is_prop(m_expr.at(type_idx)) ?
+                    mk_theorem(n, ls, m_expr.at(type_idx), m_expr.at(val_idx)) :
+                    mk_definition(m_env, n, ls, m_expr.at(type_idx), m_expr.at(val_idx), true, true);
 
-        m_env = m_env.add(check(m_env, decl, true));
+            m_env = m_env.add(check(m_env, decl, true));
+        });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << n << std::endl;
+        }
     }
 
     void handle_ax(std::istream & in) {
+        auto start = std::chrono::steady_clock::now();
         unsigned name_idx, type_idx;
         in >> name_idx >> type_idx;
         auto ls = read_level_params(in);
-        m_env = m_env.add(check(m_env, mk_axiom(m_name.at(name_idx), ls, m_expr.at(type_idx))));
+        name n = m_name.at(name_idx);
+        wrap_exception(n, m_env, [&] {
+            m_env = m_env.add(check(m_env, mk_axiom(n, ls, m_expr.at(type_idx))));
+        });
+        if (m_verbose) {
+            auto end = std::chrono::steady_clock::now();
+            std::chrono::duration<double> diff_s = end - start;
+            std::cerr << diff_s.count() << " s: " << n << std::endl;
+        }
     }
 
     void handle_notation(std::istream & in, lowlevel_notation_kind kind) {
@@ -182,11 +226,15 @@ struct text_importer {
         } else {
             throw exception(sstream() << "unknown command: " << cmd);
         }
+        if (!in.eof()) in >> std::ws;
+        if (in.fail() || !in.eof()) {
+            throw exception(sstream() << "parse error");
+        }
     }
 };
 
-void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations) {
-    text_importer importer(env);
+void import_from_text(std::istream & in, environment & env, lowlevel_notations & notations, bool verbose) {
+    text_importer importer(env, verbose);
 
     std::string line;
     unsigned line_num = 0;

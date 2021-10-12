@@ -167,7 +167,7 @@ void mt_task_queue::handle_finished(gtask const & t) {
                 // TODO(gabriel): removed failed tasks from reverse dependency lists?
                 m_waiting.erase(rdep);
                 break;
-            case task_state::Success:
+            case task_state::Running: case task_state::Success:
                 // this can happen if a task occurs in more than one reverse dependency list,
                 // or gets submitted more than once
                 break;

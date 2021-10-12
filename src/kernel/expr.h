@@ -16,6 +16,7 @@ Author: Leonardo de Moura
 #include "util/name.h"
 #include "util/hash.h"
 #include "util/buffer.h"
+#include "util/lean_json.h"
 #include "util/list_fn.h"
 #include "util/optional.h"
 #include "util/serializer.h"
@@ -26,6 +27,8 @@ Author: Leonardo de Moura
 
 namespace lean {
 class abstract_type_context;
+class tlean_exporter;
+class abstract_ast_exporter;
 
 // Tags are used by frontends to mark expressions. They are automatically propagated by
 // procedures such as update_app, update_binder, etc.
@@ -365,7 +368,12 @@ public:
     virtual void display(std::ostream & out) const;
     virtual unsigned hash() const;
     virtual void write(serializer & s) const = 0;
+    virtual bool can_textualize() const { return false; }
+    virtual void textualize(tlean_exporter &) const { throw exception("macro::textualize not implemented by default"); }
     typedef std::function<expr(deserializer&, unsigned, expr const *)> reader;
+#ifdef LEAN_JSON
+    virtual void write_json(abstract_ast_exporter &, json &) const = 0;
+#endif
 };
 
 /** \brief Smart pointer for macro definitions */
@@ -394,6 +402,8 @@ public:
     void display(std::ostream & out) const { return m_ptr->display(out); }
     unsigned hash() const { return m_ptr->hash(); }
     void write(serializer & s) const { return m_ptr->write(s); }
+    bool can_textualize() const { return m_ptr->can_textualize(); }
+    void textualize(tlean_exporter & x) const { return m_ptr->textualize(x); };
     macro_definition_cell const * raw() const { return m_ptr; }
 
     friend bool is_eqp(macro_definition const & d1, macro_definition const & d2) {

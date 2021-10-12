@@ -10,6 +10,7 @@ universes u
 class setoid (α : Sort u) :=
 (r : α → α → Prop) (iseqv : equivalence r)
 
+@[priority 100]
 instance setoid_has_equiv {α : Sort u} [setoid α] : has_equiv α :=
 ⟨setoid.r⟩
 
