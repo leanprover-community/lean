@@ -175,10 +175,7 @@ instance : linear_order ℕ :=
   le_antisymm := @nat.le_antisymm,
   le_total := @nat.le_total,
   lt := nat.lt,
-  lt_iff_le_not_le := @nat.lt_iff_le_not_le,
-  decidable_lt               := nat.decidable_lt,
-  decidable_le               := nat.decidable_le,
-  decidable_eq               := nat.decidable_eq }
+  lt_iff_le_not_le := @nat.lt_iff_le_not_le, }
 
 protected lemma eq_zero_of_le_zero {n : nat} (h : n ≤ 0) : n = 0 :=
 le_antisymm h n.zero_le

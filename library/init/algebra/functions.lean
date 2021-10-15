@@ -9,20 +9,18 @@ import init.algebra.order init.meta
 
 universe u
 
-export linear_order (min max)
-
 section
 open decidable tactic
-variables {α : Type u} [linear_order α]
+variables {α : Type u} [linear_order α] [decidable_rel ((≤) : α → α → Prop)]
 
-lemma min_def (a b : α) : min a b = if a ≤ b then a else b :=
-by rw [congr_fun linear_order.min_def a, min_default]
-lemma max_def (a b : α) : max a b = if b ≤ a then a else b :=
-by rw [congr_fun linear_order.max_def a, max_default]
+-- lemma min_def (a b : α) : min a b = if a ≤ b then a else b :=
+-- by rw [congr_fun linear_order.min_def a, min_default]
+-- lemma max_def (a b : α) : max a b = if b ≤ a then a else b :=
+-- by rw [congr_fun linear_order.max_def a, max_default]
 
 private meta def min_tac_step : tactic unit :=
 solve1 $ intros
->> `[simp only [min_def, max_def]]
+>> `[simp only [min, max]]
 >> try `[simp [*, if_pos, if_neg]]
 >> try `[apply le_refl]
 >> try `[apply le_of_not_le, assumption]
@@ -65,7 +63,7 @@ begin
 end
 
 lemma min_left_comm : ∀ (a b c : α), min a (min b c) = min b (min a c) :=
-left_comm (@min α _) (@min_comm α _) (@min_assoc α _)
+left_comm (@min α _ _) (@min_comm α _ _) (@min_assoc α _ _)
 
 @[simp]
 lemma min_self (a : α) : min a a = a :=
@@ -95,7 +93,7 @@ begin
 end
 
 lemma max_left_comm : ∀ (a b c : α), max a (max b c) = max b (max a c) :=
-left_comm (@max α _) (@max_comm α _) (@max_assoc α _)
+left_comm (@max α _ _) (@max_comm α _ _) (@max_assoc α _ _)
 
 @[simp]
 lemma max_self (a : α) : max a a = a :=

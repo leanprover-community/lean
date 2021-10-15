@@ -187,30 +187,12 @@ section linear_order
 ### Definition of `linear_order` and lemmas about types with a linear order
 -/
 
-/-- Default definition of `max`. -/
-def max_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
-if b ≤ a then a else b
-
-/-- Default definition of `min`. -/
-def min_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
-if a ≤ b then a else b
-
 /-- A linear order is reflexive, transitive, antisymmetric and total relation `≤`.
 We assume that every linear ordered type has decidable `(≤)`, `(<)`, and `(=)`. -/
 class linear_order (α : Type u) extends partial_order α :=
 (le_total : ∀ a b : α, a ≤ b ∨ b ≤ a)
-(decidable_le : decidable_rel (≤))
-(decidable_eq : decidable_eq α := @decidable_eq_of_decidable_le _ _ decidable_le)
-(decidable_lt : decidable_rel ((<) : α → α → Prop) :=
-    @decidable_lt_of_decidable_le _ _ decidable_le)
-(max : α → α → α := @max_default α _ _)
-(max_def : max = @max_default α _ decidable_le . tactic.interactive.reflexivity)
-(min : α → α → α := @min_default α _ _)
-(min_def : min = @min_default α _ decidable_le . tactic.interactive.reflexivity)
 
 variables [linear_order α]
-
-local attribute [instance] linear_order.decidable_le
 
 lemma le_total : ∀ a b : α, a ≤ b ∨ b ≤ a :=
 linear_order.le_total
@@ -226,10 +208,10 @@ lt_asymm h
 
 lemma lt_trichotomy (a b : α) : a < b ∨ a = b ∨ b < a :=
 or.elim (le_total a b)
-  (λ h : a ≤ b, or.elim (decidable.lt_or_eq_of_le h)
+  (λ h : a ≤ b, or.elim (lt_or_eq_of_le h)
     (λ h : a < b, or.inl h)
     (λ h : a = b, or.inr (or.inl h)))
-  (λ h : b ≤ a, or.elim (decidable.lt_or_eq_of_le h)
+  (λ h : b ≤ a, or.elim (lt_or_eq_of_le h)
     (λ h : b < a, or.inr (or.inr h))
     (λ h : b = a, or.inr (or.inl h.symm)))
 
@@ -246,7 +228,9 @@ lemma lt_of_not_ge {a b : α} (h : ¬ a ≥ b) : a < b :=
 lt_of_le_not_le ((le_total _ _).resolve_right h) h
 
 lemma lt_or_le (a b : α) : a < b ∨ b ≤ a :=
-if hba : b ≤ a then or.inr hba else or.inl $ lt_of_not_ge hba
+or.elim (lt_trichotomy a b)
+  (λ h, or.inl h)
+  (λ h, or.inr (or.elim h (λ h', le_of_eq h'.symm) (λ h', le_of_lt h')))
 
 lemma le_or_lt (a b : α) : a ≤ b ∨ b < a :=
 (lt_or_le b a).swap
@@ -271,32 +255,26 @@ lemma lt_iff_not_ge (x y : α) : x < y ↔ ¬ x ≥ y :=
 
 @[simp] lemma not_le {a b : α} : ¬ a ≤ b ↔ b < a := (lt_iff_not_ge _ _).symm
 
-instance (a b : α) : decidable (a < b) :=
-linear_order.decidable_lt a b
-
-instance (a b : α) : decidable (a ≤ b) :=
-linear_order.decidable_le a b
-
-instance (a b : α) : decidable (a = b) :=
-linear_order.decidable_eq a b
-
 lemma eq_or_lt_of_not_lt {a b : α} (h : ¬ a < b) : a = b ∨ b < a :=
-if h₁ : a = b then or.inl h₁
-else or.inr (lt_of_not_ge (λ hge, h (lt_of_le_of_ne hge h₁)))
+or.elim (lt_trichotomy a b)
+  (λ h', false.elim (h h'))
+  (λ h', h')
 
 instance : is_total_preorder α (≤) :=
 {trans := @le_trans _ _, total := le_total}
 
 /- TODO(Leo): decide whether we should keep this instance or not -/
-instance is_strict_weak_order_of_linear_order : is_strict_weak_order α (<) :=
+instance is_strict_weak_order_of_linear_order
+  [decidable_rel ((≤) : α → α → Prop)] : is_strict_weak_order α (<) :=
 is_strict_weak_order_of_is_total_preorder lt_iff_not_ge
 
 /- TODO(Leo): decide whether we should keep this instance or not -/
-instance is_strict_total_order_of_linear_order : is_strict_total_order α (<) :=
+instance is_strict_total_order_of_linear_order
+  [decidable_rel ((≤) : α → α → Prop)] : is_strict_total_order α (<) :=
 { trichotomous := lt_trichotomy }
 
-/-- Perform a case-split on the ordering of `x` and `y` in a decidable linear order. -/
-def lt_by_cases (x y : α) {P : Sort*}
+/-- Perform a case-split on the ordering of `x` and `y` in a linear order. -/
+def lt_by_cases [decidable_rel ((≤) : α → α → Prop)] (x y : α) {P : Sort*}
   (h₁ : x < y → P) (h₂ : x = y → P) (h₃ : y < x → P) : P :=
 if h : x < y then h₁ h else
 if h' : y < x then h₃ h' else
@@ -305,5 +283,11 @@ h₂ (le_antisymm (le_of_not_gt h') (le_of_not_gt h))
 lemma le_imp_le_of_lt_imp_lt {β} [preorder α] [linear_order β]
   {a b : α} {c d : β} (H : d < c → b < a) (h : a ≤ b) : c ≤ d :=
 le_of_not_lt $ λ h', not_le_of_gt (H h') h
+
+def min [decidable_rel ((≤) : α → α → Prop)] (a b : α) : α :=
+if a ≤ b then a else b
+
+def max [decidable_rel ((≤) : α → α → Prop)] (a b : α) : α :=
+if b ≤ a then a else b
 
 end linear_order

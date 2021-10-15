@@ -195,10 +195,7 @@ instance : linear_order int :=
   le_antisymm     := @int.le_antisymm,
   lt              := int.lt,
   lt_iff_le_not_le := @int.lt_iff_le_not_le,
-  le_total        := int.le_total,
-  decidable_eq    := int.decidable_eq,
-  decidable_le    := int.decidable_le,
-  decidable_lt    := int.decidable_lt }
+  le_total        := int.le_total, }
 
 lemma eq_nat_abs_of_zero_le {a : ℤ} (h : 0 ≤ a) : a = nat_abs a :=
 let ⟨n, e⟩ := eq_coe_of_zero_le h in by rw e; refl
