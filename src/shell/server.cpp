@@ -30,7 +30,23 @@ Authors: Gabriel Ebner, Leonardo de Moura, Sebastian Ullrich
 #include "frontends/lean/info_manager.h"
 #include "frontends/lean/interactive.h"
 #include "frontends/lean/completion.h"
+#include "frontends/lean/elaborator.h"
 #include "shell/server.h"
+
+#include "kernel/type_checker.h"
+#include "kernel/expr_sets.h"
+#include "kernel/for_each_fn.h"
+#include "library/tactic/tactic_evaluator.h"
+#include "library/tactic/intro_tactic.h"
+#include "library/unfold_macros.h"
+#include "library/compiler/rec_fn_macro.h"
+#include "library/library_task_builder.h"
+#include "library/st_task_queue.h"
+#include "library/mt_task_queue.h"
+#include "frontends/lean/json.h"
+#include "frontends/lean/cmd_table.h"
+#include "library/check.h"
+
 
 namespace lean {
 struct all_messages_msg {
@@ -455,6 +471,8 @@ void server::handle_request(server::cmd_req const & req) {
         handle_async_response(req, handle_info(req));
     } else if (command == "hole") {
         handle_async_response(req, handle_hole(req));
+    } else if (command == "try_tactic") {
+        handle_async_response(req, handle_try_tactic(req));
     } else if (command == "hole_commands") {
         send_msg(handle_hole_commands(req));
     } else if (command == "all_hole_commands") {
@@ -677,6 +695,98 @@ task<server::cmd_res> server::handle_info(server::cmd_req const & req) {
     return task_builder<cmd_res>([=] {
         return cmd_res(req.m_seq_num, info(mod_info, pos));
     }).wrap(library_scopes(log_tree::node())).build();
+}
+
+tactic_state apply(tactic_state& some_ts, snapshot const & snapshot, const std::string& tactic_str) {
+    // parse
+    std::istringstream input_stream("`[" + tactic_str + "]");
+    lean::parser some_parser(snapshot.m_env, get_global_ios(), mk_dummy_loader(), input_stream, "dummy file");
+    some_parser.from_snapshot(snapshot);
+    some_parser.scan();
+
+    auto pre_expr = (some_parser.no_error_recovery_scope(), some_parser.parse_expr());
+
+    //elaborate (from tactic_to_expr)
+    optional<metavar_decl> g = some_ts.get_main_goal_decl();
+    elaborator elab(mk_type_context_for(some_ts), some_ts.get_options(), some_ts.decl_name(), false /* recover_from_errors */);
+    expr parsed_expr = elab.elaborate(resolve_names(some_ts.env(), g->get_context(), pre_expr));
+    auto elab_mctx = elab.mctx();
+    parsed_expr = elab_mctx.instantiate_mvars(parsed_expr);
+
+    //evaluate `[...] tactic into a tactic unit
+    vm_state S(some_ts.env(), some_ts.get_options());
+    metavar_context s_mctx = some_ts.mctx();
+    parsed_expr = s_mctx.instantiate_mvars(parsed_expr);
+    environment aux_env = S.env();
+    name eval_aux_name = mk_unused_name(aux_env, "_eval_expr");
+    expr expected_type = mk_tactic_unit();
+    auto cd = check(aux_env, mk_definition(aux_env, eval_aux_name, {}, expected_type, parsed_expr, true, false));
+    auto declaration = cd.get_declaration();
+    expr evaled_expr = declaration.get_value();
+
+    // run the tactic unit on the current tactic_state
+    auto type_context = mk_type_context_for(some_ts);
+    auto evaluator = tactic::evaluator(type_context, some_ts.get_options(), false);
+    vm_obj r = evaluator(evaled_expr, some_ts);
+    auto maybe_ts = tactic::is_success(r);
+    if (maybe_ts) {
+        return maybe_ts.value();
+    }
+    throw std::runtime_error("apply tactic failed");
+}
+
+
+json server::try_tactic_command(std::shared_ptr<module_info const> const & mod_info, std::string const & tactic,
+                                pos_info const & pos, unsigned widget_id) {
+    json j;
+    widget_info * w = nullptr;
+
+    auto snap = get_closest_snapshot(mod_info, pos)->m_snapshot_at_end;
+    auto info_managers = get_info_managers(m_lt);
+
+    for (info_manager const & infom : info_managers) {
+        if (infom.get_file_name() == mod_info->m_id) {
+            auto ds = infom.get_info(pos);
+            if (!ds) continue;
+            for (info_data const & d : *ds) {
+                if (auto cw = is_widget_info(d)) {
+                    if (cw->has_widget() && cw->id() == widget_id) {
+                        w = const_cast<widget_info *>(cw);
+                        break;
+                    }
+                }
+            }
+        }
+        if (w) break; // found what we want
+    }
+    if (w) {
+        auto ts = w->get_tactic_state();
+        j["tactic"] = tactic;
+        try{
+            auto result_ts = apply(ts, *snap, tactic);
+            j["validity"] = true;
+            j["next_ts"] = (sstream() << result_ts.pp()).str();
+        } catch (std::exception& e){
+            j["validity"] = false;
+            j["error"] = e.what();
+        }
+    }
+    else {
+        j["error"] = (sstream() << "Didn't find widget " << widget_id).str();
+    }
+    return j;
+}
+
+task<server::cmd_res> server::handle_try_tactic(cmd_req const & req) {
+    std::string fn         = req.m_payload.at("file_name");
+    std::string tactic_str = req.m_payload.at("tactic");
+    unsigned widget_id     = req.m_payload.at("id");
+    pos_info pos           = {req.m_payload.at("line"), req.m_payload.at("column")};
+    auto mod_info          = m_mod_mgr->get_module(fn);
+
+    return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, try_tactic_command(mod_info, tactic_str, pos, widget_id)); })
+        .wrap(library_scopes(log_tree::node()))
+        .build();
 }
 
 json server::hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action,

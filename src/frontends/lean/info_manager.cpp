@@ -98,7 +98,7 @@ class term_goal_data : public widget_info {
     tactic_state m_state;
 
 public:
-    term_goal_data(tactic_state const & s, pos_info const & pos) : widget_info(s.env(), pos), m_state(s) {}
+    term_goal_data(tactic_state const & s, pos_info const & pos) : widget_info(s.env(), pos, s), m_state(s) {}
 
     virtual void instantiate_mvars(metavar_context const & mctx0) override {
         auto goal = m_state.get_main_goal_decl();
@@ -228,16 +228,16 @@ info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
 }
 
-info_data mk_widget_goal_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
+info_data mk_widget_goal_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget, tactic_state const & ts) {
     auto ci = new component_instance(widget, props);
     vdom c = ci;
-    return info_data(new widget_goal_info(env, pos, ci->id(), c));
+    return info_data(new widget_goal_info(env, pos, ci->id(), c, ts));
 }
 
-info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget) {
+info_data mk_widget_info(environment const & env, pos_info const & pos, vm_obj const & props, vm_obj const & widget, tactic_state const & ts) {
     auto ci = new component_instance(widget, props);
     vdom c = ci;
-    return info_data(new widget_info(env, pos, ci->id(), c));
+    return info_data(new widget_info(env, pos, ci->id(), c, ts));
 }
 
 info_data mk_hole_info(tactic_state const & s, expr const & hole_args, pos_info const & begin, pos_info end) {
@@ -333,14 +333,16 @@ void info_manager::add_widget_info(pos_info pos, vm_obj const & props, vm_obj co
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_info(tactic::to_state(props).env(), pos, props, widget));
+    auto ts = tactic::to_state(props);
+    add_info(pos, mk_widget_info(ts.env(), pos, props, widget, ts));
 }
 
 void info_manager::add_widget_goal_info(pos_info pos, vm_obj const & props, vm_obj const & widget) {
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_widget_goal_info(get_vm_state().env(), pos, props, widget));
+    auto ts = tactic::to_state(props);
+    add_info(pos, mk_widget_goal_info(get_vm_state().env(), pos, props, widget, ts));
 }
 
 
@@ -443,7 +445,8 @@ vm_obj tactic_trace_widget_at(vm_obj const & _pos, vm_obj const & widget, vm_obj
 #ifndef LEAN_NO_INFO
         if (g_info_m && get_global_module_mgr()->get_report_widgets()) {
             auto pos = to_pos_info(_pos);
-            auto wi = mk_widget_info(tactic::to_state(s).env(), pos, s, widget);
+            auto ts = tactic::to_state(s);
+            auto wi = mk_widget_info(ts.env(), pos, s, widget, ts);
             auto & loc = logtree().get_location();
             g_info_m->add_info(pos, wi);
             logtree().add(std::make_shared<message>(loc.m_file_name, pos, to_string(_text), is_widget_info(wi)->id()));

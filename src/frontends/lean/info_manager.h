@@ -73,10 +73,11 @@ protected:
     pos_info     m_pos;
     unsigned     m_id = 0;
     vdom         m_vdom;
+    tactic_state m_ts;
     mutex        m_mutex;
-    widget_info(environment const & env, pos_info const & pos) : m_env(env), m_pos(pos) {}
+    widget_info(environment const & env, pos_info const & pos, tactic_state const & ts) : m_env(env), m_pos(pos), m_ts(ts) {}
 public:
-    widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd): m_env(env), m_pos(pos), m_id(id), m_vdom(vd) {}
+    widget_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd, tactic_state const & ts): m_env(env), m_pos(pos), m_id(id), m_vdom(vd), m_ts(ts) {}
     void get(json & record);
     /** Given a message of the form
      * `{handler: {h: number; r: number[]}, args: {type: "string" | "unit"; value} }`,
@@ -92,12 +93,13 @@ public:
 
     bool has_widget() const { return m_vdom.raw(); }
     unsigned id() const { return m_id; }
+    tactic_state get_tactic_state() { return m_ts; }
 };
 
 class widget_goal_info : public widget_info {
 public:
-    widget_goal_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd) :
-        widget_info(env, pos, id, vd) {}
+    widget_goal_info(environment const & env, pos_info const & pos, unsigned id, vdom const & vd, tactic_state const & ts) :
+        widget_info(env, pos, id, vd, ts) {}
     virtual void report(io_state_stream const & ios, json & record) const override;
 };
 

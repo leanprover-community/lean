@@ -98,6 +98,7 @@ class server : public module_vfs {
     task<cmd_res> handle_widget_event(cmd_req const & req);
     task<cmd_res> handle_get_widget(cmd_req const & req);
     task<cmd_res> handle_hole(cmd_req const & req);
+    task<cmd_res> handle_try_tactic(cmd_req const & req);
     cmd_res handle_hole_commands(cmd_req const & req);
     cmd_res handle_all_hole_commands(cmd_req const & req);
     cmd_res handle_search(cmd_req const & req);
@@ -105,6 +106,7 @@ class server : public module_vfs {
 
     json autocomplete(std::shared_ptr<module_info const> const & mod_info, bool skip_completions, pos_info const & pos);
     json hole_command(std::shared_ptr<module_info const> const & mod_info, std::string const & action, pos_info const & pos);
+    json try_tactic_command(std::shared_ptr<module_info const> const & mod_info, std::string const & tactic, pos_info const & pos, unsigned widget_id);
     json info(std::shared_ptr<module_info const> const & mod_info, pos_info const & pos);
 
     bool m_quiet;
