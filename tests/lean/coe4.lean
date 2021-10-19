@@ -4,9 +4,9 @@ structure Functor (A : Type u) :=
 (fn : A → A → A) (inj : ∀ x y, fn x = fn y → x = y)
 
 attribute [instance]
-definition coe_functor_to_fn (A : Type u) : has_coe_to_fun (Functor A) :=
-{ F   := λ f, A → A → A,
-  coe := Functor.fn }
+definition coe_functor_to_fn (A : Type u) :
+  has_coe_to_fun (Functor A) (λ f, A → A → A) :=
+⟨Functor.fn⟩
 
 constant f : Functor nat
 

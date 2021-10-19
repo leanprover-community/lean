@@ -80,7 +80,7 @@ meta def to_html : tc π α → π → tactic (html α)
 meta def to_component : tc unit α → component tactic_state α
 | c := component.map_props (λ tc, (tc,())) c
 
-meta instance cfn : has_coe_to_fun (tc π α) := ⟨λ x, π → tactic (html α), to_html⟩
+meta instance : has_coe_to_fun (tc π α) (λ x, π → tactic (html α)) := ⟨to_html⟩
 
 end tc
 

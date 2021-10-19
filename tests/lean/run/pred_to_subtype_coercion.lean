@@ -1,8 +1,8 @@
 universe variables u
 
 attribute [instance]
-definition pred2subtype {A : Type u} : has_coe_to_sort (A → Prop) :=
-⟨Type u, λ p : A → Prop, subtype p⟩
+definition pred2subtype {A : Type u} : has_coe_to_sort (A → Prop) _ :=
+⟨λ p : A → Prop, subtype p⟩
 
 definition below (n : nat) : nat → Prop :=
 λ i, i < n

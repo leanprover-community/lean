@@ -17,6 +17,7 @@ Author: Leonardo de Moura
 #include "library/private.h"
 #include "library/aliases.h"
 #include "library/explicit.h"
+#include "library/constants.h"
 #include "library/reducible.h"
 #include "library/scoped_ext.h"
 #include "library/tactic/elaborate.h"
@@ -54,14 +55,14 @@ ast_id parse_univ_params(parser & p, buffer<name> & lp_names) {
 /*
 Naming instances.
 
-For `instance [...] : C t u (D x y)`, we generate the name `D.C`.
+For `instance [...] : C (D x y) t u`, we generate the name `D.C`.
 However, we remove the current namespace if it is a prefix of `C` and/or `D`.
 (Exception: if `C` *equals* the current namespace, we keep the last component of `C`.
 Otherwise, the resulting name would be the same as `D`,
 which could be a name in the current namespace.)
 The current namespace will implicitly be prepended to the resulting name.
 
-For `instance [...] : C t u α`, where `α` is a variable
+For `instance [...] : C α t u`, where `α` is a variable
 (at parse time--it might turn into a coercion later, during typechecking)
 we generate the name `C`, stripping off the current namespace if possible.
 The heuristic can fail in the presence of parameters.
@@ -109,13 +110,18 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     while (is_pi(it)) it = binding_body(it);
 
     // Extract type class name.
-    expr const & C = get_app_fn(it);
+    buffer<expr> args;
+    expr const & C = get_app_args(it, args);
     if (!is_constant(C)) return {};
     name class_name = const_name(C);
 
     // Look at head symbol of last argument.
-    if (!is_app(it)) return {};
-    expr arg_head = app_arg(it);
+    if (!args.size()) return {};
+    expr arg_head = args.back();
+    if (class_name == get_has_coe_to_fun_name() || class_name == get_has_coe_to_sort_name()) {
+        // TODO(gabriel): generalize, and pick the last non-out_param argument
+        arg_head = args[0];
+    }
     while (true) {
         if (is_app(arg_head)) {
             arg_head = app_fn(arg_head);

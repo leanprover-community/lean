@@ -17,8 +17,9 @@ structure ring_hom' (M : Type*) (N : Type*) [semiring M] [semiring N] :=
 (map_zero' : to_fun 0 = 0)
 (map_add' : ∀ x y, to_fun (x + y) = to_fun x + to_fun y)
 
-instance (α : Type*) (β : Type*) [semiring α] [semiring β] : has_coe_to_fun (ring_hom' α β) :=
-⟨_, λ f, ring_hom'.to_fun (f)⟩
+instance (α : Type*) (β : Type*) [semiring α] [semiring β] :
+  has_coe_to_fun (ring_hom' α β) (λ _, α → β) :=
+⟨λ f, ring_hom'.to_fun (f)⟩
 
 class algebra' (R : Type*) (A : Type*) [comm_semiring R] [semiring A]
   extends has_scalar' R A, ring_hom' R A :=
@@ -36,7 +37,7 @@ variables {R : Type*} {A : Type*} {B : Type*}
 variables [comm_semiring R] [semiring A] [semiring B]
 variables [algebra' R A] [algebra' R B]
 
-instance : has_coe_to_fun (alg_hom' R A B) := ⟨_, λ f, f.to_fun⟩
+instance : has_coe_to_fun (alg_hom' R A B) (λ _, A → B) := ⟨λ f, f.to_fun⟩
 
 def quot.lift
   {R : Type} [comm_ring R]

@@ -3,7 +3,7 @@ variable (α : Type*)
 structure my_equiv :=
 (to_fun : α → α)
 
-instance : has_coe_to_fun (my_equiv α) := ⟨_, my_equiv.to_fun⟩
+instance : has_coe_to_fun (my_equiv α) _ := ⟨my_equiv.to_fun⟩
 
 def my_equiv1 : my_equiv α :=
 { to_fun := id }
