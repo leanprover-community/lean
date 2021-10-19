@@ -44,12 +44,6 @@ Author: Leonardo de Moura
 #include "frontends/lean/definition_cmds.h"
 
 namespace lean {
-environment ensure_decl_namespaces(environment const & env, name const & full_n) {
-    if (full_n.is_atomic())
-        return env;
-    return add_namespace(env, full_n.get_prefix());
-}
-
 expr parse_equation_lhs(parser & p, ast_data & parent, expr const & fn, buffer<expr> & locals) {
     auto lhs_pos = p.pos();
     buffer<expr> lhs_args;
@@ -286,10 +280,6 @@ declare_definition(parser_info const & p, environment const & env, decl_cmd_kind
         new_env = add_protected(new_env, c_real_name);
 
     new_env = add_alias(new_env, meta.m_modifiers.m_is_protected, c_name, c_real_name);
-
-    if (!meta.m_modifiers.m_is_private) {
-        new_env = ensure_decl_namespaces(new_env, c_real_name);
-    }
 
     new_env = compile_decl(p, new_env, c_name, c_real_name, pos);
     if (meta.m_doc_string) {

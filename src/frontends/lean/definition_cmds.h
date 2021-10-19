@@ -12,6 +12,4 @@ namespace lean {
 environment definition_cmd_core(parser & p, decl_cmd_kind k, ast_id cmd_id, cmd_meta const & meta);
 
 environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_data * parent, cmd_meta meta);
-
-environment ensure_decl_namespaces(environment const & env, name const & full_n);
 }

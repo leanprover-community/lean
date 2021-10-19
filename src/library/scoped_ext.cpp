@@ -131,6 +131,12 @@ environment add_namespace(environment const & env, name const & ns) {
     }
 }
 
+environment add_parent_namespaces(environment const & env, name const & full_n) {
+    if (full_n.is_anonymous() || full_n.is_atomic())
+        return env;
+    return add_namespace(env, full_n.get_prefix());
+}
+
 environment push_scope(environment const & env, io_state const & ios, scope_kind k, name const & n) {
     name new_n = get_namespace(env);
     if (k == scope_kind::Namespace)
