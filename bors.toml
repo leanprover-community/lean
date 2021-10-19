@@ -5,6 +5,7 @@ status = [
   "Build linux Debug",
   "Build macos Debug",
   "Build sanitized",
+  "Build linux aarch64 Release",
   "Build emscripten"
 ]
 use_squash_merge = true
