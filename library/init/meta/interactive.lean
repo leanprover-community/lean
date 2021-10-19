@@ -83,7 +83,7 @@ in match q with
 end
 
 namespace interactive
-open interactive interactive.types expr
+open _root_.interactive interactive.types expr
 
 /--
 itactic: parse a nested "interactive" tactic. That is, parse
@@ -1257,7 +1257,7 @@ prod.snd <$> (mk_simp_set_core no_dflt attr_names hs ff)
 end mk_simp_set
 
 namespace interactive
-open interactive interactive.types expr
+open _root_.interactive interactive.types expr
 
 meta def simp_core_aux (cfg : simp_config) (discharger : tactic unit) (s : simp_lemmas) (u : list name) (hs : list expr) (tgt : bool) : tactic name_set :=
 do (to_remove, lmss) ← @list.mfoldl tactic _ (list expr × name_set) _ (λ ⟨hs, lms⟩ h,
@@ -1515,7 +1515,7 @@ structure unfold_config extends simp_config :=
 (constructor_eq     := ff)
 
 namespace interactive
-open interactive interactive.types expr
+open _root_.interactive interactive.types expr
 
 /--
 Given defined constants `e₁ ... eₙ`, `unfold e₁ ... eₙ` iteratively unfolds all occurrences in the target of the main goal, using equational lemmas associated with the definitions.

@@ -294,6 +294,29 @@ static void check_identifier(parser & p, environment const & env, name const & n
         throw parser_error(sstream() << "invalid 'open' command, unknown declaration '" << full_id << "'", p.pos());
 }
 
+/** \brief Resolves a reference to a namespace \c n .
+    It prefixes \c n with the current scope, and works its way up the stack of namespaces,
+    finally trying the root name. If the name is prefixed with \c _root_ then it will always
+    resolve to the root name if available.
+    Example: suppose the scope is:
+       namespace foo
+         namespace bla
+           namespace boo
+              ...
+    Then, the procedure tries 'foo.bla.boo'+n, 'foo.bla'+n, 'foo'+n, n.
+    If n is of the form '_root_'+m it tries only m. */
+optional<name> resolve_namespace_name(environment const & env, name const & n) {
+    for (auto const & ns : get_namespaces(env)) {
+        name r = ns + n;
+        if (is_namespace(env, r))
+            return optional<name>(r);
+    }
+    name new_n = remove_root_prefix(n);
+    if (is_namespace(env, new_n))
+        return optional<name>(new_n);
+    return optional<name>();
+}
+
 // open/export id (as id)? (id ...) (renaming id->id id->id) (hiding id ... id)
 environment open_export_cmd(parser & p, ast_id cmd_id, bool open) {
     environment env = p.env();
@@ -306,7 +329,7 @@ environment open_export_cmd(parser & p, ast_id cmd_id, bool open) {
         std::tie(ns_id, ns) = p.check_id_next("invalid 'open/export' command, identifier expected",
             break_at_pos_exception::token_context::namespc);
         group.push(ns_id);
-        optional<name> real_ns = to_valid_namespace_name(env, ns);
+        optional<name> real_ns = resolve_namespace_name(env, ns);
         if (!real_ns)
             throw parser_error(sstream() << "invalid namespace name '" << ns << "'", pos);
         ns = *real_ns;

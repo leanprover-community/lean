@@ -119,7 +119,7 @@ meta def executor.execute_with_explicit (m : Type → Type u)
 executor.execute_with
 
 /-- Default `executor` instance for `tactic`s themselves -/
-meta instance : executor tactic :=
+meta instance executor_tactic : executor tactic :=
 { config_type := unit,
   inhabited := ⟨()⟩,
   execute_with := λ _, id }
