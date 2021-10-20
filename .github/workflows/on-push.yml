@@ -11,6 +11,44 @@ on:
       - '*'
 
 jobs:
+  build_linux_aarch64_job:
+    runs-on: ubuntu-20.04
+    name: Build linux aarch64 Release
+    steps:
+      - uses: actions/checkout@v2
+      - run: mkdir -p ./build
+      - uses: docker/setup-qemu-action@v1
+      - name: Install cross compiler
+        run: |
+          sudo sed -i 's/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list
+          sudo dpkg --add-architecture arm64
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ focal main restricted' | sudo tee -a /etc/apt/sources.list
+          echo 'deb [arch=arm64] http://ports.ubuntu.com/ focal-updates main restricted' | sudo tee -a /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libgmp-dev:arm64 g++-aarch64-linux-gnu
+      - name: Configure
+        run: |
+          cmake ../src/ -DCMAKE_BUILD_TYPE=Release -DSTATIC=ON \
+            -DCMAKE_TOOLCHAIN_FILE=../script/ubuntu-aarch64-toolchain.cmake
+        working-directory: ./build
+      - name: Build
+        run: |
+          make -j2
+          cpack
+        working-directory: ./build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: build/lean-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: lean-nightly-linux-aarch64
+          path: ./build/lean-*
+
   build_ubuntu_job:
     runs-on: ubuntu-latest
     name: Build linux ${{ matrix.build_type }}
