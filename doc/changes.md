@@ -7,7 +7,7 @@ Features:
 - Builds for Linux/aarch64 (#630)
 
 Bug fixes:
-- fix `lift_list` (#626)
+- Fix `lift_list` (#626)
 
 Changes:
 - Drop `prod.has_lt` (#620)
