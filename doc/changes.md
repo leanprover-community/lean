@@ -1,5 +1,22 @@
+3.34.0c (20 October 2021)
+-------------------------
+
+Features:
+- Improve `by_contradiction` (#622)
+- Export tleans in parallel (#627)
+- Builds for Linux/aarch64 (#630)
+
+Bug fixes:
+- Fix `lift_list` (#626)
+
+Changes:
+- Drop `prod.has_lt` (#620)
+- Resolve `open` like `def` (#619)
+- `add_decl` adds parent namespaces (#618)
+- Backport `has_coe_to_sort`/`has_coe_to_fun` from Lean 4 (#557)
+
 3.33.0c (13 September 2021)
-------------------------
+---------------------------
 
 Features:
 - Allow sorry macro to textualize (#602)
