@@ -39,7 +39,12 @@ class has_lift (a : Sort u) (b : Sort v) :=
 class has_lift_t (a : Sort u) (b : Sort v) :=
 (lift : a → b)
 
-class has_coe (a : Sort u) (b : Sort v) :=
+/-!
+We specify the universes in `has_coe`, `has_coe_to_fun`, and `has_coe_to_sort`
+explicitly in order to match exactly what appears in Lean4.
+-/
+
+class has_coe (a : Sort u) (b : Sort v) : Sort (max (max 1 u) v) :=
 (coe : a → b)
 
 /-- Auxiliary class that contains the transitive closure of `has_coe`. -/
@@ -47,11 +52,11 @@ class has_coe_t (a : Sort u) (b : Sort v) :=
 (coe : a → b)
 
 class has_coe_to_fun (a : Sort u) (F : out_param (a → Sort v)) :
-  Sort (max u (v+1)) :=
+  Sort (max (max 1 u) v) :=
 (coe : Π x, F x)
 
 class has_coe_to_sort (a : Sort u) (S : out_param (Sort v)) :
-  Type (max u (v+1)) :=
+  Sort (max (max 1 u) v) :=
 (coe : a → S)
 
 def lift {a : Sort u} {b : Sort v} [has_lift a b] : a → b :=
