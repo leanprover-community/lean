@@ -2343,7 +2343,6 @@ expr parser::parse_id(bool allow_field_notation) {
     ast_id aid; name id;
     std::tie(aid, id) = check_id_next("", break_at_pos_exception::token_context::expr);
     expr e = id_to_expr(id, get_ast(aid), /* resolve_only */ false, allow_field_notation);
-    finalize_ast(aid, e);
     if (is_constant(e) && get_global_info_manager()) {
         get_global_info_manager()->add_const_info(m_env, p, const_name(e));
     }
