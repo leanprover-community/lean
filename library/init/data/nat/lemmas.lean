@@ -10,6 +10,8 @@ universes u
 namespace nat
 attribute [pre_smt] nat_zero_eq_zero
 
+/-! addition -/
+
 protected lemma add_comm : ∀ n m : ℕ, n + m = m + n
 | n 0     := eq.symm (nat.zero_add n)
 | n (m+1) :=
@@ -59,13 +61,13 @@ protected lemma eq_zero_of_add_eq_zero_right : ∀ {n m : ℕ}, n + m = 0 → n 
 protected lemma eq_zero_of_add_eq_zero_left {n m : ℕ} (h : n + m = 0) : m = 0 :=
 @nat.eq_zero_of_add_eq_zero_right m n (nat.add_comm n m ▸ h)
 
-@[simp]
-lemma pred_zero : pred 0 = 0 :=
-rfl
+protected theorem add_right_comm : ∀ (n m k : ℕ), n + m + k = n + k + m :=
+right_comm nat.add nat.add_comm nat.add_assoc
 
-@[simp]
-lemma pred_succ (n : ℕ) : pred (succ n) = n :=
-rfl
+theorem eq_zero_of_add_eq_zero {n m : ℕ} (H : n + m = 0) : n = 0 ∧ m = 0 :=
+⟨nat.eq_zero_of_add_eq_zero_right H, nat.eq_zero_of_add_eq_zero_left H⟩
+
+/-! multiplication -/
 
 protected lemma mul_zero (n : ℕ) : n * 0 = 0 :=
 rfl
@@ -111,7 +113,18 @@ protected lemma mul_one : ∀ (n : ℕ), n * 1 = n := nat.zero_add
 protected lemma one_mul (n : ℕ) : 1 * n = n :=
 by rw [nat.mul_comm, nat.mul_one]
 
-/- properties of inequality -/
+theorem succ_add_eq_succ_add (n m : ℕ) : succ n + m = n + succ m :=
+by simp [succ_add, add_succ]
+
+theorem eq_zero_of_mul_eq_zero : ∀ {n m : ℕ}, n * m = 0 → n = 0 ∨ m = 0
+| 0        m := λ h, or.inl rfl
+| (succ n) m :=
+  begin
+    rw succ_mul, intro h,
+    exact or.inr (nat.eq_zero_of_add_eq_zero_left h)
+  end
+
+/-! properties of inequality -/
 
 protected lemma le_of_eq {n m : ℕ} (p : n = m) : n ≤ m :=
 p ▸ less_than_or_equal.refl
@@ -305,20 +318,76 @@ protected theorem eq_of_mul_eq_mul_left {m k n : ℕ} (Hn : 0 < n) (H : n * m = 
 le_antisymm (nat.le_of_mul_le_mul_left (le_of_eq H) Hn)
             (nat.le_of_mul_le_mul_left (le_of_eq H.symm) Hn)
 
-/- sub properties -/
+protected lemma mul_pos {a b : ℕ} (ha : 0 < a) (hb : 0 < b) : 0 < a * b :=
+have h : 0 * b < a * b, from nat.mul_lt_mul_of_pos_right ha hb,
+by rwa nat.zero_mul at h
 
-@[simp] protected lemma zero_sub : ∀ a : ℕ, 0 - a = 0
-| 0     := rfl
-| (a+1) := congr_arg pred (zero_sub a)
+theorem le_succ_of_pred_le {n m : ℕ} : pred n ≤ m → n ≤ succ m :=
+nat.cases_on n less_than_or_equal.step (λ a, succ_le_succ)
 
-lemma sub_lt_succ (a b : ℕ) : a - b < succ a :=
-lt_succ_of_le (a.sub_le b)
+theorem le_lt_antisymm {n m : ℕ} (h₁ : n ≤ m) (h₂ : m < n) : false :=
+nat.lt_irrefl n (nat.lt_of_le_of_lt h₁ h₂)
 
-protected theorem sub_le_sub_right {n m : ℕ} (h : n ≤ m) : ∀ k, n - k ≤ m - k
-| 0        := h
-| (succ z) := pred_le_pred (sub_le_sub_right z)
+theorem lt_le_antisymm {n m : ℕ} (h₁ : n < m) (h₂ : m ≤ n) : false :=
+le_lt_antisymm h₂ h₁
 
-/- bit0/bit1 properties -/
+protected theorem lt_asymm {n m : ℕ} (h₁ : n < m) : ¬ m < n :=
+le_lt_antisymm (nat.le_of_lt h₁)
+
+protected def lt_ge_by_cases {a b : ℕ} {C : Sort u} (h₁ : a < b → C) (h₂ : b ≤ a → C) : C :=
+decidable.by_cases h₁ (λ h, h₂ (or.elim (nat.lt_or_ge a b) (λ a, absurd a h) (λ a, a)))
+
+protected def lt_by_cases {a b : ℕ} {C : Sort u} (h₁ : a < b → C) (h₂ : a = b → C)
+  (h₃ : b < a → C) : C :=
+nat.lt_ge_by_cases h₁ (λ h₁,
+  nat.lt_ge_by_cases h₃ (λ h, h₂ (nat.le_antisymm h h₁)))
+
+protected theorem lt_trichotomy (a b : ℕ) : a < b ∨ a = b ∨ b < a :=
+nat.lt_by_cases (λ h, or.inl h) (λ h, or.inr (or.inl h)) (λ h, or.inr (or.inr h))
+
+protected theorem eq_or_lt_of_not_lt {a b : ℕ} (hnlt : ¬ a < b) : a = b ∨ b < a :=
+(nat.lt_trichotomy a b).resolve_left hnlt
+
+theorem lt_succ_of_lt {a b : nat} (h : a < b) : a < succ b := le_succ_of_le h
+
+lemma one_pos : 0 < 1 := nat.zero_lt_one
+
+
+protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) : c * a ≤ c * b :=
+begin
+  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 c.zero_le, nat.zero_mul] },
+  exact (le_not_le_of_lt
+    (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le c.zero_le hc0))).left,
+end
+
+protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) : a * c ≤ b * c :=
+begin
+  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
+  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 c.zero_le, nat.mul_zero] },
+  exact (le_not_le_of_lt
+    (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le c.zero_le hc0))).left,
+end
+
+protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) :
+  a * b < c * d :=
+calc
+  a * b < c * b : nat.mul_lt_mul_of_pos_right hac pos_b
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
+
+protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : 0 < c) :
+       a * b < c * d :=
+calc
+   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1
+     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h3
+
+-- TODO: there are four variations, depending on which variables we assume to be nonneg
+protected lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) : a * b ≤ c * d :=
+calc
+  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac
+    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
+
+/-! bit0/bit1 properties -/
 
 protected lemma bit1_eq_succ_bit0 (n : ℕ) : bit1 n = succ (bit0 n) :=
 rfl
@@ -440,7 +509,54 @@ protected lemma one_le_bit0 : ∀ (n : ℕ), n ≠ 0 → 1 ≤ bit0 n
     eq.symm (nat.bit0_succ_eq n) ▸ this,
   succ_le_succ (bit0 n).succ.zero_le
 
-/- subtraction -/
+/-! successor and predecessor -/
+
+@[simp]
+lemma pred_zero : pred 0 = 0 :=
+rfl
+
+@[simp]
+lemma pred_succ (n : ℕ) : pred (succ n) = n :=
+rfl
+
+theorem add_one_ne_zero (n : ℕ) : n + 1 ≠ 0 := succ_ne_zero _
+
+theorem eq_zero_or_eq_succ_pred (n : ℕ) : n = 0 ∨ n = succ (pred n) :=
+by cases n; simp
+
+theorem exists_eq_succ_of_ne_zero {n : ℕ} (H : n ≠ 0) : ∃k : ℕ, n = succ k :=
+⟨_, (eq_zero_or_eq_succ_pred _).resolve_left H⟩
+
+def discriminate {B : Sort u} {n : ℕ} (H1: n = 0 → B) (H2 : ∀m, n = succ m → B) : B :=
+by induction h : n; [exact H1 h, exact H2 _ h]
+
+theorem one_succ_zero : 1 = succ 0 := rfl
+
+def two_step_induction {P : ℕ → Sort u} (H1 : P 0) (H2 : P 1)
+    (H3 : ∀ (n : ℕ) (IH1 : P n) (IH2 : P (succ n)), P (succ (succ n))) : Π (a : ℕ), P a
+| 0               := H1
+| 1               := H2
+| (succ (succ n)) := H3 _ (two_step_induction _) (two_step_induction _)
+
+def sub_induction {P : ℕ → ℕ → Sort u} (H1 : ∀m, P 0 m)
+   (H2 : ∀n, P (succ n) 0) (H3 : ∀n m, P n m → P (succ n) (succ m)) : Π (n m : ℕ), P n m
+| 0        m        := H1 _
+| (succ n) 0        := H2 _
+| (succ n) (succ m) := H3 _ _ (sub_induction n m)
+
+/-! subtraction -/
+
+@[simp] protected lemma zero_sub : ∀ a : ℕ, 0 - a = 0
+| 0     := rfl
+| (a+1) := congr_arg pred (zero_sub a)
+
+lemma sub_lt_succ (a b : ℕ) : a - b < succ a :=
+lt_succ_of_le (a.sub_le b)
+
+protected theorem sub_le_sub_right {n m : ℕ} (h : n ≤ m) : ∀ k, n - k ≤ m - k
+| 0        := h
+| (succ z) := pred_le_pred (sub_le_sub_right z)
+
 @[simp]
 protected theorem sub_zero (n : ℕ) : n - 0 = n :=
 rfl
@@ -564,6 +680,71 @@ protected lemma lt_of_sub_eq_succ {m n l : ℕ} (H : m - n = nat.succ l) : n < m
 not_le.1
   (assume (H' : n ≥ m), begin simp [nat.sub_eq_zero_of_le H'] at H, contradiction end)
 
+protected theorem sub_le_sub_left {n m : ℕ} (k) (h : n ≤ m) : k - m ≤ k - n :=
+by induction h; [refl, exact le_trans (pred_le _) h_ih]
+
+theorem succ_sub_sub_succ (n m k : ℕ) : succ n - m - succ k = n - m - k :=
+by rw [nat.sub_sub, nat.sub_sub, add_succ, succ_sub_succ]
+
+protected theorem sub.right_comm (m n k : ℕ) : m - n - k = m - k - n :=
+by rw [nat.sub_sub, nat.sub_sub, nat.add_comm]
+
+theorem mul_pred_left : ∀ (n m : ℕ), pred n * m = n * m - m
+| 0        m := by simp [nat.zero_sub, pred_zero, nat.zero_mul]
+| (succ n) m := by rw [pred_succ, succ_mul, nat.add_sub_cancel]
+
+theorem mul_pred_right (n m : ℕ) : n * pred m = n * m - n :=
+by rw [nat.mul_comm, mul_pred_left, nat.mul_comm]
+
+protected theorem mul_sub_right_distrib : ∀ (n m k : ℕ), (n - m) * k = n * k - m * k
+| n 0        k := by simp [nat.sub_zero, nat.zero_mul]
+| n (succ m) k := by rw [nat.sub_succ, mul_pred_left, mul_sub_right_distrib, succ_mul, nat.sub_sub]
+
+protected theorem mul_sub_left_distrib (n m k : ℕ) : n * (m - k) = n * m - n * k :=
+by rw [nat.mul_comm, nat.mul_sub_right_distrib, nat.mul_comm m n, nat.mul_comm n k]
+
+protected theorem mul_self_sub_mul_self_eq (a b : nat) : a * a - b * b = (a + b) * (a - b) :=
+by rw [nat.mul_sub_left_distrib, nat.right_distrib, nat.right_distrib, nat.mul_comm b a, nat.add_comm (a*a) (a*b),
+       nat.add_sub_add_left]
+
+theorem succ_mul_succ_eq (a b : nat) : succ a * succ b = a*b + a + b + 1 :=
+begin
+  rw [← add_one, ← add_one],
+  simp [nat.right_distrib, nat.left_distrib, nat.add_left_comm, nat.mul_one, nat.one_mul, nat.add_assoc],
+end
+
+theorem succ_sub {m n : ℕ} (h : n ≤ m) : succ m - n = succ (m - n) :=
+exists.elim (nat.le.dest h)
+  (assume k, assume hk : n + k = m,
+    by rw [← hk, nat.add_sub_cancel_left, ← add_succ, nat.add_sub_cancel_left])
+
+protected theorem sub_pos_of_lt {m n : ℕ} (h : m < n) : 0 < n - m :=
+have 0 + m < n - m + m, begin rw [nat.zero_add, nat.sub_add_cancel (le_of_lt h)], exact h end,
+nat.lt_of_add_lt_add_right this
+
+protected theorem sub_sub_self {n m : ℕ} (h : m ≤ n) : n - (n - m) = m :=
+(nat.sub_eq_iff_eq_add (nat.sub_le _ _)).2 (nat.add_sub_of_le h).symm
+
+protected theorem sub_add_comm {n m k : ℕ} (h : k ≤ n) : n + m - k = n - k + m :=
+(nat.sub_eq_iff_eq_add (nat.le_trans h (nat.le_add_right _ _))).2
+  (by rwa [nat.add_right_comm, nat.sub_add_cancel])
+
+theorem sub_one_sub_lt {n i} (h : i < n) : n - 1 - i < n := begin
+  rw nat.sub_sub,
+  apply nat.sub_lt,
+  apply lt_of_lt_of_le (nat.zero_lt_succ _) h,
+  rw nat.add_comm,
+  apply nat.zero_lt_succ
+end
+
+theorem pred_inj : ∀ {a b : nat}, 0 < a → 0 < b → nat.pred a = nat.pred b → a = b
+| (succ a) (succ b) ha hb h := have a = b, from h, by rw this
+| (succ a) 0        ha hb h := absurd hb (lt_irrefl _)
+| 0        (succ b) ha hb h := absurd ha (lt_irrefl _)
+| 0        0        ha hb h := rfl
+
+/-! min -/
+
 protected lemma zero_min (a : ℕ) : min 0 a = 0 :=
 min_eq_left a.zero_le
 
@@ -589,7 +770,7 @@ else by rewrite [nat.sub_eq_zero_of_le (le_of_not_ge h), min_eq_left (le_of_not_
 @[simp] protected theorem sub_add_min_cancel (n m : ℕ) : n - m + min n m = n :=
 by rw [sub_eq_sub_min, nat.sub_add_cancel (min_le_left n m)]
 
-/- TODO(Leo): sub + inequalities -/
+/-! induction principles -/
 
 protected def strong_rec_on {p : nat → Sort u} (n : nat) (h : ∀ n, (∀ m, m < n → p m) → p n) : p n :=
 suffices ∀ n m, m < n → p m, from this (succ n) n (lt_succ_self _),
@@ -614,7 +795,7 @@ nat.strong_induction_on a $ λ n,
   | (n+1) := λ h₁, hi n (λ m h₂, h₁ _ (lt_succ_of_le h₂))
   end
 
-/- mod -/
+/-! mod -/
 
 private lemma mod_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
   nat.mod_core y f1 x = nat.mod_core y f2 x :=
@@ -692,7 +873,74 @@ match n % 2, @nat.mod_lt n 2 dec_trivial with
 | k+2, h := absurd h dec_trivial
 end
 
-/- div & mod -/
+theorem mod_le (x y : ℕ) : x % y ≤ x :=
+or.elim (lt_or_le x y)
+  (λxlty, by rw mod_eq_of_lt xlty; refl)
+  (λylex, or.elim y.eq_zero_or_pos
+    (λy0, by rw [y0, mod_zero]; refl)
+    (λypos, le_trans (le_of_lt (mod_lt _ ypos)) ylex))
+
+@[simp] theorem add_mod_right (x z : ℕ) : (x + z) % z = x % z :=
+by rw [mod_eq_sub_mod (nat.le_add_left _ _), nat.add_sub_cancel]
+
+@[simp] theorem add_mod_left (x z : ℕ) : (x + z) % x = z % x :=
+by rw [nat.add_comm, add_mod_right]
+
+@[simp] theorem add_mul_mod_self_left (x y z : ℕ) : (x + y * z) % y = x % y :=
+by {induction z with z ih, rw [nat.mul_zero, nat.add_zero], rw [mul_succ, ← nat.add_assoc, add_mod_right, ih]}
+
+@[simp] theorem add_mul_mod_self_right (x y z : ℕ) : (x + y * z) % z = x % z :=
+by rw [nat.mul_comm, add_mul_mod_self_left]
+
+@[simp] theorem mul_mod_right (m n : ℕ) : (m * n) % m = 0 :=
+by rw [← nat.zero_add (m*n), add_mul_mod_self_left, zero_mod]
+
+@[simp] theorem mul_mod_left (m n : ℕ) : (m * n) % n = 0 :=
+by rw [nat.mul_comm, mul_mod_right]
+
+theorem mul_mod_mul_left (z x y : ℕ) : (z * x) % (z * y) = z * (x % y) :=
+if y0 : y = 0 then
+  by rw [y0, nat.mul_zero, mod_zero, mod_zero]
+else if z0 : z = 0 then
+  by rw [z0, nat.zero_mul, nat.zero_mul, nat.zero_mul, mod_zero]
+else x.strong_induction_on $ λn IH,
+  have y0 : y > 0, from nat.pos_of_ne_zero y0,
+  have z0 : z > 0, from nat.pos_of_ne_zero z0,
+  or.elim (le_or_lt y n)
+    (λyn, by rw [
+        mod_eq_sub_mod yn,
+        mod_eq_sub_mod (nat.mul_le_mul_left z yn),
+        ← nat.mul_sub_left_distrib];
+      exact IH _ (nat.sub_lt (lt_of_lt_of_le y0 yn) y0))
+    (λyn, by rw [mod_eq_of_lt yn, mod_eq_of_lt (nat.mul_lt_mul_of_pos_left yn z0)])
+
+theorem mul_mod_mul_right (z x y : ℕ) : (x * z) % (y * z) = (x % y) * z :=
+by rw [nat.mul_comm x z, nat.mul_comm y z, nat.mul_comm (x % y) z]; apply mul_mod_mul_left
+
+theorem cond_to_bool_mod_two (x : ℕ) [d : decidable (x % 2 = 1)]
+: cond (@to_bool (x % 2 = 1) d) 1 0 = x % 2 :=
+begin
+  by_cases h : x % 2 = 1,
+  { simp! [*] },
+  { cases mod_two_eq_zero_or_one x; simp! [*, nat.zero_ne_one] }
+end
+
+theorem sub_mul_mod (x k n : ℕ) (h₁ : n*k ≤ x) : (x - n*k) % n = x % n :=
+begin
+  induction k with k,
+  { rw [nat.mul_zero, nat.sub_zero] },
+  { have h₂ : n * k ≤ x,
+    { rw [mul_succ] at h₁,
+      apply nat.le_trans _ h₁,
+      apply nat.le_add_right _ n },
+    have h₄ : x - n * k ≥ n,
+    { apply @nat.le_of_add_le_add_right (n*k),
+      rw [nat.sub_add_cancel h₂],
+      simp [mul_succ, nat.add_comm] at h₁, simp [h₁] },
+    rw [mul_succ, ← nat.sub_sub, ← mod_eq_sub_mod h₄, k_ih h₂] }
+end
+
+/-! div -/
 
 private lemma div_core_congr {x y f1 f2} (h1 : x ≤ f1) (h2 : x ≤ f2) :
   nat.div_core y f1 x = nat.div_core y f2 x :=
@@ -734,8 +982,6 @@ begin
   -- ¬ (0 < k ∧ k ≤ m)
   { rw [div_def, mod_def, if_neg h', if_neg h', nat.mul_zero, nat.add_zero] },
 end
-
-/- div -/
 
 @[simp] protected lemma div_one (n : ℕ) : n / 1 = n :=
 have n % 1 + 1 * (n / 1) = n, from mod_add_div _ _,
@@ -822,273 +1068,6 @@ begin
   apply le_div_iff_mul_le _ _ Hk
 end
 
-def iterate {α : Sort u} (op : α → α) : ℕ → α → α
- | 0        a := a
- | (succ k) a := iterate k (op a)
-
-notation f`^[`n`]` := iterate f n
-
-/- successor and predecessor -/
-
-theorem add_one_ne_zero (n : ℕ) : n + 1 ≠ 0 := succ_ne_zero _
-
-theorem eq_zero_or_eq_succ_pred (n : ℕ) : n = 0 ∨ n = succ (pred n) :=
-by cases n; simp
-
-theorem exists_eq_succ_of_ne_zero {n : ℕ} (H : n ≠ 0) : ∃k : ℕ, n = succ k :=
-⟨_, (eq_zero_or_eq_succ_pred _).resolve_left H⟩
-
-def discriminate {B : Sort u} {n : ℕ} (H1: n = 0 → B) (H2 : ∀m, n = succ m → B) : B :=
-by induction h : n; [exact H1 h, exact H2 _ h]
-
-theorem one_succ_zero : 1 = succ 0 := rfl
-
-def two_step_induction {P : ℕ → Sort u} (H1 : P 0) (H2 : P 1)
-    (H3 : ∀ (n : ℕ) (IH1 : P n) (IH2 : P (succ n)), P (succ (succ n))) : Π (a : ℕ), P a
-| 0               := H1
-| 1               := H2
-| (succ (succ n)) := H3 _ (two_step_induction _) (two_step_induction _)
-
-def sub_induction {P : ℕ → ℕ → Sort u} (H1 : ∀m, P 0 m)
-   (H2 : ∀n, P (succ n) 0) (H3 : ∀n m, P n m → P (succ n) (succ m)) : Π (n m : ℕ), P n m
-| 0        m        := H1 _
-| (succ n) 0        := H2 _
-| (succ n) (succ m) := H3 _ _ (sub_induction n m)
-
-/- addition -/
-
-theorem succ_add_eq_succ_add (n m : ℕ) : succ n + m = n + succ m :=
-by simp [succ_add, add_succ]
-
--- theorem one_add (n : ℕ) : 1 + n = succ n := by simp [add_comm]
-
-protected theorem add_right_comm : ∀ (n m k : ℕ), n + m + k = n + k + m :=
-right_comm nat.add nat.add_comm nat.add_assoc
-
-theorem eq_zero_of_add_eq_zero {n m : ℕ} (H : n + m = 0) : n = 0 ∧ m = 0 :=
-⟨nat.eq_zero_of_add_eq_zero_right H, nat.eq_zero_of_add_eq_zero_left H⟩
-
-theorem eq_zero_of_mul_eq_zero : ∀ {n m : ℕ}, n * m = 0 → n = 0 ∨ m = 0
-| 0        m := λ h, or.inl rfl
-| (succ n) m :=
-  begin
-    rw succ_mul, intro h,
-    exact or.inr (nat.eq_zero_of_add_eq_zero_left h)
-  end
-
-/- properties of inequality -/
-
-theorem le_succ_of_pred_le {n m : ℕ} : pred n ≤ m → n ≤ succ m :=
-nat.cases_on n less_than_or_equal.step (λ a, succ_le_succ)
-
-theorem le_lt_antisymm {n m : ℕ} (h₁ : n ≤ m) (h₂ : m < n) : false :=
-nat.lt_irrefl n (nat.lt_of_le_of_lt h₁ h₂)
-
-theorem lt_le_antisymm {n m : ℕ} (h₁ : n < m) (h₂ : m ≤ n) : false :=
-le_lt_antisymm h₂ h₁
-
-protected theorem lt_asymm {n m : ℕ} (h₁ : n < m) : ¬ m < n :=
-le_lt_antisymm (nat.le_of_lt h₁)
-
-protected def lt_ge_by_cases {a b : ℕ} {C : Sort u} (h₁ : a < b → C) (h₂ : b ≤ a → C) : C :=
-decidable.by_cases h₁ (λ h, h₂ (or.elim (nat.lt_or_ge a b) (λ a, absurd a h) (λ a, a)))
-
-protected def lt_by_cases {a b : ℕ} {C : Sort u} (h₁ : a < b → C) (h₂ : a = b → C)
-  (h₃ : b < a → C) : C :=
-nat.lt_ge_by_cases h₁ (λ h₁,
-  nat.lt_ge_by_cases h₃ (λ h, h₂ (nat.le_antisymm h h₁)))
-
-protected theorem lt_trichotomy (a b : ℕ) : a < b ∨ a = b ∨ b < a :=
-nat.lt_by_cases (λ h, or.inl h) (λ h, or.inr (or.inl h)) (λ h, or.inr (or.inr h))
-
-protected theorem eq_or_lt_of_not_lt {a b : ℕ} (hnlt : ¬ a < b) : a = b ∨ b < a :=
-(nat.lt_trichotomy a b).resolve_left hnlt
-
-theorem lt_succ_of_lt {a b : nat} (h : a < b) : a < succ b := le_succ_of_le h
-
-lemma one_pos : 0 < 1 := nat.zero_lt_one
-
-/- subtraction -/
-
-protected theorem sub_le_sub_left {n m : ℕ} (k) (h : n ≤ m) : k - m ≤ k - n :=
-by induction h; [refl, exact le_trans (pred_le _) h_ih]
-
-theorem succ_sub_sub_succ (n m k : ℕ) : succ n - m - succ k = n - m - k :=
-by rw [nat.sub_sub, nat.sub_sub, add_succ, succ_sub_succ]
-
-protected theorem sub.right_comm (m n k : ℕ) : m - n - k = m - k - n :=
-by rw [nat.sub_sub, nat.sub_sub, nat.add_comm]
-
-theorem mul_pred_left : ∀ (n m : ℕ), pred n * m = n * m - m
-| 0        m := by simp [nat.zero_sub, pred_zero, nat.zero_mul]
-| (succ n) m := by rw [pred_succ, succ_mul, nat.add_sub_cancel]
-
-theorem mul_pred_right (n m : ℕ) : n * pred m = n * m - n :=
-by rw [nat.mul_comm, mul_pred_left, nat.mul_comm]
-
-protected theorem mul_sub_right_distrib : ∀ (n m k : ℕ), (n - m) * k = n * k - m * k
-| n 0        k := by simp [nat.sub_zero, nat.zero_mul]
-| n (succ m) k := by rw [nat.sub_succ, mul_pred_left, mul_sub_right_distrib, succ_mul, nat.sub_sub]
-
-protected theorem mul_sub_left_distrib (n m k : ℕ) : n * (m - k) = n * m - n * k :=
-by rw [nat.mul_comm, nat.mul_sub_right_distrib, nat.mul_comm m n, nat.mul_comm n k]
-
-protected theorem mul_self_sub_mul_self_eq (a b : nat) : a * a - b * b = (a + b) * (a - b) :=
-by rw [nat.mul_sub_left_distrib, nat.right_distrib, nat.right_distrib, nat.mul_comm b a, nat.add_comm (a*a) (a*b),
-       nat.add_sub_add_left]
-
-theorem succ_mul_succ_eq (a b : nat) : succ a * succ b = a*b + a + b + 1 :=
-begin
-  rw [← add_one, ← add_one],
-  simp [nat.right_distrib, nat.left_distrib, nat.add_left_comm, nat.mul_one, nat.one_mul, nat.add_assoc],
-end
-
-theorem succ_sub {m n : ℕ} (h : n ≤ m) : succ m - n = succ (m - n) :=
-exists.elim (nat.le.dest h)
-  (assume k, assume hk : n + k = m,
-    by rw [← hk, nat.add_sub_cancel_left, ← add_succ, nat.add_sub_cancel_left])
-
-protected theorem sub_pos_of_lt {m n : ℕ} (h : m < n) : 0 < n - m :=
-have 0 + m < n - m + m, begin rw [nat.zero_add, nat.sub_add_cancel (le_of_lt h)], exact h end,
-nat.lt_of_add_lt_add_right this
-
-protected theorem sub_sub_self {n m : ℕ} (h : m ≤ n) : n - (n - m) = m :=
-(nat.sub_eq_iff_eq_add (nat.sub_le _ _)).2 (nat.add_sub_of_le h).symm
-
-protected theorem sub_add_comm {n m k : ℕ} (h : k ≤ n) : n + m - k = n - k + m :=
-(nat.sub_eq_iff_eq_add (nat.le_trans h (nat.le_add_right _ _))).2
-  (by rwa [nat.add_right_comm, nat.sub_add_cancel])
-
-theorem sub_one_sub_lt {n i} (h : i < n) : n - 1 - i < n := begin
-  rw nat.sub_sub,
-  apply nat.sub_lt,
-  apply lt_of_lt_of_le (nat.zero_lt_succ _) h,
-  rw nat.add_comm,
-  apply nat.zero_lt_succ
-end
-
-theorem pred_inj : ∀ {a b : nat}, 0 < a → 0 < b → nat.pred a = nat.pred b → a = b
-| (succ a) (succ b) ha hb h := have a = b, from h, by rw this
-| (succ a) 0        ha hb h := absurd hb (lt_irrefl _)
-| 0        (succ b) ha hb h := absurd ha (lt_irrefl _)
-| 0        0        ha hb h := rfl
-
-/- find -/
-
-section find
-parameter {p : ℕ → Prop}
-
-private def lbp (m n : ℕ) : Prop := m = n + 1 ∧ ∀ k ≤ n, ¬p k
-
-parameters [decidable_pred p] (H : ∃n, p n)
-
-private def wf_lbp : well_founded lbp :=
-⟨let ⟨n, pn⟩ := H in
-suffices ∀m k, n ≤ k + m → acc lbp k, from λa, this _ _ (nat.le_add_left _ _),
-λm, nat.rec_on m
-  (λk kn, ⟨_, λy r, match y, r with ._, ⟨rfl, a⟩ := absurd pn (a _ kn) end⟩)
-  (λm IH k kn, ⟨_, λy r, match y, r with ._, ⟨rfl, a⟩ := IH _ (by rw nat.add_right_comm; exact kn) end⟩)⟩
-
-protected def find_x : {n // p n ∧ ∀m < n, ¬p m} :=
-@well_founded.fix _ (λk, (∀n < k, ¬p n) → {n // p n ∧ ∀m < n, ¬p m}) lbp wf_lbp
-(λm IH al, if pm : p m then ⟨m, pm, al⟩ else
-    have ∀ n ≤ m, ¬p n, from λn h, or.elim (decidable.lt_or_eq_of_le h) (al n) (λe, by rw e; exact pm),
-    IH _ ⟨rfl, this⟩ (λn h, this n $ nat.le_of_succ_le_succ h))
-0 (λn h, absurd h (nat.not_lt_zero _))
-
-/--
-If `p` is a (decidable) predicate on `ℕ` and `hp : ∃ (n : ℕ), p n` is a proof that
-there exists some natural number satisfying `p`, then `nat.find hp` is the
-smallest natural number satisfying `p`. Note that `nat.find` is protected,
-meaning that you can't just write `find`, even if the `nat` namespace is open.
-
-The API for `nat.find` is:
-
-* `nat.find_spec` is the proof that `nat.find hp` satisfies `p`.
-* `nat.find_min` is the proof that if `m < nat.find hp` then `m` does not satisfy `p`.
-* `nat.find_min'` is the proof that if `m` does satisfy `p` then `nat.find hp ≤ m`.
--/
-protected def find : ℕ := nat.find_x.1
-
-protected theorem find_spec : p nat.find := nat.find_x.2.left
-
-protected theorem find_min : ∀ {m : ℕ}, m < nat.find → ¬p m := nat.find_x.2.right
-
-protected theorem find_min' {m : ℕ} (h : p m) : nat.find ≤ m :=
-le_of_not_lt (λ l, find_min l h)
-
-end find
-
-/- mod -/
-
-theorem mod_le (x y : ℕ) : x % y ≤ x :=
-or.elim (lt_or_le x y)
-  (λxlty, by rw mod_eq_of_lt xlty; refl)
-  (λylex, or.elim y.eq_zero_or_pos
-    (λy0, by rw [y0, mod_zero]; refl)
-    (λypos, le_trans (le_of_lt (mod_lt _ ypos)) ylex))
-
-@[simp] theorem add_mod_right (x z : ℕ) : (x + z) % z = x % z :=
-by rw [mod_eq_sub_mod (nat.le_add_left _ _), nat.add_sub_cancel]
-
-@[simp] theorem add_mod_left (x z : ℕ) : (x + z) % x = z % x :=
-by rw [nat.add_comm, add_mod_right]
-
-@[simp] theorem add_mul_mod_self_left (x y z : ℕ) : (x + y * z) % y = x % y :=
-by {induction z with z ih, rw [nat.mul_zero, nat.add_zero], rw [mul_succ, ← nat.add_assoc, add_mod_right, ih]}
-
-@[simp] theorem add_mul_mod_self_right (x y z : ℕ) : (x + y * z) % z = x % z :=
-by rw [nat.mul_comm, add_mul_mod_self_left]
-
-@[simp] theorem mul_mod_right (m n : ℕ) : (m * n) % m = 0 :=
-by rw [← nat.zero_add (m*n), add_mul_mod_self_left, zero_mod]
-
-@[simp] theorem mul_mod_left (m n : ℕ) : (m * n) % n = 0 :=
-by rw [nat.mul_comm, mul_mod_right]
-
-theorem mul_mod_mul_left (z x y : ℕ) : (z * x) % (z * y) = z * (x % y) :=
-if y0 : y = 0 then
-  by rw [y0, nat.mul_zero, mod_zero, mod_zero]
-else if z0 : z = 0 then
-  by rw [z0, nat.zero_mul, nat.zero_mul, nat.zero_mul, mod_zero]
-else x.strong_induction_on $ λn IH,
-  have y0 : y > 0, from nat.pos_of_ne_zero y0,
-  have z0 : z > 0, from nat.pos_of_ne_zero z0,
-  or.elim (le_or_lt y n)
-    (λyn, by rw [
-        mod_eq_sub_mod yn,
-        mod_eq_sub_mod (nat.mul_le_mul_left z yn),
-        ← nat.mul_sub_left_distrib];
-      exact IH _ (nat.sub_lt (lt_of_lt_of_le y0 yn) y0))
-    (λyn, by rw [mod_eq_of_lt yn, mod_eq_of_lt (nat.mul_lt_mul_of_pos_left yn z0)])
-
-theorem mul_mod_mul_right (z x y : ℕ) : (x * z) % (y * z) = (x % y) * z :=
-by rw [nat.mul_comm x z, nat.mul_comm y z, nat.mul_comm (x % y) z]; apply mul_mod_mul_left
-
-theorem cond_to_bool_mod_two (x : ℕ) [d : decidable (x % 2 = 1)]
-: cond (@to_bool (x % 2 = 1) d) 1 0 = x % 2 :=
-begin
-  by_cases h : x % 2 = 1,
-  { simp! [*] },
-  { cases mod_two_eq_zero_or_one x; simp! [*, nat.zero_ne_one] }
-end
-
-theorem sub_mul_mod (x k n : ℕ) (h₁ : n*k ≤ x) : (x - n*k) % n = x % n :=
-begin
-  induction k with k,
-  { rw [nat.mul_zero, nat.sub_zero] },
-  { have h₂ : n * k ≤ x,
-    { rw [mul_succ] at h₁,
-      apply nat.le_trans _ h₁,
-      apply nat.le_add_right _ n },
-    have h₄ : x - n * k ≥ n,
-    { apply @nat.le_of_add_le_add_right (n*k),
-      rw [nat.sub_add_cancel h₂],
-      simp [mul_succ, nat.add_comm] at h₁, simp [h₁] },
-    rw [mul_succ, ← nat.sub_sub, ← mod_eq_sub_mod h₄, k_ih h₂] }
-end
-
-/- div -/
 
 theorem sub_mul_div (x n p : ℕ) (h₁ : n*p ≤ x) : (x - n*p) / n = x / n - p :=
 begin
@@ -1178,10 +1157,6 @@ begin
     { apply (div_lt_iff_lt_mul _ _ npos).2, rwa nat.mul_comm } }
 end
 
-protected lemma mul_pos {a b : ℕ} (ha : 0 < a) (hb : 0 < b) : 0 < a * b :=
-have h : 0 * b < a * b, from nat.mul_lt_mul_of_pos_right ha hb,
-by rwa nat.zero_mul at h
-
 protected theorem div_div_eq_div_mul (m n k : ℕ) : m / n / k = m / (n * k) :=
 begin
   cases k.eq_zero_or_pos with k0 kpos, {rw [k0, nat.mul_zero, nat.div_zero, nat.div_zero]},
@@ -1202,7 +1177,18 @@ end
 protected theorem mul_div_mul {m : ℕ} (n k : ℕ) (H : 0 < m) : m * n / (m * k) = n / k :=
 by rw [← nat.div_div_eq_div_mul, nat.mul_div_cancel_left _ H]
 
-/- dvd -/
+lemma div_lt_self {n m : nat} : 0 < n → 1 < m → n / m < n :=
+begin
+  intros h₁ h₂,
+  have m_pos : 0 < m, { apply lt_trans _ h₂, comp_val },
+  suffices : 1 * n < m * n, {
+    rw [nat.one_mul, nat.mul_comm] at this,
+    exact iff.mpr (nat.div_lt_iff_lt_mul n n m_pos) this
+  },
+  exact nat.mul_lt_mul h₂ (le_refl _) h₁
+end
+
+/-! dvd -/
 
 protected theorem dvd_mul_right (a b : ℕ) : a ∣ a * b := ⟨b, rfl⟩
 
@@ -1281,51 +1267,58 @@ exists.elim H (λl H1, by rw nat.mul_assoc at H1; exact ⟨_, nat.eq_of_mul_eq_m
 theorem dvd_of_mul_dvd_mul_right {m n k : ℕ} (kpos : 0 < k) (H : m * k ∣ n * k) : m ∣ n :=
 by rw [nat.mul_comm m k, nat.mul_comm n k] at H; exact dvd_of_mul_dvd_mul_left kpos H
 
-/- --- -/
+/-! iterate -/
 
-protected lemma mul_le_mul_of_nonneg_left {a b c : ℕ} (h₁ : a ≤ b) : c * a ≤ c * b :=
-begin
-  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 c.zero_le, nat.zero_mul] },
-  exact (le_not_le_of_lt
-    (nat.mul_lt_mul_of_pos_left (lt_of_le_not_le h₁ hba) (lt_of_le_not_le c.zero_le hc0))).left,
-end
+def iterate {α : Sort u} (op : α → α) : ℕ → α → α
+ | 0        a := a
+ | (succ k) a := iterate k (op a)
 
-protected lemma mul_le_mul_of_nonneg_right {a b c : ℕ} (h₁ : a ≤ b) : a * c ≤ b * c :=
-begin
-  by_cases hba : b ≤ a, { simp [le_antisymm hba h₁] },
-  by_cases hc0 : c ≤ 0, { simp [le_antisymm hc0 c.zero_le, nat.mul_zero] },
-  exact (le_not_le_of_lt
-    (nat.mul_lt_mul_of_pos_right (lt_of_le_not_le h₁ hba) (lt_of_le_not_le c.zero_le hc0))).left,
-end
+notation f`^[`n`]` := iterate f n
 
-protected lemma mul_lt_mul {a b c d : ℕ} (hac : a < c) (hbd : b ≤ d) (pos_b : 0 < b) :
-  a * b < c * d :=
-calc
-  a * b < c * b : nat.mul_lt_mul_of_pos_right hac pos_b
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
+/-! find -/
 
-protected lemma mul_lt_mul' {a b c d : ℕ} (h1 : a ≤ c) (h2 : b < d) (h3 : 0 < c) :
-       a * b < c * d :=
-calc
-   a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right h1
-     ... < c * d : nat.mul_lt_mul_of_pos_left h2 h3
+section find
+parameter {p : ℕ → Prop}
 
--- TODO: there are four variations, depending on which variables we assume to be nonneg
-protected lemma mul_le_mul {a b c d : ℕ} (hac : a ≤ c) (hbd : b ≤ d) : a * b ≤ c * d :=
-calc
-  a * b ≤ c * b : nat.mul_le_mul_of_nonneg_right hac
-    ... ≤ c * d : nat.mul_le_mul_of_nonneg_left hbd
+private def lbp (m n : ℕ) : Prop := m = n + 1 ∧ ∀ k ≤ n, ¬p k
 
-lemma div_lt_self {n m : nat} : 0 < n → 1 < m → n / m < n :=
-begin
-  intros h₁ h₂,
-  have m_pos : 0 < m, { apply lt_trans _ h₂, comp_val },
-  suffices : 1 * n < m * n, {
-    rw [nat.one_mul, nat.mul_comm] at this,
-    exact iff.mpr (nat.div_lt_iff_lt_mul n n m_pos) this
-  },
-  exact nat.mul_lt_mul h₂ (le_refl _) h₁
-end
+parameters [decidable_pred p] (H : ∃n, p n)
+
+private def wf_lbp : well_founded lbp :=
+⟨let ⟨n, pn⟩ := H in
+suffices ∀m k, n ≤ k + m → acc lbp k, from λa, this _ _ (nat.le_add_left _ _),
+λm, nat.rec_on m
+  (λk kn, ⟨_, λy r, match y, r with ._, ⟨rfl, a⟩ := absurd pn (a _ kn) end⟩)
+  (λm IH k kn, ⟨_, λy r, match y, r with ._, ⟨rfl, a⟩ := IH _ (by rw nat.add_right_comm; exact kn) end⟩)⟩
+
+protected def find_x : {n // p n ∧ ∀m < n, ¬p m} :=
+@well_founded.fix _ (λk, (∀n < k, ¬p n) → {n // p n ∧ ∀m < n, ¬p m}) lbp wf_lbp
+(λm IH al, if pm : p m then ⟨m, pm, al⟩ else
+    have ∀ n ≤ m, ¬p n, from λn h, or.elim (decidable.lt_or_eq_of_le h) (al n) (λe, by rw e; exact pm),
+    IH _ ⟨rfl, this⟩ (λn h, this n $ nat.le_of_succ_le_succ h))
+0 (λn h, absurd h (nat.not_lt_zero _))
+
+/--
+If `p` is a (decidable) predicate on `ℕ` and `hp : ∃ (n : ℕ), p n` is a proof that
+there exists some natural number satisfying `p`, then `nat.find hp` is the
+smallest natural number satisfying `p`. Note that `nat.find` is protected,
+meaning that you can't just write `find`, even if the `nat` namespace is open.
+
+The API for `nat.find` is:
+
+* `nat.find_spec` is the proof that `nat.find hp` satisfies `p`.
+* `nat.find_min` is the proof that if `m < nat.find hp` then `m` does not satisfy `p`.
+* `nat.find_min'` is the proof that if `m` does satisfy `p` then `nat.find hp ≤ m`.
+-/
+protected def find : ℕ := nat.find_x.1
+
+protected theorem find_spec : p nat.find := nat.find_x.2.left
+
+protected theorem find_min : ∀ {m : ℕ}, m < nat.find → ¬p m := nat.find_x.2.right
+
+protected theorem find_min' {m : ℕ} (h : p m) : nat.find ≤ m :=
+le_of_not_lt (λ l, find_min l h)
+
+end find
 
 end nat
