@@ -40,7 +40,6 @@ elan override set leanprover-community/lean:3.xx.x
 You can now build the core library with `lean --make library` or open any Lean file is VSCode / Emacs and it will use the version of Lean you specified. You might have to restart Lean (in VScode: `ctrl+shift+P Lean: Restart`). Warning: all imported Lean files will be from the downloaded community version, *not* the version of the files in this repository. Therefore, this setup is not recommended if you modify more than one file. Moreover, editor features like `Go to Definition` will not behave correctly with this setup. For the best experience, [build Lean from source](doc/make/index.md).
 
 Stable binary releases of Lean are available on the [release page](https://github.com/leanprover-community/lean/releases).
-Nightly binary releases are available on the [nightly release page](https://github.com/leanprover-community/lean-nightly/releases).
 
 Miscellaneous
 -------------
