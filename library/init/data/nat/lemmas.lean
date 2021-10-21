@@ -532,19 +532,15 @@ by induction h : n; [exact H1 h, exact H2 _ h]
 
 theorem one_succ_zero : 1 = succ 0 := rfl
 
-def two_step_induction {P : ℕ → Sort u} (H1 : P 0) (H2 : P 1)
-    (H3 : ∀ (n : ℕ) (IH1 : P n) (IH2 : P (succ n)), P (succ (succ n))) : Π (a : ℕ), P a
-| 0               := H1
-| 1               := H2
-| (succ (succ n)) := H3 _ (two_step_induction _) (two_step_induction _)
+theorem pred_inj : ∀ {a b : nat}, 0 < a → 0 < b → nat.pred a = nat.pred b → a = b
+| (succ a) (succ b) ha hb h := have a = b, from h, by rw this
+| (succ a) 0        ha hb h := absurd hb (lt_irrefl _)
+| 0        (succ b) ha hb h := absurd ha (lt_irrefl _)
+| 0        0        ha hb h := rfl
 
-def sub_induction {P : ℕ → ℕ → Sort u} (H1 : ∀m, P 0 m)
-   (H2 : ∀n, P (succ n) 0) (H3 : ∀n m, P n m → P (succ n) (succ m)) : Π (n m : ℕ), P n m
-| 0        m        := H1 _
-| (succ n) 0        := H2 _
-| (succ n) (succ m) := H3 _ _ (sub_induction n m)
+/-! subtraction
 
-/-! subtraction -/
+Many lemmas are proven more generally in mathlib `algebra/order/sub` -/
 
 @[simp] protected lemma zero_sub : ∀ a : ℕ, 0 - a = 0
 | 0     := rfl
@@ -689,6 +685,31 @@ by rw [nat.sub_sub, nat.sub_sub, add_succ, succ_sub_succ]
 protected theorem sub.right_comm (m n k : ℕ) : m - n - k = m - k - n :=
 by rw [nat.sub_sub, nat.sub_sub, nat.add_comm]
 
+theorem succ_sub {m n : ℕ} (h : n ≤ m) : succ m - n = succ (m - n) :=
+exists.elim (nat.le.dest h)
+  (assume k, assume hk : n + k = m,
+    by rw [← hk, nat.add_sub_cancel_left, ← add_succ, nat.add_sub_cancel_left])
+
+protected theorem sub_pos_of_lt {m n : ℕ} (h : m < n) : 0 < n - m :=
+have 0 + m < n - m + m, begin rw [nat.zero_add, nat.sub_add_cancel (le_of_lt h)], exact h end,
+nat.lt_of_add_lt_add_right this
+
+protected theorem sub_sub_self {n m : ℕ} (h : m ≤ n) : n - (n - m) = m :=
+(nat.sub_eq_iff_eq_add (nat.sub_le _ _)).2 (nat.add_sub_of_le h).symm
+
+protected theorem sub_add_comm {n m k : ℕ} (h : k ≤ n) : n + m - k = n - k + m :=
+(nat.sub_eq_iff_eq_add (nat.le_trans h (nat.le_add_right _ _))).2
+  (by rwa [nat.add_right_comm, nat.sub_add_cancel])
+
+theorem sub_one_sub_lt {n i} (h : i < n) : n - 1 - i < n :=
+begin
+  rw nat.sub_sub,
+  apply nat.sub_lt,
+  apply lt_of_lt_of_le (nat.zero_lt_succ _) h,
+  rw nat.add_comm,
+  apply nat.zero_lt_succ
+end
+
 theorem mul_pred_left : ∀ (n m : ℕ), pred n * m = n * m - m
 | 0        m := by simp [nat.zero_sub, pred_zero, nat.zero_mul]
 | (succ n) m := by rw [pred_succ, succ_mul, nat.add_sub_cancel]
@@ -707,41 +728,11 @@ protected theorem mul_self_sub_mul_self_eq (a b : nat) : a * a - b * b = (a + b)
 by rw [nat.mul_sub_left_distrib, nat.right_distrib, nat.right_distrib, nat.mul_comm b a, nat.add_comm (a*a) (a*b),
        nat.add_sub_add_left]
 
-theorem succ_mul_succ_eq (a b : nat) : succ a * succ b = a*b + a + b + 1 :=
+theorem succ_mul_succ_eq (a b : nat) : succ a * succ b = a * b + a + b + 1 :=
 begin
   rw [← add_one, ← add_one],
   simp [nat.right_distrib, nat.left_distrib, nat.add_left_comm, nat.mul_one, nat.one_mul, nat.add_assoc],
 end
-
-theorem succ_sub {m n : ℕ} (h : n ≤ m) : succ m - n = succ (m - n) :=
-exists.elim (nat.le.dest h)
-  (assume k, assume hk : n + k = m,
-    by rw [← hk, nat.add_sub_cancel_left, ← add_succ, nat.add_sub_cancel_left])
-
-protected theorem sub_pos_of_lt {m n : ℕ} (h : m < n) : 0 < n - m :=
-have 0 + m < n - m + m, begin rw [nat.zero_add, nat.sub_add_cancel (le_of_lt h)], exact h end,
-nat.lt_of_add_lt_add_right this
-
-protected theorem sub_sub_self {n m : ℕ} (h : m ≤ n) : n - (n - m) = m :=
-(nat.sub_eq_iff_eq_add (nat.sub_le _ _)).2 (nat.add_sub_of_le h).symm
-
-protected theorem sub_add_comm {n m k : ℕ} (h : k ≤ n) : n + m - k = n - k + m :=
-(nat.sub_eq_iff_eq_add (nat.le_trans h (nat.le_add_right _ _))).2
-  (by rwa [nat.add_right_comm, nat.sub_add_cancel])
-
-theorem sub_one_sub_lt {n i} (h : i < n) : n - 1 - i < n := begin
-  rw nat.sub_sub,
-  apply nat.sub_lt,
-  apply lt_of_lt_of_le (nat.zero_lt_succ _) h,
-  rw nat.add_comm,
-  apply nat.zero_lt_succ
-end
-
-theorem pred_inj : ∀ {a b : nat}, 0 < a → 0 < b → nat.pred a = nat.pred b → a = b
-| (succ a) (succ b) ha hb h := have a = b, from h, by rw this
-| (succ a) 0        ha hb h := absurd hb (lt_irrefl _)
-| 0        (succ b) ha hb h := absurd ha (lt_irrefl _)
-| 0        0        ha hb h := rfl
 
 /-! min -/
 
@@ -771,6 +762,18 @@ else by rewrite [nat.sub_eq_zero_of_le (le_of_not_ge h), min_eq_left (le_of_not_
 by rw [sub_eq_sub_min, nat.sub_add_cancel (min_le_left n m)]
 
 /-! induction principles -/
+
+def two_step_induction {P : ℕ → Sort u} (H1 : P 0) (H2 : P 1)
+    (H3 : ∀ (n : ℕ) (IH1 : P n) (IH2 : P (succ n)), P (succ (succ n))) : Π (a : ℕ), P a
+| 0               := H1
+| 1               := H2
+| (succ (succ n)) := H3 _ (two_step_induction _) (two_step_induction _)
+
+def sub_induction {P : ℕ → ℕ → Sort u} (H1 : ∀m, P 0 m)
+   (H2 : ∀n, P (succ n) 0) (H3 : ∀n m, P n m → P (succ n) (succ m)) : Π (n m : ℕ), P n m
+| 0        m        := H1 _
+| (succ n) 0        := H2 _
+| (succ n) (succ m) := H3 _ _ (sub_induction n m)
 
 protected def strong_rec_on {p : nat → Sort u} (n : nat) (h : ∀ n, (∀ m, m < n → p m) → p n) : p n :=
 suffices ∀ n m, m < n → p m, from this (succ n) n (lt_succ_self _),
