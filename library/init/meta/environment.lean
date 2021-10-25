@@ -165,6 +165,9 @@ meta constant trans_for : environment → name → option name
 meta constant decl_olean : environment → name → option string
 /-- `decl_pos env d` returns the source location of d if available. -/
 meta constant decl_pos : environment → name → option pos
+/-- `decl_pos env d` returns the name of a declaration that d inherits
+noncomputability from, or `none` if it is computable. -/
+meta constant decl_noncomputable_reason : environment → name → option name
 /-- Return the fields of the structure with the given name, or `none` if it is not a structure -/
 meta constant structure_fields : environment → name → option (list name)
 /-- `get_class_attribute_symbols env attr_name` return symbols
