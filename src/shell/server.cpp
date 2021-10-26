@@ -775,10 +775,8 @@ json server::try_tactic_command(std::string const & fn, std::string const & tact
     else {
         j["error"] = (sstream() << "Didn't find widget " << widget_id).str();
     }
-    j["filename"] = fn;
-    j["id"] = widget_id;
-    j["line"] = pos.first;
-    j["column"] = pos.second;
+    j["file_name"] = fn;
+    j["widget"] = { {"id", widget_id}, {"line", pos.first}, {"column", pos.second} };
     return j;
 }
 
