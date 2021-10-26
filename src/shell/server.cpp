@@ -736,11 +736,12 @@ tactic_state apply(tactic_state& some_ts, snapshot const & snapshot, const std::
 }
 
 
-json server::try_tactic_command(std::shared_ptr<module_info const> const & mod_info, std::string const & tactic,
+json server::try_tactic_command(std::string const & fn, std::string const & tactic,
                                 pos_info const & pos, unsigned widget_id) {
     json j;
     widget_info * w = nullptr;
 
+    auto mod_info = m_mod_mgr->get_module(fn);
     auto snap = get_closest_snapshot(mod_info, pos)->m_snapshot_at_end;
     auto info_managers = get_info_managers(m_lt);
 
@@ -774,6 +775,10 @@ json server::try_tactic_command(std::shared_ptr<module_info const> const & mod_i
     else {
         j["error"] = (sstream() << "Didn't find widget " << widget_id).str();
     }
+    j["filename"] = fn;
+    j["id"] = widget_id;
+    j["line"] = pos.first;
+    j["column"] = pos.second;
     return j;
 }
 
@@ -782,9 +787,8 @@ task<server::cmd_res> server::handle_try_tactic(cmd_req const & req) {
     std::string tactic_str = req.m_payload.at("tactic");
     unsigned widget_id     = req.m_payload.at("id");
     pos_info pos           = {req.m_payload.at("line"), req.m_payload.at("column")};
-    auto mod_info          = m_mod_mgr->get_module(fn);
 
-    return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, try_tactic_command(mod_info, tactic_str, pos, widget_id)); })
+    return task_builder<cmd_res>([=] { return cmd_res(req.m_seq_num, try_tactic_command(fn, tactic_str, pos, widget_id)); })
         .wrap(library_scopes(log_tree::node()))
         .build();
 }
