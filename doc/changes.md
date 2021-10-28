@@ -1,3 +1,18 @@
+3.35.0c (28 October 2021)
+-------------------------
+
+Features:
+- Add `vm_decl.noncomputable_reason` (#638)
+
+Bug fixes:
+- Bugfix AST export (#634)
+
+Changes:
+- Adjust universe levels of coercions to match Lean 4 (#632)
+- Reorder sections in `data/nat/lemmas` (#635)
+- Remove `library/data/stream` (will be moved to mathlib) (#636)
+- Remove `library/data/rbtree` and `library/data/rbmap` (will be moved to mathlib) (#637)
+
 3.34.0c (20 October 2021)
 -------------------------
 
