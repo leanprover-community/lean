@@ -624,7 +624,7 @@ vm_obj set_goals(list<expr> const & gs, tactic_state const & s) {
     buffer<expr> new_gs;
     metavar_context const & mctx = s.mctx();
     for (expr const & g : gs) {
-        if (!mctx.find_metavar_decl(g)) {
+        if (!is_metavar_decl_ref(g) || !mctx.find_metavar_decl(g)) {
             return tactic::mk_exception("invalid set_goals tactic, expressions must be meta-variables "
                                        "that have been declared in the current tactic_state", s);
         }
@@ -658,7 +658,7 @@ vm_obj tactic_mk_meta_var(vm_obj const & t, vm_obj const & s0) {
 vm_obj tactic_get_univ_assignment(vm_obj const & u, vm_obj const & s0) {
     tactic_state const & s   = tactic::to_state(s0);
     metavar_context mctx     = s.mctx();
-    if (!is_meta(to_level(u))) {
+    if (!is_metavar_decl_ref(to_level(u))) {
         return tactic::mk_exception("get_univ_assignment tactic failed, argument is not an universe metavariable", s);
     } else if (auto r = mctx.get_assignment(to_level(u))) {
         return tactic::mk_success(to_obj(*r), s);
@@ -670,7 +670,7 @@ vm_obj tactic_get_univ_assignment(vm_obj const & u, vm_obj const & s0) {
 vm_obj tactic_get_assignment(vm_obj const & e, vm_obj const & s0) {
     tactic_state const & s   = tactic::to_state(s0);
     metavar_context mctx     = s.mctx();
-    if (!is_metavar(to_expr(e))) {
+    if (!is_metavar_decl_ref(to_expr(e))) {
         return tactic::mk_exception("get_assignment tactic failed, argument is not a metavariable", s);
     } else if (auto r = mctx.get_assignment(to_expr(e))) {
         return tactic::mk_success(to_obj(*r), s);
@@ -681,7 +681,7 @@ vm_obj tactic_get_assignment(vm_obj const & e, vm_obj const & s0) {
 
 vm_obj tactic_is_assigned(vm_obj const & g, vm_obj const & s0) {
     tactic_state const & s   = tactic::to_state(s0);
-    if (!is_metavar(to_expr(g))) {
+    if (!is_metavar_decl_ref(to_expr(g))) {
         return tactic::mk_exception("is_assigned tactic failed, argument is not a metavariable", s);
     } else {
         return tactic::mk_success(mk_vm_bool(s.mctx().is_assigned(to_expr(g))), s);

@@ -1,0 +1,3 @@
+641.lean:1:21: error: invalid set_goals tactic, expressions must be meta-variables that have been declared in the current tactic_state
+state:
+⊢ true
