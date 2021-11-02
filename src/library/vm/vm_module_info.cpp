@@ -31,6 +31,10 @@ static vm_obj module_info_id(vm_obj const & mi_) {
     return to_obj(to_module_info(mi_)->m_id);
 }
 
+static vm_obj module_info_get_all() {
+    return to_obj(et_global_module_mgr()->get_all_modules());
+}
+
 static vm_obj environment_import_dependencies(vm_obj const & env_, vm_obj const & mi_) {
     auto & mod_info = to_module_info(mi_);
     auto env = to_env(env_);
@@ -65,11 +69,13 @@ static vm_obj environment_import_only_until_decl(vm_obj const & env_, vm_obj con
     }
     return to_obj(env);
 }
+    
 
 void initialize_vm_module_info() {
     DECLARE_VM_BUILTIN(name({"module_info", "resolve_module_name"}),   module_info_resolve_module_name);
     DECLARE_VM_BUILTIN(name({"module_info", "of_module_id"}),          module_info_of_module_id);
     DECLARE_VM_BUILTIN(name({"module_info", "id"}),                    module_info_id);
+    DECLARE_VM_BUILTIN(name({"module_info", "get_all"}),               module_info_get_all);
     DECLARE_VM_BUILTIN(name({"environment", "import_dependencies"}),   environment_import_dependencies);
     DECLARE_VM_BUILTIN(name({"environment", "import_only"}),           environment_import_only);
     DECLARE_VM_BUILTIN(name({"environment", "import_only_until_decl"}), environment_import_only_until_decl);
