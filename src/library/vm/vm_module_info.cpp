@@ -32,7 +32,7 @@ static vm_obj module_info_id(vm_obj const & mi_) {
 }
 
 static vm_obj module_info_get_all() {
-    return to_obj(et_global_module_mgr()->get_all_modules());
+    return to_obj(get_global_module_mgr()->get_all_modules());
 }
 
 static vm_obj environment_import_dependencies(vm_obj const & env_, vm_obj const & mi_) {
