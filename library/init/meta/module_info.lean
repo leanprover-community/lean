@@ -11,6 +11,8 @@ meta constant module_info : Type
 
 namespace module_info
 
+meta constant get_all : list module_info
+
 /-- The absolute path to the `.lean` file containing the module (e.g. `".../data/dlist.lean"`). -/
 @[reducible] meta def module_id := string
 /-- The name of the module, as used in an import command (e.g. `data.dlist`). -/
