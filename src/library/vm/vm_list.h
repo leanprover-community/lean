@@ -48,7 +48,7 @@ inline vm_obj mk_vm_cons(vm_obj const & h, vm_obj const & t) { return mk_vm_cons
 template<typename T>
 vm_obj to_obj(vector<T> const & ls) {
     vm_obj obj = mk_vm_nil();
-    for (unsigned i = ls.size(); i > 0; i--)
+    for (auto i = ls.size(); i > 0; i--)
         obj = mk_vm_cons(to_obj(ls[i - 1]), obj);
     return obj;
 }
