@@ -70,7 +70,6 @@ static vm_obj environment_import_only_until_decl(vm_obj const & env_, vm_obj con
     }
     return to_obj(env);
 }
-    
 
 void initialize_vm_module_info() {
     DECLARE_VM_BUILTIN(name({"module_info", "resolve_module_name"}),   module_info_resolve_module_name);
