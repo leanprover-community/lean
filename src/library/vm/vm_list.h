@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #pragma once
 #include "kernel/expr.h"
 #include "library/vm/vm.h"
+#include <vector>
 
 namespace lean {
 list<name> to_list_name(vm_obj const & o);
