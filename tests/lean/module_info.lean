@@ -1,6 +1,6 @@
 open tactic
 
-#eval module_info.get_all
+run_cmd guard (module_info.get_all ≠ [] : bool)
 
 #eval (module_info.resolve_module_name `data.dlist).backn 10
 
