@@ -319,16 +319,16 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
 
     if (m_export_tlean) {
         if (!mod_dep) mod_dep = module_deep_dependency(mod->m_result);
-        mod->m_tlean_export = add_library_task(task_builder<unit>([mod] {
+        mod->m_tlean_export = add_library_task(task_builder<unit>([mod, mod_parser_fn] {
             auto res = get(mod->m_result);
             auto tlean_fn = tlean_of_lean(mod->m_id);
             exclusive_file_lock output_lock(tlean_fn);
             std::ofstream out(tlean_fn);
-            write_module_tlean(*res.m_loaded_module, out);
+            write_module_tlean(*res.m_loaded_module, mod_parser_fn->get_parser().env(), out);
             out.close();
             if (!out) throw exception(sstream() << "failed to write tlean file: " << tlean_fn);
             return unit();
-        }).depends_on(mod_dep), std::string("exporting AST"));
+        }).depends_on(mod_dep), std::string("exporting tlean"));
     }
 }
 

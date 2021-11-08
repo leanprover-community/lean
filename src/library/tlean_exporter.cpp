@@ -264,12 +264,4 @@ tlean_exporter::tlean_exporter(std::ostream & out, environment const & env) : m_
     m_level2idx[{}] = 0;
 }
 
-std::ostream & tlean_exporter::out() {
-    return m_out;
-}
-
-environment & tlean_exporter::env() {
-    return m_env;
-}
-
 }
