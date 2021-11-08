@@ -44,6 +44,7 @@ struct loaded_module {
     modification_list m_modifications;
     task<bool> m_uses_sorry;
 
+    // Only used as a performance optimization to speed up prelude imports.
     task<environment> m_env;
 };
 using module_loader = std::function<std::shared_ptr<loaded_module const> (std::string const &, module_name const &)>;
@@ -92,7 +93,7 @@ environment add_transient_decl_pos_info(environment const & env, name const & de
 /** \brief Store/Export module using \c env. */
 loaded_module export_module(environment const & env, std::string const & mod_name, unsigned src_hash, unsigned trans_hash);
 void write_module(loaded_module const & mod, std::ostream & out);
-void write_module_tlean(loaded_module const & mod, std::ostream & out);
+void write_module_tlean(loaded_module const & mod, environment const & env, std::ostream & out);
 
 std::shared_ptr<loaded_module const> cache_preimported_env(
         loaded_module &&, environment const & initial_env,

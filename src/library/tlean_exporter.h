@@ -45,8 +45,8 @@ public:
     void export_declaration(declaration const & d);
     void export_inductive(inductive::certified_inductive_decl const & d);
 
-    std::ostream & out();
-    environment & env();
+    std::ostream & out() { return m_out; }
+    environment const & env() { return m_env; }
 };
 
 }

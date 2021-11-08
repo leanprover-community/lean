@@ -271,7 +271,7 @@ void write_module(loaded_module const & mod, std::ostream & out) {
     s2.write_blob(r);
 }
 
-void write_module_tlean(loaded_module const & mod, std::ostream & out) {
+void write_module_tlean(loaded_module const & mod, environment const & env, std::ostream & out) {
     out << "IMPORT " << static_cast<unsigned>(mod.m_imports.size()) << " ";
 
     for (auto import : mod.m_imports) {
@@ -280,8 +280,8 @@ void write_module_tlean(loaded_module const & mod, std::ostream & out) {
     }
     out << "\n";
 
-    tlean_exporter x(out, get(mod.m_env));
-    for (auto p : mod.m_modifications) {
+    tlean_exporter x(out, env);
+    for (auto & p : mod.m_modifications) {
         p->textualize(x);
     }
 
