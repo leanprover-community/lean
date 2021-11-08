@@ -1,3 +1,14 @@
+3.35.1c (8 November 2021)
+-------------------------
+
+Features:
+- Support freebsd (#643)
+
+Bug fixes:
+- Check that arguments to `set_goals` are mvars (#642)
+- Turn comment into docstring (#646)
+- Use less memory in tlean export (#648)
+
 3.35.0c (28 October 2021)
 -------------------------
 
