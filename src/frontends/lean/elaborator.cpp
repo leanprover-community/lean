@@ -298,6 +298,7 @@ expr elaborator::mk_instance_core(local_context const & lctx, expr const & C, ex
     // TODO(gabriel): cache failures so that we do not report errors twice
     optional<expr> inst = m_ctx.mk_class_instance_at(lctx, C);
     if (!inst) {
+        m_missing_instances = cons(C, m_missing_instances);
         metavar_context mctx   = m_ctx.mctx();
         local_context new_lctx = lctx.instantiate_mvars(mctx);
         new_lctx = erase_inaccessible_annotations(new_lctx);

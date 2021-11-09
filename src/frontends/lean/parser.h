@@ -206,8 +206,8 @@ class parser : public abstract_parser, public parser_info {
     expr parse_decimal_expr();
     expr parse_string_expr();
     expr parse_char_expr();
-    expr parse_inst_implicit_decl();
-    void parse_inst_implicit_decl(buffer<expr> & r);
+    expr parse_inst_implicit_decl(binder_info bi);
+    void parse_inst_implicit_decl(binder_info bi, buffer<expr> & r);
     expr parse_binder_core(binder_info const & bi, unsigned rbp);
     bool parse_binder_collection(buffer<pair<pos_info, name>> const & names, binder_info const & bi, buffer<expr> & r);
     void parse_binder_block(buffer<expr> & r, binder_info const & bi, unsigned rbp, bool allow_default);

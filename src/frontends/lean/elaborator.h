@@ -49,6 +49,7 @@ private:
     bool              m_has_errors = false;
 
     list<expr>        m_instances;
+    list<expr>        m_missing_instances;
     list<expr>        m_numeral_types;
     list<expr_pair>   m_tactics;
     list<expr_pair>   m_holes;
@@ -320,6 +321,8 @@ public:
     expr instantiate_mvars(expr const & e);
     void freeze_local_instances() { m_ctx.freeze_local_instances(); }
     void unfreeze_local_instances() { m_ctx.unfreeze_local_instances(); }
+    void reset_missing_instances() { m_missing_instances = list<expr>(); }
+    void report_missing_instances(buffer<expr> & dest) { for (expr const & inst : m_missing_instances) { dest.push_back(inst); } }
     expr elaborate(expr const & e);
     expr elaborate_type(expr const & e);
     expr_pair elaborate_with_type(expr const & e, expr const & e_type);

@@ -860,6 +860,8 @@ void parser::throw_invalid_open_binder(pos_info const & pos) {
       - '{{' or '⦃'  : strict implicit
       - '['          : inst_implicit (i.e., implicit argument that should be
                        synthesized using type class resolution)
+      - '⟬'          : inst_implicit_deps (i.e. inst_implicit, and any parameters
+                       that the type in the binder depends on, get added)
 
    If simple_only, then only `(` is considered
 */
@@ -883,6 +885,9 @@ optional<binder_info> parser::parse_optional_binder_info(bool simple_only) {
     } else if (curr_is_token(get_ldcurly_tk())) {
         next();
         return some(mk_strict_implicit_binder_info());
+    } else if (curr_is_token(get_ldbracket_tk())) {
+        next();
+        return some(mk_inst_implicit_deps_binder_info());
     } else {
         return optional<binder_info>();
     }
@@ -890,7 +895,7 @@ optional<binder_info> parser::parse_optional_binder_info(bool simple_only) {
 
 /**
    \brief Return binder_info object based on the current token, it fails if the current token
-   is not '(', '{', '{{', '⦃', or '['
+   is not '(', '{', '{{', '⦃', '[', or '⟬'
 
    \see parse_optional_binder_info
 */
@@ -906,17 +911,20 @@ binder_info parser::parse_binder_info(bool simple_only) {
 
 /**
    \brief Consume the next token based on the value of \c bi
-     - none            : do not consume anything
-     - default         : consume ')'
-     - implicit        : consume '}'
-     - strict implicit : consume '}}' or '⦄'
-     - inst implicit   : consume ']'
+     - none                 : do not consume anything
+     - default              : consume ')'
+     - implicit             : consume '}'
+     - strict implicit      : consume '}}' or '⦄'
+     - inst implicit        : consume ']'
+     - inst implicit + deps : consume '⟭'
 */
 void parser::parse_close_binder_info(optional<binder_info> const & bi) {
     if (!bi) {
         return;
     } else if (bi->is_implicit()) {
         check_token_next(get_rcurly_tk(), "invalid declaration, '}' expected");
+    } else if (bi->is_inst_implicit_deps()) {
+        check_token_next(get_rdbracket_tk(), "invalid declaration, '⟧' expected");
     } else if (bi->is_inst_implicit()) {
         check_token_next(get_rbracket_tk(), "invalid declaration, ']' expected");
     } else if (bi->is_strict_implicit()) {
@@ -1058,8 +1066,7 @@ void parser::parse_binder_block(buffer<expr> & r, binder_info const & bi, unsign
     }
 }
 
-expr parser::parse_inst_implicit_decl() {
-    binder_info bi = mk_inst_implicit_binder_info();
+expr parser::parse_inst_implicit_decl(binder_info bi) {
     auto id_pos = pos();
     name id;
     expr type;
@@ -1088,8 +1095,8 @@ expr parser::parse_inst_implicit_decl() {
 }
 
 
-void parser::parse_inst_implicit_decl(buffer<expr> & r) {
-    expr local = parse_inst_implicit_decl();
+void parser::parse_inst_implicit_decl(binder_info bi, buffer<expr> & r) {
+    expr local = parse_inst_implicit_decl(bi);
     r.push_back(local);
 }
 
@@ -1136,7 +1143,7 @@ void parser::parse_binders_core(buffer<expr> & r, parse_binders_config & cfg) {
                 unsigned rbp = 0;
                 cfg.m_last_block_delimited = true;
                 if (bi->is_inst_implicit()) {
-                    parse_inst_implicit_decl(r);
+                    parse_inst_implicit_decl(bi.value(), r);
                 } else {
                     if (cfg.m_simple_only || !parse_local_notation_decl(cfg.m_nentries))
                         parse_binder_block(r, *bi, rbp, new_allow_default);

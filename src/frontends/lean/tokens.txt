@@ -17,6 +17,8 @@ ldcurly      ⦃
 rdcurly      ⦄
 lbracket     [
 rbracket     ]
+ldbracket    ⟬
+rdbracket    ⟭
 lcurlybang   {!
 rcurlybang   !}
 langle       ⟨

@@ -221,24 +221,30 @@ class binder_info {
     /** \brief if m_inst_implicit is true, binder argument is an implicit argument, and should be
         inferred by class-instance resolution. */
     unsigned m_inst_implicit:1;
+    /** \brief if m_implicit_deps is true, missing instance implicit parameters for this binder are
+               added to the binder list before this binder. */
+    unsigned m_implicit_deps:1;
     /** \brief Auxiliary internal attribute used to mark local constants representing recursive functions
         in recursive equations. TODO(Leo): rename to eqn_decl since we also mark non recursive equations
         (e.g., `match ... with ... end`) with this flag. */
     unsigned m_rec:1;
 public:
-    binder_info(bool implicit = false, bool strict_implicit = false, bool inst_implicit = false, bool rec = false):
-        m_implicit(implicit), m_strict_implicit(strict_implicit), m_inst_implicit(inst_implicit), m_rec(rec) {}
+    binder_info(bool implicit = false, bool strict_implicit = false, bool inst_implicit = false, bool rec = false, bool implicit_deps = false):
+        m_implicit(implicit), m_strict_implicit(strict_implicit), m_inst_implicit(inst_implicit), m_implicit_deps(implicit_deps), m_rec(rec) {}
     bool is_implicit() const { return m_implicit; }
     bool is_strict_implicit() const { return m_strict_implicit; }
     bool is_inst_implicit() const { return m_inst_implicit; }
+    bool is_implicit_deps() const { return m_implicit_deps; }
+    bool is_inst_implicit_deps() const { return m_inst_implicit && m_implicit_deps; }
     bool is_rec() const { return m_rec; }
     unsigned hash() const;
 };
 
-inline binder_info mk_implicit_binder_info()        { return binder_info(true); }
-inline binder_info mk_strict_implicit_binder_info() { return binder_info(false, true); }
-inline binder_info mk_inst_implicit_binder_info()   { return binder_info(false, false, true); }
-inline binder_info mk_rec_info(bool f)              { return binder_info(false, false, false, f); }
+inline binder_info mk_implicit_binder_info()           { return binder_info(true); }
+inline binder_info mk_strict_implicit_binder_info()    { return binder_info(false, true); }
+inline binder_info mk_inst_implicit_binder_info()      { return binder_info(false, false, true); }
+inline binder_info mk_inst_implicit_deps_binder_info() { return binder_info(false, false, true, false, true); }
+inline binder_info mk_rec_info(bool f)                 { return binder_info(false, false, false, f); }
 
 inline bool is_explicit(binder_info const & bi) {
     return !bi.is_implicit() && !bi.is_strict_implicit() && !bi.is_inst_implicit();

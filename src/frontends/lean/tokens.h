@@ -24,6 +24,8 @@ name const & get_ldcurly_tk();
 name const & get_rdcurly_tk();
 name const & get_lbracket_tk();
 name const & get_rbracket_tk();
+name const & get_ldbracket_tk();
+name const & get_rdbracket_tk();
 name const & get_lcurlybang_tk();
 name const & get_rcurlybang_tk();
 name const & get_langle_tk();

@@ -462,10 +462,32 @@ void collect_implicit_locals(parser_info & p, buffer<name> & lp_names, buffer<ex
     collect_implicit_locals(p, lp_names, params, all_exprs);
 }
 
+// Append to `new_instances` each typeclass instance that is missing in order to make `type` elaborate correctly.
+void find_missing_instances(elaborator & elab, expr const & type, buffer<expr> & new_instances) {
+    elab.freeze_local_instances();
+    elab.reset_missing_instances();
+    expr new_type      = elab.elaborate_type(type);
+    elab.unfreeze_local_instances();
+    elab.report_missing_instances(new_instances);
+}
+
 void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<expr> & new_params) {
     for (unsigned i = 0; i < params.size(); i++) {
         expr const & param = params[i];
         expr type          = replace_locals_preserving_pos_info(mlocal_type(param), i, params.data(), new_params.data());
+        binder_info const & bi = to_local(param)->get_info();
+        if (bi.is_implicit_deps()) {
+            // Add any instance parameter that the current binder depends on, before we elaborate the type fully.
+            buffer<expr> new_instances;
+            find_missing_instances(elab, type, new_instances);
+            for (unsigned j = 0; j < new_instances.size(); j++) {
+                expr const & inst_type = new_instances[j];
+                name id = mk_anonymous_inst_name(0); // TODO: determine this somehow?
+                binder_info bi = mk_inst_implicit_binder_info();
+                expr new_instance = mk_local(id, inst_type, bi);
+                new_params.push_back(new_instance);
+            }
+        }
         elab.freeze_local_instances();
         expr new_type      = elab.elaborate_type(type);
         elab.unfreeze_local_instances();
