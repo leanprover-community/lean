@@ -177,8 +177,8 @@ void collect_implicit_locals(parser_info & p, buffer<name> & lp_names, buffer<ex
 /** \brief Elaborate the types of the parameters \c params, and update the elaborator local context using them.
     Store the elaborated parameters at new_params.
 
-    \post params.size() == new_params.size() */
-void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<expr> & new_params);
+    \post params.size() + insertions.size() == new_params.size() */
+void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<expr> & new_params, buffer<unsigned> & insertions);
 
 /** \brief Create an alias c_name --> (c_real_name.{level_params} params)
     level_params and params are subsets of lp_names and var_params that were
@@ -195,6 +195,7 @@ equations_header mk_equations_header(list<name> const & fn_names, list<name> con
 equations_header mk_equations_header(name const & fn_name, name const & fn_actual_name);
 equations_header mk_match_header(name const & n, name const & actual_n);
 
+expr replace_locals_preserving_pos_info(expr const & e, buffer<expr> const & from, buffer<expr> const & to, buffer<unsigned> const & insertions);
 expr replace_locals_preserving_pos_info(expr const & e, buffer<expr> const & from, buffer<expr> const & to);
 expr replace_local_preserving_pos_info(expr const & e, expr const & from, expr const & to);
 }

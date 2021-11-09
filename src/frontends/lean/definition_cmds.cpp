@@ -477,8 +477,9 @@ static environment mutual_definition_cmd_core(parser & p, decl_cmd_kind kind, cm
     bool recover_from_errors = true;
     elaborator elab(env, p.get_options(), resolve_decl_name(env, fns[0]), metavar_context(), local_context(), recover_from_errors);
     buffer<expr> new_params;
-    elaborate_params(elab, params, new_params);
-    val = replace_locals_preserving_pos_info(val, params, new_params);
+    buffer<unsigned> insertions;
+    elaborate_params(elab, params, new_params, insertions);
+    val = replace_locals_preserving_pos_info(val, params, new_params, insertions);
     val = elab.elaborate(val);
     if (!is_equations_result(val)) {
         /* Failed to elaborate mutual recursion.
@@ -608,10 +609,10 @@ dummy_def_parser::parse_definition(buffer<name> & lp_names, buffer<expr> & param
     return std::make_tuple(fn, val, scope2.get_actual_name());
 }
 
-static void replace_params(buffer<expr> const & params, buffer<expr> const & new_params, expr & fn, expr & val) {
-    expr fn_type = replace_locals_preserving_pos_info(mlocal_type(fn), params, new_params);
+static void replace_params(buffer<expr> const & params, buffer<expr> const & new_params, buffer<unsigned> const & insertions, expr & fn, expr & val) {
+    expr fn_type = replace_locals_preserving_pos_info(mlocal_type(fn), params, new_params, insertions);
     expr new_fn  = update_mlocal(fn, fn_type);
-    val          = replace_locals_preserving_pos_info(val, params, new_params);
+    val          = replace_locals_preserving_pos_info(val, params, new_params, insertions);
     val          = replace_local_preserving_pos_info(val, fn, new_fn);
     fn           = new_fn;
 }
@@ -796,9 +797,10 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, cmd_
     bool recover_from_errors = p.m_error_recovery;
     elaborator elab(env, p.get_options(), resolve_decl_name(env, fn), metavar_context(), local_context(), recover_from_errors);
     buffer<expr> new_params;
-    elaborate_params(elab, params, new_params);
+    buffer<unsigned> insertions;
+    elaborate_params(elab, params, new_params, insertions);
     elab.freeze_local_instances();
-    replace_params(params, new_params, fn, val);
+    replace_params(params, new_params, insertions, fn, val);
 
     auto process = [&](expr val) -> environment {
         expr type;

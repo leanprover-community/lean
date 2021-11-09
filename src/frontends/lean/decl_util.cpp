@@ -384,15 +384,22 @@ void update_univ_parameters(parser_info & p, buffer<name> & lp_names, name_set c
         });
 }
 
-expr replace_locals_preserving_pos_info(expr const & e, unsigned sz, expr const * from, expr const * to) {
+expr replace_locals_preserving_pos_info(expr const & e, unsigned sz, expr const * from, expr const * to, unsigned const * insertions, unsigned insertions_sz) {
     bool use_cache = false;
     return replace(e, [&](expr const & e, unsigned) {
             if (is_local(e)) {
-                unsigned i = sz;
-                while (i > 0) {
-                    --i;
-                    if (mlocal_name(from[i]) == mlocal_name(e)) {
-                        return some_expr(copy_tag(e, copy(to[i])));
+                for (unsigned i_from = 0, i_to = 0, i_insert = 0; i_from < sz; i_from++, i_to++)
+                {
+                    // Skip the `i_to`s that were inserted.
+                    if (i_insert < insertions_sz)
+                    {
+                        while (insertions[i_insert] == i_to)
+                        {
+                            i_insert++; i_to++;
+                        }
+                    }
+                    if (mlocal_name(from[i_from]) == mlocal_name(e)) {
+                        return some_expr(copy_tag(e, copy(to[i_to])));
                     }
                 }
             }
@@ -400,9 +407,18 @@ expr replace_locals_preserving_pos_info(expr const & e, unsigned sz, expr const 
         }, use_cache);
 }
 
+expr replace_locals_preserving_pos_info(expr const & e, unsigned sz, expr const * from, expr const * to) {
+    return replace_locals_preserving_pos_info(e, sz, from, to, NULL, 0);
+}
+
+expr replace_locals_preserving_pos_info(expr const & e, buffer<expr> const & from, buffer<expr> const & to, buffer<unsigned> const & insertions) {
+    lean_assert(from.size() + insertions.size() == to.size());
+    return replace_locals_preserving_pos_info(e, from.size(), from.data(), to.data(), insertions.data(), insertions.size());
+}
+
 expr replace_locals_preserving_pos_info(expr const & e, buffer<expr> const & from, buffer<expr> const & to) {
-    lean_assert(from.size() == to.size());
-    return replace_locals_preserving_pos_info(e, from.size(), from.data(), to.data());
+    buffer<unsigned> insertions;
+    return replace_locals_preserving_pos_info(e, from, to, insertions);
 }
 
 expr replace_local_preserving_pos_info(expr const & e, expr const & from, expr const & to) {
@@ -471,10 +487,10 @@ void find_missing_instances(elaborator & elab, expr const & type, buffer<expr> &
     elab.report_missing_instances(new_instances);
 }
 
-void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<expr> & new_params) {
+void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<expr> & new_params, buffer<unsigned> & insertions) {
     for (unsigned i = 0; i < params.size(); i++) {
         expr const & param = params[i];
-        expr type          = replace_locals_preserving_pos_info(mlocal_type(param), i, params.data(), new_params.data());
+        expr type          = replace_locals_preserving_pos_info(mlocal_type(param), i, params.data(), new_params.data(), insertions.data(), insertions.size());
         binder_info const & bi = to_local(param)->get_info();
         if (bi.is_implicit_deps()) {
             // Add any instance parameter that the current binder depends on, before we elaborate the type fully.
@@ -483,8 +499,10 @@ void elaborate_params(elaborator & elab, buffer<expr> const & params, buffer<exp
             for (unsigned j = 0; j < new_instances.size(); j++) {
                 expr const & inst_type = new_instances[j];
                 name id = mk_anonymous_inst_name(0); // TODO: determine this somehow?
+                expr new_type = elab.elaborate_type(inst_type);
                 binder_info bi = mk_inst_implicit_binder_info();
-                expr new_instance = mk_local(id, inst_type, bi);
+                expr new_instance = elab.push_local(id, new_type, bi);
+                insertions.push_back(new_params.size());
                 new_params.push_back(new_instance);
             }
         }

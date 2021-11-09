@@ -436,7 +436,11 @@ class inductive_cmd_fn {
         }
 
         buffer<expr> elab_params;
-        elaborate_params(elab, params_no_inds, elab_params);
+        buffer<unsigned> insertions;
+        elaborate_params(elab, params_no_inds, elab_params, insertions);
+
+        // TODO: support insertion of params here
+        lean_assert(params_no_inds.size() == elab_params.size());
 
         convert_params_to_kernel(elab, elab_params, new_params);
 
