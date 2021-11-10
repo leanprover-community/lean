@@ -305,7 +305,7 @@ expr elaborator::mk_instance_core(local_context const & lctx, expr const & C, ex
         tactic_state s = ::lean::mk_tactic_state_for(m_env, m_opts, m_decl_name, mctx, new_lctx, C);
         return recoverable_error(some_expr(C), ref, elaborator_exception(
                 ref, format("failed to synthesize type class instance for") + line() + s.pp())
-            .ignore_if(has_synth_sorry({C})));
+            .ignore_if(has_synth_sorry({C}) || m_ignore_missing_instances));
     }
     return *inst;
 }
@@ -3991,6 +3991,18 @@ expr_pair elaborator::elaborate_with_type(expr const & e, expr const & e_type) {
     }
     new_e = enforce_type(new_e, new_e_type, "type mismatch", ref);
     return mk_pair(new_e, new_e_type);
+}
+
+// Append to `new_instances` each typeclass instance that is missing in order to make `type` elaborate correctly.
+void elaborator::find_missing_instances(expr const & type, buffer<expr> & new_instances) {
+    this->freeze_local_instances();
+    this->reset_missing_instances();
+    {
+        flet<bool> do_ignore_missing_instances(m_ignore_missing_instances, true);
+        expr new_type = this->elaborate_type(type);
+    }
+    this->unfreeze_local_instances();
+    this->report_missing_instances(new_instances);
 }
 
 void elaborator::finalize_core(sanitize_param_names_fn & S, buffer<expr> & es,

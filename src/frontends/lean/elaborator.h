@@ -50,6 +50,7 @@ private:
 
     list<expr>        m_instances;
     list<expr>        m_missing_instances;
+    bool              m_ignore_missing_instances = false;
     list<expr>        m_numeral_types;
     list<expr_pair>   m_tactics;
     list<expr_pair>   m_holes;
@@ -326,6 +327,8 @@ public:
     expr elaborate(expr const & e);
     expr elaborate_type(expr const & e);
     expr_pair elaborate_with_type(expr const & e, expr const & e_type);
+    /** Append to `new_instances` each typeclass instance that is missing in order to make `type` elaborate correctly. */
+    void find_missing_instances(expr const & type, buffer<expr> & new_instances);
     void report_error(tactic_state const & s, std::string const & msg, expr const & ref);
     void ensure_no_unassigned_metavars(expr & e);
     /**
