@@ -205,8 +205,8 @@ open interaction_monad
 open interactive
 
 private meta def parse_format : string → list char → parser pexpr
-| acc []            := pure ``(to_fmt %%(reflect acc))
-| acc ('\n'::s)     :=
+| acc [] := pure ``(to_fmt %%(reflect acc))
+| acc ('\n'::s) :=
 do f ← parse_format "" s,
    pure ``(to_fmt %%(reflect acc) ++ format.line ++ %%f)
 | acc ('{'::'{'::s) := parse_format (acc ++ "{") s
@@ -215,6 +215,8 @@ do (e, s) ← with_input (lean.parser.pexpr 0) s.as_string,
    '}'::s ← return s.to_list | fail "'}' expected",
    f ← parse_format "" s,
    pure ``(to_fmt %%(reflect acc) ++ to_fmt %%e ++ %%f)
+| acc ('}'::'}'::s) := parse_format (acc ++ "}") s
+| acc ('}'::s) := fail "'}}' expected"
 | acc (c::s) := parse_format (acc.str c) s
 
 reserve prefix `format! `:100
@@ -223,13 +225,15 @@ meta def format_macro (_ : parse $ tk "format!") (s : string) : parser pexpr :=
 parse_format "" s.to_list
 
 private meta def parse_sformat : string → list char → parser pexpr
-| acc []            := pure $ pexpr.of_expr (reflect acc)
+| acc [] := pure $ pexpr.of_expr (reflect acc)
 | acc ('{'::'{'::s) := parse_sformat (acc ++ "{") s
 | acc ('{'::s) :=
 do (e, s) ← with_input (lean.parser.pexpr 0) s.as_string,
    '}'::s ← return s.to_list | fail "'}' expected",
    f ← parse_sformat "" s,
    pure ``(%%(reflect acc) ++ to_string %%e ++ %%f)
+| acc ('}'::'}'::s) := parse_sformat (acc ++ "}") s
+| acc ('}'::s) := fail "'}}' expected"
 | acc (c::s) := parse_sformat (acc.str c) s
 
 reserve prefix `sformat! `:100
