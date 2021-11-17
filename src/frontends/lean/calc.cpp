@@ -67,7 +67,7 @@ static calc_pred decode_expr(expr const & e, pos_info const & pos) {
 
 // Create (op _ _ ... _)
 static expr mk_op_fn(parser & p, name const & op, unsigned num_placeholders, pos_info const & pos) {
-    expr r = p.save_pos(mk_explicit(mk_constant(op)), pos);
+    expr r = p.save_pos(mk_explicit(mk_as_atomic(mk_constant(op))), pos);
     while (num_placeholders > 0) {
         num_placeholders--;
         r = p.mk_app(r, p.save_pos(mk_expr_placeholder(), pos), pos);
@@ -114,7 +114,7 @@ static calc_step join(parser & p, calc_step const & s1, calc_step const & s2, po
 }
 
 static expr mk_implies(parser & p, expr const & lhs, expr const & rhs, pos_info const & pos) {
-    return p.mk_app(p.mk_app(p.save_pos(mk_constant(get_implies_name()), pos), lhs, pos), rhs, pos);
+    return p.mk_app(p.mk_app(p.save_pos(mk_as_atomic(mk_constant(get_implies_name())), pos), lhs, pos), rhs, pos);
 }
 
 static expr parse_pred(parser & p, ast_data & parent) {
