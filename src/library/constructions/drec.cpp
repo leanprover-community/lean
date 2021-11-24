@@ -129,7 +129,7 @@ struct mk_drec_fn {
                     app_args.push_back(local);
                 } else {
                     // inductive hypothesis
-                    lean_assert(j - num_fields < recursive_params.size());
+                    lean_always_assert(j - num_fields < recursive_params.size());
                     expr const & recursive_param = recursive_params[j - num_fields];
                     expr ih_type = mlocal_type(local);
                     buffer<expr> ih_params;
