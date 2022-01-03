@@ -4107,7 +4107,7 @@ expr type_context_old::preprocess_class(expr const & type,
             return type; /* failed */
         expr const & d = binding_domain(it2);
 
-        if (is_out_param[i]) {
+        if (i < is_out_param.size() && is_out_param[i]) {
             expr new_mvar = mk_tmp_mvar(locals.mk_pi(d));
             new_mvars.push_back(new_mvar);
             expr new_arg  = mk_app(new_mvar, locals.as_buffer());
