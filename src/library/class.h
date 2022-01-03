@@ -36,6 +36,10 @@ bool is_anonymous_inst_name(name const & n);
 /** \brief Return true iff e is of the form `out_param a` */
 bool is_class_out_param(expr const & e);
 
+/** \brief Determine which arguments to `cls` have the form `out_param a`, or depend on another parameter that is an `out_param`.
+ * `cls` should be the type of an instance parameter. */
+void class_out_param_deps(expr const & cls, buffer<bool> & is_out_param);
+
 /** \brief Return true iff c is a type class that contains an `out_param` */
 bool has_class_out_params(environment const & env, name const & c);
 

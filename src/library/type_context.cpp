@@ -3994,37 +3994,6 @@ static bool depends_on_mvar(expr const & e, buffer<expr> const & mvars) {
     return false;
 }
 
-buffer<bool> type_context_old::class_out_param_deps(expr const & cls) {
-    buffer<bool> result;
-    buffer<expr> C_args;
-    expr const & C = get_app_args(cls, C_args);
-    if (!is_constant(C))
-        return result;
-    expr it = infer(C);
-    for (unsigned int i = 0; i < C_args.size(); i++) {
-        if (!is_pi(it))
-            return result; /* failed */
-        expr const & d = binding_domain(it);
-
-        bool is_out = false;
-        // Is this parameter itself an out_param?
-        if (is_class_out_param(d)) {
-            is_out = true;
-        } else if (has_free_vars(d)) {
-            // Are there any bound variables in this parameter corresponding to an out_param?
-            for (unsigned int j = 0; j < i; j++) {
-                if (result[j] && has_free_var(d, i - j - 1)) {
-                    is_out = true;
-                    break;
-                }
-            }
-        }
-        result.push_back(is_out);
-        it = binding_body(it);
-    }
-    return result;
-}
-
 /*
 Type class parameters can be annotated with out_param annotations.
 
@@ -4129,7 +4098,8 @@ expr type_context_old::preprocess_class(expr const & type,
     if (!u_replacements.empty())
         C = update_constant(C, to_list(C_levels));
     expr it2 = infer(C);
-    buffer<bool> is_out_param = class_out_param_deps(it);
+    buffer<bool> is_out_param;
+    class_out_param_deps(it2, is_out_param);
     int i = 0;
     for (expr & C_arg : C_args) {
         it2  = whnf(it2);

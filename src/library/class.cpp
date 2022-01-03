@@ -10,6 +10,7 @@ Author: Leonardo de Moura
 #include "util/fresh_name.h"
 #include "util/name_set.h"
 #include "kernel/type_checker.h"
+#include "kernel/free_vars.h"
 #include "kernel/instantiate.h"
 #include "kernel/for_each_fn.h"
 #include "library/scoped_ext.h"
@@ -305,6 +306,29 @@ bool is_class(environment const & env, name const & c) {
 bool has_class_out_params(environment const & env, name const & c) {
     class_state const & s = class_ext::get_state(env);
     return s.m_has_out_params.contains(c);
+}
+
+void class_out_param_deps(expr const & cls_type, buffer<bool> & is_out_param) {
+    expr cur_cls_type = cls_type;
+    for (unsigned int i = 0; is_pi(cur_cls_type); i++) {
+        expr const & d = binding_domain(cur_cls_type);
+
+        bool is_out = false;
+        // Is this parameter itself an out_param?
+        if (is_class_out_param(d)) {
+            is_out = true;
+        } else if (has_free_vars(d)) {
+            // Are there any bound variables in this parameter corresponding to an out_param?
+            for (unsigned int j = 0; j < i; j++) {
+                if (is_out_param[j] && has_free_var(d, i - j - 1)) {
+                    is_out = true;
+                    break;
+                }
+            }
+        }
+        is_out_param.push_back(is_out);
+        cur_cls_type = binding_body(cur_cls_type);
+    }
 }
 
 environment add_instance_core(environment const & env, name const & n, unsigned priority, bool persistent, bool disable) {

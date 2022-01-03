@@ -325,8 +325,9 @@ bool elaborator::ready_to_synthesize(expr inst_type) {
     expr const & C = get_app_args(inst_type, C_args);
     if (!is_constant(C))
         return false;
-    buffer<bool> is_out_param = m_ctx.class_out_param_deps(inst_type);
     expr it = m_ctx.infer(C);
+    buffer<bool> is_out_param;
+    class_out_param_deps(it, is_out_param);
     int i = 0;
     for (expr const & C_arg : C_args) {
         if (!is_pi(it))
