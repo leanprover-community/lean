@@ -3994,6 +3994,37 @@ static bool depends_on_mvar(expr const & e, buffer<expr> const & mvars) {
     return false;
 }
 
+buffer<bool> type_context_old::class_out_param_deps(expr const & cls) {
+    buffer<bool> result;
+    buffer<expr> C_args;
+    expr const & C = get_app_args(cls, C_args);
+    if (!is_constant(C))
+        return result;
+    expr it = infer(C);
+    for (unsigned int i = 0; i < C_args.size(); i++) {
+        if (!is_pi(it))
+            return result; /* failed */
+        expr const & d = binding_domain(it);
+
+        bool is_out = false;
+        // Is this parameter itself an out_param?
+        if (is_class_out_param(d)) {
+            is_out = true;
+        } else {
+            // Are there any bound variables in this parameter corresponding to an out_param?
+            for (unsigned int j = 0; j < i; j++) {
+                if (result[j] && occurs(mk_var(i - j - 1), d)) {
+                    is_out = true;
+                    break;
+                }
+            }
+        }
+        result.push_back(is_out);
+        it = binding_body(it);
+    }
+    return result;
+}
+
 /*
 Type class parameters can be annotated with out_param annotations.
 
@@ -4011,6 +4042,7 @@ OR
    If we reject this kind of declaration, then we don't need
    this extra case which may artificially treat regular parameters
    as `out` (**).
+These two cases are detected by `type_context_old::class_out_param_deps`.
 
 Then, we execute type class resolution as usual.
 If it succeeds, and metavariables ?x_i have been assigned, we solve the unification
@@ -4097,15 +4129,15 @@ expr type_context_old::preprocess_class(expr const & type,
     if (!u_replacements.empty())
         C = update_constant(C, to_list(C_levels));
     expr it2 = infer(C);
+    buffer<bool> is_out_param = class_out_param_deps(it);
+    int i = 0;
     for (expr & C_arg : C_args) {
         it2  = whnf(it2);
         if (!is_pi(it2))
             return type; /* failed */
         expr const & d = binding_domain(it2);
-        if (/* Case 1 */
-            is_class_out_param(d) ||
-            /* Case 2 */
-            depends_on_mvar(d, new_mvars)) {
+        lean_assert(is_out_param[i] == (is_class_out_param(d) || depends_on_mvar(d, new_mvars)));
+        if (is_out_param[i]) {
             expr new_mvar = mk_tmp_mvar(locals.mk_pi(d));
             new_mvars.push_back(new_mvar);
             expr new_arg  = mk_app(new_mvar, locals.as_buffer());
@@ -4113,6 +4145,7 @@ expr type_context_old::preprocess_class(expr const & type,
             C_arg = new_arg;
         }
         it2 = instantiate(binding_body(it2), C_arg);
+        i++;
     }
     expr new_class = mk_app(C, C_args);
     return locals.mk_pi(new_class);

@@ -325,14 +325,17 @@ bool elaborator::ready_to_synthesize(expr inst_type) {
     expr const & C = get_app_args(inst_type, C_args);
     if (!is_constant(C))
         return false;
+    buffer<bool> is_out_param = m_ctx.class_out_param_deps(inst_type);
     expr it = m_ctx.infer(C);
+    int i = 0;
     for (expr const & C_arg : C_args) {
         if (!is_pi(it))
             return false; /* failed */
-        expr const & d = binding_domain(it);
-        if (has_expr_metavar(C_arg) && !is_class_out_param(d))
+        if (has_expr_metavar(C_arg) && !is_out_param[i])
             return false;
+
         it = binding_body(it);
+        i++;
     }
     return true;
 }

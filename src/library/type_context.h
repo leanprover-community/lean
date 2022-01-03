@@ -1001,6 +1001,10 @@ private:
     expr preprocess_class(expr const & type, buffer<level_pair> & u_replacements, buffer<expr_pair> & e_replacements);
 
 public:
+    /** \brief Determine which arguments to `cls` have the form `out_param a`, or depend on another parameter that is an `out_param`.
+     * `cls` should be the type of an instance parameter with the outermost `Pi`s already removed. */
+    buffer<bool> class_out_param_deps(expr const & cls);
+
     /* Helper class for creating pushing local declarations into the local context m_lctx */
     class tmp_locals {
         type_context_old & m_ctx;
