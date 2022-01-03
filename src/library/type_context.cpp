@@ -4136,7 +4136,7 @@ expr type_context_old::preprocess_class(expr const & type,
         if (!is_pi(it2))
             return type; /* failed */
         expr const & d = binding_domain(it2);
-        lean_assert(is_out_param[i] == (is_class_out_param(d) || depends_on_mvar(d, new_mvars)));
+
         if (is_out_param[i]) {
             expr new_mvar = mk_tmp_mvar(locals.mk_pi(d));
             new_mvars.push_back(new_mvar);
