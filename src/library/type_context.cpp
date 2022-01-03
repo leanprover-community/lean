@@ -4010,10 +4010,10 @@ buffer<bool> type_context_old::class_out_param_deps(expr const & cls) {
         // Is this parameter itself an out_param?
         if (is_class_out_param(d)) {
             is_out = true;
-        } else {
+        } else if (has_free_vars(d)) {
             // Are there any bound variables in this parameter corresponding to an out_param?
             for (unsigned int j = 0; j < i; j++) {
-                if (result[j] && occurs(mk_var(i - j - 1), d)) {
+                if (result[j] && has_free_var(d, i - j - 1)) {
                     is_out = true;
                     break;
                 }
