@@ -40,59 +40,64 @@ public:
         m_prover(prover) {}
 
     bool operator()(tmp_type_context & tmp_ctx, list<expr> const & emetas, list<bool> const & instances) {
-        bool failed = false;
-        for_each2(emetas, instances, [&](expr const & mvar, bool const & is_instance) {
-                unsigned mvar_idx = to_meta_idx(mvar);
-                if (failed) return;
-                expr mvar_type = tmp_ctx.instantiate_mvars(tmp_ctx.infer(mvar));
-                if (has_idx_metavar(mvar_type)) {
-                    failed = true;
-                    return;
-                }
+        // Repeat until we stop making progress or all variables are instantiated.
+        bool progress = false;
+        bool done = false;
+        do {
+            progress = false; // Set to true if we instantiate a variable.
+            done = true; // Set to false if we skip a variable.
+            for_each2(emetas, instances, [&](expr const & mvar, bool const & is_instance) {
+                    unsigned mvar_idx = to_meta_idx(mvar);
+                    expr mvar_type = tmp_ctx.instantiate_mvars(tmp_ctx.infer(mvar));
 
-                if (tmp_ctx.is_eassigned(mvar_idx)) return;
+                    if (tmp_ctx.is_eassigned(mvar_idx)) return;
 
-                if (is_instance) {
-                    if (auto v = tmp_ctx.ctx().mk_class_instance(mvar_type)) {
-                        if (!tmp_ctx.is_def_eq(mvar, *v)) {
+                    if (is_instance) {
+                        if (auto v = tmp_ctx.mk_class_instance(mvar_type)) {
+                            if (!tmp_ctx.is_def_eq(mvar, *v)) {
+                                lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                                                tout() << "unable to assign instance for: " << mvar_type << "\n";);
+                                done = false;
+                                return;
+                            } else {
+                                progress = true;
+                            }
+                        } else {
                             lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                            tout() << "unable to assign instance for: " << mvar_type << "\n";);
-                            failed = true;
+                                            tout() << "unable to synthesize instance for: " << mvar_type << "\n";);
+                            done = false;
+                            return;
+                        }
+                    }
+
+                    if (tmp_ctx.is_eassigned(mvar_idx)) return;
+
+                    if (optional<expr> pf = try_auto_param(tmp_ctx, mvar_type)) {
+                        lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
+                        progress = true;
+                        return;
+                    }
+
+                    if (tmp_ctx.ctx().is_prop(mvar_type)) {
+                        if (auto pf = m_prover(tmp_ctx, mvar_type)) {
+                            lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
+                            progress = true;
+                            return;
+                        } else {
+                            lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                                            tout() << "failed to prove: " << mvar << " : " << mvar_type << "\n";);
+                            done = false;
                             return;
                         }
                     } else {
                         lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                        tout() << "unable to synthesize instance for: " << mvar_type << "\n";);
-                        failed = true;
+                                        tout() << "failed to assign: " << mvar << " : " << mvar_type << "\n";);
+                        done = false;
                         return;
                     }
-                }
-
-                if (tmp_ctx.is_eassigned(mvar_idx)) return;
-
-                if (optional<expr> pf = try_auto_param(tmp_ctx, mvar_type)) {
-                    lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
-                    return;
-                }
-
-                if (tmp_ctx.ctx().is_prop(mvar_type)) {
-                    if (auto pf = m_prover(tmp_ctx, mvar_type)) {
-                        lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
-                        return;
-                    } else {
-                        lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                        tout() << "failed to prove: " << mvar << " : " << mvar_type << "\n";);
-                        failed = true;
-                        return;
-                    }
-                } else {
-                    lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                    tout() << "failed to assign: " << mvar << " : " << mvar_type << "\n";);
-                    failed = true;
-                    return;
-                }
-            });
-        return !failed;
+                });
+        } while (progress && !done);
+        return done;
     }
 };
 }

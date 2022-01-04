@@ -1081,6 +1081,7 @@ public:
     bool is_eassigned(unsigned i) const;
     void clear_eassignment();
     expr instantiate_mvars(expr const & e);
+    optional<expr> mk_class_instance(expr const & cls_type);
 };
 
 /** Create a formatting function that can 'decode' metavar_decl_refs and local_decl_refs

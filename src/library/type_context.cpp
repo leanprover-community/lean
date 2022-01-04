@@ -4271,6 +4271,11 @@ expr tmp_type_context::instantiate_mvars(expr const & e) {
     return m_ctx.instantiate_mvars(e);
 }
 
+optional<expr> tmp_type_context::mk_class_instance(expr const & cls_type) {
+    type_context_old::tmp_mode_scope_with_data tmp_scope(m_ctx, m_tmp_data);
+    return m_ctx.mk_class_instance(cls_type);
+}
+
 void tmp_type_context::assign(expr const & m, expr const & v) {
     type_context_old::tmp_mode_scope_with_data tmp_scope(m_ctx, m_tmp_data);
     m_ctx.assign(m, v);
