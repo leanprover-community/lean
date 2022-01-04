@@ -7,9 +7,7 @@ class broken₁ (A : Type*) :=
 (f : A → A)
 open broken₁
 
-class broken₂ (A : Type*) (a : out_param $ A)
-  -- The following doesn't need to be an `out_param` when #657 is merged:
-  [out_param $ broken₁ A] :=
+class broken₂ (A : Type*) (a : out_param $ A) [broken₁ A] :=
 (f_eq : ∀ x, f x = a)
 open broken₂
 
