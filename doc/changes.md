@@ -1,3 +1,16 @@
+3.36.0c (4 January 2021)
+------------------------
+
+Bug fixes:
+- Don't re-resolve calc constants (#652, fixes #651)
+- Unfold recursive arguments in inductives as semireducible (#653)
+- Use `always_assert` in `drec` construction (#654)
+- Don't block on metavariables that depend on an `out_param` (#657)
+
+Changes:
+- Use `}}` in format strings (#650)
+- Change binder collection order in `∀ (x y < n), true` (#656)
+
 3.35.1c (8 November 2021)
 -------------------------
 
