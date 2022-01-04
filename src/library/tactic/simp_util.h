@@ -53,6 +53,8 @@ public:
                     if (tmp_ctx.is_eassigned(mvar_idx)) return;
 
                     if (is_instance) {
+                        // Use the *temporary* context for the instance search
+                        // in order to also fill in any previous temporary metas created by matching.
                         if (auto v = tmp_ctx.mk_class_instance(mvar_type)) {
                             if (!tmp_ctx.is_def_eq(mvar, *v)) {
                                 lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
@@ -69,8 +71,14 @@ public:
                             return;
                         }
                     }
-
                     if (tmp_ctx.is_eassigned(mvar_idx)) return;
+
+                    // `mk_class_instance` can deal with temporary metavariables, but other tactics
+                    // (including `simp` itself when called recursively to solve goals) usually can't.
+                    if (has_idx_metavar(mvar_type)) {
+                        done = false;
+                        return;
+                    }
 
                     if (optional<expr> pf = try_auto_param(tmp_ctx, mvar_type)) {
                         lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
