@@ -1,3 +1,7 @@
+prelude
+import init.data.int.basic
+import init.meta.interactive
+
 namespace in_param
 
 class A (α β : Type) -- no out_param!
