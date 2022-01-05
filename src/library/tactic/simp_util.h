@@ -35,64 +35,96 @@ class instantiate_emetas_fn {
         return some_expr(result);
     }
 
+    enum emeta_result {
+        FAILED, // This metavariable is definitely not solvable.
+        WAITING, // This metavariable might be solved, if other variables are solved.
+        DONE, // This metavariable is already solved.
+        PROGRESS, // This metavariable has been solved in the last iteration.
+    };
+
+    /*
+     * \brief Try to solve the metavariable by unification, synthesizing instances or calling the prover.
+     */
+    emeta_result solve_emeta(tmp_type_context & tmp_ctx, expr const & mvar, bool const & is_instance) {
+        unsigned mvar_idx = to_meta_idx(mvar);
+        expr mvar_type = tmp_ctx.instantiate_mvars(tmp_ctx.infer(mvar));
+        if (tmp_ctx.is_eassigned(mvar_idx)) return DONE;
+
+        if (is_instance && tmp_ctx.ctx().ready_to_synthesize(mvar_type)) {
+            // Use the *temporary* context for the instance search
+            // in order to also fill in any previous temporary metas created by matching.
+            if (auto v = tmp_ctx.mk_class_instance(mvar_type)) {
+                if (!tmp_ctx.is_def_eq(mvar, *v)) {
+                    lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                                    tout() << "unable to assign instance for: " << mvar_type << "\n";);
+                    return FAILED;
+                } else {
+                    return PROGRESS;
+                }
+            } else {
+                lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                                tout() << "unable to synthesize instance for: " << mvar_type << "\n";);
+                return FAILED;
+            }
+        }
+        if (tmp_ctx.is_eassigned(mvar_idx)) return DONE;
+
+        // `mk_class_instance` can deal with temporary metavariables, but other tactics
+        // (including `simp` itself when called recursively to solve goals) usually can't.
+        if (has_idx_metavar(mvar_type)) {
+            return WAITING;
+        }
+
+        if (optional<expr> pf = try_auto_param(tmp_ctx, mvar_type)) {
+            lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
+            return PROGRESS;
+        }
+
+        if (tmp_ctx.ctx().is_prop(mvar_type)) {
+            if (auto pf = m_prover(tmp_ctx, mvar_type)) {
+                lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
+                return PROGRESS;
+            } else {
+                lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                                tout() << "failed to prove: " << mvar << " : " << mvar_type << "\n";);
+                return FAILED;
+            }
+        } else {
+            // This variable can't be inferred by itself, but it might still be possible through unifying another variable.
+            // (For example, as `out_param Type` to an instance that hasn't passed through `solve_emeta`;
+            // such cases where the type is already known but the value isn't, won't be caught by the `has_idx_metavar` check above.)
+            lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
+                            tout() << "failed to assign: " << mvar << " : " << mvar_type << "\n";);
+            return WAITING;
+        }
+    }
+
 public:
     instantiate_emetas_fn(Prover & prover):
         m_prover(prover) {}
 
     bool operator()(tmp_type_context & tmp_ctx, list<expr> const & emetas, list<bool> const & instances) {
-        bool failed = false;
-        for_each2(emetas, instances, [&](expr const & mvar, bool const & is_instance) {
-                unsigned mvar_idx = to_meta_idx(mvar);
-                if (failed) return;
-                expr mvar_type = tmp_ctx.instantiate_mvars(tmp_ctx.infer(mvar));
-                if (has_idx_metavar(mvar_type)) {
-                    failed = true;
-                    return;
-                }
-
-                if (tmp_ctx.is_eassigned(mvar_idx)) return;
-
-                if (is_instance) {
-                    if (auto v = tmp_ctx.ctx().mk_class_instance(mvar_type)) {
-                        if (!tmp_ctx.is_def_eq(mvar, *v)) {
-                            lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                            tout() << "unable to assign instance for: " << mvar_type << "\n";);
-                            failed = true;
-                            return;
-                        }
-                    } else {
-                        lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                        tout() << "unable to synthesize instance for: " << mvar_type << "\n";);
-                        failed = true;
-                        return;
+        // Repeat until we stop making progress or all variables are instantiated.
+        bool any_progress = false;
+        bool any_waiting = false;
+        do {
+            any_progress = false;
+            any_waiting = false;
+            bool any_failed = false; // Early exit if there's something definitively impossible to solve.
+            for_each2(emetas, instances, [&](expr const & mvar, bool const & is_instance) {
+                    if (any_failed) return;
+                    switch (solve_emeta(tmp_ctx, mvar, is_instance)) {
+                        case DONE: break;
+                        case PROGRESS: any_progress = true; break;
+                        case WAITING: any_waiting = true; break;
+                        case FAILED: any_failed = true; break;
                     }
-                }
-
-                if (tmp_ctx.is_eassigned(mvar_idx)) return;
-
-                if (optional<expr> pf = try_auto_param(tmp_ctx, mvar_type)) {
-                    lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
-                    return;
-                }
-
-                if (tmp_ctx.ctx().is_prop(mvar_type)) {
-                    if (auto pf = m_prover(tmp_ctx, mvar_type)) {
-                        lean_verify(tmp_ctx.is_def_eq(mvar, *pf));
-                        return;
-                    } else {
-                        lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                        tout() << "failed to prove: " << mvar << " : " << mvar_type << "\n";);
-                        failed = true;
-                        return;
-                    }
-                } else {
-                    lean_simp_trace(tmp_ctx, name({"simplify", "failure"}),
-                                    tout() << "failed to assign: " << mvar << " : " << mvar_type << "\n";);
-                    failed = true;
-                    return;
-                }
-            });
-        return !failed;
+                });
+            if (any_failed) {
+                return false;
+            }
+        } while (any_progress && any_waiting);
+        return !any_waiting;
     }
 };
 }
