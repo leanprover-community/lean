@@ -4176,6 +4176,34 @@ optional<expr> type_context_old::mk_class_instance(expr const & type_0) {
     return result;
 }
 
+/* We say a type class (Pi X, (C a_1 ... a_n)), where X may be empty, is
+   ready to synthesize if it does not contain metavariables,
+   or if the a_i's that contain metavariables are marked as output params. */
+bool type_context_old::ready_to_synthesize(expr inst_type) {
+    if (!has_expr_metavar(inst_type))
+        return true;
+    while (is_pi(inst_type))
+        inst_type = binding_body(inst_type);
+    buffer<expr> C_args;
+    expr const & C = get_app_args(inst_type, C_args);
+    if (!is_constant(C))
+        return false;
+    expr it = infer(C);
+    buffer<bool> is_out_param;
+    class_out_param_deps(it, is_out_param);
+    int i = 0;
+    for (expr const & C_arg : C_args) {
+        if (!is_pi(it))
+            return false; /* failed */
+        if (has_expr_metavar(C_arg) && !is_out_param[i])
+            return false;
+
+        it = binding_body(it);
+        i++;
+    }
+    return true;
+}
+
 optional<expr> type_context_old::mk_subsingleton_instance(expr const & type) {
     if (optional<optional<expr>> r = m_cache->get_subsingleton(type))
         return *r;

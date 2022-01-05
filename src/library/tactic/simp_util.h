@@ -52,7 +52,7 @@ public:
 
                     if (tmp_ctx.is_eassigned(mvar_idx)) return;
 
-                    if (is_instance) {
+                    if (is_instance && tmp_ctx.ctx().ready_to_synthesize(mvar_type)) {
                         // Use the *temporary* context for the instance search
                         // in order to also fill in any previous temporary metas created by matching.
                         if (auto v = tmp_ctx.mk_class_instance(mvar_type)) {

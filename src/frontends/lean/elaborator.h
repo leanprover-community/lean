@@ -272,8 +272,6 @@ private:
     tactic_state mk_tactic_state_for(expr const & mvar);
     void invoke_tactic(expr const & mvar, expr const & tac);
 
-    bool ready_to_synthesize(expr inst_type);
-
     void process_hole(expr const & mvar, expr const & arg);
     void process_holes();
 

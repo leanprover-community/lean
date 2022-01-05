@@ -740,6 +740,8 @@ public:
 
     optional<name> is_class(expr const & type);
     optional<expr> mk_class_instance(expr const & type);
+    /* Are sufficiently many metavariables instantiated for synthesis? */
+    bool ready_to_synthesize(expr inst_type);
     optional<expr> mk_subsingleton_instance(expr const & type);
     /* Create type class instance in a different local context */
     optional<expr> mk_class_instance_at(local_context const & lctx, expr const & type);

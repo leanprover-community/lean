@@ -1,0 +1,6 @@
+simp_out_params_ready.lean:11:20: error: simplify tactic failed to simplify
+state:
+⊢ p ℕ
+simp_out_params_ready.lean:22:20: error: tactic failed, there are unsolved goals
+state:
+⊢ p ℤ
