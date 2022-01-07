@@ -8,7 +8,7 @@ instance loops_wo_cache.loop {α} [loops_wo_cache α] [inhabited α] :
 ‹loops_wo_cache α›
 
 instance inhabited.to_loops_wo_cache {α} [inhabited α] : loops_wo_cache α :=
-{a := default _}
+{a := default}
 
 instance loops_wo_cache.to_fails_quickly_w_cache {α} [has_no_inst α] [loops_wo_cache α] :
     fails_quickly_w_cache α :=
@@ -16,7 +16,7 @@ instance loops_wo_cache.to_fails_quickly_w_cache {α} [has_no_inst α] [loops_wo
 
 @[priority 1] instance inhabited.to_succeeds_w_cache {α} [inhabited α] :
     succeeds_w_cache α :=
-{a := default _}
+{a := default}
 
 #check (by apply_instance : succeeds_w_cache ℕ)
 

@@ -244,7 +244,7 @@ d_array.read_write a i v
 d_array.read_write_of_ne a v
 
 def read' [inhabited β] (a : array n β) (i : nat) : β :=
-if h : i < n then a.read ⟨i,h⟩ else default β
+if h : i < n then a.read ⟨i,h⟩ else default
 
 def write' (a : array n α) (i : nat) (v : α) : array n α :=
 if h : i < n then a.write ⟨i, h⟩ v else a

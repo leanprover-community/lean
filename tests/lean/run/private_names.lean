@@ -5,7 +5,7 @@ section
 
   attribute [instance, priority 1000] foo
 
-  example : default Prop = false :=
+  example : (default : Prop) = false :=
   rfl
 end
 end bla

@@ -773,18 +773,18 @@ end
 /- inhabited -/
 
 class inhabited (α : Sort u) :=
-(default [] : α)
+(default : α)
 
 export inhabited (default)
 
 @[inline, irreducible] def arbitrary (α : Sort u) [inhabited α] : α :=
-default α
+default
 
 instance prop.inhabited : inhabited Prop :=
 ⟨true⟩
 
 instance pi.inhabited (α : Sort u) {β : α → Sort v} [Π x, inhabited (β x)] : inhabited (Π x, β x) :=
-⟨λ a, default (β a)⟩
+⟨λ a, default⟩
 
 instance : inhabited bool := ⟨ff⟩
 
@@ -798,7 +798,7 @@ nonempty.rec h₂ h₁
 
 @[priority 100]
 instance nonempty_of_inhabited {α : Sort u} [inhabited α] : nonempty α :=
-⟨default α⟩
+⟨default⟩
 
 lemma nonempty_of_exists {α : Sort u} {p : α → Prop} : (∃ x, p x) → nonempty α
 | ⟨w, h⟩ := ⟨w⟩

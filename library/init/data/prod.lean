@@ -14,7 +14,7 @@ variables {α : Type u} {β : Type v}
 | (a, b) := rfl
 
 instance [inhabited α] [inhabited β] : inhabited (prod α β) :=
-⟨(default α, default β)⟩
+⟨(default, default)⟩
 
 instance [h₁ : decidable_eq α] [h₂ : decidable_eq β] : decidable_eq (α × β)
 | (a, b) (a', b') :=

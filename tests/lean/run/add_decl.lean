@@ -12,7 +12,7 @@ run_cmd do
   let c : expr := (@const tt `foo []).app α,
   env ← get_env,
   env.add_ginductive options.mk
-    [] [α] [((`foo, `(Type)), [⟨`foo.constr, c, default _⟩])] ff >>= set_env
+    [] [α] [((`foo, `(Type)), [⟨`foo.constr, c, default⟩])] ff >>= set_env
 
 #print foo
 
@@ -40,10 +40,10 @@ run_cmd do
   env.add_ginductive options.mk
     [] [α, zero, succ] [
       ((`odd, `((%%α : Type) → Prop)),
-        [⟨`odd.succ, odd_succ_ty, default _⟩]),
+        [⟨`odd.succ, odd_succ_ty, default⟩]),
       ((`even, `((%%α : Type) → Prop)),
-        [⟨`even.zero, even zero, default _⟩,
-         ⟨`even.succ, even_succ_ty, default _⟩])] ff >>= set_env
+        [⟨`even.zero, even zero, default⟩,
+         ⟨`even.succ, even_succ_ty, default⟩])] ff >>= set_env
 
 #print prefix odd
 #print prefix even

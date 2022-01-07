@@ -1,6 +1,6 @@
 open tactic bool
 universe variables u
-constant foo {A : Type u} [inhabited A] (a b : A) : a = default A → a = b
+constant foo {A : Type u} [inhabited A] (a b : A) : a = default → a = b
 
 example (a b : nat) : a = 0 → a = b :=
 by do

@@ -93,7 +93,7 @@ open option nat
 | (a :: l) (n+1) h := nth_le l n (le_of_succ_le_succ h)
 
 @[simp] def head [inhabited α] : list α → α
-| []       := default α
+| []       := default
 | (a :: l) := a
 
 @[simp] def tail : list α → list α

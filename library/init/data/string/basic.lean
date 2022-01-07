@@ -74,7 +74,7 @@ def mk_iterator : string → iterator
 namespace iterator
 def curr : iterator → char
 | ⟨p, c::n⟩ := c
-| _         := default char
+| _         := default
 
 /- In the VM, `set_curr` is constant time if the string being iterated is not shared and linear time
    if it is. -/
