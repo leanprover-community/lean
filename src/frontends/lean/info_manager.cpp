@@ -443,7 +443,9 @@ vm_obj tactic_trace_widget_at(vm_obj const & _pos, vm_obj const & widget, vm_obj
 #ifndef LEAN_NO_INFO
         if (g_info_m && get_global_module_mgr()->get_report_widgets()) {
             auto pos = to_pos_info(_pos);
-            auto wi = mk_widget_info(tactic::to_state(s).env(), pos, s, widget);
+            // Use environment from VM state because widgets contain closures
+            // (which may refer to lambdas only available in the VM env)
+            auto wi = mk_widget_info(get_vm_state().env(), pos, s, widget);
             auto & loc = logtree().get_location();
             g_info_m->add_info(pos, wi);
             logtree().add(std::make_shared<message>(loc.m_file_name, pos, to_string(_text), is_widget_info(wi)->id()));
