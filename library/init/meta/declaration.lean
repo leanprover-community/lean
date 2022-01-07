@@ -82,12 +82,12 @@ meta def type : declaration → expr
 meta def value : declaration → expr
 | (defn _ _ _ v _ _) := v
 | (thm _ _ _ v)      := v.get
-| _                  := default expr
+| _                  := default
 
 meta def value_task : declaration → task expr
 | (defn _ _ _ v _ _) := task.pure v
 | (thm _ _ _ v)      := v
-| _                  := task.pure (default expr)
+| _                  := task.pure default
 
 meta def is_trusted : declaration → bool
 | (defn _ _ _ _ _ t) := t
@@ -122,8 +122,8 @@ meta def map_value : declaration → (expr → expr) → declaration
 | d                    f := d
 
 meta def to_definition : declaration → declaration
-| (cnst n ls t tr) := defn n ls t (default expr) reducibility_hints.abbrev tr
-| (ax n ls t)      := thm n ls t (task.pure (default expr))
+| (cnst n ls t tr) := defn n ls t default reducibility_hints.abbrev tr
+| (ax n ls t)      := thm n ls t (task.pure default)
 | d                := d
 
 meta def is_definition : declaration → bool

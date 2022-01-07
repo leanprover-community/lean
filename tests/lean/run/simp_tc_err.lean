@@ -1,5 +1,5 @@
-def c : ℕ := default _
-def d : ℕ := default _
+def c : ℕ := default
+def d : ℕ := default
 
 local attribute [simp] nat.add_zero
 

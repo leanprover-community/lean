@@ -8,8 +8,8 @@ notation `⟦` l:(foldr `, ` (h t, dvec.dcons h t) dvec.dnil `⟧`) := l
 
 def get {X : Type} [decidable_eq X] {Y : X → Type} (x₀ : X) [inhabited (Y x₀)]
   : Π {xs : list X}, dvec Y xs → ℕ → Y x₀
-| []      _                _      := default (Y x₀)
-| (x::xs) (dvec.dcons y ys) 0     := if H : x = x₀ then eq.rec_on H y else default (Y x₀)
+| []      _                _      := default
+| (x::xs) (dvec.dcons y ys) 0     := if H : x = x₀ then eq.rec_on H y else default
 | (x::xs) (dvec.dcons y ys) (n+1) := get ys n
 
 end dvec

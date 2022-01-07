@@ -15,7 +15,7 @@ universes u v
 variables {α : Type u} {β : Type v}
 
 instance sum.inhabited_left [h : inhabited α] : inhabited (α ⊕ β) :=
-⟨sum.inl (default α)⟩
+⟨sum.inl default⟩
 
 instance sum.inhabited_right [h : inhabited β] : inhabited (α ⊕ β) :=
-⟨sum.inr (default β)⟩
+⟨sum.inr default⟩
