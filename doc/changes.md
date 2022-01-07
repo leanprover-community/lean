@@ -1,3 +1,17 @@
+3.37.0c (7 January 2021)
+------------------------
+
+Features:
+- Improve `out_param` support in simp (#659)
+
+Bug fixes:
+- More robust check in cast removal in simp (#661)
+- Sort level parameters after collection (#662)
+- Use vm environment in `trace_widget` (#663)
+
+Changes:
+- Make type argument of default implicit (#660)
+
 3.36.0c (4 January 2021)
 ------------------------
 
