@@ -91,7 +91,6 @@ expr closure_helper::collect(expr const & e) {
 
 void closure_helper::finalize_collection() {
     lean_assert(!m_finalized_collection);
-    std::sort(m_level_params.begin(), m_level_params.end());
     name_map<expr> new_types;
     for (unsigned i = 0; i < m_params.size(); i++) {
         expr x = m_params[i];
@@ -109,6 +108,7 @@ void closure_helper::finalize_collection() {
         expr new_param = m_ctx.push_local(mlocal_pp_name(x), new_type, local_info(x));
         m_norm_params.push_back(new_param);
     }
+    std::sort(m_level_params.begin(), m_level_params.end());
     m_finalized_collection = true;
 }
 
