@@ -93,6 +93,7 @@ public:
     void erase(simp_lemma const & r);
     void erase(name_set const & ids);
     void erase(buffer<name> const & ids);
+    void erase_simp_lemmas();
     /* Return the Simp/Refl simp_lemma's for the given head index */
     list<simp_lemma> const * find(head_index const & h) const;
     void for_each(std::function<void(simp_lemma const &)> const & fn) const;
@@ -111,6 +112,7 @@ public:
     void erase(name const & eqv, simp_lemma const & r);
     void erase(name_set const & ids);
     void erase(buffer<name> const & ids);
+    void erase_simp_lemmas();
     void get_relations(buffer<name> & rs) const;
     simp_lemmas_for const * find(name const & eqv) const;
     list<simp_lemma> const * find(name const & eqv, head_index const & h) const;

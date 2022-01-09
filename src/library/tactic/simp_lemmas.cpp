@@ -285,6 +285,10 @@ void simp_lemmas_for::erase(simp_lemma const & r) {
         m_simp_set.erase(r.get_lhs(), r);
 }
 
+void simp_lemmas_for::erase_simp_lemmas() {
+    m_simp_set = {};
+}
+
 list<simp_lemma> const * simp_lemmas_for::find(head_index const & h) const {
     return m_simp_set.find(h);
 }
@@ -331,6 +335,16 @@ void simp_lemmas::insert(name const & eqv, simp_lemma const & r) {
     }
     s.insert(r);
     m_sets.insert(eqv, s);
+}
+
+void simp_lemmas::erase_simp_lemmas() {
+    name_map<simp_lemmas_for> new_sets;
+    m_sets.for_each([&](name const & n, simp_lemmas_for const & s) {
+            simp_lemmas_for new_s = s;
+            new_s.erase_simp_lemmas();
+            new_sets.insert(n, new_s);
+        });
+    m_sets = new_sets;
 }
 
 void simp_lemmas::erase(name const & eqv, simp_lemma const & r) {
@@ -1500,6 +1514,12 @@ vm_obj simp_lemmas_erase(vm_obj const & lemmas, vm_obj const & lemma_list) {
     return to_obj(new_lemmas);
 }
 
+vm_obj simp_lemmas_erase_simp_lemmas(vm_obj const & lemmas) {
+    simp_lemmas new_lemmas = to_simp_lemmas(lemmas);
+    new_lemmas.erase_simp_lemmas();
+    return to_obj(new_lemmas);
+}
+
 class simp_aux_prover {
     vm_obj         m_prove_fn;
     tactic_state   m_state;
@@ -1698,6 +1718,7 @@ void initialize_simp_lemmas() {
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "mk"}), simp_lemmas_mk);
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "join"}), simp_lemmas_join);
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "erase"}), simp_lemmas_erase);
+    DECLARE_VM_BUILTIN(name({"simp_lemmas", "erase_simp_lemmas"}), simp_lemmas_erase_simp_lemmas);
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "mk_default"}),      simp_lemmas_mk_default);
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "add"}),             simp_lemmas_add);
     DECLARE_VM_BUILTIN(name({"simp_lemmas", "add_simp"}),        simp_lemmas_add_simp);
