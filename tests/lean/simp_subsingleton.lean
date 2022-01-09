@@ -10,7 +10,7 @@ def some_function : some_subsingleton → some_subsingleton := λ x, x
   some_function a = canonical := by cases a; refl
 
 -- Motivating example:
--- example (a : some_subsingleton) : some_function a = canonical := by simp only [some_function_lemma]
+example (a : some_subsingleton) : some_function a = canonical := by simp only [some_function_lemma]
 
 example (a : some_subsingleton) : some_function a = canonical :=
 by {(do
