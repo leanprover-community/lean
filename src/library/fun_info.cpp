@@ -150,12 +150,11 @@ ss_param_infos get_subsingleton_info(type_context_old & ctx, expr const & e, uns
     return r;
 }
 
-/* Return true if there is j s.t. ssinfos[j] is marked as subsingleton,
+/* Return true if there is j s.t. ssinfos[j] is a proposition,
    and it dependends of argument i */
-static bool has_nonsubsingleton_fwd_dep(unsigned i, buffer<param_info> const & pinfos, buffer<ss_param_info> const & ssinfos) {
-    lean_assert(pinfos.size() == ssinfos.size());
+static bool has_nonsubsingleton_fwd_dep(unsigned i, buffer<param_info> const & pinfos) {
     for (unsigned j = i+1; j < pinfos.size(); j++) {
-        if (ssinfos[j].is_subsingleton())
+        if (pinfos[j].is_prop())
             continue;
         auto const & back_deps = pinfos[j].get_back_deps();
         if (std::find(back_deps.begin(), back_deps.end(), i) != back_deps.end()) {
@@ -173,9 +172,6 @@ static void trace_if_unsupported(type_context_old & ctx, expr const & fn,
     fun_info info = get_fun_info(ctx, fn, args.size());
     buffer<param_info> pinfos;
     to_buffer(info.get_params_info(), pinfos);
-    buffer<ss_param_info> ssinfos;
-    to_buffer(get_subsingleton_info(ctx, fn, args.size()), ssinfos);
-    lean_assert(pinfos.size() == ssinfos.size());
     /* Check if all remaining arguments are nondependent or
        dependent (but all forward dependencies are subsingletons) */
     unsigned i = prefix_sz;
@@ -183,7 +179,7 @@ static void trace_if_unsupported(type_context_old & ctx, expr const & fn,
         param_info const & pinfo = pinfos[i];
         if (!pinfo.has_fwd_deps())
             continue; /* nondependent argument */
-        if (has_nonsubsingleton_fwd_dep(i, pinfos, ssinfos))
+        if (has_nonsubsingleton_fwd_dep(i, pinfos))
             break; /* failed i-th argument has a forward dependent that is not a prop nor a subsingleton */
     }
     if (i == pinfos.size())
@@ -256,9 +252,6 @@ unsigned get_specialization_prefix_size(type_context_old & ctx, expr const & fn,
     fun_info info = get_fun_info(ctx, fn, nargs);
     buffer<param_info> pinfos;
     to_buffer(info.get_params_info(), pinfos);
-    buffer<ss_param_info> ssinfos;
-    to_buffer(get_subsingleton_info(ctx, fn, nargs), ssinfos);
-    lean_assert(pinfos.size() == ssinfos.size());
     /* Compute "prefix": 0 or more parameters s.t.
        at lest one forward dependency is not a proposition or a subsingleton */
     unsigned i = 0;
@@ -266,8 +259,8 @@ unsigned get_specialization_prefix_size(type_context_old & ctx, expr const & fn,
         param_info const & pinfo = pinfos[i];
         if (!pinfo.has_fwd_deps())
             break;
-        /* search for forward dependency that is not a proposition nor a subsingleton */
-        if (!has_nonsubsingleton_fwd_dep(i, pinfos, ssinfos))
+        /* search for forward dependency that is not a proposition */
+        if (!has_nonsubsingleton_fwd_dep(i, pinfos))
             break;
     }
     unsigned prefix_sz = i;
