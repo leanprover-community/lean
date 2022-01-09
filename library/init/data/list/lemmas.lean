@@ -198,59 +198,34 @@ theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length
   by dsimp [remove_nth]; rw [length_remove_nth xs i this, nat.sub_add_cancel (lt_of_le_of_lt (nat.zero_le _) this)]; refl
 
 @[congr]
-lemma partition_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.partition _ p i xs = @list.partition _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma partition_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.partition _ p i xs = @list.partition _ q j ys :=
+by cc
 
 @[congr]
-lemma drop_while_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.drop_while _ p i xs = @list.drop_while _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma drop_while_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.drop_while _ p i xs = @list.drop_while _ q j ys :=
+by cc
 
 @[congr]
-lemma after_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.after _ p i xs = @list.after _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma after_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.after _ p i xs = @list.after _ q j ys :=
+by cc
 
 @[congr]
-lemma span_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.span _ p i xs = @list.span _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma span_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.span _ p i xs = @list.span _ q j ys :=
+by cc
 
 @[congr]
-lemma find_index_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.find_index _ p i xs = @list.find_index _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma find_index_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.find_index _ p i xs = @list.find_index _ q j ys :=
+by cc
 
 @[simp] lemma partition_eq_filter_filter (p : α → Prop) [decidable_pred p] : ∀ (l : list α), partition p l = (filter p l, filter (not ∘ p) l)
 | []     := rfl
@@ -272,15 +247,10 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
 
 /- filter -/
 @[congr]
-lemma filter_congr {p q : α → Prop} {xs ys : list α} (hpq : ∀ x, p x ↔ q x) (hxs : xs = ys) :
-  ∀ [i : decidable_pred p] [j : decidable_pred q], @list.filter _ p i xs = @list.filter _ q j ys :=
-begin
-  intros i j,
-  subst hxs,
-  cases (show p = q, from funext (λ _, propext (hpq _))),
-  cases (show i = j, from subsingleton.elim _ _),
-  refl
-end
+lemma filter_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
+    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
+  @list.filter _ p i xs = @list.filter _ q j ys :=
+by cc
 
 @[simp] theorem filter_nil (p : α → Prop) [h : decidable_pred p] : filter p [] = [] := rfl
 
