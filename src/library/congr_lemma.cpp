@@ -535,6 +535,17 @@ struct congr_lemma_manager {
         }
     }
 
+    void pre_specialize_simp(expr const & a, expr & g, unsigned & prefix_sz, unsigned & num_rest_args) {
+        buffer<expr> args;
+        expr const & fn = get_app_args(a, args);
+        prefix_sz = get_specialization_prefix_size(m_ctx, fn, args.size());
+        num_rest_args = get_app_num_args(a) - prefix_sz;
+        g = a;
+        for (unsigned i = 0; i < num_rest_args; i++) {
+            g = app_fn(g);
+        }
+    }
+
     result mk_specialize_result(result const & r, unsigned prefix_sz) {
         list<congr_arg_kind> new_arg_kinds = r.get_arg_kinds();
         for (unsigned i = 0; i < prefix_sz; i++)
@@ -624,7 +635,7 @@ struct congr_lemma_manager {
     optional<result> mk_specialized_congr_simp(expr const & a) {
         lean_assert(is_app(a));
         expr g; unsigned prefix_sz, num_rest_args;
-        pre_specialize(a, g, prefix_sz, num_rest_args);
+        pre_specialize_simp(a, g, prefix_sz, num_rest_args);
         key k(g, num_rest_args);
         auto it = m_cache.m_simp_cache_spec.find(k);
         if (it != m_cache.m_simp_cache_spec.end())
