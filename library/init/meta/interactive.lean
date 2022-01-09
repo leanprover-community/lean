@@ -1196,6 +1196,8 @@ do
   let e := p.erase_annotations.get_app_fn.erase_annotations,
   match e with
   | const n _           :=
+    (do guard (¬ symm), has_attribute `congr n, s ← s.add_congr n, pure (s, u))
+    <|>
     (do b ← is_valid_simp_lemma_cnst n, guard b, save_const_type_info n ref, s ← s.add_simp n symm, return (s, u))
     <|>
     (do eqns ← get_eqn_lemmas_for tt n,

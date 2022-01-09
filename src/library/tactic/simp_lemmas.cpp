@@ -1477,7 +1477,8 @@ vm_obj simp_lemmas_add_congr(vm_obj const & lemmas, vm_obj const & lemma_name, v
     LEAN_TACTIC_TRY;
     tactic_state_context_cache cache(s);
     type_context_old ctx = cache.mk_type_context();
-    simp_lemmas new_lemmas = add_congr(ctx, to_simp_lemmas(lemmas), to_name(lemma_name), LEAN_DEFAULT_PRIORITY);
+    simp_lemmas new_lemmas = (flet<bool>(g_throw_ex, true),
+        add_congr(ctx, to_simp_lemmas(lemmas), to_name(lemma_name), LEAN_DEFAULT_PRIORITY));
     return tactic::mk_success(to_obj(new_lemmas), s);
     LEAN_TACTIC_CATCH(s);
 }

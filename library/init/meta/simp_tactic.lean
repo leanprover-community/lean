@@ -415,7 +415,7 @@ do (lhs, rhs)     ← target >>= match_eq,
 
 meta def to_simp_lemmas : simp_lemmas → list name → tactic simp_lemmas
 | S []      := return S
-| S (n::ns) := do S' ← S.add_simp n ff, to_simp_lemmas S' ns
+| S (n::ns) := do S' ← (has_attribute `congr n >> S.add_congr n) <|> S.add_simp n ff, to_simp_lemmas S' ns
 
 meta def mk_simp_attr (attr_name : name) (attr_deps : list name := []) : command :=
 do let t := `(user_attribute simp_lemmas),
