@@ -925,7 +925,7 @@ theorem cond_to_bool_mod_two (x : ℕ) [d : decidable (x % 2 = 1)]
 begin
   by_cases h : x % 2 = 1,
   { simp! [*] },
-  { cases mod_two_eq_zero_or_one x; simp! [*, nat.zero_ne_one] }
+  { cases mod_two_eq_zero_or_one x; simp! [*, nat.zero_ne_one]; contradiction }
 end
 
 theorem sub_mul_mod (x k n : ℕ) (h₁ : n*k ≤ x) : (x - n*k) % n = x % n :=

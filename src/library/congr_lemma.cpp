@@ -403,7 +403,6 @@ struct congr_lemma_manager {
 
     /** Assign a `congr_arg_kind` to each parameter of a function, for use in the simp tactic. */
     buffer<congr_arg_kind> congr_simp_kinds(buffer<param_info> const & pinfos,
-                                            buffer<ss_param_info> const & ssinfos,
                                             list<unsigned> const & result_deps) {
         buffer<congr_arg_kind> kinds;
 
@@ -424,22 +423,7 @@ struct congr_lemma_manager {
                 // Propositions are all definitionally equal, so we don't need to make this Eq.
                 kinds[i] = congr_arg_kind::Cast;
             } else if (pinfos[i].is_inst_implicit()) {
-                // Instance implicits should be Fixed or Cast as appropriate.
-                if (ssinfos[i].is_subsingleton() && !pinfos[i].has_fwd_deps())
-                    kinds[i] = congr_arg_kind::Cast;
-                else
-                    kinds[i] = congr_arg_kind::Fixed;
-            } else if (ssinfos[i].is_subsingleton()) {
-                // If there are backwards dependencies on Eq arguments, then
-                // we will use subsingleton elimination to prove this
-                // equality.
-                // Otherwise we can let this arg stay Eq without problems.
-                for (auto j : pinfos[i].get_back_deps()) {
-                    if (kinds[j] == congr_arg_kind::Eq) {
-                        kinds[i] = congr_arg_kind::Cast;
-                        break;
-                    }
-                }
+                kinds[i] = congr_arg_kind::Fixed;
             }
         }
 
@@ -471,17 +455,15 @@ struct congr_lemma_manager {
     }
 
     optional<result> mk_congr_simp(expr const & fn, unsigned nargs,
-                                   fun_info const & finfo, ss_param_infos const & ssinfos) {
+                                   fun_info const & finfo) {
         auto r = m_cache.m_simp_cache.find(key(fn, nargs));
         if (r != m_cache.m_simp_cache.end())
             return optional<result>(r->second);
         list<unsigned> const & result_deps = finfo.get_result_deps();
         buffer<param_info>     pinfos;
-        buffer<ss_param_info>  ssinfos_buffer;
         to_buffer(finfo.get_params_info(), pinfos);
-        to_buffer(ssinfos, ssinfos_buffer);
 
-        buffer<congr_arg_kind> kinds = congr_simp_kinds(pinfos, ssinfos_buffer, result_deps);
+        buffer<congr_arg_kind> kinds = congr_simp_kinds(pinfos, result_deps);
         auto new_r = mk_congr_simp_from_kinds(fn, pinfos, kinds);
         if (new_r)
             m_cache.m_simp_cache.insert(mk_pair(key(fn, nargs), *new_r));
@@ -490,8 +472,7 @@ struct congr_lemma_manager {
 
     optional<result> mk_congr_simp(expr const & fn, unsigned nargs) {
         fun_info finfo         = get_fun_info(m_ctx, fn, nargs);
-        ss_param_infos ssinfos = get_subsingleton_info(m_ctx, fn, nargs);
-        return mk_congr_simp(fn, nargs, finfo, ssinfos);
+        return mk_congr_simp(fn, nargs, finfo);
     }
 
     optional<result> mk_congr(expr const & fn, unsigned nargs,
@@ -637,8 +618,7 @@ struct congr_lemma_manager {
 
     optional<result> mk_congr_simp(expr const & fn) {
         fun_info finfo         = get_fun_info(m_ctx, fn);
-        ss_param_infos ssinfos = get_subsingleton_info(m_ctx, fn);
-        return mk_congr_simp(fn, finfo.get_arity(), finfo, ssinfos);
+        return mk_congr_simp(fn, finfo.get_arity(), finfo);
     }
 
     optional<result> mk_specialized_congr_simp(expr const & a) {

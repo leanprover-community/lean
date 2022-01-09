@@ -130,13 +130,6 @@ theorem to_bool_ff {p : Prop} [decidable p] : ¬p → to_bool p = ff := (to_bool
 
 theorem of_to_bool_ff {p : Prop} [decidable p] : to_bool p = ff → ¬p := (to_bool_ff_iff p).1
 
-theorem to_bool_congr {p q : Prop} [decidable p] [decidable q] (h : p ↔ q) : to_bool p = to_bool q :=
-begin
-  induction h' : to_bool q,
-  exact to_bool_ff (mt h.1 $ of_to_bool_ff h'),
-  exact to_bool_true (h.2 $ of_to_bool_true h')
-end
-
 @[simp] theorem bor_coe_iff (a b : bool) : a || b ↔ a ∨ b :=
 by cases a; cases b; exact dec_trivial
 
