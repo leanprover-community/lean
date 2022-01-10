@@ -197,36 +197,6 @@ theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length
 | (x::xs) (i+1) h := have i < length xs, from lt_of_succ_lt_succ h,
   by dsimp [remove_nth]; rw [length_remove_nth xs i this, nat.sub_add_cancel (lt_of_le_of_lt (nat.zero_le _) this)]; refl
 
-@[congr]
-lemma partition_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.partition _ p i xs = @list.partition _ q j ys :=
-by cc
-
-@[congr]
-lemma drop_while_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.drop_while _ p i xs = @list.drop_while _ q j ys :=
-by cc
-
-@[congr]
-lemma after_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.after _ p i xs = @list.after _ q j ys :=
-by cc
-
-@[congr]
-lemma span_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.span _ p i xs = @list.span _ q j ys :=
-by cc
-
-@[congr]
-lemma find_index_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.find_index _ p i xs = @list.find_index _ q j ys :=
-by cc
-
 @[simp] lemma partition_eq_filter_filter (p : α → Prop) [decidable_pred p] : ∀ (l : list α), partition p l = (filter p l, filter (not ∘ p) l)
 | []     := rfl
 | (a::l) := by { by_cases pa : p a; simp [partition, filter, pa, partition_eq_filter_filter l] }
@@ -246,11 +216,6 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
 | _ _ (sublist.cons2 l₁ l₂ a s) := succ_le_succ (length_le_of_sublist s)
 
 /- filter -/
-@[congr]
-lemma filter_congr {p q : α → Prop} [i : decidable_pred p] [j : decidable_pred q]
-    {xs ys : list α} (hpq : p = q) (hxs : xs = ys) :
-  @list.filter _ p i xs = @list.filter _ q j ys :=
-by cc
 
 @[simp] theorem filter_nil (p : α → Prop) [h : decidable_pred p] : filter p [] = [] := rfl
 

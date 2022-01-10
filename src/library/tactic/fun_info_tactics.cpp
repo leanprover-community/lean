@@ -22,10 +22,11 @@ inline vm_obj bb(bool b) { return mk_vm_bool(b); }
   (back_deps : list nat) -- previous parameters it depends on
 */
 vm_obj to_obj(param_info const & info) {
-    vm_obj args[5] = { bb(info.is_implicit()), bb(info.is_inst_implicit()),
+    vm_obj args[6] = { bb(info.is_implicit()), bb(info.is_inst_implicit()),
                        bb(info.is_prop()), bb(info.has_fwd_deps()),
+                       bb(info.is_dec_inst()),
                        to_obj(info.get_back_deps()) };
-    return mk_vm_constructor(0, 5, args);
+    return mk_vm_constructor(0, 6, args);
 }
 
 vm_obj to_obj(list<param_info> const & ls) {

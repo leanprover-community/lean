@@ -371,6 +371,9 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             has_cast = true;
             new_args.emplace_back(args[i]);
             break;
+        case congr_arg_kind::DecInst:
+            new_args.emplace_back(args[i]);
+            break;
         }
         i++;
     }
@@ -422,6 +425,23 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             lean_assert(has_cast);
             proof = mk_app(proof, args[i]);
             subst.push_back(args[i]);
+            type = binding_body(type);
+            break;
+        case congr_arg_kind::DecInst:
+            proof = mk_app(proof, args[i]);
+            subst.push_back(args[i]);
+            type = binding_body(type);
+            expr new_cls = instantiate_rev(binding_domain(type), subst.size(), subst.data());
+            optional<expr> new_inst =
+                m_ctx.is_def_eq(m_ctx.infer(args[i]), new_cls) ? some_expr(args[i]) :
+                m_ctx.mk_class_instance(new_cls);
+            if (!new_inst) {
+                lean_simp_trace(m_ctx, name({"simplify", "congruence"}),
+                    tout() << "failed to synthesize instance " << new_cls << "\n";);
+                return {};
+            }
+            proof = mk_app(proof, *new_inst);
+            subst.push_back(*new_inst);
             type = binding_body(type);
             break;
         }

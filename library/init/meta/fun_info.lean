@@ -11,6 +11,7 @@ structure param_info :=
 (is_inst_implicit : bool) -- is a typeclass instance
 (is_prop          : bool)
 (has_fwd_deps     : bool)
+(is_dec_inst      : bool)
 (back_deps        : list nat) -- previous parameters it depends on
 
 open format list decidable
@@ -26,12 +27,13 @@ else f₁ ++ to_fmt "," ++ line ++ f₂
 local infix `+++`:65 := concat_fields
 
 meta def param_info.to_format : param_info → format
-| (param_info.mk i ii p d ds) :=
+| (param_info.mk i ii p d di ds) :=
 group ∘ cbrace $
   when i  "implicit" +++
   when ii "inst_implicit" +++
   when p  "prop" +++
   when d  "has_fwd_deps" +++
+  when di "is_dec_inst" +++
   when (length ds > 0) (to_fmt "back_deps := " ++ to_fmt ds)
 
 meta instance : has_to_format param_info :=

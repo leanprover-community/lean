@@ -16,16 +16,18 @@ class param_info {
     unsigned       m_inst_implicit:1;
     unsigned       m_prop:1;
     unsigned       m_has_fwd_deps:1; // true if rest depends on this parameter
+    unsigned       m_is_dec_inst:1;
     list<unsigned> m_back_deps;      // previous arguments it depends on
 public:
-    param_info(bool imp, bool inst_imp, bool prop, bool has_fwd_deps, list<unsigned> const & back_deps):
+    param_info(bool imp, bool inst_imp, bool prop, bool has_fwd_deps, bool is_dec_inst, list<unsigned> const & back_deps):
         m_implicit(imp), m_inst_implicit(inst_imp), m_prop(prop),
-        m_has_fwd_deps(has_fwd_deps), m_back_deps(back_deps) {}
+        m_has_fwd_deps(has_fwd_deps), m_is_dec_inst(is_dec_inst), m_back_deps(back_deps) {}
     list<unsigned> const & get_back_deps() const { return m_back_deps; }
     bool is_implicit() const { return m_implicit; }
     bool is_inst_implicit() const { return m_inst_implicit; }
     bool is_prop() const { return m_prop; }
     bool has_fwd_deps() const { return m_has_fwd_deps; }
+    bool is_dec_inst() const { return m_is_dec_inst; }
     void set_has_fwd_deps() { m_has_fwd_deps = true; }
 };
 

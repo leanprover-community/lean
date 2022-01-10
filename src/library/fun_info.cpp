@@ -57,6 +57,16 @@ static list<unsigned> collect_deps(expr const & type, buffer<expr> const & local
     return to_list(deps);
 }
 
+static bool is_dec_class(type_context_old & ctx, expr ty) {
+    type_context_old::tmp_locals locals(ctx);
+    type_context_old::transparency_scope(ctx, transparency_mode::Reducible);
+    while (is_pi(ty) || is_pi(ty = ctx.whnf(ty))) {
+        expr local = locals.push_local_from_binding(ty);
+        ty = instantiate(binding_body(ty), local);
+    }
+    return is_app_of(ty, get_decidable_name());
+}
+
 /* Store parameter info for fn in \c pinfos and return the dependencies of the resulting type. */
 static list<unsigned> get_core(type_context_old & ctx,
                                expr const & fn, buffer<param_info> & pinfos,
@@ -72,9 +82,11 @@ static list<unsigned> get_core(type_context_old & ctx,
         expr new_type   = ctx.relaxed_try_to_pi(instantiate(binding_body(type), local));
         bool is_prop    = ctx.is_prop(local_type);
         bool is_dep     = false; /* it is set by collect_deps */
+        bool is_dec_inst = is_dec_class(ctx, local_type);
         pinfos.emplace_back(binding_info(type).is_implicit(),
                             binding_info(type).is_inst_implicit(),
-                            is_prop, is_dep, collect_deps(local_type, locals.as_buffer(), pinfos));
+                            is_prop, is_dep, is_dec_inst,
+                            collect_deps(local_type, locals.as_buffer(), pinfos));
         type = new_type;
         i++;
     }
@@ -150,11 +162,11 @@ ss_param_infos get_subsingleton_info(type_context_old & ctx, expr const & e, uns
     return r;
 }
 
-/* Return true if there is j s.t. ssinfos[j] is a proposition,
+/* Return true if there is j s.t. ssinfos[j] is a proposition or decidability instance,
    and it dependends of argument i */
 static bool has_nonsubsingleton_fwd_dep(unsigned i, buffer<param_info> const & pinfos) {
     for (unsigned j = i+1; j < pinfos.size(); j++) {
-        if (pinfos[j].is_prop())
+        if (pinfos[j].is_prop() || pinfos[j].is_dec_inst())
             continue;
         auto const & back_deps = pinfos[j].get_back_deps();
         if (std::find(back_deps.begin(), back_deps.end(), i) != back_deps.end()) {

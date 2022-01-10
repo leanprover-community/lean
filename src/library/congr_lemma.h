@@ -24,7 +24,10 @@ enum class congr_arg_kind {
     Cast,
     /* The lemma contains three parameters for this kind of argument a_i, b_i and (eq_i : a_i == b_i).
        a_i and b_i represent the left and right hand sides, and eq_i is a proof for their heterogeneous equality. */
-    HEq
+    HEq,
+    /* For congr-simp lemmas only.  Indicates a decidable instance argument.
+       The lemma contains two arguments [a_i : decidable ...] [b_i : decidable ...] */
+    DecInst,
 };
 
 class congr_lemma {

@@ -883,7 +883,6 @@ match dec_b, dec_c with
 | (is_true h₁),  (is_false h₂) := absurd h₁ (iff.mpr (not_iff_not_of_iff h_c) h₂)
 end
 
-@[congr]
 lemma if_congr {α : Sort u} {b c : Prop} [dec_b : decidable b] [dec_c : decidable c]
                {x y u v : α}
                (h_c : b ↔ c) (h_t : x = u) (h_e : y = v) :
