@@ -32,6 +32,8 @@ meta constant simp_lemmas.mk : simp_lemmas
 meta constant simp_lemmas.join : simp_lemmas → simp_lemmas → simp_lemmas
 /-- Remove the given lemmas from the table. Use the names of the lemmas. -/
 meta constant simp_lemmas.erase : simp_lemmas → list name → simp_lemmas
+/-- Remove all simp lemmas from the table. -/
+meta constant simp_lemmas.erase_simp_lemmas : simp_lemmas → simp_lemmas
 /-- Makes the default simp_lemmas table which is composed of all lemmas tagged with `simp`. -/
 meta constant simp_lemmas.mk_default : tactic simp_lemmas
 /-- Add a simplification lemma by an expression `p`. Some conditions on `p` must hold for it to be added, see list below.
@@ -415,7 +417,7 @@ do (lhs, rhs)     ← target >>= match_eq,
 
 meta def to_simp_lemmas : simp_lemmas → list name → tactic simp_lemmas
 | S []      := return S
-| S (n::ns) := do S' ← S.add_simp n ff, to_simp_lemmas S' ns
+| S (n::ns) := do S' ← (has_attribute `congr n >> S.add_congr n) <|> S.add_simp n ff, to_simp_lemmas S' ns
 
 meta def mk_simp_attr (attr_name : name) (attr_deps : list name := []) : command :=
 do let t := `(user_attribute simp_lemmas),
@@ -456,11 +458,9 @@ meta def join_user_simp_lemmas_core : simp_lemmas → list name → tactic simp_
 | S (attr_name::R) := do S' ← get_user_simp_lemmas attr_name, join_user_simp_lemmas_core (S.join S') R
 
 meta def join_user_simp_lemmas (no_dflt : bool) (attrs : list name) : tactic simp_lemmas :=
-if no_dflt then
-  join_user_simp_lemmas_core simp_lemmas.mk attrs
-else do
-  s ← simp_lemmas.mk_default,
-  join_user_simp_lemmas_core s attrs
+do s ← simp_lemmas.mk_default,
+   let s := if no_dflt then s.erase_simp_lemmas else s,
+   join_user_simp_lemmas_core s attrs
 
 meta def simplify_top_down {α} (a : α) (pre : α → expr → tactic (α × expr × expr)) (e : expr) (cfg : simp_config := {}) : tactic (α × expr × expr) :=
 ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)

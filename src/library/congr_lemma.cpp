@@ -103,7 +103,11 @@ struct congr_lemma_manager {
     }
 
     bool has_cast(buffer<congr_arg_kind> const & kinds) {
-        return std::find(kinds.begin(), kinds.end(), congr_arg_kind::Cast) != kinds.end();
+        for (auto kind : kinds) {
+            if (kind == congr_arg_kind::Cast || kind == congr_arg_kind::SubsingletonInst)
+                return true;
+        }
+        return false;
     }
 
     /** \brief Create simple congruence theorem using just congr, congr_arg, and congr_fun lemmas.
@@ -136,29 +140,49 @@ struct congr_lemma_manager {
         return pr;
     }
 
-    /** \brief Given a the set of hypotheses \c eqs, build a proof for <tt>lhs = rhs</tt> using \c eq.drec and \c eqs.
-        \remark eqs are the proofs for the Eq arguments.
-        \remark This is an auxiliary method used by mk_congr_simp. */
-    expr mk_congr_proof(unsigned i, expr const & lhs, expr const & rhs, buffer<optional<expr>> const & eqs) {
-        if (i == eqs.size()) {
-            return mk_eq_refl(m_ctx, rhs);
-        } else if (!eqs[i]) {
-            return mk_congr_proof(i+1, lhs, rhs, eqs);
-        } else {
-            expr major = *eqs[i];
-            expr x_1, x_2;
-            lean_verify(is_eq(m_ctx.infer(major), x_1, x_2));
-            lean_assert(is_local(x_1));
-            lean_assert(is_local(x_2));
-            expr motive_eq = mk_eq(m_ctx, lhs, rhs);
-            expr motive    = m_ctx.mk_lambda({x_2, major}, motive_eq);
-            // We compute the new_rhs by replacing x_2 with x_1 and major with (eq.refl x_1) in rhs.
-            expr new_rhs = instantiate(abstract_local(rhs, x_2), x_1);
-            expr x1_refl = mk_eq_refl(m_ctx, x_1);
-            new_rhs      = instantiate(abstract_local(new_rhs, major), x1_refl);
-            expr minor   = mk_congr_proof(i+1, lhs, new_rhs, eqs);
-            return mk_eq_drec(m_ctx, motive, minor, major);
+    /** Proves the congr lemma with type `ty` and kinds `kinds[i:-1]`. */
+    expr mk_congr_proof(unsigned i, expr ty, buffer<congr_arg_kind> const & kinds) {
+        if (i == kinds.size()) {
+            expr lhs, rhs;
+            lean_verify(is_eq(ty, lhs, rhs));
+            return mk_eq_refl(m_ctx, lhs);
         }
+
+        type_context_old::tmp_locals locals(m_ctx);
+        auto pop_arg = [&] () -> expr {
+            expr local = locals.push_local_from_binding(ty);
+            ty = instantiate(binding_body(ty), local);
+            return local;
+        };
+
+        expr lhs = pop_arg();
+        switch (kinds[i]) {
+        case congr_arg_kind::Eq: {
+            expr sub_ty = instantiate(binding_body(binding_body(ty)), {mk_eq_refl(m_ctx, lhs), lhs});
+            expr rhs = pop_arg();
+            expr heq = pop_arg();
+            expr motive = m_ctx.mk_lambda({rhs, heq}, ty);
+            expr sub_prf = mk_congr_proof(i + 1, sub_ty, kinds);
+            return m_ctx.mk_lambda({lhs, rhs, heq}, mk_eq_drec(m_ctx, motive, sub_prf, heq));
+        }
+        case congr_arg_kind::HEq:
+            lean_unreachable();
+            break;
+        case congr_arg_kind::Cast: case congr_arg_kind::Fixed:
+            return m_ctx.mk_lambda({lhs}, mk_congr_proof(i + 1, ty, kinds));
+        case congr_arg_kind::FixedNoParam:
+            lean_unreachable(); // TODO(Leo): not implemented yet
+            break;
+        case congr_arg_kind::SubsingletonInst: {
+            expr sub_ty = instantiate(binding_body(ty), lhs);
+            expr rhs = pop_arg();
+            expr motive = m_ctx.mk_lambda({rhs}, ty);
+            expr sub_prf = mk_congr_proof(i + 1, sub_ty, kinds);
+            expr heq = mk_app(m_ctx, get_subsingleton_elim_name(), lhs, rhs);
+            return m_ctx.mk_lambda({lhs, rhs}, mk_eq_rec(m_ctx, motive, sub_prf, heq));
+        }}
+
+        lean_unreachable();
     }
 
     void trace_too_many_arguments(expr const & fn, unsigned nargs) {
@@ -214,6 +238,16 @@ struct congr_lemma_manager {
                 case congr_arg_kind::FixedNoParam:
                     lean_unreachable(); // TODO(Leo): not implemented yet
                     break;
+                case congr_arg_kind::SubsingletonInst: {
+                    expr rhs_type = m_ctx.infer(lhs);
+                    rhs_type = instantiate_rev(abstract_locals(rhs_type, lhss.size()-1, lhss.data()),
+                                               rhss.size(), rhss.data());
+                    expr rhs = locals.push_local(binding_name(fn_type), rhs_type, mk_inst_implicit_binder_info());
+                    rhss.push_back(rhs);
+                    hyps.push_back(rhs);
+                    eqs.push_back(none_expr());
+                    break;
+                }
                 case congr_arg_kind::Cast: {
                     expr rhs_type = m_ctx.infer(lhs);
                     rhs_type = instantiate_rev(abstract_locals(rhs_type, lhss.size()-1, lhss.data()),
@@ -231,11 +265,10 @@ struct congr_lemma_manager {
             expr congr_type  = m_ctx.mk_pi(hyps, eq);
             expr congr_proof;
             if (has_cast(kinds)) {
-                congr_proof = mk_congr_proof(0, lhs, rhs, eqs);
+                congr_proof = mk_congr_proof(0, congr_type, kinds);
             } else {
-                congr_proof = mk_simple_congr_proof(fn, lhss, eqs, kinds);
+                congr_proof = m_ctx.mk_lambda(hyps, mk_simple_congr_proof(fn, lhss, eqs, kinds));
             }
-            congr_proof = m_ctx.mk_lambda(hyps, congr_proof);
             return optional<result>(congr_type, congr_proof, to_list(kinds));
         } catch (app_builder_exception &) {
             trace_app_builder_failure(fn);
@@ -301,6 +334,10 @@ struct congr_lemma_manager {
                     rhss.push_back(rhs);
                     eqs.push_back(none_expr());
                     hyps.push_back(rhs);
+                    break;
+                }
+                case congr_arg_kind::SubsingletonInst: {
+                    lean_unreachable(); // Not used in cc congr lemmas
                     break;
                 }}
                 fn_type1  = whnf(instantiate(binding_body(fn_type1), lhs));
@@ -403,7 +440,6 @@ struct congr_lemma_manager {
 
     /** Assign a `congr_arg_kind` to each parameter of a function, for use in the simp tactic. */
     buffer<congr_arg_kind> congr_simp_kinds(buffer<param_info> const & pinfos,
-                                            buffer<ss_param_info> const & ssinfos,
                                             list<unsigned> const & result_deps) {
         buffer<congr_arg_kind> kinds;
 
@@ -424,20 +460,16 @@ struct congr_lemma_manager {
                 // Propositions are all definitionally equal, so we don't need to make this Eq.
                 kinds[i] = congr_arg_kind::Cast;
             } else if (pinfos[i].is_inst_implicit()) {
-                // Instance implicits should be Fixed or Cast as appropriate.
-                if (ssinfos[i].is_subsingleton() && !pinfos[i].has_fwd_deps())
-                    kinds[i] = congr_arg_kind::Cast;
-                else
-                    kinds[i] = congr_arg_kind::Fixed;
-            } else if (ssinfos[i].is_subsingleton()) {
-                // If there are backwards dependencies on Eq arguments, then
-                // we will use subsingleton elimination to prove this
-                // equality.
-                // Otherwise we can let this arg stay Eq without problems.
-                for (auto j : pinfos[i].get_back_deps()) {
-                    if (kinds[j] == congr_arg_kind::Eq) {
-                        kinds[i] = congr_arg_kind::Cast;
-                        break;
+                kinds[i] = congr_arg_kind::Fixed;
+
+                // Upgrade decidability instances which depend on Eq to SubsingletonInst.
+                // (Otherwise fix_kinds_for_dependencies will downgrade them to Fixed)
+                if (pinfos[i].is_dec_inst()) {
+                    for (unsigned j : pinfos[i].get_back_deps()) {
+                        if (kinds[j] == congr_arg_kind::Eq) {
+                            kinds[i] = congr_arg_kind::SubsingletonInst;
+                            break;
+                        }
                     }
                 }
             }
@@ -461,7 +493,7 @@ struct congr_lemma_manager {
         } else if (has_cast(kinds)) {
             // remove casts and try again
             for (unsigned i = 0; i < kinds.size(); i++) {
-                if (kinds[i] == congr_arg_kind::Cast)
+                if (kinds[i] == congr_arg_kind::Cast || kinds[i] == congr_arg_kind::SubsingletonInst)
                     kinds[i] = congr_arg_kind::Fixed;
             }
             return mk_congr_simp(fn, pinfos, kinds);
@@ -471,17 +503,15 @@ struct congr_lemma_manager {
     }
 
     optional<result> mk_congr_simp(expr const & fn, unsigned nargs,
-                                   fun_info const & finfo, ss_param_infos const & ssinfos) {
+                                   fun_info const & finfo) {
         auto r = m_cache.m_simp_cache.find(key(fn, nargs));
         if (r != m_cache.m_simp_cache.end())
             return optional<result>(r->second);
         list<unsigned> const & result_deps = finfo.get_result_deps();
         buffer<param_info>     pinfos;
-        buffer<ss_param_info>  ssinfos_buffer;
         to_buffer(finfo.get_params_info(), pinfos);
-        to_buffer(ssinfos, ssinfos_buffer);
 
-        buffer<congr_arg_kind> kinds = congr_simp_kinds(pinfos, ssinfos_buffer, result_deps);
+        buffer<congr_arg_kind> kinds = congr_simp_kinds(pinfos, result_deps);
         auto new_r = mk_congr_simp_from_kinds(fn, pinfos, kinds);
         if (new_r)
             m_cache.m_simp_cache.insert(mk_pair(key(fn, nargs), *new_r));
@@ -490,8 +520,7 @@ struct congr_lemma_manager {
 
     optional<result> mk_congr_simp(expr const & fn, unsigned nargs) {
         fun_info finfo         = get_fun_info(m_ctx, fn, nargs);
-        ss_param_infos ssinfos = get_subsingleton_info(m_ctx, fn, nargs);
-        return mk_congr_simp(fn, nargs, finfo, ssinfos);
+        return mk_congr_simp(fn, nargs, finfo);
     }
 
     optional<result> mk_congr(expr const & fn, unsigned nargs,
@@ -547,6 +576,17 @@ struct congr_lemma_manager {
                 break;
             prefix_sz++;
         }
+        num_rest_args = get_app_num_args(a) - prefix_sz;
+        g = a;
+        for (unsigned i = 0; i < num_rest_args; i++) {
+            g = app_fn(g);
+        }
+    }
+
+    void pre_specialize_simp(expr const & a, expr & g, unsigned & prefix_sz, unsigned & num_rest_args) {
+        buffer<expr> args;
+        expr const & fn = get_app_args(a, args);
+        prefix_sz = get_specialization_prefix_size(m_ctx, fn, args.size());
         num_rest_args = get_app_num_args(a) - prefix_sz;
         g = a;
         for (unsigned i = 0; i < num_rest_args; i++) {
@@ -637,14 +677,13 @@ struct congr_lemma_manager {
 
     optional<result> mk_congr_simp(expr const & fn) {
         fun_info finfo         = get_fun_info(m_ctx, fn);
-        ss_param_infos ssinfos = get_subsingleton_info(m_ctx, fn);
-        return mk_congr_simp(fn, finfo.get_arity(), finfo, ssinfos);
+        return mk_congr_simp(fn, finfo.get_arity(), finfo);
     }
 
     optional<result> mk_specialized_congr_simp(expr const & a) {
         lean_assert(is_app(a));
         expr g; unsigned prefix_sz, num_rest_args;
-        pre_specialize(a, g, prefix_sz, num_rest_args);
+        pre_specialize_simp(a, g, prefix_sz, num_rest_args);
         key k(g, num_rest_args);
         auto it = m_cache.m_simp_cache_spec.find(k);
         if (it != m_cache.m_simp_cache_spec.end())

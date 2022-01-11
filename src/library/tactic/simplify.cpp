@@ -161,28 +161,24 @@ simp_lemmas simplify_core_fn::add_to_slss(simp_lemmas const & _slss, buffer<expr
 expr simplify_core_fn::remove_unnecessary_casts(expr const & e) {
     buffer<expr> args;
     expr f = get_app_args(e, args);
-    ss_param_infos ss_infos = get_specialized_subsingleton_info(m_ctx, e);
-    int i = -1;
     bool modified = false;
-    for (ss_param_info const & ss_info : ss_infos) {
-        i++;
-        if (ss_info.is_subsingleton()) {
-            while (is_constant(get_app_fn(args[i]))) {
-                buffer<expr> cast_args;
-                expr f_cast = get_app_args(args[i], cast_args);
-                name n_f = const_name(f_cast);
-                if ((n_f == get_eq_rec_name() || n_f == get_eq_drec_name()) && cast_args.size() == 6) {
-                    expr major_premise = cast_args[5];
-                    expr f_major_premise = get_app_fn(major_premise);
-                    if (is_constant(f_major_premise) && const_name(f_major_premise) == get_eq_refl_name()) {
-                        args[i] = cast_args[3];
-                        modified = true;
-                    } else {
-                        break;
-                    }
+    for (unsigned i = 0; i < args.size(); i++) {
+        while (true) {
+            buffer<expr> cast_args;
+            expr const & f_cast = get_app_args(args[i], cast_args);
+            if (!is_constant(f_cast)) break;
+            name const & n_f = const_name(f_cast);
+            if ((n_f == get_eq_rec_name() || n_f == get_eq_drec_name()) && cast_args.size() == 6) {
+                expr major_premise = cast_args[5];
+                expr f_major_premise = get_app_fn(major_premise);
+                if (is_constant(f_major_premise) && const_name(f_major_premise) == get_eq_refl_name()) {
+                    args[i] = cast_args[3];
+                    modified = true;
                 } else {
                     break;
                 }
+            } else {
+                break;
             }
         }
     }
@@ -375,6 +371,9 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             has_cast = true;
             new_args.emplace_back(args[i]);
             break;
+        case congr_arg_kind::SubsingletonInst:
+            new_args.emplace_back(args[i]);
+            break;
         }
         i++;
     }
@@ -426,6 +425,23 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             lean_assert(has_cast);
             proof = mk_app(proof, args[i]);
             subst.push_back(args[i]);
+            type = binding_body(type);
+            break;
+        case congr_arg_kind::SubsingletonInst:
+            proof = mk_app(proof, args[i]);
+            subst.push_back(args[i]);
+            type = binding_body(type);
+            expr new_cls = instantiate_rev(binding_domain(type), subst.size(), subst.data());
+            optional<expr> new_inst =
+                m_ctx.is_def_eq(m_ctx.infer(args[i]), new_cls) ? some_expr(args[i]) :
+                m_ctx.mk_class_instance(new_cls);
+            if (!new_inst) {
+                lean_simp_trace(m_ctx, name({"simplify", "congruence"}),
+                    tout() << "failed to synthesize instance " << new_cls << "\n";);
+                return {};
+            }
+            proof = mk_app(proof, *new_inst);
+            subst.push_back(*new_inst);
             type = binding_body(type);
             break;
         }
