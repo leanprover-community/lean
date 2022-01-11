@@ -619,10 +619,7 @@ public:
        4- (Drawback) Local instances cannot be reverted anymore.
 
        This method is invoked after we parse the header of a declaration.
-
-       TODO(Leo):
-       add tactic `unfreeze_local_instances : tactic unit` which unfreezes the set of frozen local instances
-       for the current goal. */
+    */
     void freeze_local_instances();
     void unfreeze_local_instances();
     list<local_instance> get_local_instances() const { return m_local_instances; }

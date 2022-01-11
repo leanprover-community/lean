@@ -343,7 +343,8 @@ pair<local_context, expr> type_context_old::revert_core(buffer<expr> & to_revert
         for (expr const & h : to_revert) {
             for (local_instance const & li : *lis) {
                 if (mlocal_name(h) == mlocal_name(li.get_local())) {
-                    throw exception(sstream() << "failed to revert '" << h << "', it is a frozen local instance (possible solution: use tactic `tactic.unfreeze_local_instances` to reset the set of local instances)");
+                    throw exception(sstream() << "failed to revert '" << h
+                        << "', it is a frozen local instance (possible solution: use tactic `unfreezing` to temporarily reset the set of local instances)");
                 }
             }
         }
