@@ -21,12 +21,8 @@ struct interaction_monad {
 
         virtual ~vm_State();
         virtual void dealloc() override;
-        /* The methods ts_clone and close assume there is function
-
-              bool is_ts_safe(State const &)
-
-           This function should return true if the object can be safely
-           cloned between threads. */
+        /* The methods ts_clone and close assume there is a function
+              State ts_clone_impl(vm_clone_fn const &, State const &) */
         virtual vm_external * ts_clone(vm_clone_fn const &) override;
         virtual vm_external * clone(vm_clone_fn const &) override;
         virtual unsigned int hash() { return 0; }
