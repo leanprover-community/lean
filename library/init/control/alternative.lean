@@ -24,10 +24,6 @@ alternative.failure
 @[inline] def guard {f : Type → Type v} [alternative f] (p : Prop) [decidable p] : f unit :=
 if p then pure () else failure
 
-@[congr]
-lemma guard_congr {f} [alternative f] {p q} [decidable p] [decidable q] (h : p ↔ q) : (guard p : f unit) = guard q :=
-if_congr h rfl rfl
-
 @[inline] def assert {f : Type → Type v} [alternative f] (p : Prop) [decidable p] : f (inhabited p) :=
 if h : p then pure ⟨h⟩ else failure
 

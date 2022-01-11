@@ -216,7 +216,6 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
 | _ _ (sublist.cons2 l₁ l₂ a s) := succ_le_succ (length_le_of_sublist s)
 
 /- filter -/
-
 @[simp] theorem filter_nil (p : α → Prop) [h : decidable_pred p] : filter p [] = [] := rfl
 
 @[simp] theorem filter_cons_of_pos {p : α → Prop} [h : decidable_pred p] {a : α} :

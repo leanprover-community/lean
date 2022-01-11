@@ -599,12 +599,6 @@ decidable.cases_on h (λ h₁, bool.ff) (λ h₂, bool.tt)
 
 export decidable (is_true is_false to_bool)
 
-@[congr] lemma to_bool_congr {p q} : ∀ [i : decidable p] [j : decidable q] (h : p ↔ q), @to_bool p i = @to_bool q j
-| (is_true hp) (is_true hq) h := rfl
-| (is_false hp) (is_false hq) h := rfl
-| (is_true hp) (is_false hq) h := (hq (h.1 hp)).elim
-| (is_false hp) (is_true hq) h := (hp (h.2 hq)).elim
-
 @[simp] lemma to_bool_true_eq_tt (h : decidable true) : @to_bool true h = tt :=
 decidable.cases_on h (λ h, false.elim (iff.mp not_true h)) (λ _, rfl)
 
