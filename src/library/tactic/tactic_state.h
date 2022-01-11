@@ -27,6 +27,7 @@ public:
     void dealloc(unsigned ref);
     vm_obj read(unsigned ref) const;
     void write(unsigned ref, vm_obj const & o);
+    void ts_clone(vm_clone_fn const &);
 };
 
 struct tag_info {
@@ -156,7 +157,7 @@ template<typename T> tactic_state update_option_if_undef(tactic_state const & s,
     return set_options(s, s.get_options().update_if_undef(n, v));
 }
 
-bool is_ts_safe(tactic_state const & s);
+tactic_state ts_clone_impl(vm_clone_fn const & fn, tactic_state const & s);
 typedef interaction_monad<tactic_state> tactic;
 
 vm_obj to_obj(tactic_state const & s);

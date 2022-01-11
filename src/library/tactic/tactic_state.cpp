@@ -42,8 +42,14 @@ Author: Leonardo de Moura
 #include "library/tactic/simp_lemmas.h"
 
 namespace lean {
-/* is_ts_safe is required by the interaction_state implementation. */
-bool is_ts_safe(tactic_state const & s) { return s.us().m_mem.empty(); }
+/* ts_clone is required by the interaction_state implementation. */
+tactic_state ts_clone_impl(vm_clone_fn const & fn, tactic_state const & s) {
+    if (s.us().m_mem.empty()) return s;
+    auto us = s.us();
+    us.ts_clone(fn);
+    return set_user_state(s, us);
+}
+
 template struct interaction_monad<tactic_state>;
 
 void tactic_state_cell::dealloc() {
@@ -905,6 +911,14 @@ void tactic_user_state::write(unsigned ref, vm_obj const & o) {
     } else {
         throw exception("invalid write_ref, invalid reference");
     }
+}
+
+void tactic_user_state::ts_clone(vm_clone_fn const & fn) {
+    unsigned_map<vm_obj> new_mem;
+    m_mem.for_each([&] (unsigned i, vm_obj const & o) {
+        new_mem.insert(i, fn(o));
+    });
+    m_mem = new_mem;
 }
 
 /*
