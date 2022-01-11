@@ -27,7 +27,7 @@ enum class congr_arg_kind {
     HEq,
     /* For congr-simp lemmas only.  Indicates a decidable instance argument.
        The lemma contains two arguments [a_i : decidable ...] [b_i : decidable ...] */
-    DecInst,
+    SubsingletonInst,
 };
 
 class congr_lemma {

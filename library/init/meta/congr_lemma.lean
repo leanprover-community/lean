@@ -20,11 +20,11 @@ import init.meta.tactic init.meta.format init.function
    `a_i` and `b_i` represent the left and right hand sides, and eq_i is a proof for their heterogeneous equality.
 -/
 inductive congr_arg_kind
-| fixed | fixed_no_param | eq | cast | heq | decinst
+| fixed | fixed_no_param | eq | cast | heq | subsingleton_inst
 
 namespace congr_arg_kind
     def to_string : congr_arg_kind → string
-    | fixed := "fixed" | fixed_no_param := "fixed_no_param" | eq := "eq" | cast := "cast" | heq := "heq" | decinst := "decinst"
+    | fixed := "fixed" | fixed_no_param := "fixed_no_param" | eq := "eq" | cast := "cast" | heq := "heq" | subsingleton_inst := "subsingleton_inst"
     instance : has_repr congr_arg_kind := ⟨to_string⟩
     meta instance : has_to_format congr_arg_kind := ⟨λ x, to_string x⟩
 end congr_arg_kind

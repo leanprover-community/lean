@@ -104,7 +104,7 @@ struct congr_lemma_manager {
 
     bool has_cast(buffer<congr_arg_kind> const & kinds) {
         for (auto kind : kinds) {
-            if (kind == congr_arg_kind::Cast || kind == congr_arg_kind::DecInst)
+            if (kind == congr_arg_kind::Cast || kind == congr_arg_kind::SubsingletonInst)
                 return true;
         }
         return false;
@@ -173,7 +173,7 @@ struct congr_lemma_manager {
         case congr_arg_kind::FixedNoParam:
             lean_unreachable(); // TODO(Leo): not implemented yet
             break;
-        case congr_arg_kind::DecInst: {
+        case congr_arg_kind::SubsingletonInst: {
             expr sub_ty = instantiate(binding_body(ty), lhs);
             expr rhs = pop_arg();
             expr motive = m_ctx.mk_lambda({rhs}, ty);
@@ -238,7 +238,7 @@ struct congr_lemma_manager {
                 case congr_arg_kind::FixedNoParam:
                     lean_unreachable(); // TODO(Leo): not implemented yet
                     break;
-                case congr_arg_kind::DecInst: {
+                case congr_arg_kind::SubsingletonInst: {
                     expr rhs_type = m_ctx.infer(lhs);
                     rhs_type = instantiate_rev(abstract_locals(rhs_type, lhss.size()-1, lhss.data()),
                                                rhss.size(), rhss.data());
@@ -336,7 +336,7 @@ struct congr_lemma_manager {
                     hyps.push_back(rhs);
                     break;
                 }
-                case congr_arg_kind::DecInst: {
+                case congr_arg_kind::SubsingletonInst: {
                     lean_unreachable(); // Not used in cc congr lemmas
                     break;
                 }}
@@ -462,12 +462,12 @@ struct congr_lemma_manager {
             } else if (pinfos[i].is_inst_implicit()) {
                 kinds[i] = congr_arg_kind::Fixed;
 
-                // Upgrade decidability instances which depend on Eq to DecInst.
+                // Upgrade decidability instances which depend on Eq to SubsingletonInst.
                 // (Otherwise fix_kinds_for_dependencies will downgrade them to Fixed)
                 if (pinfos[i].is_dec_inst()) {
                     for (unsigned j : pinfos[i].get_back_deps()) {
                         if (kinds[j] == congr_arg_kind::Eq) {
-                            kinds[i] = congr_arg_kind::DecInst;
+                            kinds[i] = congr_arg_kind::SubsingletonInst;
                             break;
                         }
                     }
@@ -493,7 +493,7 @@ struct congr_lemma_manager {
         } else if (has_cast(kinds)) {
             // remove casts and try again
             for (unsigned i = 0; i < kinds.size(); i++) {
-                if (kinds[i] == congr_arg_kind::Cast || kinds[i] == congr_arg_kind::DecInst)
+                if (kinds[i] == congr_arg_kind::Cast || kinds[i] == congr_arg_kind::SubsingletonInst)
                     kinds[i] = congr_arg_kind::Fixed;
             }
             return mk_congr_simp(fn, pinfos, kinds);

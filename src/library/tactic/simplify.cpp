@@ -371,7 +371,7 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             has_cast = true;
             new_args.emplace_back(args[i]);
             break;
-        case congr_arg_kind::DecInst:
+        case congr_arg_kind::SubsingletonInst:
             new_args.emplace_back(args[i]);
             break;
         }
@@ -427,7 +427,7 @@ optional<simp_result> simplify_core_fn::try_auto_eq_congr(expr const & e) {
             subst.push_back(args[i]);
             type = binding_body(type);
             break;
-        case congr_arg_kind::DecInst:
+        case congr_arg_kind::SubsingletonInst:
             proof = mk_app(proof, args[i]);
             subst.push_back(args[i]);
             type = binding_body(type);
