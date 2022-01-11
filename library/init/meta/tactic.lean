@@ -757,7 +757,7 @@ meta constant set_tag (g : expr) (t : tag) : tactic unit
 /-- Return tag associated with `g`. Return `[]` if there is no tag. -/
 meta constant get_tag (g : expr) : tactic tag
 
-/-- By default, Lean only considers local instances in the header of declarations.
+/-! By default, Lean only considers local instances in the header of declarations.
     This has two main benefits.
     1- Results produced by the type class resolution procedure can be easily cached.
     2- The set of local instances does not have to be recomputed.
@@ -766,11 +766,14 @@ meta constant get_tag (g : expr) : tactic tag
     1- Frozen local instances cannot be reverted.
     2- Local instances defined inside of a declaration are not considered during type
        class resolution.
+-/
 
-    This tactic resets the set of local instances. After executing this tactic,
-    the set of local instances will be recomputed and the cache will be frequently
-    reset. Note that, the cache is still used when executing a single tactic that
-    may generate many type class resolution problems (e.g., `simp`). -/
+/--
+Avoid this function!  Use `unfreezingI`/`resetI`/etc. instead!
+
+Unfreezes the current set of local instances.
+After this tactic, the instance cache is disabled.
+-/
 meta constant unfreeze_local_instances : tactic unit
 /--
 Freeze the current set of local instances.
@@ -957,8 +960,8 @@ revert_lst [l]
 
 /- Revert "all" hypotheses. Actually, the tactic only reverts
    hypotheses occurring after the last frozen local instance.
-   Recall that frozen local instances cannot be reverted.
-   We can use `unfreeze_local_instances` to workaround this limitation. -/
+   Recall that frozen local instances cannot be reverted,
+   use `unfreezing revert_all` instead. -/
 meta def revert_all : tactic nat :=
 do lctx ← local_context,
    lis  ← frozen_local_instances,
@@ -1741,7 +1744,7 @@ are the new names.
 
 This tactic can only rename hypotheses which occur after the last frozen local
 instance. If you need to rename earlier hypotheses, try
-`unfreeze_local_instances`.
+`unfreezing (rename_many ...)`.
 
 If `strict` is true, we fail if `name_map` refers to hypotheses that do not
 appear in the local context or that appear before a frozen local instance.
@@ -1774,7 +1777,7 @@ do let hyp_name : expr → name :=
        , format.line
        , "This is because these hypotheses either do not occur in the\n"
        , "context or they occur before a frozen local instance.\n"
-       , "In the latter case, try `tactic.unfreeze_local_instances`."
+       , "In the latter case, try `unfreezingI { ... }`."
        ]
    },
    -- The new names for all hypotheses in ctx_suffix.
