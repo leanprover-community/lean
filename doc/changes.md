@@ -1,3 +1,15 @@
+3.38.0c (11 January 2011)
+-------------------------
+
+Features:
+- Import unfreezing tactic from mathlib (#667)
+
+Changes:
+- Do not check for subsingleton in simp congrs (#665)
+
+Bug fixes:
+- Allow cloning tactic states with references (#666)
+
 3.37.0c (7 January 2021)
 ------------------------
 
