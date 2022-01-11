@@ -457,10 +457,10 @@ meta def join_user_simp_lemmas_core : simp_lemmas → list name → tactic simp_
 | S []             := return S
 | S (attr_name::R) := do S' ← get_user_simp_lemmas attr_name, join_user_simp_lemmas_core (S.join S') R
 
-meta def join_user_simp_lemmas (no_dflt : bool) (attrs : list name) : tactic simp_lemmas := do
-s ← simp_lemmas.mk_default,
-let s := if no_dflt then s.erase_simp_lemmas else s,
-join_user_simp_lemmas_core s attrs
+meta def join_user_simp_lemmas (no_dflt : bool) (attrs : list name) : tactic simp_lemmas :=
+do s ← simp_lemmas.mk_default,
+   let s := if no_dflt then s.erase_simp_lemmas else s,
+   join_user_simp_lemmas_core s attrs
 
 meta def simplify_top_down {α} (a : α) (pre : α → expr → tactic (α × expr × expr)) (e : expr) (cfg : simp_config := {}) : tactic (α × expr × expr) :=
 ext_simplify_core a cfg simp_lemmas.mk (λ _, failed)
