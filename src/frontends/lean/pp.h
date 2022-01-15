@@ -76,6 +76,7 @@ private:
     bool                    m_coercion;         //!< if true show coercions
     bool                    m_num_nat_coe;      //!< true when !m_coercion && env has coercion from num -> nat
     bool                    m_notation;
+    bool                    m_parens;
     bool                    m_universes;
     bool                    m_full_names;
     bool                    m_private_names;
