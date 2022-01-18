@@ -20,6 +20,10 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_PP_NOTATION true
 #endif
 
+#ifndef LEAN_DEFAULT_PP_PARENS
+#define LEAN_DEFAULT_PP_PARENS false
+#endif
+
 #ifndef LEAN_DEFAULT_PP_IMPLICIT
 #define LEAN_DEFAULT_PP_IMPLICIT false
 #endif
@@ -132,6 +136,7 @@ namespace lean {
 static name * g_pp_max_depth         = nullptr;
 static name * g_pp_max_steps         = nullptr;
 static name * g_pp_notation          = nullptr;
+static name * g_pp_parens            = nullptr;
 static name * g_pp_implicit          = nullptr;
 static name * g_pp_proofs            = nullptr;
 static name * g_pp_coercions         = nullptr;
@@ -165,6 +170,7 @@ void initialize_pp_options() {
     g_pp_max_depth         = new name{"pp", "max_depth"};
     g_pp_max_steps         = new name{"pp", "max_steps"};
     g_pp_notation          = new name{"pp", "notation"};
+    g_pp_parens            = new name{"pp", "parens"};
     g_pp_implicit          = new name{"pp", "implicit"};
     g_pp_proofs            = new name{"pp", "proofs"};
     g_pp_coercions         = new name{"pp", "coercions"};
@@ -199,6 +205,8 @@ void initialize_pp_options() {
                              "(pretty printer) maximum number of visited expressions, after that it will use ellipsis");
     register_bool_option(*g_pp_notation,  LEAN_DEFAULT_PP_NOTATION,
                          "(pretty printer) disable/enable notation (infix, mixfix, postfix operators and unicode characters)");
+    register_bool_option(*g_pp_parens,  LEAN_DEFAULT_PP_PARENS,
+                         "(pretty printer) if set to true, notation will be wrapped in parentheses regardless of precedence");
     register_bool_option(*g_pp_implicit,  LEAN_DEFAULT_PP_IMPLICIT,
                          "(pretty printer) display implicit parameters");
     register_bool_option(*g_pp_proofs,  LEAN_DEFAULT_PP_PROOFS,
@@ -283,6 +291,7 @@ void finalize_pp_options() {
     delete g_pp_max_depth;
     delete g_pp_max_steps;
     delete g_pp_notation;
+    delete g_pp_parens;
     delete g_pp_implicit;
     delete g_pp_proofs;
     delete g_pp_coercions;
@@ -328,6 +337,7 @@ name const & get_pp_generalized_field_notation_name() { return *g_pp_generalized
 unsigned get_pp_max_depth(options const & opts)         { return opts.get_unsigned(*g_pp_max_depth, LEAN_DEFAULT_PP_MAX_DEPTH); }
 unsigned get_pp_max_steps(options const & opts)         { return opts.get_unsigned(*g_pp_max_steps, LEAN_DEFAULT_PP_MAX_STEPS); }
 bool     get_pp_notation(options const & opts)          { return opts.get_bool(*g_pp_notation, LEAN_DEFAULT_PP_NOTATION); }
+bool     get_pp_parens(options const & opts)            { return opts.get_bool(*g_pp_parens, LEAN_DEFAULT_PP_PARENS); }
 bool     get_pp_implicit(options const & opts)          { return opts.get_bool(*g_pp_implicit, LEAN_DEFAULT_PP_IMPLICIT); }
 bool     get_pp_proofs(options const & opts)            { return opts.get_bool(*g_pp_proofs, LEAN_DEFAULT_PP_PROOFS); }
 bool     get_pp_coercions(options const & opts)         { return opts.get_bool(*g_pp_coercions, LEAN_DEFAULT_PP_COERCIONS); }

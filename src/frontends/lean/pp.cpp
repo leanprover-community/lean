@@ -346,6 +346,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_unicode           = get_pp_unicode(o);
     m_coercion          = get_pp_coercions(o);
     m_notation          = get_pp_notation(o);
+    m_parens            = get_pp_parens(o);
     m_universes         = get_pp_universes(o);
     m_full_names        = get_pp_full_names(o);
     m_private_names     = get_pp_private_names(o);
@@ -1375,7 +1376,7 @@ template<class T>
 auto pretty_fn<T>::pp_num(mpz const & n, unsigned bp) -> result {
     if (n.is_neg()) {
         auto prec = get_expr_precedence(m_token_table, "-");
-        if (!prec || bp > *prec) {
+        if (m_parens || !prec || bp > *prec) {
             return result(paren(T(n.to_string())));
         }
     }
@@ -1763,7 +1764,11 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
             T e_fmt = pp_notation_child(e.first, 0, token_lbp).fmt();
             fmt = e_fmt + fmt;
         }
-        return optional<result>(result(first_lbp, last_rbp, group(nest(m_indent, fmt))));
+        if (m_parens) {
+          return optional<result>(result(paren(fmt)));
+        } else {
+          return optional<result>(result(first_lbp, last_rbp, group(nest(m_indent, fmt))));
+        }
     }
 }
 template<class T>
