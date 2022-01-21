@@ -2176,6 +2176,10 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         }
     };
 
+    auto add_resolved = [&] (name const & c) {
+        id_data.push(new_ast("resolved", pos(), c).m_id);
+    };
+
     auto& p = id_data.m_start;
     if (!explicit_levels && m_id_behavior == id_behavior::AllLocal) {
         expr r = save_pos(mk_local(id, save_pos(mk_expr_placeholder(), p)), p);
@@ -2206,6 +2210,7 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         auto new_id = ns + id;
         if (!ns.is_anonymous() && m_env.find(new_id) &&
             (!id.is_atomic() || !is_protected(m_env, new_id))) {
+            add_resolved(new_id);
             return save_pos(mk_constant(*this, new_id, ls, id_data, explicit_levels), p);
         }
     }
@@ -2214,6 +2219,7 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         name new_id = id;
         new_id = remove_root_prefix(new_id);
         if (m_env.find(new_id)) {
+            add_resolved(new_id);
             return save_pos(mk_constant(*this, new_id, ls, id_data, explicit_levels), p);
         }
     }
@@ -2221,8 +2227,10 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
     optional<expr> r;
     // globals
 
-    if (m_env.find(id))
+    if (m_env.find(id)) {
+        add_resolved(id);
         r = save_pos(mk_constant(*this, id, ls, id_data, explicit_levels), p);
+    }
     // aliases
     auto as = get_expr_aliases(m_env, id);
     if (!is_nil(as)) {
@@ -2231,6 +2239,7 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
             new_as.push_back(*r);
         for (auto const & e : as) {
             new_as.push_back(copy_with_new_pos(mk_constant(e, ls), p));
+            add_resolved(e);
         }
         r = save_pos(mk_choice(new_as.size(), new_as.data()), p);
         ast_id c = new_ast(new_as.size() == 1 ? "const" : "choice_const", id_data.m_start)
