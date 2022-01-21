@@ -38,6 +38,8 @@ protected def {u v} psum.has_sizeof_alt
 namespace well_founded_tactics
 open tactic
 
+def id_tagged.wf : unit := ()
+
 meta def mk_alt_sizeof : expr → expr
 | (expr.app (expr.app (expr.app (expr.app (expr.const ``psum.has_sizeof l) α) β) iα) iβ) :=
   (expr.const ``psum.has_sizeof_alt l : expr) α β iα (mk_alt_sizeof iβ)
@@ -152,6 +154,8 @@ else a.lt b
 private meta def sort_args (args : list expr) : list expr :=
 args.qsort num_small_lt
 
+private def tagged_proof.wf : unit := ()
+
 meta def cancel_nat_add_lt : tactic unit :=
 do `(%%lhs < %%rhs) ← target,
    ty ← infer_type lhs >>= whnf,
@@ -169,7 +173,7 @@ do `(%%lhs < %%rhs) ← target,
      rhs_pr     ← prove_eq_by_perm rhs new_rhs,
      target_pr  ← to_expr ``(congr (congr_arg (<) %%lhs_pr) %%rhs_pr),
      new_target ← to_expr ``(%%new_lhs < %%new_rhs),
-     replace_target new_target target_pr "wf",
+     replace_target new_target target_pr ``id_tagged.wf,
      `[apply nat.add_lt_add_left] <|> `[apply nat.lt_add_of_zero_lt_left]
 
 meta def check_target_is_value_lt : tactic unit :=

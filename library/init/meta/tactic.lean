@@ -551,13 +551,9 @@ meta constant rotate_left   : nat → tactic unit
 meta constant get_goals     : tactic (list expr)
 /-- Replace the current list of goals with the given one. Each expr in the list should be a metavariable. Any assigned metavariables will be ignored.-/
 meta constant set_goals     : list expr → tactic unit
-/-- Convenience function for creating `id` applications of proofs -/
-meta def mk_id_proof (prop : expr) (pr : expr) : expr :=
-expr.app (expr.app (expr.const ``id [level.zero]) prop) pr
-/-- Convenience function for creating `id_tag` applications -/
-meta def mk_id_tag_proof (prop : expr) (pr : expr) (tag : string) : expr :=
-expr.app (expr.app (expr.const ``id_tag [level.zero]) prop (reflect tag)) pr
-
+/-- Convenience function for creating `id_tagged` applications for proofs. -/
+meta def mk_tagged_proof (prop : expr) (pr : expr) (tag : name) : expr :=
+expr.mk_app (expr.const ``id_tagged [level.zero]) [expr.const tag [], prop, pr]
 
 /-- How to order the new goals made from an `apply` tactic.
 Supposing we were applying `e : ∀ (a:α) (p : P(a)), Q`
@@ -1820,11 +1816,11 @@ that (type = new_type). The tactic actually creates a new hypothesis
 with the same user facing name, and (tries to) clear `h`.
 The `clear` step fails if `h` has forward dependencies. In this case, the old `h`
 will remain in the local context. The tactic returns the new hypothesis. -/
-meta def replace_hyp (h : expr) (new_type : expr) (eq_pr : expr) (tag : string := "<unk>") : tactic expr :=
+meta def replace_hyp (h : expr) (new_type : expr) (eq_pr : expr) (tag : name := `unit.star) : tactic expr :=
 do h_type ← infer_type h,
    new_h ← assert h.local_pp_name new_type,
    eq_pr_type ← mk_app `eq [h_type, new_type],
-   let eq_pr := mk_id_tag_proof eq_pr_type eq_pr tag,
+   let eq_pr := mk_tagged_proof eq_pr_type eq_pr tag,
    mk_eq_mp eq_pr h >>= exact,
    try $ clear h,
    return new_h
@@ -1892,12 +1888,12 @@ meta instance : monad task :=
 
 namespace tactic
 
-meta def replace_target (new_target : expr) (pr : expr) (tag : string := "<unk>") : tactic unit :=
+meta def replace_target (new_target : expr) (pr : expr) (tag : name := `unit.star) : tactic unit :=
 do t ← target,
    assert `htarget new_target, swap,
    ht        ← get_local `htarget,
    pr_type   ← mk_app `eq [t, new_target],
-   let locked_pr := mk_id_tag_proof pr_type pr tag,
+   let locked_pr := mk_tagged_proof pr_type pr tag,
    mk_eq_mpr locked_pr ht >>= exact
 
 meta def eval_pexpr (α) [reflected α] (e : pexpr) : tactic α :=

@@ -10,6 +10,8 @@ import init.meta.tactic init.meta.simp_tactic init.meta.interactive
 import init.meta.congr_lemma init.meta.match_tactic
 open tactic
 
+def tactic.id_tagged.conv : unit := ()
+
 universe u
 
 /-- `conv α` is a tactic for discharging goals of the form `lhs ~ rhs` for some relation `~` (usually equality) and fixed lhs, rhs.
