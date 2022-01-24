@@ -40,11 +40,52 @@ with repr_core : value → string
 | (value.nat n)    := repr n
 | (value.bool tt)  := "true"
 | (value.bool ff)  := "false"
-| (value.table cs) := "{" ++ repr_pairs cs ++ "}"
+| (value.table cs) :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inr cs) (psum.inl (table cs)) :=
+  begin
+    unfold has_well_founded.r sizeof_measure measure inv_image,
+    unfold sizeof has_sizeof.sizeof value.sizeof psum.alt.sizeof,
+    rw [nat.add_comm],
+    exact nat.lt_succ_self _,
+  end,
+  "{" ++ repr_pairs cs ++ "}"
 with repr_pairs : list (string × value) → string
 | []               := ""
-| [(k, v)]         := k ++ " = " ++ repr_core v
-| ((k, v)::kvs)    := k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
+| [(k, v)]         :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inl v) (psum.inr [(k, v)]) :=
+  begin
+    apply nat.lt_succ_of_lt,
+    unfold sizeof has_sizeof.sizeof prod.sizeof,
+    rw [← nat.add_assoc],
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  k ++ " = " ++ repr_core v
+| ((k, v)::kvs)    :=
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (psum.has_sizeof_alt _ _))
+    (psum.inl v) (psum.inr ((k, v) :: kvs)) :=
+  begin
+    change v.sizeof < 1 + (1 + k.length + v.sizeof) + kvs.sizeof,
+    rw [← nat.add_assoc, nat.add_comm, ← nat.add_assoc],
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm, nat.add_assoc, nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  have @has_well_founded.r _
+    (@has_well_founded_of_has_sizeof _ (@psum.has_sizeof_alt value _ _ _))
+    (psum.inr kvs) (psum.inr ((k, v) :: kvs)) :=
+  begin
+    apply nat.lt_add_of_pos_left,
+    rw [nat.add_comm],
+    exact nat.succ_pos _,
+  end,
+  k ++ " = " ++ repr_core v ++ ", " ++ repr_pairs kvs
 
 protected def repr : ∀ (v : value), string
 | (table cs) := join "\n" $ do (h, c) ← cs,

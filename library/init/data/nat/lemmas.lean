@@ -1324,4 +1324,22 @@ le_of_not_lt (λ l, find_min l h)
 
 end find
 
+/- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
+lemma lt_add_of_zero_lt_left (a b : nat) (h : 0 < b) : a < a + b :=
+show a + 0 < a + b,
+by {apply nat.add_lt_add_left, assumption}
+
+/- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
+lemma zero_lt_one_add (a : nat) : 0 < 1 + a :=
+suffices 0 < a + 1, by {simp [nat.add_comm], assumption},
+nat.zero_lt_succ _
+
+/- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
+lemma lt_add_right (a b c : nat) : a < b → a < b + c :=
+λ h, lt_of_lt_of_le h (nat.le_add_right _ _)
+
+/- TODO(Leo): move this lemma, or delete it after we add algebraic normalizer. -/
+lemma lt_add_left (a b c : nat) : a < b → a < c + b :=
+λ h, lt_of_lt_of_le h (nat.le_add_left _ _)
+
 end nat

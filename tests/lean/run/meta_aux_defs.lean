@@ -10,10 +10,14 @@ def f : nat → nat
 mutual def even, odd
 with even : nat → bool
 | 0     := tt
-| (n+1) := odd n
+| (n+1) :=
+  have _ := n.lt_succ_self,
+  odd n
 with odd : nat → bool
 | 0     := ff
-| (n+1) := even n
+| (n+1) :=
+  have _ := n.lt_succ_self,
+  even n
 
 #print even._main
 

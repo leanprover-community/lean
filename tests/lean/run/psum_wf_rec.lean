@@ -10,16 +10,20 @@ local attribute [simp] nat.add_comm nat.add_left_comm nat.add_assoc nat.mul_asso
 
 mutual def f, g
 with f : ℕ → ℕ
-| n := g n + 1
+| n :=
+  have has_well_founded.r (psum.inr n) (psum.inl n), from nat.lt_succ_self _,
+  g n + 1
 with g : ℕ → ℕ
 | 0     := 0
 | (n+1) :=
   /- The following is a hint for the equation compiler.
      We will be able to delete it as soon as we have decision procedures for arithmetic -/
-  have 2 + n * 2 < 1 + 2 * (n + 1), from
+  have has_well_founded.r (psum.inl n) (psum.inr (n + 1)), from
     begin
+      unfold has_well_founded.r sizeof_measure measure inv_image,
+      unfold sizeof has_sizeof.sizeof psum.alt'.sizeof nat.sizeof,
       rw [nat.left_distrib], simp,
-      well_founded_tactics.cancel_nat_add_lt,
-      tactic.comp_val
+      rw [nat.add_comm 1 _],
+      exact nat.lt_succ_self _,
     end,
   f n
