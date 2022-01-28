@@ -111,7 +111,7 @@ they are sometimes dummy values. Use `tactic.infer_type` instead. -/
 
 variable {elab : bool}
 
-meta instance : inhabited expr := ⟨expr.sort level.zero⟩
+meta instance : inhabited (expr elab) := ⟨expr.sort level.zero⟩
 
 /-- Get the name of the macro definition. -/
 meta constant expr.macro_def_name (d : macro_def) : name
