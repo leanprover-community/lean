@@ -110,6 +110,7 @@ private meta def parser_desc_aux : expr → tactic (list format)
 | `(pure ._) := return []
 | `(._ <$> %%p) := parser_desc_aux p
 | `(skip_info %%p) := parser_desc_aux p
+| `(._ <$ %%p) := parser_desc_aux p
 | `(set_goal_info_pos %%p) := parser_desc_aux p
 | `(with_desc %%desc %%p) := list.ret <$> eval_expr format desc
 | `(%%p₁ <*> %%p₂) := do
@@ -121,6 +122,10 @@ private meta def parser_desc_aux : expr → tactic (list format)
   f₂ ← parser_desc_aux p₂,
   return $ concat f₁ f₂
 | `(%%p₁ *> %%p₂) := do
+  f₁ ← parser_desc_aux p₁,
+  f₂ ← parser_desc_aux p₂,
+  return $ concat f₁ f₂
+| `(%%p₁ >> %%p₂) := do
   f₁ ← parser_desc_aux p₁,
   f₂ ← parser_desc_aux p₂,
   return $ concat f₁ f₂
