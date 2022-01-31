@@ -8,7 +8,7 @@ import init.meta.relation_tactics init.meta.occurrences
 
 namespace tactic
 
-def id_tagged.rw : unit := ()
+def id_tag.rw : unit := ()
 
 /-- Configuration options for the `rewrite` tactic. -/
 structure rewrite_cfg extends apply_cfg :=
@@ -41,11 +41,11 @@ do (new_t, prf, metas) ← rewrite_core h e cfg,
 meta def rewrite_target (h : expr) (cfg : rewrite_cfg := {}) : tactic unit :=
 do t ← target,
    (new_t, prf, _) ← rewrite h t cfg,
-   replace_target new_t prf ``id_tagged.rw
+   replace_target new_t prf ``id_tag.rw
 
 meta def rewrite_hyp (h : expr) (hyp : expr) (cfg : rewrite_cfg := {}) : tactic expr :=
 do hyp_type ← infer_type hyp,
    (new_hyp_type, prf, _) ← rewrite h hyp_type cfg,
-   replace_hyp hyp new_hyp_type prf ``id_tagged.rw
+   replace_hyp hyp new_hyp_type prf ``id_tag.rw
 
 end tactic

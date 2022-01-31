@@ -551,9 +551,9 @@ meta constant rotate_left   : nat → tactic unit
 meta constant get_goals     : tactic (list expr)
 /-- Replace the current list of goals with the given one. Each expr in the list should be a metavariable. Any assigned metavariables will be ignored.-/
 meta constant set_goals     : list expr → tactic unit
-/-- Convenience function for creating `id_tagged` applications for proofs. -/
+/-- Convenience function for creating `id_tag` applications for proofs. -/
 meta def mk_tagged_proof (prop : expr) (pr : expr) (tag : name) : expr :=
-expr.mk_app (expr.const ``id_tagged [level.zero]) [expr.const tag [], prop, pr]
+expr.mk_app (expr.const ``id_tag [level.zero]) [expr.const tag [], prop, pr]
 
 /-- How to order the new goals made from an `apply` tactic.
 Supposing we were applying `e : ∀ (a:α) (p : P(a)), Q`

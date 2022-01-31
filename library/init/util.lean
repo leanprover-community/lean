@@ -54,4 +54,4 @@ cast undefined
   For tactics to tag the terms they construct.
   The tag is `unit` but is intended to be encoded by a constant, e.g.
   def tagged_proof.ring : unit := () -/
-@[reducible] def id_tagged (tag : unit) {α : Sort u} (x : α) : α := x
+@[reducible] def id_tag (tag : unit) {α : Sort u} (x : α) : α := x

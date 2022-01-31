@@ -10,7 +10,7 @@ import init.meta.tactic init.meta.simp_tactic init.meta.interactive
 import init.meta.congr_lemma init.meta.match_tactic
 open tactic
 
-def tactic.id_tagged.conv : unit := ()
+def tactic.id_tag.conv : unit := ()
 
 universe u
 
