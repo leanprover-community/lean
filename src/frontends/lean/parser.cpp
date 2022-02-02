@@ -2139,7 +2139,6 @@ optional<expr> parser::resolve_local(name const & id, ast_data & id_data, pos_in
     }
 
     if (allow_field_notation && !id.is_atomic() && id.is_string()) {
-        ast_data prefix_data = id_data; // TODO(dselsam): implement
         name n = id_data.m_value = id.get_prefix();
         if (auto s = resolve_local(n, id_data, p, extra_locals)) {
             auto field_pos = p;
