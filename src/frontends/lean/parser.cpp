@@ -2077,44 +2077,6 @@ expr parser::patexpr_to_expr_core(expr const & pat_or_expr) {
     return patexpr_to_expr_fn(*this)(pat_or_expr);
 }
 
-optional<expr> parser::resolve_local(name const & id, pos_info const & p, list<name> const & extra_locals,
-                                     bool allow_field_notation) {
-    /* Remark: (auxiliary) local constants many not be atomic.
-       Example: when elaborating
-
-          protected def list.sizeof {α : Type u} [has_sizeof α] : list α → nat
-          | list.nil        := 1
-          | (list.cons a l) := 1 + sizeof a + list.sizeof l
-
-       the local context will contain the auxiliary local constant `list.size_of`
-    */
-
-    // extra locals
-    unsigned vidx = 0;
-    for (name const & extra : extra_locals) {
-        if (id == extra)
-            return some_expr(save_pos(mk_var(vidx), p));
-        vidx++;
-    }
-
-    // locals
-    if (auto it1 = m_local_decls.find(id)) {
-        return some_expr(copy_with_new_pos(*it1, p));
-    }
-
-    if (allow_field_notation && !id.is_atomic() && id.is_string()) {
-        if (auto r = resolve_local(id.get_prefix(), p, extra_locals)) {
-            auto field_pos = p;
-            field_pos.second += id.get_prefix().utf8_size();
-            return some_expr(save_pos(mk_field_notation_compact(*r, id.get_string()), field_pos));
-        } else {
-            return none_expr();
-        }
-    } else {
-        return none_expr();
-    }
-}
-
 static expr mk_constant(parser & p, const name & id, const levels & ls, const ast_data & id_data, ast_id levels_id) {
     expr r = mk_constant(id, ls);
     ast_id c = p.new_ast("const", id_data.m_start).push(id_data.m_id).push(levels_id).m_id;
@@ -2144,6 +2106,50 @@ static expr mk_field_notation(parser & p, const expr & s, const pos_info & field
 static expr mk_field_notation(parser & p, const expr & s, const pos_info & field_pos, ast_id field_id, unsigned fidx) {
     expr r = p.save_pos(mk_field_notation(s, fidx), field_pos);
     return mk_field_notation_ast(p, s, r, field_id);
+}
+
+optional<expr> parser::resolve_local(name const & id, ast_data & id_data, pos_info const & p, list<name> const & extra_locals,
+                                     bool allow_field_notation) {
+    /* Remark: (auxiliary) local constants many not be atomic.
+       Example: when elaborating
+
+          protected def list.sizeof {α : Type u} [has_sizeof α] : list α → nat
+          | list.nil        := 1
+          | (list.cons a l) := 1 + sizeof a + list.sizeof l
+
+       the local context will contain the auxiliary local constant `list.size_of`
+    */
+
+    // extra locals
+    unsigned vidx = 0;
+    for (name const & extra : extra_locals) {
+        if (id == extra) {
+            expr r = save_pos(mk_var(vidx), p);
+            finalize_ast(id_data.m_id, r);
+            return some_expr(r);
+        }
+        vidx++;
+    }
+
+    // locals
+    if (auto it1 = m_local_decls.find(id)) {
+        expr r = copy_with_new_pos(*it1, p);
+        finalize_ast(id_data.m_id, r);
+        return some_expr(r);
+    }
+
+    if (allow_field_notation && !id.is_atomic() && id.is_string()) {
+        name n = id_data.m_value = id.get_prefix();
+        if (auto s = resolve_local(n, id_data, p, extra_locals)) {
+            auto field_pos = p;
+            field_pos.second += id.get_prefix().utf8_size();
+            return some_expr(mk_field_notation_compact(*this, *s, field_pos, id.get_string()));
+        } else {
+            return none_expr();
+        }
+    } else {
+        return none_expr();
+    }
 }
 
 expr parser::id_to_expr(name const & id, ast_data & id_data,
@@ -2183,9 +2189,8 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         return r;
     }
 
-    if (auto r = resolve_local(id, p, extra_locals, allow_field_notation)) {
+    if (auto r = resolve_local(id, id_data, p, extra_locals, allow_field_notation)) {
         check_no_levels(ls, p);
-        finalize_ast(id_data.m_id, *r);
         return *r;
     }
 
