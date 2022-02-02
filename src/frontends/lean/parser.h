@@ -288,7 +288,7 @@ class parser : public abstract_parser, public parser_info {
 
     std::shared_ptr<snapshot> mk_snapshot();
 
-    optional<expr> resolve_local(name const & id, pos_info const & p, list<name> const & extra_locals,
+    optional<expr> resolve_local(name const & id, ast_data & id_data, pos_info const & p, list<name> const & extra_locals,
                                  bool allow_field_notation = true);
 
     friend class module_parser;
