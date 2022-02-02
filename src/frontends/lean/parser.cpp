@@ -2143,7 +2143,7 @@ optional<expr> parser::resolve_local(name const & id, ast_data & id_data, pos_in
         if (auto s = resolve_local(n, id_data, p, extra_locals)) {
             auto field_pos = p;
             field_pos.second += id.get_prefix().utf8_size();
-            return some_expr(save_pos(mk_field_notation_compact(*this, *s, field_pos, id.get_string()), field_pos));
+            return some_expr(mk_field_notation_compact(*this, *s, field_pos, id.get_string()));
         } else {
             return none_expr();
         }
