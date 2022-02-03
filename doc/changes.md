@@ -1,3 +1,16 @@
+3.39.0c (3 February 2022)
+-------------------------
+
+Features:
+- Add option `pp.parens` to force parentheses for notation (#669)
+- `lstlean.tex`: `ϖ` and `ᵒ` (#671)
+- `pexpr` is inhabited too (#674)
+- `id_tag` for "tagging" tactic proofs (#670)
+- Export ast field info for `<local>.<field>` (#677)
+
+Bug fixes:
+- Add missing `parser_desc` combinators (#676)
+
 3.38.0c (11 January 2022)
 -------------------------
 
