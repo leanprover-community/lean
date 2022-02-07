@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #pragma once
 #include <string>
 #include <iostream>
+#include <vector>
 #include "kernel/pos_info_provider.h"
 #include "util/name.h"
 #include "util/flet.h"
