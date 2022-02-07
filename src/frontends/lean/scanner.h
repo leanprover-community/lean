@@ -21,6 +21,15 @@ enum class token_kind {Keyword, CommandKeyword, Identifier, Numeral, Decimal,
         String, Char, QuotedSymbol,
         DocBlock, ModDocBlock, FieldNum, FieldName, Eof};
 
+struct ast_comment {
+    pos_info m_start, m_end;
+    std::string m_text;
+
+    ast_comment() {}
+    ast_comment(pos_info start, pos_info end, std::string const & text) :
+        m_start(start), m_end(end), m_text(text) {}
+};
+
 /**
     \brief Scanner. The behavior of the scanner is controlled using a token set.
 
@@ -53,6 +62,8 @@ protected:
     mpq                 m_num_val;
     std::string         m_buffer;
     std::string         m_aux_buffer;
+
+    std::vector<ast_comment> m_comments;
 
     bool                m_in_notation;
     bool                m_field_notation{true};
@@ -101,6 +112,8 @@ public:
     pos_info get_pos_info() const { return {m_line, m_pos}; }
     pos_info get_last_end_pos_info() const { return {m_eline, m_epos}; }
     token_kind scan(environment const & env);
+
+    std::vector<ast_comment> const & get_comments() const { return m_comments; }
 
     mpq const & get_num_val() const { return m_num_val; }
     name const & get_name_val() const { return m_name_val; }

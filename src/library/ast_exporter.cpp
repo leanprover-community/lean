@@ -20,6 +20,7 @@ struct ast_exporter : abstract_ast_exporter {
     std::vector<ast_data*> const & m_ast;
     tag_ast_table const & m_tag_ast_table;
     tactic_log const * m_tactic_log;
+    std::vector<ast_comment> const & m_comments;
     std::vector<bool> m_reachable;
     json m_levels;
     json m_exprs = {nullptr};
@@ -33,8 +34,9 @@ struct ast_exporter : abstract_ast_exporter {
         }
     }
 
-    ast_exporter(std::vector<ast_data*> const & ast, tag_ast_table const & tag_ast_table, tactic_log const * log):
-        m_ast(ast), m_tag_ast_table(tag_ast_table), m_tactic_log(log),
+    ast_exporter(std::vector<ast_data*> const & ast, tag_ast_table const & tag_ast_table, tactic_log const * log,
+            std::vector<ast_comment> const & comments):
+        m_ast(ast), m_tag_ast_table(tag_ast_table), m_tactic_log(log), m_comments(comments),
         m_reachable(ast.size(), false) {
         m_levels.push_back("0");
         m_level2idx.emplace(mk_level_zero(), 0);
@@ -153,7 +155,15 @@ struct ast_exporter : abstract_ast_exporter {
             }
             asts.push_back(j);
         }
-        json r = {{"ast", asts}, {"file", AST_TOP_ID}};
+        json comments = json::array();
+        for (auto & c : m_comments) {
+            comments.push_back({
+                {"start", {c.m_start.first, c.m_start.second}},
+                {"end", {c.m_end.first, c.m_end.second}},
+                {"text", c.m_text}
+            });
+        }
+        json r = {{"ast", asts}, {"comments", comments}, {"file", AST_TOP_ID}};
         if (m_tactic_log) {
             lean_assert(!m_tactic_log->m_detached);
             m_tactic_log->m_exported.store(true);
@@ -200,7 +210,7 @@ void export_ast(parser const & p) {
     auto ast_fn = json_of_lean(p.m_file_name);
     exclusive_file_lock output_lock(ast_fn);
     std::ofstream out(ast_fn);
-    ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get()).write_ast(out);
+    ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get(), p.get_comments()).write_ast(out);
     out.close();
     if (!out) throw exception(sstream() << "failed to write ast file: " << ast_fn);
 }
