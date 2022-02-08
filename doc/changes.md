@@ -1,3 +1,9 @@
+3.39.1c (8 February 2022)
+-------------------------
+
+Features:
+- Record comments in ast (#679)
+
 3.39.0c (3 February 2022)
 -------------------------
 
