@@ -457,6 +457,7 @@ public:
     std::string const & get_str_val() const { return m_scanner.get_str_val(); }
     token_info const & get_token_info() const { return m_scanner.get_token_info(); }
     std::string const & get_stream_name() const { return m_scanner.get_stream_name(); }
+    std::vector<ast_comment> const & get_comments() const { return m_scanner.get_comments(); }
 
     unsigned get_small_nat();
     virtual pair<ast_id, unsigned> parse_small_nat() override final;

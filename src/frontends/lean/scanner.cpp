@@ -339,16 +339,21 @@ auto scanner::read_number() -> token_kind {
 }
 
 void scanner::read_single_line_comment() {
+    pos_info start = {m_sline, m_upos}, end;
+    m_buffer.clear();
     while (true) {
+        end = {m_sline, m_upos};
         if (curr() == '\n') {
             next();
-            return;
+            break;
         } else if (curr() == Eof) {
-            return;
+            break;
         } else {
+            m_buffer += curr();
             next();
         }
     }
+    m_comments.emplace_back(start, end, m_buffer);
 }
 
 void scanner::read_doc_block_core() {
@@ -421,13 +426,18 @@ token_kind scanner::read_string_block() {
 }
 
 void scanner::read_comment_block() {
+    pos_info start = {m_sline, m_upos}, end;
+    m_buffer.clear();
     unsigned nesting = 1;
     while (true) {
+        end = {m_sline, m_upos};
         uchar c = curr();
         check_not_eof("unexpected end of comment block");
         next();
         if (c == '/') {
+            m_buffer += c;
             if (curr() == '-') {
+                m_buffer += '-';
                 next();
                 nesting++;
             }
@@ -436,10 +446,17 @@ void scanner::read_comment_block() {
                 next();
                 nesting--;
                 if (nesting == 0)
-                    return;
+                    break;
+                m_buffer += '-';
+                m_buffer += '/';
+            } else {
+              m_buffer += c;
             }
+        } else {
+            m_buffer += c;
         }
     }
+    m_comments.emplace_back(start, end, m_buffer);
 }
 
 void scanner::read_comment_block_doc() {
