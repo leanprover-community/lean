@@ -28,7 +28,7 @@ unsigned tactic_log::summary::cell::mk_hash() const {
     return h;
 }
 
-tactic_state_id tactic_log::get_id(summary const & s) const {
+tactic_state_id tactic_log::get_id(tactic_state const & ts, summary const & s) const {
     lock_guard<mutex> l(m_mutex);
     auto& map = get_state_map(l);
     auto it = map.find(s);
@@ -36,6 +36,12 @@ tactic_state_id tactic_log::get_id(summary const & s) const {
     tactic_state_id r = get_states(l).size();
     get_states(l).push_back(s);
     map.emplace(s, r);
+    auto& ts_pps = get_ts_pps(l);
+
+    std::ostringstream os;
+    os << ts.pp();
+    ts_pps.push_back(os.str());
+
     return r;
 }
 
@@ -85,8 +91,8 @@ static tactic_log::summary summarize(tactic_state const & s) {
 void log_tactic(ast_id id, tactic_state const & before, tactic_state const & after, bool success) {
     if (auto log = get_tactic_log()) {
         lean_assert(!log->m_exported);
-        auto s1 = log->get_id(summarize(before));
-        auto s2 = is_eqp(before, after) ? s1 : log->get_id(summarize(after));
+        auto s1 = log->get_id(before, summarize(before));
+        auto s2 = is_eqp(before, after) ? s1 : log->get_id(after, summarize(after));
         log->push_invocation(id, s1, s2, success);
     }
 }

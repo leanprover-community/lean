@@ -87,6 +87,7 @@ public:
 
 private:
     mutable std::vector<tactic_invocation> m_invocs;
+    mutable std::vector<std::string> m_ts_pps; // tactic state pretty-printeds
     using state_map = std::unordered_map<summary, tactic_state_id, summary_hash, summary_eq>;
     mutable state_map m_state_map;
     mutable std::vector<summary> m_states;
@@ -98,9 +99,10 @@ public:
     mutable std::atomic_bool m_exported{false};
     tactic_log() {}
 
-    tactic_state_id get_id(summary const & s) const;
+    tactic_state_id get_id(tactic_state const & ts, summary const & s) const;
     tactic_state_id push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const;
     inline std::vector<tactic_invocation> & get_invocs(lock_guard<mutex> &) const { return m_invocs; }
+    inline std::vector<std::string> & get_ts_pps(lock_guard<mutex> &) const { return m_ts_pps; }
     inline std::vector<summary> & get_states(lock_guard<mutex> &) const { return m_states; }
     void detach() const;
 };
