@@ -172,7 +172,7 @@ struct ast_exporter : abstract_ast_exporter {
             auto& ts_pps = m_tactic_log->get_ts_pps(l);
             if (!invocs.empty()) {
                 r["tactics"] = invocs;
-                r["pretty-printed-tactics"] = ts_pps;
+                r["statePPs"] = ts_pps;
                 auto& ss = r["states"] = json::array();
                 for (auto& s : m_tactic_log->get_states(l)) {
                     auto gs = json::array();
