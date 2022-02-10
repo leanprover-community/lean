@@ -3986,15 +3986,6 @@ struct instance_synthesizer {
     }
 };
 
-static bool depends_on_mvar(expr const & e, buffer<expr> const & mvars) {
-    // TODO(Leo): improve performance if needed
-    for (expr const & mvar : mvars) {
-        if (occurs(mvar, e))
-            return true;
-    }
-    return false;
-}
-
 /*
 Type class parameters can be annotated with out_param annotations.
 
@@ -4101,7 +4092,7 @@ expr type_context_old::preprocess_class(expr const & type,
     expr it2 = infer(C);
     buffer<bool> is_out_param;
     class_out_param_deps(it2, is_out_param);
-    int i = 0;
+    unsigned i = 0;
     for (expr & C_arg : C_args) {
         it2  = whnf(it2);
         if (!is_pi(it2))

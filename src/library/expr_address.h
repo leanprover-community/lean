@@ -17,8 +17,6 @@ enum class expr_coord {
     lam_var_type, lam_body,
     pi_var_type, pi_body,
     elet_var_type , elet_assignment, elet_body,
-    mvar_type,
-    local_const_type,
 };
 
 typedef list<expr_coord> address;
@@ -33,7 +31,6 @@ namespace expr_address {
     address fn(unsigned sz = 1);
     address arg();
     address pi_body(unsigned n = 1);
-    address mlocal_type(expr const & local);
     address binding_body(expr const & binder);
     address binding_type(expr const & binder);
     address lam_body(unsigned n = 1);

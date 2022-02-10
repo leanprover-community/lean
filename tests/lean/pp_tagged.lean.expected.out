@@ -202,3 +202,40 @@
   "→"
   "\n"
   (tag_expr [pi_body] `(eq.{1} nat x x) (tag_expr [app_fn, app_arg] `(x) "x") " =" "\n" (tag_expr [app_arg] `(x) "x")))
+"have"
+" "
+"x"
+" "
+":"
+"\n"
+(tag_expr [app_fn, lam_var_type] `(true) "true")
+","
+" "
+"from"
+"\n"
+(tag_expr [app_arg] `(trivial) "trivial")
+","
+"\n"
+(tag_expr [app_fn, lam_body] `(checkpoint (eq.{0} true x x)) "x" " =" "\n" "x")
+"("
+(tag_expr [app_fn]
+  `(fun (x : Prop), trivial)
+  "λ"
+  ""
+  "\n"
+  ""
+  "("
+  "x"
+  " "
+  ":"
+  "\n"
+  (tag_expr [lam_var_type] `(Prop) "Prop")
+  ")"
+  ","
+  "\n"
+  (tag_expr [lam_body] `(trivial) "trivial"))
+")"
+"\n"
+"("
+(tag_expr [app_arg] `(eq.{1} nat x x) (tag_expr [app_fn, app_arg] `(x) "x") " =" "\n" (tag_expr [app_arg] `(x) "x"))
+")"

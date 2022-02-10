@@ -1135,9 +1135,10 @@ auto pretty_fn<T>::pp_have(expr const & e) -> result {
     expr local   = p.second;
     expr body    = p.first;
     name const & n = mlocal_pp_name(local);
-    T type_fmt  = pp_child_at(mlocal_type(local), 0, expr_address::mlocal_type(local)).fmt();
+    T type_fmt  = pp_child_at(mlocal_type(local), 0,
+        append(expr_address::binding_type(binding), expr_address::fn())).fmt();
     T proof_fmt = pp_child_at(proof, 0, expr_address::arg()).fmt();
-    T body_fmt  = pp_child_at(body, 0, expr_address::lam_body()).fmt();
+    T body_fmt  = pp_child_at(body, 0, append(expr_address::lam_body(), expr_address::fn())).fmt();
     T head_fmt  = *g_have_fmt;
     T r = head_fmt + space() + escape(n) + space();
     r += colon() + nest(m_indent, line() + type_fmt + comma() + space() + *g_from_fmt);

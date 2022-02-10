@@ -28,3 +28,5 @@ constant foo (α : Type) [inhabited ℕ] [inhabited ℕ] : ℕ → ℤ
 #eval (sf.of_eformat <$> tactic.pp_tagged `(∃ (x > 0), x = x)) >>= tactic.trace
 #eval (sf.of_eformat <$> tactic.pp_tagged `(λ (x > 0), x = x)) >>= tactic.trace
 #eval (sf.of_eformat <$> tactic.pp_tagged `(Π (x > 0), x = x)) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `(have x: _, from trivial, x = x)) >>= tactic.trace
+#eval (sf.of_eformat <$> tactic.pp_tagged `(suffices x: _, from trivial, x = x)) >>= tactic.trace

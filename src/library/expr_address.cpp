@@ -90,10 +90,5 @@ address repeat(address e, unsigned n) {
     return result;
 }
 
-address mlocal_type(expr const & local) {
-    lean_assert(is_mlocal(local));
-    return is_local(local) ? address(expr_coord::local_const_type) : address(expr_coord::mvar_type);
-}
-
 
 }}
