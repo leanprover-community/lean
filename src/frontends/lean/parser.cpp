@@ -2077,18 +2077,7 @@ expr parser::patexpr_to_expr_core(expr const & pat_or_expr) {
     return patexpr_to_expr_fn(*this)(pat_or_expr);
 }
 
-optional<expr> parser::resolve_local(name const & id, pos_info const & p, list<name> const & extra_locals,
-                                     bool allow_field_notation) {
-    /* Remark: (auxiliary) local constants many not be atomic.
-       Example: when elaborating
-
-          protected def list.sizeof {α : Type u} [has_sizeof α] : list α → nat
-          | list.nil        := 1
-          | (list.cons a l) := 1 + sizeof a + list.sizeof l
-
-       the local context will contain the auxiliary local constant `list.size_of`
-    */
-
+optional<expr> parser::resolve_local(name const & id, pos_info const & p, list<name> const & extra_locals) {
     // extra locals
     unsigned vidx = 0;
     for (name const & extra : extra_locals) {
@@ -2102,17 +2091,7 @@ optional<expr> parser::resolve_local(name const & id, pos_info const & p, list<n
         return some_expr(copy_with_new_pos(*it1, p));
     }
 
-    if (allow_field_notation && !id.is_atomic() && id.is_string()) {
-        if (auto r = resolve_local(id.get_prefix(), p, extra_locals)) {
-            auto field_pos = p;
-            field_pos.second += id.get_prefix().utf8_size();
-            return some_expr(save_pos(mk_field_notation_compact(*r, id.get_string()), field_pos));
-        } else {
-            return none_expr();
-        }
-    } else {
-        return none_expr();
-    }
+    return none_expr();
 }
 
 static expr mk_constant(parser & p, const name & id, const levels & ls, const ast_data & id_data, ast_id levels_id) {
@@ -2183,10 +2162,31 @@ expr parser::id_to_expr(name const & id, ast_data & id_data,
         return r;
     }
 
-    if (auto r = resolve_local(id, p, extra_locals, allow_field_notation)) {
+    if (auto r = resolve_local(id, p, extra_locals)) {
         check_no_levels(ls, p);
         finalize_ast(id_data.m_id, *r);
         return *r;
+    }
+
+    if (allow_field_notation && !id.is_atomic() && id.is_string()) {
+        /* Remark: (auxiliary) local constants many not be atomic.
+            Example: when elaborating
+
+            protected def list.sizeof {α : Type u} [has_sizeof α] : list α → nat
+            | list.nil        := 1
+            | (list.cons a l) := 1 + sizeof a + list.sizeof l
+
+            the local context will contain the auxiliary local constant `list.size_of`
+        */
+        name prefix = id.get_prefix();
+        if (auto r = resolve_local(prefix, p, extra_locals)) {
+            check_no_levels(ls, p);
+            id_data.m_value = prefix;
+            finalize_ast(id_data.m_id, *r);
+            auto field_pos = p;
+            field_pos.second += prefix.utf8_size();
+            return mk_field_notation_compact(*this, *r, field_pos, id.get_string());
+        }
     }
 
     if (!explicit_levels && m_id_behavior == id_behavior::AssumeLocalIfNotLocal) {
