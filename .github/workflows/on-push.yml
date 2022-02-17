@@ -177,7 +177,7 @@ jobs:
       - run: mkdir -p ./build
       - name: Configure
         run: |
-          cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Unix\ Makefiles
+          cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMINGW_LOCAL_DIR=D:/a/_temp/msys64/mingw64/bin -G Unix\ Makefiles
         working-directory: ./build
       - name: Build
         run: |
