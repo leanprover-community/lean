@@ -1,3 +1,10 @@
+3.39.2c (17 February 2022)
+--------------------------
+
+Bug fixes:
+- Regression in ast constant names export (#683)
+- `pp_tagged` output for have statements (#682)
+
 3.39.1c (8 February 2022)
 -------------------------
 
