@@ -551,7 +551,7 @@ if("${INCLUDE_MSYS2_DLLS}" MATCHES "ON")
   # TODO(Leo): do not use hardlinks to required DLLs.
   # For example, we can try to use ldd to retrieve the list of required DLLs.
   set(RUNTIME_LIBRARIES
-         ${MINGW_LOCAL_DIR}/libgmp-10.dll
+         ${MINGW_LOCAL_DIR}/libgmp-11.dll
          ${MINGW_LOCAL_DIR}/libwinpthread-1.dll
          ${MINGW_LOCAL_DIR}/libgcc_s_seh-1.dll
          ${MINGW_LOCAL_DIR}/libstdc++-6.dll)
