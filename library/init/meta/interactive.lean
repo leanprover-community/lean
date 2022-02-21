@@ -367,7 +367,8 @@ private meta def rw_hyp (cfg : rewrite_cfg) : list rw_rule → expr → tactic u
   save_info r.pos,
   eq_lemmas ← get_rule_eqn_lemmas r,
   orelse'
-    (do e ← to_expr' r.rule, when (not (uses_hyp e hyp)) $ rewrite_hyp e hyp {symm := r.symm, ..cfg} >>= rw_hyp rs)
+    (do e ← to_expr' r.rule,
+      (if uses_hyp e hyp then pure e else rewrite_hyp e hyp {symm := r.symm, ..cfg}) >>= rw_hyp rs)
     (eq_lemmas.mfirst $ λ n, do e ← mk_const n, rewrite_hyp e hyp {symm := r.symm, ..cfg} >>= rw_hyp rs)
     (eq_lemmas.empty)
 
