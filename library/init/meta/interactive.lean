@@ -861,7 +861,7 @@ The ignored tactic block is useful for "commenting out" part of a proof during d
 begin
   split,
   admit { expensive_tactic },
-  
+
 end
 ```
 -/
@@ -875,7 +875,7 @@ The ignored tactic block is useful for "commenting out" part of a proof during d
 begin
   split,
   sorry { expensive_tactic },
-  
+
 end
 ```
 -/
