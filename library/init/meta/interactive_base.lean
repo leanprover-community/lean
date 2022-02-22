@@ -49,6 +49,9 @@ do hs ← l.get_locals,
 /-- Use `desc` as the interactive description of `p`. -/
 meta def with_desc {α : Type} (desc : format) (p : parser α) : parser α := p
 
+meta instance with_desc.reflectable {α : Type} (p : parser α) [h : lean.parser.reflectable p]
+  (f : format) : reflectable (with_desc f p) := h
+
 namespace types
 variables {α β : Type}
 

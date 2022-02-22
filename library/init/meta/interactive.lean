@@ -854,14 +854,32 @@ meta def trivial : tactic unit :=
 tactic.triv <|> tactic.reflexivity <|> tactic.contradiction <|> fail "trivial tactic failed"
 
 /--
-Closes the main goal using `sorry`.
+Closes the main goal using `sorry`. Takes an optional ignored tactic block.
+
+The ignored tactic block is useful for "commenting out" part of a proof during development:
+```lean
+begin
+  split,
+  admit { expensive_tactic },
+  
+end
+```
 -/
-meta def admit : tactic unit := tactic.admit
+meta def admit (t : parse (with_desc "{...}" parser.itactic)?) : tactic unit := tactic.admit
 
 /--
-Closes the main goal using `sorry`.
+Closes the main goal using `sorry`. Takes an optional ignored tactic block.
+
+The ignored tactic block is useful for "commenting out" part of a proof during development:
+```lean
+begin
+  split,
+  sorry { expensive_tactic },
+  
+end
+```
 -/
-meta def «sorry» : tactic unit := tactic.admit
+meta def «sorry» (t : parse (with_desc "{...}" parser.itactic)?) : tactic unit := tactic.admit
 
 /--
 The contradiction tactic attempts to find in the current local context a hypothesis that is equivalent to an empty inductive type (e.g. `false`), a hypothesis of the form `c_1 ... = c_2 ...` where `c_1` and `c_2` are distinct constructors, or two contradictory hypotheses.
