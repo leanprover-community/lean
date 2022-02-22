@@ -1,2 +1,4 @@
 sorry_itactic.lean:1:0: warning: declaration '[anonymous]' uses sorry
 sorry_itactic.lean:8:0: warning: declaration '[anonymous]' uses sorry
+sorry_itactic.lean:17:0: warning: declaration '[anonymous]' uses sorry
+sorry_itactic.lean:24:0: warning: declaration '[anonymous]' uses sorry
