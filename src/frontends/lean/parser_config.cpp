@@ -8,6 +8,7 @@ Author: Leonardo de Moura
 #include <string>
 #include "util/sstream.h"
 #include "util/list_fn.h"
+#include "util/utf8.h"
 #include "library/scoped_ext.h"
 #include "library/kernel_serializer.h"
 #include "frontends/lean/parser_config.h"
@@ -104,8 +105,9 @@ name notation_entry::heuristic_name() const {
             switch (a.kind()) {
                 case action_kind::Skip: break;
                 case action_kind::Exprs:
-                    a.get_sep().display(out << " ", false);
-                    if (auto term = a.get_terminator()) term->display(out, false);
+                    name(utf8_trim(a.get_sep().to_string_unescaped())).display(out << " ", false);
+                    if (auto term = a.get_terminator())
+                        name(utf8_trim(term->to_string_unescaped())).display(out, false);
                     break;
                 default: out << " "; break;
             }
