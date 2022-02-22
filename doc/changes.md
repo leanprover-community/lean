@@ -1,3 +1,10 @@
+3.40.0c (22 February 2022)
+-------------------------
+
+Bug fixes:
+- Strip spaces in heuristic name for notations (#687)
+- Don't skip remainder in `rw_hyp` (#686)
+
 3.39.2c (17 February 2022)
 --------------------------
 
