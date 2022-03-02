@@ -119,6 +119,7 @@ static optional<unsigned> to_unsigned(expr const & e) {
 
 static name * g_pp_using_anonymous_constructor = nullptr;
 static name * g_pp_nodot = nullptr;
+static name * g_pp_numeral_type = nullptr;
 
 bool pp_using_anonymous_constructor(environment const & env, name const & n) {
     return has_attribute(env, *g_pp_using_anonymous_constructor, n);
@@ -126,6 +127,10 @@ bool pp_using_anonymous_constructor(environment const & env, name const & n) {
 
 bool pp_nodot(environment const & env, name const & n) {
     return has_attribute(env, *g_pp_nodot, n);
+}
+
+bool pp_numeral_type(environment const & env, name const & n) {
+    return has_attribute(env, *g_pp_numeral_type, n);
 }
 
 void initialize_pp() {
@@ -153,6 +158,7 @@ void initialize_pp() {
 
     g_pp_using_anonymous_constructor = new name("pp_using_anonymous_constructor");
     g_pp_nodot = new name("pp_nodot");
+    g_pp_numeral_type = new name("pp_numeral_type");
 
     register_system_attribute(basic_attribute::with_check(
                                   *g_pp_using_anonymous_constructor,
@@ -165,11 +171,15 @@ void initialize_pp() {
                                               "only structures can be marked with this attribute");
                                               }));
     register_system_attribute(basic_attribute(*g_pp_nodot, "Do not pretty-print using dot-notation."));
+    register_system_attribute(basic_attribute(*g_pp_numeral_type,
+                                              "Pretty print type ascription when displaying numerals "
+                                              "whose type's head is tagged with this attribute."));
 }
 
 void finalize_pp() {
     delete g_pp_nodot;
     delete g_pp_using_anonymous_constructor;
+    delete g_pp_numeral_type;
     delete g_nat_numeral_pp;
     delete g_ellipsis_n_fmt;
     delete g_ellipsis_fmt;
@@ -355,6 +365,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_locals_full_names = get_pp_locals_full_names(o);
     m_beta              = get_pp_beta(o);
     m_numerals          = get_pp_numerals(o);
+    m_numeral_types     = get_pp_numeral_types(o);
     m_strings           = get_pp_strings(o);
     m_preterm           = get_pp_preterm(o);
     m_binder_types      = get_pp_binder_types(o);
@@ -647,7 +658,7 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool 
         }
         if (m_numerals) {
             if (auto n = to_num(e)) {
-                return tag(m_address, e, pp_num(*n, bp));
+                return tag(m_address, e, pp_num(e, *n, bp));
             }
         }
         if (m_strings) {
@@ -1373,15 +1384,32 @@ auto pretty_fn<T>::pp_let(expr e) -> result {
     r += line() + *g_in_fmt + space() + nest(2 + 1, b);
     return result(0, r);
 }
+
 template<class T>
-auto pretty_fn<T>::pp_num(mpz const & n, unsigned bp) -> result {
-    if (n.is_neg()) {
+bool pretty_fn<T>::is_num_type_candidate(expr const & e) {
+    if (m_numeral_types) {
+        return true;
+    }
+    auto ty = get_app_fn(infer_type(e));
+    if (!is_constant(ty)) {
+        return false;
+    }
+    return pp_numeral_type(m_env, const_name(ty));
+}
+
+template<class T>
+auto pretty_fn<T>::pp_num(expr const & e, mpz const & n, unsigned bp) -> result {
+    auto r = T(n.to_string());
+    if (is_num_type_candidate(e)) {
+        r += space() + compose(colon(), nest(m_indent, compose(line(), pp_child(infer_type(e), 0).fmt())));
+        r = paren(r);
+    } else if (n.is_neg()) {
         auto prec = get_expr_precedence(m_token_table, "-");
         if (m_parens || !prec || bp > *prec) {
-            return result(paren(T(n.to_string())));
+            r = paren(r);
         }
     }
-    return result(T(n.to_string()));
+    return result(r);
 }
 
 // Return the number of parameters in a notation declaration.
@@ -1523,7 +1551,7 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp,
         if (m_numerals) {
             if (auto n = to_num(e)){
                 address_reset_scope ars(*this);
-                return tag(ars.m_adr, e, pp_num(*n, lbp));
+                return tag(ars.m_adr, e, pp_num(e, *n, lbp));
             }
         }
         if (m_strings) {
@@ -1973,7 +2001,7 @@ auto pretty_fn<T>::pp_core(expr const & e, bool ignore_hide) -> result {
     m_num_steps++;
 
     if (m_numerals) {
-        if (auto n = to_num(e)) return pp_num(*n, 0);
+        if (auto n = to_num(e)) return pp_num(e, *n, 0);
     }
     if (m_strings) {
         if (auto r = to_string(e))      return T(pp_string_literal(*r));
@@ -2010,8 +2038,14 @@ auto pretty_fn<T>::pp_core(expr const & e, bool ignore_hide) -> result {
     if (is_have(e))         return pp_have(e);
     if (is_typed_expr(e))   return pp(get_typed_expr_expr(e));
     if (m_num_nat_coe)
-        if (auto k = to_unsigned(e))
-            return T(format(*k));
+        if (auto k = to_unsigned(e)) {
+            auto fmt = T(format(*k));
+            if (m_numeral_types) {
+              // use `nat` to help indicate that this numeral is using `nat.succ` directly
+              fmt = paren(fmt + space() + colon() + space() + escape(get_nat_name()));
+            }
+            return fmt;
+        }
     switch (e.kind()) {
     case expr_kind::Var:       return pp_var(e);
     case expr_kind::Sort:      return pp_sort(e);
