@@ -57,13 +57,13 @@ static vm_obj rewrite_core(expr h, expr e, rewrite_cfg const & cfg, tactic_state
     h_type = annotated_head_beta_reduce(h_type);
     if (!is_eq(h_type, A, lhs, rhs))
         return tactic::mk_exception("rewrite tactic failed, lemma is not an equality nor a iff", s);
-    if (is_metavar(lhs))
-        return tactic::mk_exception("rewrite tactic failed, lemma lhs is a metavariable", s);
     if (cfg.m_symm) {
         h      = mk_eq_symm(ctx, h);
         h_type = mk_eq(ctx, rhs, lhs);
         std::swap(lhs, rhs);
     }
+    if (is_metavar(lhs))
+        return tactic::mk_exception("rewrite tactic failed, lemma lhs is a metavariable", s);
     e = ctx.instantiate_mvars(e);
     expr pattern = lhs;
     lean_trace("rewrite", tout() << "before kabstract\n";);
