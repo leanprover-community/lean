@@ -1,5 +1,11 @@
 (17 : fin 22) : fin 22
+(17 : fin (22 : ℕ)) : fin (22 : ℕ)
+(3 : ℕ) : ℕ
 (2 : ℕ) + (1 : ℕ) = (3 : ℕ) : Prop
 (17 : fin (22 : ℕ)) : fin (22 : ℕ)
 (3 : ℕ) : ℕ
-(3 : nat) : ℕ
+(3 : ℕ) : ℕ
+@bit1.{0} nat nat.has_one nat.has_add (@has_one.one.{0} nat nat.has_one) : nat
+nat.succ (nat.succ (nat.succ nat.zero)) : nat
+3 : ℕ
+1.succ.succ : ℕ

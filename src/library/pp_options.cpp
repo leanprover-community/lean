@@ -72,6 +72,10 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_PP_NUMERAL_TYPES false
 #endif
 
+#ifndef LEAN_DEFAULT_PP_NAT_NUMERALS
+#define LEAN_DEFAULT_PP_NAT_NUMERALS true
+#endif
+
 #ifndef LEAN_DEFAULT_PP_STRINGSS
 #define LEAN_DEFAULT_PP_STRINGS true
 #endif
@@ -153,6 +157,7 @@ static name * g_pp_locals_full_names = nullptr;
 static name * g_pp_beta              = nullptr;
 static name * g_pp_numerals          = nullptr;
 static name * g_pp_numeral_types     = nullptr;
+static name * g_pp_nat_numerals      = nullptr;
 static name * g_pp_strings           = nullptr;
 static name * g_pp_preterm           = nullptr;
 static name * g_pp_goal_compact      = nullptr;
@@ -188,6 +193,7 @@ void initialize_pp_options() {
     g_pp_beta              = new name{"pp", "beta"};
     g_pp_numerals          = new name{"pp", "numerals"};
     g_pp_numeral_types     = new name{"pp", "numeral_types"};
+    g_pp_nat_numerals      = new name{"pp", "nat_numerals"};
     g_pp_strings           = new name{"pp", "strings"};
     g_pp_preterm           = new name{"pp", "preterm"};
     g_pp_binder_types      = new name{"pp", "binder_types"};
@@ -236,9 +242,11 @@ void initialize_pp_options() {
     register_bool_option(*g_pp_beta,  LEAN_DEFAULT_PP_BETA,
                          "(pretty printer) apply beta-reduction when pretty printing");
     register_bool_option(*g_pp_numerals, LEAN_DEFAULT_PP_NUMERALS,
-                         "(pretty printer) display nat/num numerals in decimal notation");
+                         "(pretty printer) display numerals in decimal notation");
     register_bool_option(*g_pp_numeral_types, LEAN_DEFAULT_PP_NUMERAL_TYPES,
                          "(pretty printer) display types when displaying nat/num numerals");
+    register_bool_option(*g_pp_nat_numerals, LEAN_DEFAULT_PP_NAT_NUMERALS,
+                         "(pretty printer) display unary nats in decimal notation");
     register_bool_option(*g_pp_strings, LEAN_DEFAULT_PP_STRINGS,
                          "(pretty printer) pretty print string and character literals");
     register_bool_option(*g_pp_preterm, LEAN_DEFAULT_PP_PRETERM,
@@ -296,6 +304,7 @@ void finalize_pp_options() {
     delete g_pp_preterm;
     delete g_pp_numerals;
     delete g_pp_numeral_types;
+    delete g_pp_nat_numerals;
     delete g_pp_strings;
     delete g_pp_max_depth;
     delete g_pp_max_steps;
@@ -338,6 +347,7 @@ name const & get_pp_locals_full_names_name() { return *g_pp_locals_full_names; }
 name const & get_pp_beta_name() { return *g_pp_beta; }
 name const & get_pp_preterm_name() { return *g_pp_preterm; }
 name const & get_pp_numerals_name() { return *g_pp_numerals; }
+name const & get_pp_nat_numerals_name() { return *g_pp_nat_numerals; }
 name const & get_pp_strings_name() { return *g_pp_strings; }
 name const & get_pp_use_holes_name() { return *g_pp_use_holes; }
 name const & get_pp_binder_types_name() { return *g_pp_binder_types; }
@@ -359,6 +369,7 @@ bool     get_pp_locals_full_names(options const & opts) { return opts.get_bool(*
 bool     get_pp_beta(options const & opts)              { return opts.get_bool(*g_pp_beta, LEAN_DEFAULT_PP_BETA); }
 bool     get_pp_numerals(options const & opts)          { return opts.get_bool(*g_pp_numerals, LEAN_DEFAULT_PP_NUMERALS); }
 bool     get_pp_numeral_types(options const & opts)     { return opts.get_bool(*g_pp_numeral_types, LEAN_DEFAULT_PP_NUMERAL_TYPES); }
+bool     get_pp_nat_numerals(options const & opts)      { return opts.get_bool(*g_pp_nat_numerals, LEAN_DEFAULT_PP_NAT_NUMERALS); }
 bool     get_pp_strings(options const & opts)           { return opts.get_bool(*g_pp_strings, LEAN_DEFAULT_PP_STRINGS); }
 bool     get_pp_preterm(options const & opts)           { return opts.get_bool(*g_pp_preterm, LEAN_DEFAULT_PP_PRETERM); }
 bool     get_pp_goal_compact(options const & opts)      { return opts.get_bool(*g_pp_goal_compact, LEAN_DEFAULT_PP_GOAL_COMPACT); }

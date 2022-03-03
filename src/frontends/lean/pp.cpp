@@ -343,6 +343,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_full_names_name(), true);
         o = o.update_if_undef(get_pp_beta_name(), false);
         o = o.update_if_undef(get_pp_numerals_name(), false);
+        o = o.update_if_undef(get_pp_nat_numerals_name(), false);
         o = o.update_if_undef(get_pp_strings_name(), false);
         o = o.update_if_undef(get_pp_binder_types_name(), true);
         o = o.update_if_undef(get_pp_generalized_field_notation_name(), false);
@@ -366,6 +367,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_beta              = get_pp_beta(o);
     m_numerals          = get_pp_numerals(o);
     m_numeral_types     = get_pp_numeral_types(o);
+    m_nat_numerals      = get_pp_nat_numerals(o);
     m_strings           = get_pp_strings(o);
     m_preterm           = get_pp_preterm(o);
     m_binder_types      = get_pp_binder_types(o);
@@ -374,7 +376,6 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_use_holes         = get_pp_use_holes(o);
     m_annotations       = get_pp_annotations(o);
     m_hide_full_terms   = get_formatter_hide_full_terms(o);
-    m_num_nat_coe       = m_numerals;
     m_structure_instances = get_pp_structure_instances(o);
     m_structure_instances_qualifier = get_pp_structure_instances_qualifier(o);
     m_structure_projections         = get_pp_structure_projections(o);
@@ -2037,14 +2038,9 @@ auto pretty_fn<T>::pp_core(expr const & e, bool ignore_hide) -> result {
     if (is_show(e))         return pp_show(e);
     if (is_have(e))         return pp_have(e);
     if (is_typed_expr(e))   return pp(get_typed_expr_expr(e));
-    if (m_num_nat_coe)
+    if (m_nat_numerals)
         if (auto k = to_unsigned(e)) {
-            auto fmt = T(format(*k));
-            if (m_numeral_types) {
-              // use `nat` to help indicate that this numeral is using `nat.succ` directly
-              fmt = paren(fmt + space() + colon() + space() + escape(get_nat_name()));
-            }
-            return fmt;
+            return pp_num(e, static_cast<mpz>(*k), 0);
         }
     switch (e.kind()) {
     case expr_kind::Var:       return pp_var(e);
