@@ -242,11 +242,11 @@ void initialize_pp_options() {
     register_bool_option(*g_pp_beta,  LEAN_DEFAULT_PP_BETA,
                          "(pretty printer) apply beta-reduction when pretty printing");
     register_bool_option(*g_pp_numerals, LEAN_DEFAULT_PP_NUMERALS,
-                         "(pretty printer) display numerals in decimal notation");
+                         "(pretty printer) display nat/num numerals in decimal notation");
     register_bool_option(*g_pp_numeral_types, LEAN_DEFAULT_PP_NUMERAL_TYPES,
                          "(pretty printer) display types when displaying nat/num numerals");
     register_bool_option(*g_pp_nat_numerals, LEAN_DEFAULT_PP_NAT_NUMERALS,
-                         "(pretty printer) display unary nats in decimal notation");
+                         "(pretty printer) display unary nats in decimal notation when pp.numeral_types is true");
     register_bool_option(*g_pp_strings, LEAN_DEFAULT_PP_STRINGS,
                          "(pretty printer) pretty print string and character literals");
     register_bool_option(*g_pp_preterm, LEAN_DEFAULT_PP_PRETERM,

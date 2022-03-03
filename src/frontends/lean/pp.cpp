@@ -343,7 +343,6 @@ void pretty_fn<T>::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_full_names_name(), true);
         o = o.update_if_undef(get_pp_beta_name(), false);
         o = o.update_if_undef(get_pp_numerals_name(), false);
-        o = o.update_if_undef(get_pp_nat_numerals_name(), false);
         o = o.update_if_undef(get_pp_strings_name(), false);
         o = o.update_if_undef(get_pp_binder_types_name(), true);
         o = o.update_if_undef(get_pp_generalized_field_notation_name(), false);
@@ -367,7 +366,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_beta              = get_pp_beta(o);
     m_numerals          = get_pp_numerals(o);
     m_numeral_types     = get_pp_numeral_types(o);
-    m_nat_numerals      = get_pp_nat_numerals(o);
+    m_nat_numerals      = m_numerals && get_pp_nat_numerals(o);
     m_strings           = get_pp_strings(o);
     m_preterm           = get_pp_preterm(o);
     m_binder_types      = get_pp_binder_types(o);
