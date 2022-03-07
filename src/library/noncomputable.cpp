@@ -167,18 +167,21 @@ struct get_noncomputable_reason_fn {
                 }
             }
             visit(fn);
-            if (is_constant(fn) && inductive::is_intro_rule(m_tc.env(), const_name(fn))) {
-                // Only visit computational relevant arguments of the constructor.
-                buffer<bool> rel_fields;
-                get_constructor_relevant_fields(m_tc.env(), const_name(fn), rel_fields);
-                lean_assert(args.size() <= rel_fields.size());
-                for (unsigned i = 0; i < args.size(); i++)
-                    if (rel_fields[i])
-                        visit(args[i]);
-            } else {
-                for (expr const & arg : args)
-                    visit(arg);
+            if (is_constant(fn)) {
+                if (auto I_name = inductive::is_intro_rule(m_tc.env(), const_name(fn))) {
+                    // Only visit computational relevant arguments of the constructor.
+                    unsigned nparams = *inductive::get_num_params(m_tc.env(), *I_name);
+                    buffer<bool> rel_fields;
+                    get_constructor_relevant_fields(m_tc.env(), const_name(fn), rel_fields);
+                    lean_assert(args.size() <= nparams + rel_fields.size());
+                    for (unsigned i = 0; i < rel_fields.size(); i++)
+                        if (rel_fields[i] && nparams + i < args.size())
+                            visit(args[nparams + i]);
+                    return;
+                }
             }
+            for (expr const & arg : args)
+                visit(arg);
         }
     }
 
