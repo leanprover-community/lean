@@ -373,6 +373,17 @@ class erase_irrelevant_fn : public compiler_step_visitor {
         return visit(mk_app(r, args.size() - info->m_arity, args.data() + info->m_arity));
     }
 
+    /* Erase parameters for constructor's inductive type. These are fully erased in
+       the simp_inductive pass. */
+    expr visit_constructor(expr const & e, name const & I_name, expr const & fn, buffer<expr> const & args) {
+        unsigned start = *inductive::get_num_params(env(), I_name);
+        expr new_fn = visit(fn);
+        buffer<expr> new_args;
+        for (unsigned i = 0; i < args.size(); i++)
+            new_args.push_back(i < start ? mk_neutral_expr() : visit(args[i]));
+        return copy_tag(e, mk_app(new_fn, new_args));
+    }
+
     virtual expr visit_app(expr const & e) override {
         if (is_comp_irrelevant(e))
             return *g_neutral_expr;
@@ -412,6 +423,8 @@ class erase_irrelevant_fn : public compiler_step_visitor {
                 return visit_subtype_val(args);
             } else if (is_ginductive_pack(env(), n) || is_ginductive_unpack(env(), n)) {
                 return visit_pack_unpack(fn, args);
+            } else if (auto I_name = inductive::is_intro_rule(env(), n)) {
+                return visit_constructor(e, *I_name, fn, args);
             }
         }
         return compiler_step_visitor::visit_app(e);
