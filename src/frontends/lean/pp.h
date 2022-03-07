@@ -74,7 +74,6 @@ private:
     bool                    m_proofs;           //!< if true show proof terms
     bool                    m_unicode;          //!< if true use unicode chars
     bool                    m_coercion;         //!< if true show coercions
-    bool                    m_num_nat_coe;      //!< true when !m_coercion && env has coercion from num -> nat
     bool                    m_notation;
     bool                    m_parens;
     bool                    m_universes;
@@ -86,6 +85,7 @@ private:
     bool                    m_beta;
     bool                    m_numerals;
     bool                    m_numeral_types;
+    bool                    m_nat_numerals;
     bool                    m_strings;
     bool                    m_hide_full_terms;
     bool                    m_hide_comp_irrel;
