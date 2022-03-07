@@ -423,8 +423,9 @@ class erase_irrelevant_fn : public compiler_step_visitor {
                 return visit_subtype_val(args);
             } else if (is_ginductive_pack(env(), n) || is_ginductive_unpack(env(), n)) {
                 return visit_pack_unpack(fn, args);
-            } else if (auto I_name = inductive::is_intro_rule(env(), n)) {
-                return visit_constructor(e, *I_name, fn, args);
+            } else if (!is_vm_builtin_function(n)) {
+                if (auto I_name = inductive::is_intro_rule(env(), n))
+                    return visit_constructor(e, *I_name, fn, args);
             }
         }
         return compiler_step_visitor::visit_app(e);

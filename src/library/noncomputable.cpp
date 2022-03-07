@@ -16,6 +16,7 @@ Author: Leonardo de Moura
 #include "library/trace.h"
 #include "library/quote.h"
 #include "library/constants.h"
+#include "library/vm/vm.h"
 // TODO(Leo): move inline attribute declaration to library
 #include "library/compiler/inliner.h"
 namespace lean {
@@ -168,7 +169,7 @@ struct get_noncomputable_reason_fn {
             }
             visit(fn);
             unsigned start = 0;
-            if (is_constant(fn)) {
+            if (is_constant(fn) && !is_vm_builtin_function(const_name(fn))) {
                 if (auto I_name = inductive::is_intro_rule(m_tc.env(), const_name(fn))) {
                     // For constructors, only visit arguments after the inductive type's parameters
                     start = *inductive::get_num_params(m_tc.env(), *I_name);
