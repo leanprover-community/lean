@@ -145,11 +145,14 @@ optional<name> heuristic_inst_name(name const & ns, expr const & type) {
     } else if (is_pi(arg_head)) {
         arg_name = "pi";
     } else if (is_field_notation(arg_head)) {
-        expr lhs = macro_arg(arg_head, 0);
-        arg_name = get_field_notation_field_name(arg_head);
+        if (is_anonymous_field_notation(arg_head))
+            arg_name = name("field").append_after(get_field_notation_field_idx(arg_head));
+        else
+            arg_name = get_field_notation_field_name(arg_head);
 
         // The field projection does not have the full name.
         // If we can guess the type of the lhs, prepend it.
+        expr lhs = macro_arg(arg_head, 0);
         if (is_local(lhs)) {
             expr type = get_app_fn(mlocal_type(lhs));
             if (is_constant(type))
