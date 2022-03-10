@@ -301,7 +301,7 @@ long RandomForest::best_feature_naive(const LVec& samples) const {
   long best_diff = 0;
 
   for (const auto& f : ff) {
-    long diff = abs(f.second - optimal_n_samples);
+    long diff = labs(f.second - optimal_n_samples);
     if (diff < best_diff || best_f == -1) {
       best_f = f.first;
       best_diff = diff;
@@ -330,7 +330,7 @@ void RandomForest::update_tree(DecisionTree *tree, const LVec& new_samples) {
   // become a good splitting feature, even if it did not appear at all
   // in the new samples
   for (const auto& f : tree->features_freq) {
-    long diff = abs(f.second - optimal_n_samples);
+    long diff = labs(f.second - optimal_n_samples);
     if (diff < best_diff || best_f == -1) {
       best_f = f.first;
       best_diff = diff;
