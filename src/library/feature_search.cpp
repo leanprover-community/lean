@@ -8,6 +8,8 @@ Author: Gabriel Ebner
 #include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+#include <utility>
 #include "kernel/expr_maps.h"
 #include "kernel/expr_sets.h"
 #include "kernel/for_each_fn.h"
@@ -274,7 +276,7 @@ void feature_stats::add(feature_vec const & fv) {
 float feature_stats::idf(feature const & f) const {
     auto it = m_feature_counts.find(f);
     unsigned num_thms = 1 + (it == m_feature_counts.end() ? 0 : it->second);
-    return log(m_thms / float(num_thms));
+    return log(m_thms / static_cast<float>(num_thms));
 }
 
 float feature_stats::norm(feature_vec const & a) const {
@@ -299,7 +301,7 @@ float feature_stats::dotp(feature_vec const & a, feature_vec const & b) const {
 }
 
 float feature_stats::cosine_similarity(feature_vec const & a, feature_vec const & b) const {
-    return dotp(a,b) / norm(a) / norm(b);
+    return dotp(a, b) / norm(a) / norm(b);
 }
 
 struct predictor {
@@ -522,8 +524,7 @@ static vm_obj predictor_predict(vm_obj const & p_, vm_obj const & fv_, vm_obj co
     for (auto & res : results) {
         results_.push_back(mk_vm_pair(
             to_obj(res.first),
-            to_obj(res.second)
-        ));
+            to_obj(res.second)));
     }
     return to_obj(results_);
 }
