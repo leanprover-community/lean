@@ -9,6 +9,7 @@ import init.propext init.cc_lemmas init.funext init.control.combinators init.fun
 import init.util init.coe init.wf init.meta init.meta.well_founded_tactics init.algebra init.data
 import init.meta.float
 import init.meta.widget
+import init.meta.feature_search
 
 @[user_attribute]
 meta def debugger.attr : user_attribute :=

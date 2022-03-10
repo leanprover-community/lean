@@ -55,6 +55,7 @@ Author: Leonardo de Moura
 #include "library/profiling.h"
 #include "library/time_task.h"
 #include "library/unique_id.h"
+#include "library/feature_search.h"
 
 namespace lean {
 void initialize_library_core_module() {
@@ -121,9 +122,11 @@ void initialize_library_module() {
     initialize_congr_lemma();
     initialize_parray();
     initialize_time_task();
+    initialize_feature_search();
 }
 
 void finalize_library_module() {
+    finalize_feature_search();
     finalize_time_task();
     finalize_parray();
     finalize_congr_lemma();

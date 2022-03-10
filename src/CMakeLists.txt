@@ -411,6 +411,8 @@ add_subdirectory(library/equations_compiler)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:equations_compiler>)
 add_subdirectory(library/inductive_compiler)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:inductive_compiler>)
+add_subdirectory(library/predict)
+set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:predict>)
 add_subdirectory(library/vm)
 set(LEAN_OBJS ${LEAN_OBJS} $<TARGET_OBJECTS:vm>)
 add_subdirectory(library/compiler)
@@ -464,6 +466,7 @@ file(GLOB_RECURSE LEAN_SOURCES
   "${LEAN_SOURCE_DIR}"
   "${LEAN_SOURCE_DIR}/[A-Za-z]*.cpp"
   "${LEAN_SOURCE_DIR}/[A-Za-z]*.h")
+list(FILTER LEAN_SOURCES EXCLUDE REGEX .*/predict/.*)
 add_style_check_target(style "${LEAN_SOURCES}")
 add_test(NAME style_check COMMAND "${PYTHON_EXECUTABLE}" "${LEAN_SOURCE_DIR}/cmake/Modules/cpplint.py" ${LEAN_SOURCES})
 endif()
