@@ -384,8 +384,7 @@ static void check_closed(char const * tac_name, expr const & e) {
     if (!closed(e))
         throw exception(sstream() << "tactic '" << tac_name << "' failed, "
                         "given expression should not contain de-Bruijn variables, "
-                        "they should be replaced with local constants before using this tactic:"
-                        << e);
+                        "they should be replaced with local constants before using this tactic");
 }
 
 vm_obj tactic_infer_type(vm_obj const & e, vm_obj const & s0) {

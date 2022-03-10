@@ -29,6 +29,7 @@ Author: Leonardo de Moura
 #include "library/vm/vm_override.h"
 #include "library/vm/vm_eformat.h"
 #include "library/vm/vm_json.h"
+#include "library/feature_search.h"
 
 namespace lean {
 void initialize_vm_core_module() {
@@ -57,9 +58,11 @@ void initialize_vm_core_module() {
     initialize_vm_override();
     initialize_vm_eformat();
     initialize_vm_json();
+    initialize_feature_search();
 }
 
 void finalize_vm_core_module() {
+    finalize_feature_search();
     finalize_vm_module_info();
     finalize_vm_float();
     finalize_vm_string();
