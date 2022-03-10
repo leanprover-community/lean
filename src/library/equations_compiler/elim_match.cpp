@@ -757,7 +757,8 @@ struct elim_match_fn {
         /* Remark: reverted bcf44f7020, see issue #1739 */
         /* expr x_type        = whnf_inductive(ctx, ctx.infer(x)); */
         expr x_type        = ctx.relaxed_whnf(whnf_inductive(ctx, ctx.infer(x)));
-        lean_assert(is_inductive_app(x_type));
+        if (!is_inductive_app(x_type))
+            throw exception(sstream() << "not an inductive type: " << mk_pp_ctx(P)(x_type));
         buffer<expr> x_type_args;
         auto x_type_const  = get_app_args(x_type, x_type_args);
         name I_name        = const_name(x_type_const);
