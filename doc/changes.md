@@ -1,3 +1,18 @@
+3.41.0c (11 March 2022)
+-----------------------
+
+Features:
+- Give `sorry` tactic ignored itactic block (#689)
+- Add `pp.numeral_types` option to display type ascriptions for numerals (#691)
+- Add `pp.numerals` option to control pretty printing of unary nats (#692)
+- Premise selection (#696)
+
+Bug fixes:
+- `rw`: move LHS metavar check (#690)
+- `noncomputable`: for constructors, only check arguments after inductive type's parameters (#693)
+- Give the heuristic instance name awareness of anonymous fields (#694)
+- `elim_match`: better error message (#697)
+
 3.40.0c (22 February 2022)
 -------------------------
 
