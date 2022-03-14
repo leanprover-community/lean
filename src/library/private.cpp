@@ -101,8 +101,10 @@ static unsigned mk_extra_hash_using_pos() {
     unsigned h = 31;
     if (auto pinfo = get_pos_info_provider()) {
         h = hash(pinfo->get_some_pos().first, pinfo->get_some_pos().second);
-        char const * fname = pinfo->get_file_name();
-        h = hash_str(strlen(fname), fname, h);
+        // Using the file name for private name generation is not deterministic
+        // and breaks caching because it includes the full path to the file.
+        // char const * fname = pinfo->get_file_name();
+        // h = hash_str(strlen(fname), fname, h);
     }
     return h;
 }
