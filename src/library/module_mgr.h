@@ -33,12 +33,12 @@ struct module_info {
     module_id m_id;
     std::string m_contents;
     // Hash of the Lean source (after normalizing line endings) yielding this module:
-    // - if m_source == LEAN, hash_data(remove_cr(m_contents))
+    // - if m_source == LEAN, hash64_str(remove_cr(m_contents))
     // - if m_source == OLEAN, value loaded from the .olean
-    unsigned m_src_hash;
+    uint64 m_src_hash;
     // Transitive hash of all source code this module was built from,
     // i.e. m_src_hash mixed with the m_trans_hash of each imported module
-    unsigned m_trans_hash;
+    uint64 m_trans_hash;
     module_src m_source = module_src::LEAN;
 
     struct dependency {
@@ -71,7 +71,7 @@ struct module_info {
 
     module_info() {}
 
-    module_info(module_id const & id, std::string const & contents, unsigned src_hash, unsigned trans_hash, module_src src)
+    module_info(module_id const & id, std::string const & contents, uint64 src_hash, uint64 trans_hash, module_src src)
             : m_id(id), m_contents(contents), m_src_hash(src_hash), m_trans_hash(trans_hash), m_source(src) {}
 };
 

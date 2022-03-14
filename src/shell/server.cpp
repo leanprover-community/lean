@@ -497,7 +497,7 @@ server::cmd_res server::handle_sync(server::cmd_req const & req) {
 
     // NOTE(Vtec234): as of 2020-03-05, hashing all of mathlib takes about .1s on
     // a 2.7GHz cpu, so this should not have observable performance impact.
-    unsigned new_hash = hash_data(remove_cr(new_content));
+    uint64 new_hash = hash64_str(remove_cr(new_content));
 
     bool needs_invalidation = true;
 
