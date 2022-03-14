@@ -284,8 +284,8 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     }
 
     auto initial_env = m_initial_env;
-    unsigned src_hash = mod->m_src_hash;
-    unsigned trans_hash = mod->m_trans_hash;
+    uint64 src_hash = mod->m_src_hash;
+    uint64 trans_hash = mod->m_trans_hash;
     mod->m_result = map<module_info::parse_result>(
         get_end(snapshots),
         [id, initial_env, ldr, src_hash, trans_hash]

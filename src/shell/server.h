@@ -61,7 +61,7 @@ class server : public module_vfs {
 
     struct editor_file {
         std::string m_content;
-        unsigned m_src_hash;
+        uint64 m_src_hash;
     };
     std::unordered_map<std::string, editor_file> m_open_files;
 
