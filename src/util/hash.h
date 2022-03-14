@@ -14,6 +14,8 @@ namespace lean {
 void mix(unsigned & a, unsigned & b, unsigned & c);
 
 unsigned hash_str(unsigned len, char const * str, unsigned init_value);
+uint64 hash64_str(unsigned len, char const * str, uint64 init_value = 0);
+uint64 hash64_str(std::string const & str, uint64 init_value = 0);
 
 unsigned hash_data(std::string const & data);
 

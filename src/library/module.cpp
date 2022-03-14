@@ -253,7 +253,7 @@ void write_module(loaded_module const & mod, std::ostream & out) {
     }
 
     std::string r = out1.str();
-    unsigned blob_hash = hash_data(r);
+    uint64 blob_hash = hash64_str(r);
 
     bool uses_sorry = get(mod.m_uses_sorry);
 
@@ -294,7 +294,7 @@ static task<bool> has_sorry(modification_list const & mods) {
     return any(introduced_exprs, [] (expr const & e) { return has_sorry(e); });
 }
 
-loaded_module export_module(environment const & env, std::string const & mod_name, unsigned src_hash, unsigned trans_hash) {
+loaded_module export_module(environment const & env, std::string const & mod_name, uint64 src_hash, uint64 trans_hash) {
     loaded_module out;
     out.m_module_name = mod_name;
 
@@ -608,7 +608,7 @@ optional<declaration> is_decl_modification(modification const & mod) {
 
 } // end of namespace module
 
-optional<unsigned> src_hash_if_is_candidate_olean(std::string const & file_name) {
+optional<uint64> src_hash_if_is_candidate_olean(std::string const & file_name) {
     std::ifstream in(file_name, std::ios_base::binary);
     deserializer d1(in, optional<std::string>(file_name));
     std::string header, version;
@@ -620,9 +620,9 @@ optional<unsigned> src_hash_if_is_candidate_olean(std::string const & file_name)
     if (version != get_version_string())
         return {};
 #endif
-    unsigned olean_src_hash;
+    uint64 olean_src_hash;
     d1 >> olean_src_hash;
-    return some<unsigned>(olean_src_hash);
+    return some<uint64>(olean_src_hash);
 }
 
 olean_data parse_olean(std::istream & in, std::string const & file_name, bool check_hash) {
@@ -631,7 +631,7 @@ olean_data parse_olean(std::istream & in, std::string const & file_name, bool ch
 
     deserializer d1(in, optional<std::string>(file_name));
     std::string header, version;
-    unsigned src_hash, trans_hash, claimed_blob_hash;
+    uint64 src_hash, trans_hash, claimed_blob_hash;
     d1 >> header;
     if (header != g_olean_header)
         throw exception(sstream() << "file '" << file_name << "' does not seem to be a valid object Lean file, invalid header");
@@ -655,7 +655,7 @@ olean_data parse_olean(std::istream & in, std::string const & file_name, bool ch
 
 //    if (m_senv.env().trust_lvl() <= LEAN_BELIEVER_TRUST_LEVEL) {
     if (check_hash) {
-        unsigned computed_hash = hash_data(code);
+        uint64 computed_hash = hash64_str(code);
         if (claimed_blob_hash != computed_hash)
             throw exception(sstream() << "file '" << file_name << "' has been corrupted, checksum mismatch");
     }
