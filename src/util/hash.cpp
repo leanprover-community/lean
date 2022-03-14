@@ -112,12 +112,8 @@ static uint64_t MurmurHash64A(void const * key, int len, unsigned int seed) {
     return h;
 }
 
-uint64 hash64_str(unsigned len, char const * str, uint64 init_value) {
-    return MurmurHash64A(str, len, init_value);
-}
-
-uint64 hash64_str(std::string const & str, uint64 init_value) {
-    return hash64_str(str.length(), str.c_str(), init_value);
+uint64 hash64_str(unsigned len, char const * str) {
+    return MurmurHash64A(str, len, 0);
 }
 
 }
