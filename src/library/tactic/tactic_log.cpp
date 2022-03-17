@@ -93,6 +93,7 @@ tactic_state_id tactic_log::get_id(tactic_state const & ts) const {
 }
 
 void log_tactic(ast_id id, tactic_state const & before, tactic_state const & after, bool success) {
+    if (!get_global_module_mgr()->get_export_tsast()) return;
     if (auto log = get_tactic_log()) {
         lean_assert(!log->m_exported);
         auto s1 = log->get_id(before);
