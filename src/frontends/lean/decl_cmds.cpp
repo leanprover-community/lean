@@ -559,14 +559,28 @@ static environment modifiers_cmd(parser & p, ast_id & cmd_id, cmd_meta const & _
         mods.push(tk);
         tk = 0;
         p.next();
+        bool force_noncomputable = false;
+        if (p.curr_is_token_or_id(get_exclam_tk())) {
+            p.new_ast(get_exclam_tk(), p.pos());
+            p.next();
+            force_noncomputable = true;
+        }
         if (!meta.m_attrs && !meta.m_modifiers && p.curr_is_token_or_id(get_theory_tk())) {
             cmd_id = p.new_ast(get_theory_tk(), p.pos()).push(mods.m_id).m_id;
-            // `noncomputable theory`
+            // `noncomputable theory` or `noncomputable! theory`
             p.next();
-            p.set_ignore_noncomputable();
+            if (force_noncomputable) {
+                p.set_noncomputable_policy(noncomputable_policy::ForceNoncomputable);
+            } else {
+                p.set_noncomputable_policy(noncomputable_policy::Auto);
+            }
             return p.env();
         } else {
-            meta.m_modifiers.m_is_noncomputable = true;
+            if (force_noncomputable) {
+                meta.m_modifiers.m_noncomputable = noncomputable_modifier::ForceNoncomputable;
+            } else {
+                meta.m_modifiers.m_noncomputable = noncomputable_modifier::Noncomputable;
+            }
         }
     }
     if (p.curr_is_token(get_meta_tk())) {

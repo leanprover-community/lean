@@ -680,7 +680,7 @@ class inductive_cmd_fn {
     }
 
     void check_modifiers() const {
-        if (m_meta_info.m_modifiers.m_is_noncomputable)
+        if (m_meta_info.m_modifiers.m_noncomputable != noncomputable_modifier::Computable)
             throw_error("invalid 'noncomputable' modifier for inductive type");
         if (m_meta_info.m_modifiers.m_is_private)
             throw_error("invalid 'private' modifier for inductive type");

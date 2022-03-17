@@ -56,9 +56,7 @@ protected:
     // profiling
     bool                   m_profile;
 
-    // If the following flag is true we do not raise error messages
-    // noncomputable definitions not tagged as noncomputable.
-    bool                   m_ignore_noncomputable;
+    noncomputable_policy    m_noncomputable_policy;
 
     // error recovery
     bool                   m_error_recovery = true;
@@ -142,8 +140,8 @@ public:
     virtual optional<pos_info> get_pos_info(expr const & e) const = 0;
     virtual message_builder mk_message(pos_info const &p, message_severity severity) const = 0;
     virtual message_builder mk_message(message_severity severity) const = 0;
-    bool ignore_noncomputable() const { return m_ignore_noncomputable; }
-    void set_ignore_noncomputable() { m_ignore_noncomputable = true; }
+    noncomputable_policy get_noncomputable_policy() const { return m_noncomputable_policy; }
+    void set_noncomputable_policy(noncomputable_policy p) { m_noncomputable_policy = p; }
     virtual char const * get_file_name() const = 0;
     virtual pos_info cmd_pos() const = 0;
     virtual optional<pos_info> const & get_break_at_pos() const = 0;
@@ -653,7 +651,6 @@ bool parse_commands(environment & env, io_state & ios, char const * fname);
 
 class dummy_def_parser : public parser_info {
 public:
-  bool            m_ignore_noncomputable;
   pos_info        m_pos;
   std::string     m_file_name;
   name            m_name;
@@ -668,7 +665,6 @@ public:
     parser_info(env, io_state(io_state(), opts))
       { m_error_recovery = false; }
   char const * get_file_name() const override { return m_file_name.c_str(); }
-  bool ignore_noncomputable() const { return m_ignore_noncomputable; }
   options get_options() const { return m_ios.get_options(); }
   message_builder mk_message(pos_info const &p, message_severity severity) const override {
     std::shared_ptr<abstract_type_context> tc = std::make_shared<type_context_old>(m_env, get_options());

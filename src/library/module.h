@@ -153,7 +153,7 @@ environment add(environment const & env, std::shared_ptr<modification const> con
 environment add_and_perform(environment const & env, std::shared_ptr<modification const> const & modif);
 
 /** \brief Add the given declaration to the environment, and mark it to be exported. */
-environment add(environment const & env, certified_declaration const & d);
+environment add(environment const & env, certified_declaration const & d, bool force_noncomputable = false);
 
 /** \brief Adds a module-level doc to the current module. */
 environment add_doc_string(environment const & env, std::string const & doc, pos_info pos);
