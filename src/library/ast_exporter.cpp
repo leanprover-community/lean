@@ -169,10 +169,8 @@ struct ast_exporter : abstract_ast_exporter {
             m_tactic_log->m_exported.store(true);
             lock_guard<mutex> l(m_tactic_log->m_mutex);
             auto& invocs = m_tactic_log->get_invocs(l);
-            auto& tspps = m_tactic_log->get_tspps(l);
             if (!invocs.empty()) {
                 r["tactics"] = invocs;
-                r["tspps"] = tspps;
                 auto& ss = r["states"] = json::array();
                 for (auto& s : m_tactic_log->get_states(l)) {
                     auto gs = json::array();
@@ -189,7 +187,9 @@ struct ast_exporter : abstract_ast_exporter {
                         }
                         gs.push_back({hs, export_expr(g.m_target_type)});
                     }
-                    ss.push_back({{"decl", json_of_name(s.decl_name())}, {"goals", gs}});
+                    json sj = {{"decl", json_of_name(s.decl_name())}, {"goals", gs}};
+                    if (s.pp()) sj["pp"] = *s.pp();
+                    ss.push_back(sj);
                 }
             }
         }

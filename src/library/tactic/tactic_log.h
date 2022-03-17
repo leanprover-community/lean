@@ -7,7 +7,6 @@ Author: Mario Carneiro
 #pragma once
 #include <atomic>
 #include <vector>
-#include <string>
 #include <unordered_map>
 #include "library/abstract_parser.h"
 #include "library/tactic/tactic_state.h"
@@ -58,15 +57,16 @@ public:
         struct cell {
             name m_decl_name;
             std::vector<goal> m_goals;
+            optional<std::string> m_pp;
             unsigned m_hash;
             MK_LEAN_RC();
             unsigned mk_hash() const;
-            cell(name const & decl_name, std::vector<goal> && goals):
-                m_decl_name(decl_name), m_goals(std::move(goals)), m_hash(mk_hash()), m_rc(1) {}
+            cell(name const & decl_name, std::vector<goal> && goals, optional<std::string> && pp):
+                m_decl_name(decl_name), m_goals(std::move(goals)), m_pp(std::move(pp)), m_hash(mk_hash()), m_rc(1) {}
             void dealloc() { delete this; }
         };
         friend bool operator==(cell const & c1, cell const & c2) {
-            return c1.m_hash == c2.m_hash && c1.m_decl_name == c2.m_decl_name && c1.m_goals == c2.m_goals;
+            return c1.m_hash == c2.m_hash && c1.m_decl_name == c2.m_decl_name && c1.m_goals == c2.m_goals && c1.m_pp == c2.m_pp;
         }
 
         cell * m_ptr;
@@ -75,12 +75,13 @@ public:
         friend bool operator==(summary const & s1, summary const & s2) { return s1.m_ptr == s2.m_ptr || *s1.m_ptr == *s2.m_ptr; }
     public:
         summary(summary const & s):m_ptr(s.m_ptr) { if (m_ptr) m_ptr->inc_ref(); }
-        summary(name const & decl_name, std::vector<goal> && goals):
-            summary(new cell(decl_name, std::move(goals))) {}
+        summary(name const & decl_name, std::vector<goal> && goals, optional<std::string> && pp):
+            summary(new cell(decl_name, std::move(goals), std::move(pp))) {}
         ~summary() { if (m_ptr) m_ptr->dec_ref(); }
         unsigned hash() const { return m_ptr->m_hash; }
         name decl_name() const { return m_ptr->m_decl_name; }
         std::vector<goal> const & goals() const { return m_ptr->m_goals; }
+        optional<std::string> const & pp() const { return m_ptr->m_pp; }
     };
 
     struct summary_hash { unsigned operator()(summary const & n) const { return n.hash(); } };
@@ -88,7 +89,6 @@ public:
 
 private:
     mutable std::vector<tactic_invocation> m_invocs;
-    mutable std::vector<std::string> m_tspps; // tactic state pretty-printeds
     using state_map = std::unordered_map<summary, tactic_state_id, summary_hash, summary_eq>;
     mutable state_map m_state_map;
     mutable std::vector<summary> m_states;
@@ -100,10 +100,9 @@ public:
     mutable std::atomic_bool m_exported{false};
     tactic_log() {}
 
-    tactic_state_id get_id(tactic_state const & ts) const;
+    tactic_state_id get_id(summary const & s) const;
     tactic_state_id push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const;
     inline std::vector<tactic_invocation> & get_invocs(lock_guard<mutex> &) const { return m_invocs; }
-    inline std::vector<std::string> & get_tspps(lock_guard<mutex> &) const { return m_tspps; }
     inline std::vector<summary> & get_states(lock_guard<mutex> &) const { return m_states; }
     void detach() const;
 };

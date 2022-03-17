@@ -30,6 +30,17 @@ unsigned tactic_log::summary::cell::mk_hash() const {
     return h;
 }
 
+tactic_state_id tactic_log::get_id(summary const & s) const {
+    lock_guard<mutex> l(m_mutex);
+    auto& map = get_state_map(l);
+    auto it = map.find(s);
+    if (it != map.end()) return it->second;
+    tactic_state_id r = get_states(l).size();
+    get_states(l).push_back(s);
+    map.emplace(s, r);
+    return r;
+}
+
 tactic_state_id tactic_log::push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const {
     lock_guard<mutex> l(m_mutex);
     auto& invocs = get_invocs(l);
@@ -70,34 +81,23 @@ static tactic_log::goal summarize(metavar_decl const & d) {
 static tactic_log::summary summarize(tactic_state const & s) {
     std::vector<tactic_log::goal> goals;
     for (auto& g : s.goals()) goals.push_back(summarize(s.mctx().get_metavar_decl(g)));
-    return {s.decl_name(), std::move(goals)};
-}
 
-tactic_state_id tactic_log::get_id(tactic_state const & ts) const {
-    auto s = summarize(ts);
-    lock_guard<mutex> l(m_mutex);
-    auto& map = get_state_map(l);
-    auto it = map.find(s);
-    if (it != map.end()) return it->second;
-    tactic_state_id r = get_states(l).size();
-    get_states(l).push_back(s);
-    map.emplace(s, r);
-
+    optional<std::string> pp;
     if (get_global_module_mgr()->get_export_tspp()) {
         std::ostringstream os;
-        os << ts.pp();
-        get_tspps(l).push_back(os.str());
+        os << s.pp();
+        pp = optional<std::string>(os.str());
     }
 
-    return r;
+    return {s.decl_name(), std::move(goals), std::move(pp)};
 }
 
 void log_tactic(ast_id id, tactic_state const & before, tactic_state const & after, bool success) {
     if (!get_global_module_mgr()->get_export_tsast()) return;
     if (auto log = get_tactic_log()) {
         lean_assert(!log->m_exported);
-        auto s1 = log->get_id(before);
-        auto s2 = is_eqp(before, after) ? s1 : log->get_id(after);
+        auto s1 = log->get_id(summarize(before));
+        auto s2 = is_eqp(before, after) ? s1 : log->get_id(summarize(after));
         log->push_invocation(id, s1, s2, success);
     }
 }
