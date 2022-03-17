@@ -566,6 +566,18 @@ environment add_alias(environment const & env, bool is_protected, name const & c
     }
 }
 
+bool should_force_noncomputable(noncomputable_modifier modifier) {
+    return modifier == noncomputable_modifier::ForceNoncomputable;
+}
+
+bool should_validate_noncomputable(noncomputable_policy policy, noncomputable_modifier modifier) {
+    if (policy == noncomputable_policy::Auto)
+        return false;
+    if (modifier == noncomputable_modifier::ForceNoncomputable)
+        return false;
+    return true;
+}
+
 struct definition_info {
     name     m_prefix; // prefix for local names
     name     m_actual_prefix; // actual prefix used to create kernel declaration names. m_prefix and m_actual_prefix are different for scoped/private declarations.
@@ -576,7 +588,7 @@ struct definition_info {
        Remark: a regular (i.e., non meta) declaration provided by the user may contain a meta subexpression (e.g., tactic).
     */
     bool     m_is_meta{false};      // true iff current block
-    bool     m_is_noncomputable{false};
+    noncomputable_modifier m_noncomputable{noncomputable_modifier::Computable};
     bool     m_is_lemma{false};
     bool     m_aux_lemmas{false};
     unsigned m_next_match_idx{1};
@@ -595,7 +607,7 @@ declaration_info_scope::declaration_info_scope(name const & ns, decl_cmd_kind ki
     info.m_is_private       = modifiers.m_is_private;
     info.m_is_meta_decl     = modifiers.m_is_meta;
     info.m_is_meta          = modifiers.m_is_meta;
-    info.m_is_noncomputable = modifiers.m_is_noncomputable;
+    info.m_noncomputable    = modifiers.m_noncomputable;
     info.m_is_lemma         = kind == decl_cmd_kind::Theorem;
     info.m_aux_lemmas       = kind != decl_cmd_kind::Theorem && !modifiers.m_is_meta;
     info.m_next_match_idx = 1;
@@ -622,7 +634,7 @@ equations_header mk_equations_header(list<name> const & ns, list<name> const & a
     h.m_fn_actual_names  = actual_ns;
     h.m_is_private       = get_definition_info().m_is_private;
     h.m_is_meta          = get_definition_info().m_is_meta;
-    h.m_is_noncomputable = get_definition_info().m_is_noncomputable;
+    h.m_is_noncomputable = get_definition_info().m_noncomputable != noncomputable_modifier::Computable;
     h.m_is_lemma         = get_definition_info().m_is_lemma;
     h.m_aux_lemmas       = get_definition_info().m_aux_lemmas;
     return h;

@@ -177,12 +177,15 @@ meta constant decl_attributes : Type
 
 meta constant decl_attributes.apply : decl_attributes → name → parser unit
 
+meta inductive noncomputable_modifier
+| computable | «noncomputable» | force_noncomputable
+
 meta structure decl_modifiers :=
 (is_private       : bool)
 (is_protected     : bool)
 (is_meta          : bool)
 (is_mutual        : bool)
-(is_noncomputable : bool)
+(is_noncomputable : noncomputable_modifier)
 
 meta structure decl_meta_info :=
 (attrs      : decl_attributes)

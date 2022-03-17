@@ -164,7 +164,7 @@ parser::parser(environment const & env, io_state const & ios,
     m_scanner(strm, m_file_name.c_str()),
     m_ast{new ast_data(0, {}, {}), new ast_data(AST_TOP_ID, {}, "file")} {
     m_next_inst_idx = 1;
-    m_ignore_noncomputable = false;
+    m_noncomputable_policy = noncomputable_policy::Validate;
     m_in_quote = false;
     m_in_pattern = false;
     m_has_params = false;
@@ -2904,7 +2904,7 @@ std::shared_ptr<snapshot> parser::mk_snapshot() {
     return std::make_shared<snapshot>(
             m_env, m_ngen, m_local_level_decls, m_local_decls,
             m_level_variables, m_variables, m_include_vars,
-            m_ios.get_options(), m_imports_parsed, m_ignore_noncomputable, m_parser_scope_stack, m_next_inst_idx, pos());
+            m_ios.get_options(), m_imports_parsed, m_noncomputable_policy, m_parser_scope_stack, m_next_inst_idx, pos());
 }
 
 optional<pos_info> parser::get_pos_info(expr const & e) const {
@@ -2958,7 +2958,7 @@ void parser::from_snapshot(snapshot const & s) {
     m_variables          = s.m_vars;
     m_include_vars       = s.m_include_vars;
     m_imports_parsed     = s.m_imports_parsed;
-    m_ignore_noncomputable = s.m_noncomputable_theory;
+    m_noncomputable_policy = s.m_noncomputable_policy;
     m_parser_scope_stack = s.m_parser_scope_stack;
     m_next_inst_idx      = s.m_next_inst_idx;
     m_ast_invalid        = true; // invalidate AST because we don't snapshot it

@@ -123,6 +123,7 @@ static name const * g_inductive_tk = nullptr;
 static name const * g_instance_tk = nullptr;
 static name const * g_this_tk = nullptr;
 static name const * g_noncomputable_tk = nullptr;
+static name const * g_exclam_tk = nullptr;
 static name const * g_theory_tk = nullptr;
 static name const * g_key_equivalences_tk = nullptr;
 static name const * g_using_tk = nullptr;
@@ -248,6 +249,7 @@ void initialize_tokens() {
     g_instance_tk = new name{"instance"};
     g_this_tk = new name{"this"};
     g_noncomputable_tk = new name{"noncomputable"};
+    g_exclam_tk = new name{"!"};
     g_theory_tk = new name{"theory"};
     g_key_equivalences_tk = new name{"key_equivalences"};
     g_using_tk = new name{"using"};
@@ -374,6 +376,7 @@ void finalize_tokens() {
     delete g_instance_tk;
     delete g_this_tk;
     delete g_noncomputable_tk;
+    delete g_exclam_tk;
     delete g_theory_tk;
     delete g_key_equivalences_tk;
     delete g_using_tk;
@@ -499,6 +502,7 @@ name const & get_inductive_tk() { return *g_inductive_tk; }
 name const & get_instance_tk() { return *g_instance_tk; }
 name const & get_this_tk() { return *g_this_tk; }
 name const & get_noncomputable_tk() { return *g_noncomputable_tk; }
+name const & get_exclam_tk() { return *g_exclam_tk; }
 name const & get_theory_tk() { return *g_theory_tk; }
 name const & get_key_equivalences_tk() { return *g_key_equivalences_tk; }
 name const & get_using_tk() { return *g_using_tk; }

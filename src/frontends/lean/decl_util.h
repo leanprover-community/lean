@@ -17,15 +17,47 @@ class elaborator;
 
 enum class decl_cmd_kind { Theorem, Definition, Example, Instance, Var, Abbreviation };
 
+/* Enum for the noncomputability modifier for a declaration.
+
+   This declaration should remain in sync with `interactive.noncomputable_modifier`. */
+enum class noncomputable_modifier {
+    /* Check that the definition is not noncomputable. (Default) */
+    Computable,
+    /* Check that the definition is noncomputable. */
+    Noncomputable,
+    /* Ignore noncomputability checker, force noncomputability, and inhibit VM compilation. */
+    ForceNoncomputable
+};
+
+/* Global policy for noncomputability checking.
+   The precise interpretation is influenced by a declaration's noncomputable_modifier */
+enum class noncomputable_policy {
+    /* Validate that the user-supplied modifier matches the result of the noncomputability checker
+       if it's not ForceNoncomputable. (Default) */
+    Validate,
+    /* Ignore the user-supplied modifier and rely on the result of the noncomputability checker
+       if it's not ForceNoncomputable. Enabled with the `noncomputable theory` command. */
+    Auto
+};
+
+/* Whether a declaration should be forced to be marked noncomputable in the environment. */
+bool should_force_noncomputable(noncomputable_modifier modifier);
+
+/* Given the policy and modifier, whether the noncomputable_modifier should be checked to match
+   whether the declaration has been marked noncomputable in the environment.
+
+   Postcondition if true: modifier is either Computable or Noncomputable. */
+bool should_validate_noncomputable(noncomputable_policy policy, noncomputable_modifier modifier);
+
 struct decl_modifiers {
     bool m_is_private{false};
     bool m_is_protected{false};
     bool m_is_meta{false};
     bool m_is_mutual{false};
-    bool m_is_noncomputable{false};
+    noncomputable_modifier m_noncomputable{noncomputable_modifier::Computable};
 
     operator bool() const {
-        return m_is_private || m_is_protected || m_is_meta || m_is_mutual || m_is_noncomputable;
+        return m_is_private || m_is_protected || m_is_meta || m_is_mutual || m_noncomputable != noncomputable_modifier::Computable;
     }
 };
 

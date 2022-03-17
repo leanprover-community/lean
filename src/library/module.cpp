@@ -525,10 +525,10 @@ static task<bool> error_already_reported() {
     return any(children, [] (bool already_reported) { return already_reported; });
 }
 
-environment add(environment const & env, certified_declaration const & d) {
+environment add(environment const & env, certified_declaration const & d, bool force_noncomputable) {
     environment new_env = env.add(d);
     declaration _d = d.get_declaration();
-    if (!check_computable(new_env, _d.get_name()))
+    if (force_noncomputable || !check_computable(new_env, _d.get_name()))
         new_env = mark_noncomputable(new_env, _d.get_name());
     if (!is_private(new_env, _d.get_name()))
         new_env = add_parent_namespaces(new_env, strip_internal_suffixes(_d.get_name()));

@@ -1,0 +1,10 @@
+computable
+noncomputable
+force_noncomputable
+37
+noncomputable_modifier.lean:25:18: warning: definition 'n2' was incorrectly marked as noncomputable
+37
+noncomputable_modifier.lean:28:0: error: code generation failed, VM does not have code for 'n3'
+37
+noncomputable_modifier.lean:34:0: error: code generation failed, VM does not have code for 'n5'
+noncomputable_modifier.lean:35:15: error: invalid 'noncomputable! theory', unsupported noncomputability policy
