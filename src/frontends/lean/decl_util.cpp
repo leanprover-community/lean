@@ -566,20 +566,12 @@ environment add_alias(environment const & env, bool is_protected, name const & c
     }
 }
 
-noncomputable_modifier effective_noncomputable_modifier(noncomputable_policy policy, noncomputable_modifier modifier) {
-    if (policy == noncomputable_policy::ForceNoncomputable) {
-        return noncomputable_modifier::ForceNoncomputable;
-    } else {
-        return modifier;
-    }
-}
-
 bool should_force_noncomputable(noncomputable_modifier modifier) {
     return modifier == noncomputable_modifier::ForceNoncomputable;
 }
 
 bool should_validate_noncomputable(noncomputable_policy policy, noncomputable_modifier modifier) {
-    if (policy == noncomputable_policy::Auto || policy == noncomputable_policy::ForceNoncomputable)
+    if (policy == noncomputable_policy::Auto)
         return false;
     if (modifier == noncomputable_modifier::ForceNoncomputable)
         return false;

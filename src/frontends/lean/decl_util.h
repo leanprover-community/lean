@@ -21,7 +21,7 @@ enum class decl_cmd_kind { Theorem, Definition, Example, Instance, Var, Abbrevia
 
    This declaration should remain in sync with `interactive.noncomputable_modifier`. */
 enum class noncomputable_modifier {
-    /* Check that the definition is not noncomputable. */
+    /* Check that the definition is not noncomputable. (Default) */
     Computable,
     /* Check that the definition is noncomputable. */
     Noncomputable,
@@ -32,16 +32,13 @@ enum class noncomputable_modifier {
 /* Global policy for noncomputability checking.
    The precise interpretation is influenced by a declaration's noncomputable_modifier */
 enum class noncomputable_policy {
-    /* Validate that the user-supplied modifier matches the result of the noncomputability checker.  */
+    /* Validate that the user-supplied modifier matches the result of the noncomputability checker
+       if it's not ForceNoncomputable. (Default) */
     Validate,
-    /* Ignore the user-supplied modifier and rely on the result of the noncomputability checker. */
-    Auto,
-    /* Ignore noncomputability checker, force noncomputability, and inhibit VM compilation. */
-    ForceNoncomputable
+    /* Ignore the user-supplied modifier and rely on the result of the noncomputability checker
+       if it's not ForceNoncomputable. Enabled with the `noncomputable theory` command. */
+    Auto
 };
-
-/* Use the policy to compute the effective noncomputable modifier. */
-noncomputable_modifier effective_noncomputable_modifier(noncomputable_policy policy, noncomputable_modifier modifier);
 
 /* Whether a declaration should be forced to be marked noncomputable in the environment. */
 bool should_force_noncomputable(noncomputable_modifier modifier);

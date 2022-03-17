@@ -228,8 +228,8 @@ static void validate_noncomputable(noncomputable_policy policy, environment cons
         && !is_marked_noncomputable(env, c_real_name)) {
         report_message(message(file_name, pos, WARNING,
                                (sstream() << "definition '" << c_name << "' was incorrectly marked as noncomputable").str()));
+        return;
     }
-    return;
 }
 
 static environment compile_decl(parser_info const & p, environment const & env,
@@ -934,10 +934,7 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_
     }
 }
 
-environment definition_cmd_core(parser & p, decl_cmd_kind kind, ast_id cmd_id, cmd_meta const & _meta) {
-    auto meta = _meta;
-    meta.m_modifiers.m_noncomputable = effective_noncomputable_modifier(p.get_noncomputable_policy(),
-                                                                        meta.m_modifiers.m_noncomputable);
+environment definition_cmd_core(parser & p, decl_cmd_kind kind, ast_id cmd_id, cmd_meta const & meta) {
     auto& data = p.get_ast(cmd_id).push(meta.m_modifiers_id);
     if (meta.m_modifiers.m_is_mutual) {
         data.push(p.new_ast("mutual", p.pos()).m_id);

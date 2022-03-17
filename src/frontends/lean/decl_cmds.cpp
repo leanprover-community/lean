@@ -569,14 +569,13 @@ static environment modifiers_cmd(parser & p, ast_id & cmd_id, cmd_meta const & _
             ast.push(0);
         }
         if (!meta.m_attrs && !meta.m_modifiers && p.curr_is_token_or_id(get_theory_tk())) {
-            cmd_id = p.new_ast(get_theory_tk(), p.pos()).push(mods.m_id).m_id;
-            // `noncomputable theory` or `noncomputable! theory`
-            p.next();
             if (force_noncomputable) {
-                p.set_noncomputable_policy(noncomputable_policy::ForceNoncomputable);
-            } else {
-                p.set_noncomputable_policy(noncomputable_policy::Auto);
+                throw parser_error("invalid 'noncomputable! theory', unsupported noncomputability policy", p.pos());
             }
+            // `noncomputable theory`
+            cmd_id = p.new_ast(get_theory_tk(), p.pos()).push(mods.m_id).m_id;
+            p.next();
+            p.set_noncomputable_policy(noncomputable_policy::Auto);
             return p.env();
         } else {
             if (force_noncomputable) {
