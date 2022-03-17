@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Mario Carneiro
 */
 #include <vector>
+#include <string>
 #include "util/thread.h"
 #include "library/module_mgr.h"
 #include "library/tactic/tactic_log.h"

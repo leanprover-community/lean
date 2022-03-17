@@ -7,6 +7,7 @@ Author: Mario Carneiro
 #pragma once
 #include <atomic>
 #include <vector>
+#include <string>
 #include <unordered_map>
 #include "library/abstract_parser.h"
 #include "library/tactic/tactic_state.h"
