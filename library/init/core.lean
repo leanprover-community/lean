@@ -189,7 +189,7 @@ lemma prod.mk.inj {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x₂ : α
   : (x₁, y₁) = (x₂, y₂) → and (x₁ = x₂) (y₁ = y₂) :=
 λ h, prod.no_confusion h (λ h₁ h₂, ⟨h₁, h₂⟩)
 
-lemma prod.mk.inj_arrow {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x₂ : α} {y₂ : β}
+def prod.mk.inj_arrow {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x₂ : α} {y₂ : β}
   : (x₁, y₁) = (x₂, y₂) → Π ⦃P : Sort w⦄, (x₁ = x₂ → y₁ = y₂ → P) → P :=
 λ h₁ _ h₂, prod.no_confusion h₁ h₂
 
@@ -197,7 +197,7 @@ lemma pprod.mk.inj {α : Sort u} {β : Sort v} {x₁ : α} {y₁ : β} {x₂ : �
   : pprod.mk x₁ y₁ = pprod.mk x₂ y₂ → and (x₁ = x₂) (y₁ = y₂) :=
 λ h, pprod.no_confusion h (λ h₁ h₂, ⟨h₁, h₂⟩)
 
-lemma pprod.mk.inj_arrow {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x₂ : α} {y₂ : β}
+def pprod.mk.inj_arrow {α : Type u} {β : Type v} {x₁ : α} {y₁ : β} {x₂ : α} {y₂ : β}
   : (x₁, y₁) = (x₂, y₂) → Π ⦃P : Sort w⦄, (x₁ = x₂ → y₁ = y₂ → P) → P :=
 λ h₁ _ h₂, prod.no_confusion h₁ h₂
 

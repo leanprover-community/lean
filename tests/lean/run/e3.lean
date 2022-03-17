@@ -4,6 +4,7 @@ definition Prop := Type.{0}
 definition false := ∀x : Prop, x
 #check false
 
+noncomputable
 theorem false.elim (C : Prop) (H : false) : C
 := H C
 
@@ -14,8 +15,10 @@ definition Eq {A : Type} (a b : A)
 
 infix `=`:50 := Eq
 
+noncomputable
 theorem refl {A : Type} (a : A) : a = a
 := λ P H, H
 
+noncomputable
 theorem subst {A : Type} {P : A -> Prop} {a b : A} (H1 : a = b) (H2 : P a) : P b
 := @H1 P H2

@@ -20,7 +20,7 @@ begin
   specialize (@f _ x), exact f,
 end
 
-lemma test5 (X : Type) [has_add X] (f : forall {A : Type} [has_add A], A → A → A) (x : X) : X :=
+def test5 (X : Type) [has_add X] (f : forall {A : Type} [has_add A], A → A → A) (x : X) : X :=
 begin
   specialize (f x x), assumption
 end

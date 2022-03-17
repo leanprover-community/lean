@@ -220,14 +220,19 @@ static void validate_noncomputable(noncomputable_policy policy, environment cons
         && is_marked_noncomputable(env, c_real_name)) {
         auto reason = get_noncomputable_reason(env, c_real_name);
         lean_assert(reason);
-        report_message(message(file_name, pos, ERROR,
-                               (sstream() << "definition '" << c_name << "' is noncomputable, it depends on '" << *reason << "'").str()));
+        if (*reason == c_real_name) {
+            report_message(message(file_name, pos, ERROR,
+                (sstream() << "missing 'noncomputable' modifier, definition '" << c_real_name << "' is not compiled").str()));
+        } else {
+            report_message(message(file_name, pos, ERROR,
+                (sstream() << "missing 'noncomputable' modifier, definition '" << c_name << "' depends on '" << *reason << "'").str()));
+        }
         return;
     }
     if (noncomputable_mod != noncomputable_modifier::Computable
         && !is_marked_noncomputable(env, c_real_name)) {
         report_message(message(file_name, pos, WARNING,
-                               (sstream() << "definition '" << c_name << "' was incorrectly marked as noncomputable").str()));
+            (sstream() << "unexpected 'noncomputable' modifier, definition '" << c_name << "' is computable").str()));
         return;
     }
 }

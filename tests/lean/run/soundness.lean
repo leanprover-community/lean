@@ -84,7 +84,7 @@ namespace PropF
 
   open Nc
 
-  lemma weakening2 : ∀ {Γ A Δ}, Γ ⊢ A → Γ ⊆ Δ → Δ ⊢ A
+  def weakening2 : ∀ {Γ A Δ}, Γ ⊢ A → Γ ⊆ Δ → Δ ⊢ A
   | ._ ._       Δ (Nax Γ A Hin)          Hs := Nax _ _ (Hs Hin)
   | ._ .(A ⇒ B) Δ (ImpI Γ A B H)         Hs := ImpI _ _ _ (weakening2 H (cons_subset_cons A Hs))
   | ._ ._       Δ (ImpE Γ A B H₁ H₂)     Hs := ImpE _ _ _ (weakening2 H₁ Hs) (weakening2 H₂ Hs)
@@ -97,13 +97,13 @@ namespace PropF
   | ._ ._       Δ (OrE Γ A B C H₁ H₂ H₃) Hs :=
        OrE _ _ _ _ (weakening2 H₁ Hs) (weakening2 H₂ (cons_subset_cons A Hs)) (weakening2 H₃ (cons_subset_cons B Hs))
 
-  lemma weakening : ∀ Γ Δ A, Γ ⊢ A → Γ++Δ ⊢ A :=
+  def weakening : ∀ Γ Δ A, Γ ⊢ A → Γ++Δ ⊢ A :=
   λ Γ Δ A H, weakening2 H (subset_append_left Γ Δ)
 
-  lemma deduction : ∀ Γ A B, Γ ⊢ A ⇒ B → A::Γ ⊢ B :=
+  def deduction : ∀ Γ A B, Γ ⊢ A ⇒ B → A::Γ ⊢ B :=
   λ Γ A B H, ImpE _ _ _ (weakening2 H (subset_cons A Γ)) (Nax _ _ (mem_cons_self A Γ))
 
-  lemma prov_impl : ∀ A B, Provable (A ⇒ B) → ∀ Γ, Γ ⊢ A → Γ ⊢ B :=
+  def prov_impl : ∀ A B, Provable (A ⇒ B) → ∀ Γ, Γ ⊢ A → Γ ⊢ B :=
   λ A B Hp Γ Ha,
     have wHp : Γ ⊢ (A ⇒ B), from weakening _ _ _ Hp,
     ImpE _ _ _ wHp Ha

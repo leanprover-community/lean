@@ -1,1 +1,1 @@
-noncomp_error.lean:1:25: warning: definition 'a' was incorrectly marked as noncomputable
+noncomp_error.lean:1:25: warning: unexpected 'noncomputable' modifier, definition 'a' is computable

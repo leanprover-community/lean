@@ -2,6 +2,7 @@
 -- subterm proving `n < 5`, we need to zeta-expand n not just in the subterm,
 -- but also in the local context.
 
+noncomputable
 lemma bug₁ : fin 5 :=
 let n : ℕ := 3 in
 have h : n < 5, from dec_trivial,

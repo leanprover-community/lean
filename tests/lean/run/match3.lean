@@ -10,7 +10,7 @@ example : foo 3 = 2 := rfl
 
 open decidable
 
-protected theorem dec_eq : ∀ x y : nat, decidable (x = y)
+protected def dec_eq : ∀ x y : nat, decidable (x = y)
 | 0        0        := is_true rfl
 | (succ x) 0        := is_false (λ h, nat.no_confusion h)
 | 0       (succ y) := is_false (λ h, nat.no_confusion h)
