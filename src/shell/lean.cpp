@@ -211,6 +211,7 @@ static void display_help(std::ostream & out) {
     std::cout << "  --server=file      start lean in server mode, redirecting standard input from the specified file (for debugging)\n";
     // std::cout << "  --no-widgets       turn off reporting on widgets\n";
     std::cout << "  --ast              export a .ast.json file for every .lean file\n";
+    std::cout << "  --tspp            include pretty-printed tactic states in ast exports\n";
 #endif
     std::cout << "  --profile          display elaboration/type checking time for each definition/theorem\n";
     DEBUG_CODE(
@@ -249,6 +250,7 @@ static struct option g_long_options[] = {
     {"server",       optional_argument, 0, 'S'},
     {"no-widgets",   no_argument,       0, 'W'},
     {"ast",          no_argument,       0, 'X'},
+    {"tspp",         no_argument,       0, 'Y'},
 #endif
 #if defined(LEAN_MULTI_THREAD)
     {"tstack",       required_argument, 0, 's'},
@@ -434,6 +436,7 @@ int main(int argc, char ** argv) {
     bool make_mode          = false;
     bool export_tlean       = false;
     bool export_ast         = false;
+    bool export_tspp        = false;
     bool use_old_oleans     = false;
     bool report_widgets     = true;
     bool recursive          = false;
@@ -547,6 +550,9 @@ int main(int argc, char ** argv) {
         case 'X':
             export_ast = true;
             break;
+        case 'Y':
+            export_tspp = true;
+            break;
 #endif
         case 'P':
             opts = opts.update("profiler", true);
@@ -641,6 +647,7 @@ int main(int argc, char ** argv) {
         module_mgr mod_mgr(&vfs, lt.get_root(), path.get_path(), env, ios);
         mod_mgr.set_use_old_oleans(use_old_oleans);
         mod_mgr.set_export_ast(export_ast);
+        mod_mgr.set_export_tspp(export_tspp);
         mod_mgr.set_export_tlean(export_tlean);
         set_global_module_mgr(mod_mgr);
 

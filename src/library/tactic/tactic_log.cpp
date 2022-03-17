@@ -6,7 +6,9 @@ Author: Mario Carneiro
 */
 #include <vector>
 #include "util/thread.h"
+#include "library/module_mgr.h"
 #include "library/tactic/tactic_log.h"
+
 
 namespace lean {
 
@@ -26,23 +28,6 @@ unsigned tactic_log::summary::cell::mk_hash() const {
     auto h = ::lean::hash(m_decl_name.hash(), (unsigned) m_goals.size());
     for (auto& g : m_goals) h = ::lean::hash(h, g.hash());
     return h;
-}
-
-tactic_state_id tactic_log::get_id(tactic_state const & ts, summary const & s) const {
-    lock_guard<mutex> l(m_mutex);
-    auto& map = get_state_map(l);
-    auto it = map.find(s);
-    if (it != map.end()) return it->second;
-    tactic_state_id r = get_states(l).size();
-    get_states(l).push_back(s);
-    map.emplace(s, r);
-    auto& ts_pps = get_ts_pps(l);
-
-    std::ostringstream os;
-    os << ts.pp();
-    ts_pps.push_back(os.str());
-
-    return r;
 }
 
 tactic_state_id tactic_log::push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const {
@@ -88,11 +73,30 @@ static tactic_log::summary summarize(tactic_state const & s) {
     return {s.decl_name(), std::move(goals)};
 }
 
+tactic_state_id tactic_log::get_id(tactic_state const & ts) const {
+    auto s = summarize(ts);
+    lock_guard<mutex> l(m_mutex);
+    auto& map = get_state_map(l);
+    auto it = map.find(s);
+    if (it != map.end()) return it->second;
+    tactic_state_id r = get_states(l).size();
+    get_states(l).push_back(s);
+    map.emplace(s, r);
+
+    if (get_global_module_mgr()->get_export_tspp()) {
+        std::ostringstream os;
+        os << ts.pp();
+        get_tspps(l).push_back(os.str());
+    }
+
+    return r;
+}
+
 void log_tactic(ast_id id, tactic_state const & before, tactic_state const & after, bool success) {
     if (auto log = get_tactic_log()) {
         lean_assert(!log->m_exported);
-        auto s1 = log->get_id(before, summarize(before));
-        auto s2 = is_eqp(before, after) ? s1 : log->get_id(after, summarize(after));
+        auto s1 = log->get_id(before);
+        auto s2 = is_eqp(before, after) ? s1 : log->get_id(after);
         log->push_invocation(id, s1, s2, success);
     }
 }
