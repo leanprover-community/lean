@@ -1,3 +1,14 @@
+3.42.0c (18 March 2022)
+-----------------------
+
+Features:
+- `noncomputable!` to force noncomputability (#703)
+- Require non-Prop theorems to be noncomputable (#704)
+
+Bug fixes:
+- Do not use file name for private name generation (#699)
+- Use 64-bit hashes for file contents (#700)
+
 3.41.0c (11 March 2022)
 -----------------------
 
