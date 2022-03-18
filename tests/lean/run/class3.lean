@@ -6,7 +6,7 @@ section
   variable Ha : inhabited A
   variable Hb : inhabited B
   include Ha Hb
-  theorem tst : inhabited (Prop × A × B) := by apply_instance
+  def tst : inhabited (Prop × A × B) := by apply_instance
 
 end
 

@@ -1,1 +1,1 @@
-noncomp_thm.lean:1:22: warning: definition 'foo' was incorrectly marked as noncomputable
+noncomp_thm.lean:1:22: warning: unexpected 'noncomputable' modifier, definition 'foo' is computable

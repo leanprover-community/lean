@@ -8,7 +8,7 @@ class Finite ( α : Type ) :=
   ( cardinality : nat )
   ( bijection : Bijection α (fin cardinality) )
 
-lemma empty_exfalso (x : false) : empty := begin exfalso, trivial end
+def empty_exfalso (x : false) : empty := begin exfalso, trivial end
 
 instance empty_is_Finite : Finite empty := {
   cardinality := 0,

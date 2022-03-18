@@ -227,6 +227,10 @@ optional<name> get_noncomputable_reason(environment const & env, name const & n)
     type_checker tc(env);
     if (tc.is_prop(d.get_type()))
         return optional<name>(); // definition is a proposition, then do nothing
+    if (d.is_theorem()) {
+        // definition is a non-Prop theorem
+        return optional<name>(n);
+    }
     expr const & v = d.get_value();
     auto ext = get_extension(env);
     bool ok  = true;

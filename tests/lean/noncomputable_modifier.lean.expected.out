@@ -2,7 +2,7 @@ computable
 noncomputable
 force_noncomputable
 37
-noncomputable_modifier.lean:25:18: warning: definition 'n2' was incorrectly marked as noncomputable
+noncomputable_modifier.lean:25:18: warning: unexpected 'noncomputable' modifier, definition 'n2' is computable
 37
 noncomputable_modifier.lean:28:0: error: code generation failed, VM does not have code for 'n3'
 37
