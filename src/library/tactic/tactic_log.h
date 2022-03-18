@@ -62,12 +62,12 @@ public:
             unsigned m_hash;
             MK_LEAN_RC();
             unsigned mk_hash() const;
-            cell(name const & decl_name, std::vector<goal> && goals, optional<std::string> && pp):
-                m_decl_name(decl_name), m_goals(std::move(goals)), m_pp(std::move(pp)), m_hash(mk_hash()), m_rc(1) {}
+            cell(name const & decl_name, std::vector<goal> && goals):
+                m_decl_name(decl_name), m_goals(std::move(goals)), m_pp(), m_hash(mk_hash()), m_rc(1) {}
             void dealloc() { delete this; }
         };
         friend bool operator==(cell const & c1, cell const & c2) {
-            return c1.m_hash == c2.m_hash && c1.m_decl_name == c2.m_decl_name && c1.m_goals == c2.m_goals && c1.m_pp == c2.m_pp;
+            return c1.m_hash == c2.m_hash && c1.m_decl_name == c2.m_decl_name && c1.m_goals == c2.m_goals;
         }
 
         cell * m_ptr;
@@ -76,12 +76,13 @@ public:
         friend bool operator==(summary const & s1, summary const & s2) { return s1.m_ptr == s2.m_ptr || *s1.m_ptr == *s2.m_ptr; }
     public:
         summary(summary const & s):m_ptr(s.m_ptr) { if (m_ptr) m_ptr->inc_ref(); }
-        summary(name const & decl_name, std::vector<goal> && goals, optional<std::string> && pp):
-            summary(new cell(decl_name, std::move(goals), std::move(pp))) {}
+        summary(name const & decl_name, std::vector<goal> && goals):
+            summary(new cell(decl_name, std::move(goals))) {}
         ~summary() { if (m_ptr) m_ptr->dec_ref(); }
         unsigned hash() const { return m_ptr->m_hash; }
         name decl_name() const { return m_ptr->m_decl_name; }
         std::vector<goal> const & goals() const { return m_ptr->m_goals; }
+        void set_pp(std::string const & pp) const { m_ptr->m_pp = optional<std::string>(pp); }
         optional<std::string> const & pp() const { return m_ptr->m_pp; }
     };
 
@@ -101,7 +102,7 @@ public:
     mutable std::atomic_bool m_exported{false};
     tactic_log() {}
 
-    tactic_state_id get_id(summary const & s) const;
+    tactic_state_id get_id(tactic_state const & ts, summary const & s) const;
     tactic_state_id push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const;
     inline std::vector<tactic_invocation> & get_invocs(lock_guard<mutex> &) const { return m_invocs; }
     inline std::vector<summary> & get_states(lock_guard<mutex> &) const { return m_states; }
