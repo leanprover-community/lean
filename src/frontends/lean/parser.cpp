@@ -279,7 +279,7 @@ tag parser::get_tag(expr e) {
 
 ast_data & parser::new_ast(name type, pos_info start, name value) {
     ast_id id = m_ast.size();
-    m_ast.push_back(new ast_data{id, start, type, value});
+    m_ast.push_back(new ast_data{id, start, pos(), type, value});
     return *m_ast.back();
 }
 

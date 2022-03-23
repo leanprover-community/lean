@@ -39,6 +39,9 @@ struct ast_data {
     ast_data(ast_id id, pos_info start, name type, name value = {}):
         m_id(id), m_start(start), m_type(type), m_value(value) {}
 
+    ast_data(ast_id id, pos_info start, pos_info end, name type, name value = {}):
+        m_id(id), m_start(start), m_end(end), m_type(type), m_value(value) {}
+
     ast_data & push(ast_id id) {
         lean_assert(m_id != 0);
         m_children.push_back(id);

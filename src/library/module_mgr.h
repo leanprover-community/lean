@@ -98,6 +98,8 @@ class module_mgr {
     bool m_use_old_oleans = false;
     bool m_report_widgets = true;
     bool m_export_ast = false;
+    bool m_export_tsast = false;
+    bool m_export_tspp = false;
     bool m_export_tlean = false;
 
     search_path m_path;
@@ -147,6 +149,10 @@ public:
     bool get_report_widgets() const { return m_report_widgets; }
     void set_export_ast(bool export_ast) { m_export_ast = export_ast; }
     void set_export_tlean(bool export_tlean) { m_export_tlean = export_tlean; }
+    void set_export_tsast(bool export_tsast) { m_export_tsast = export_tsast; }
+    bool get_export_tsast() { return m_export_tsast; }
+    void set_export_tspp(bool export_tspp) { m_export_tspp = export_tspp; }
+    bool get_export_tspp() { return m_export_tspp; }
 
     environment get_initial_env() const { return m_initial_env; }
     options get_options() const { return m_ios.get_options(); }
