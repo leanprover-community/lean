@@ -6,6 +6,7 @@ Authors: Gabriel Ebner
 prelude
 import init.meta.tactic
 import init.meta.interactive
+import init.meta.instance_cache
 
 namespace tactic
 
