@@ -1,3 +1,12 @@
+3.42.0c (24 March 2022)
+-----------------------
+
+Features:
+- Export pretty-printed tactic states (#702)
+
+Bug fixes:
+- Make `async` aware of instance cache (#706)
+
 3.42.0c (18 March 2022)
 -----------------------
 
