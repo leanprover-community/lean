@@ -78,6 +78,7 @@ Author: Leonardo de Moura
 namespace lean {
 static name * g_elab_strategy = nullptr;
 static name * g_elaborator_coercions = nullptr;
+static name * g_elab_field_alternatives = nullptr;
 
 bool get_elaborator_coercions(options const & opts) {
     return opts.get_bool(*g_elaborator_coercions, LEAN_DEFAULT_ELABORATOR_COERCIONS);
@@ -128,6 +129,10 @@ elaborator_strategy get_elaborator_strategy(environment const & env, name const 
     }
 
     return elaborator_strategy::WithExpectedType;
+}
+
+static names_attribute const & get_elab_field_alternatives_attribute() {
+    return static_cast<names_attribute const &>(get_system_attribute(*g_elab_field_alternatives));
 }
 
 #define trace_elab(CODE) lean_trace("elaborator", scope_trace_env _scope(m_env, m_ctx); CODE)
@@ -1876,41 +1881,78 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
     } else if (is_field_notation(fn) && amask == arg_mask::Default) {
         expr s           = visit(macro_arg(fn, 0), none_expr());
         expr s_type      = head_beta_reduce(instantiate_mvars(infer_type(s)));
-        auto field_res   = find_field_fn(fn, s, s_type);
+        auto field_res   = resolve_field_notation(fn, s, s_type);
+
         expr proj, proj_type;
-        if (field_res.m_ldecl) {
-            proj      = copy_tag(fn, field_res.m_ldecl->mk_ref());
-            proj_type = field_res.m_ldecl->get_type();
-        } else {
-            proj      = copy_tag(fn, mk_constant(field_res.get_full_fname()));
-            proj_type = m_env.get(field_res.get_full_fname()).get_type();
+        optional<name> find_matching = {};
+        switch (field_res.m_kind) {
+            case field_resolution::kind::ProjFn: {
+                auto fr = field_res.get_proj_fn();
+                expr coerced_s = *mk_base_projections(m_env, fr.m_struct_name, fr.m_base_struct_name, mk_as_is(s));
+                expr proj_app = mk_proj_app(m_env, fr.m_base_struct_name, fr.m_field_name, coerced_s, ref);
+                expr new_proj = visit_function(proj_app, has_args, has_args ? none_expr() : expected_type, ref);
+                return visit_base_app(new_proj, amask, args, expected_type, ref);
+            }
+            case field_resolution::kind::LocalRec: {
+                auto fr = field_res.get_local_rec();
+                proj = copy_tag(fn, fr.m_ldecl.mk_ref());
+                proj_type = fr.m_ldecl.get_type();
+                find_matching = fr.m_base_name;
+                break;
+            }
+            case field_resolution::kind::Const: {
+                auto fr = field_res.get_const();
+                expr coerced_s = *mk_base_projections(m_env, fr.m_struct_name, fr.m_base_struct_name, mk_as_is(s));
+                s = copy_tag(s, std::move(coerced_s));
+                proj = copy_tag(fn, mk_constant(fr.m_const_name));
+                proj_type = m_env.get(field_res.get_full_name()).get_type();
+                if (fr.m_find_matching) {
+                    find_matching = fr.get_base_name();
+                }
+                break;
+            }
+            default: lean_unreachable();
         }
+
+        //type_context_old::tmp_locals locals(m_ctx);
+        buffer<expr> fun_args;
         buffer<expr> new_args;
-        unsigned i       = 0;
+        unsigned i = 0;
         while (is_pi(proj_type)) {
             if (is_explicit(binding_info(proj_type))) {
-                if (is_app_of(binding_domain(proj_type), field_res.m_base_S_name)) {
+                if (!find_matching || is_app_of(binding_domain(proj_type), *find_matching)) {
                     /* found s location */
-                    expr coerced_s = *mk_base_projections(m_env, field_res.m_S_name, field_res.m_base_S_name, mk_as_is(s));
-                    new_args.push_back(copy_tag(fn, std::move(coerced_s)));
+                    new_args.push_back(s);
                     for (; i < args.size(); i++)
                         new_args.push_back(args[i]);
-                    expr new_proj = visit_function(proj, has_args, has_args ? none_expr() : expected_type, ref);
-                    return visit_base_app(new_proj, amask, new_args, expected_type, ref);
-                } else {
-                    if (i >= args.size()) {
-                        throw elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
-                                                   << field_res.get_full_fname() << "'");
+
+                    if (fun_args.empty()) {
+                        expr new_proj = visit_function(proj, has_args, has_args ? none_expr() : expected_type, ref);
+                        return visit_base_app(new_proj, amask, new_args, expected_type, ref);
+                    } else {
+                        expr new_proj = visit_function(proj, true, none_expr(), ref);
+                        optional<expr> expected_type_f = expected_type ? some_expr(Pi(fun_args, *expected_type)) : none_expr();
+                        expr f = visit_base_app(new_proj, amask, new_args, expected_type_f, ref);
+                        return copy_tag(ref, Fun(fun_args, f));
                     }
-                    new_args.push_back(args[i]);
+                } else {
+                    if (i >= args.size()) { // TODO make this generate a lambda expression
+                        auto funarg = mk_local(mk_fresh_name(), binding_name(proj_type), binding_domain(proj_type), binding_info(proj_type));
+                        fun_args.push_back(funarg);
+                        new_args.push_back(funarg);
+                        //throw elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
+                        //                           << field_res.get_full_name() << "'");
+                    } else {
+                        new_args.push_back(args[i]);
+                    }
                     i++;
                 }
             }
             proj_type = binding_body(proj_type);
         }
         throw elaborator_exception(ref, sstream() << "invalid field notation, function '"
-                                   << field_res.get_full_fname() << "' does not have explicit argument with type ("
-                                   << field_res.m_base_S_name << " ...)");
+                                   << field_res.get_full_name() << "' does not have explicit argument with type ("
+                                   << field_res.get_base_name() << " ...)");
     } else {
         expr new_fn = visit_function(fn, has_args, has_args ? none_expr() : expected_type, ref);
         /* Check if we should use a custom elaboration procedure for this application. */
@@ -2685,24 +2727,94 @@ expr elaborator::visit_inaccessible(expr const & e, optional<expr> const & expec
     return copy_tag(e, mk_inaccessible(new_a));
 }
 
-elaborator::field_resolution elaborator::field_to_decl(expr const & e, expr const & s, expr const & s_type) {
-    // prefer 'unknown identifier' error when lhs is a constant of non-value type
-    if (is_field_notation(e)) {
-        auto lhs = macro_arg(e, 0);
-        if (is_constant(lhs)) {
-            type_context_old::tmp_locals locals(m_ctx);
-            expr t = whnf(s_type);
-            while (is_pi(t)) {
-                t = whnf(instantiate(binding_body(t), locals.push_local_from_binding(t)));
-            }
-            if (is_sort(t) && !is_anonymous_field_notation(e)) {
-                name fname = get_field_notation_field_name(e);
-                throw elaborator_exception(lhs, format("unknown identifier '") + format(const_name(lhs)) + format(".") +
-                                           format(fname) + format("'"));
+elaborator::field_resolution elaborator::resolve_field_notation_method(expr const & e, expr const & s, expr const & s_type, name const & struct_name, bool find_matching,
+                                                                        buffer<name> const & extra_base_names) {
+    lean_assert(is_field_notation(e) && !is_anonymous_field_notation(e));
+    name fname = get_field_notation_field_name(e);
+
+    if (auto m = find_method(m_env, struct_name, fname)) {
+        return field_resolution_const(m->first, struct_name, m->second, find_matching);
+    }
+
+    // Now try to look for extension methods
+    if (auto data = get_elab_field_alternatives_attribute().get(m_env, struct_name)) {
+        for (name const & alt : data->m_names) {
+            if (m_env.find(alt + fname)) {
+                return field_resolution_const(struct_name, struct_name, alt + fname, false);
             }
         }
     }
-    expr I      = get_app_fn(s_type);
+    // then do the same for the extra base_names
+    for (name const & alt : extra_base_names) {
+        if (m_env.find(alt + fname)) {
+            return field_resolution_const(struct_name, struct_name, alt + fname, false);
+        }
+    }
+
+    // prefer 'unknown identifier' error when lhs is a constant of non-value type
+    auto lhs = macro_arg(e, 0);
+    if (is_constant(lhs)) {
+        type_context_old::tmp_locals locals(m_ctx);
+        expr t = whnf(s_type);
+        while (is_pi(t)) {
+            t = whnf(instantiate(binding_body(t), locals.push_local_from_binding(t)));
+        }
+        if (is_sort(t) && !is_anonymous_field_notation(e)) {
+            name fname = get_field_notation_field_name(e);
+            throw elaborator_exception(lhs, format("unknown identifier '") + format(const_name(lhs) + fname) + format("'"));
+        }
+    }
+
+    auto pp_fn = mk_pp_ctx();
+    throw elaborator_exception(e, format("invalid field notation, '") + format(fname) + format("'") +
+                                format(" is not a valid \"field\" because environment does not contain ") +
+                                format("'") + format(struct_name + fname) + format("'") +
+                                pp_indent(pp_fn, s) +
+                                line() + format("which has type") +
+                                pp_indent(pp_fn, s_type));
+}
+
+elaborator::field_resolution elaborator::resolve_field_notation_aux(expr const & e, expr const & s, expr const & s_type) {
+    lean_assert(is_field_notation(e));
+
+    // If it's a function, resolve the field as a method in the function/pi/implies/forall namespaces.
+    if (is_pi(s_type)) {
+        type_context_old::tmp_locals locals(m_ctx);
+        expr t = s_type;
+        while (is_pi(t)) {
+            t = whnf(instantiate(binding_body(t), locals.push_local_from_binding(t)));
+        }
+        bool is_forall = false;
+        try {
+            expr t2 = m_ctx.relaxed_whnf(m_ctx.infer(t));
+            is_forall = t2 == mk_Prop();
+        } catch (exception &) {}
+
+        name struct_name;
+        buffer<name> extra;
+        if (is_forall) {
+            if (is_arrow(s_type)) {
+                struct_name = get_implies_name();
+                extra.push_back(get_function_name());
+                extra.push_back(get_forall_name());
+                extra.push_back(get_pi_name());
+            } else {
+                struct_name = get_forall_name();
+                extra.push_back(get_pi_name());
+            }
+        } else {
+            if (is_arrow(s_type)) {
+                struct_name = get_function_name();
+                extra.push_back(get_pi_name());
+            } else {
+                struct_name = get_pi_name();
+            }
+        }
+        return resolve_field_notation_method(e, s, s_type, struct_name, false, extra);
+    }
+
+    expr I = get_app_fn(s_type);
+
     if (!is_constant(I)) {
         auto pp_fn = mk_pp_ctx();
         throw elaborator_exception(e, format("invalid field notation, type is not of the form (C ...) where C is a constant") +
@@ -2710,17 +2822,20 @@ elaborator::field_resolution elaborator::field_to_decl(expr const & e, expr cons
                                    line() + format("has type") +
                                    pp_indent(pp_fn, s_type));
     }
+
+    auto struct_name = const_name(I);
+
     if (is_anonymous_field_notation(e)) {
-        if (!is_structure(m_env, const_name(I))) {
+        if (!is_structure(m_env, struct_name)) {
             auto pp_fn = mk_pp_ctx();
             throw elaborator_exception(e, format("invalid projection, structure expected") +
                                        pp_indent(pp_fn, s) +
                                        line() + format("has type") +
                                        pp_indent(pp_fn, s_type));
         }
-        auto fnames = get_structure_fields(m_env, const_name(I));
+        auto fnames = get_structure_fields(m_env, struct_name);
         unsigned fidx = get_field_notation_field_idx(e);
-        if (fidx  == 0) {
+        if (fidx == 0) {
             throw elaborator_exception(e, "invalid projection, index must be greater than 0");
         }
         if (fidx > fnames.size()) {
@@ -2731,37 +2846,30 @@ elaborator::field_resolution elaborator::field_to_decl(expr const & e, expr cons
                                        line() + format("which has type") +
                                        pp_indent(pp_fn, s_type));
         }
-        return const_name(I) + fnames[fidx-1];
+        return field_resolution_proj_fn(struct_name, struct_name, fnames[fidx-1]);
     } else {
-        name fname  = get_field_notation_field_name(e);
-        // search for "true" fields first, including in parent structures
-        if (is_structure_like(m_env, const_name(I)))
-            if (auto p = find_field(m_env, const_name(I), fname))
-                return field_resolution(const_name(I), *p, fname);
-        name full_fname = const_name(I) + fname;
-        name local_name = full_fname.replace_prefix(get_namespace(env()), {});
-        if (auto ldecl = m_ctx.lctx().find_if([&](local_decl const & decl) {
-            return decl.get_info().is_rec() && decl.get_pp_name() == local_name;
-        })) {
-            // projection is recursive call
-            return field_resolution(full_fname, ldecl);
+        name fname = get_field_notation_field_name(e);
+
+        // Search for "true" fields first, including in parent structures
+        if (is_structure_like(m_env, struct_name))
+            if (auto p = find_field(m_env, struct_name, fname))
+                return field_resolution_proj_fn(*p, struct_name, fname);
+
+        // Check if field notation is being used to make a "local" recursive call.
+        name full_fname = struct_name + fname;
+        name local_name = full_fname.replace_prefix(get_namespace(m_env), {});
+        if (auto ldecl = m_ctx.lctx().find_if([&](local_decl const & decl) { return decl.get_info().is_rec() && decl.get_pp_name() == local_name; })) {
+            return field_resolution_local_rec(struct_name, full_fname, *ldecl);
         }
-        if (!m_env.find(full_fname)) {
-            auto pp_fn = mk_pp_ctx();
-            throw elaborator_exception(e, format("invalid field notation, '") + format(fname) + format("'") +
-                                       format(" is not a valid \"field\" because environment does not contain ") +
-                                       format("'") + format(full_fname) + format("'") +
-                                       pp_indent(pp_fn, s) +
-                                       line() + format("which has type") +
-                                       pp_indent(pp_fn, s_type));
-        }
-        return full_fname;
+
+        return resolve_field_notation_method(e, s, s_type, struct_name);
     }
 }
 
-elaborator::field_resolution elaborator::find_field_fn(expr const & e, expr const & s, expr const & s_type) {
+elaborator::field_resolution elaborator::resolve_field_notation(expr const & e, expr const & s, expr const & s_type) {
+    lean_assert(is_field_notation(e));
     try {
-        return field_to_decl(e, s, s_type);
+        return resolve_field_notation_aux(e, s, s_type);
     } catch (elaborator_exception & ex1) {
         expr new_s_type = s_type;
         if (auto d = unfold_term(env(), new_s_type))
@@ -2770,7 +2878,7 @@ elaborator::field_resolution elaborator::find_field_fn(expr const & e, expr cons
         if (new_s_type == s_type)
             throw;
         try {
-            return find_field_fn(e, s, new_s_type);
+            return resolve_field_notation(e, s, new_s_type);
         } catch (elaborator_exception & ex2) {
             throw nested_elaborator_exception(ex2.get_pos(), ex1, ex2.pp());
         }
@@ -2779,17 +2887,7 @@ elaborator::field_resolution elaborator::find_field_fn(expr const & e, expr cons
 
 expr elaborator::visit_field(expr const & e, optional<expr> const & expected_type) {
     lean_assert(is_field_notation(e));
-    expr s         = visit(macro_arg(e, 0), none_expr());
-    expr s_type    = head_beta_reduce(instantiate_mvars(infer_type(s)));
-    auto field_res = find_field_fn(e, s, s_type);
-    expr proj_app;
-    if (field_res.m_ldecl) {
-        proj_app   = copy_tag(e, mk_app(field_res.m_ldecl->mk_ref(), mk_as_is(s)));
-    } else {
-        expr new_e = *mk_base_projections(m_env, field_res.m_S_name, field_res.m_base_S_name, mk_as_is(s));
-        proj_app   = mk_proj_app(m_env, field_res.m_base_S_name, field_res.m_fname, new_e, e);
-    }
-    return visit(proj_app, expected_type);
+    return visit_app_core(e, buffer<expr>(), expected_type, e);
 }
 
 class reduce_projections_visitor : public replace_visitor {
@@ -4326,6 +4424,13 @@ void initialize_elaborator() {
     register_incompatible("elab_simple", "elab_as_eliminator");
     register_incompatible("elab_with_expected_type", "elab_as_eliminator");
 
+    g_elab_field_alternatives = new name("elab_field_alternatives");
+
+    register_system_attribute(
+        names_attribute(
+            *g_elab_field_alternatives,
+            "provides alternative prefixes to search when elaborating field notation"));
+
     DECLARE_VM_BUILTIN(name({"environment", "add_defn_eqns"}), environment_add_defn_eqns);
 
     DECLARE_VM_BUILTIN(name({"tactic", "save_type_info"}), tactic_save_type_info);
@@ -4338,6 +4443,7 @@ void initialize_elaborator() {
 
 void finalize_elaborator() {
     delete g_elab_strategy;
+    delete g_elab_field_alternatives;
     delete g_elaborator_coercions;
 }
 }

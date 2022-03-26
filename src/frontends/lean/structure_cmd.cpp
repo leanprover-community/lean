@@ -177,6 +177,18 @@ optional<name> find_field(environment const & env, name const & S_name, name con
     return {};
 }
 
+optional<pair<name, name>> find_method(environment const & env, name const & struct_name, name const & field_name) {
+    if (env.find(struct_name + field_name))
+        return some(mk_pair(struct_name, struct_name + field_name));
+    if (is_structure_like(env, struct_name)) {
+        for (auto const & p : get_parent_structures(env, struct_name)) {
+            if (auto m = find_method(env, p, field_name))
+                return m;
+        }
+    }
+    return {};
+}
+
 void get_structure_fields_flattened(environment const & env, name const & structure_name, buffer<name> & full_fnames) {
     for (auto const & fname : get_structure_fields(env, structure_name)) {
         full_fnames.push_back(structure_name + fname);

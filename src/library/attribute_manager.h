@@ -220,6 +220,31 @@ struct indices_attribute_data : public attr_data {
     }
 };
 
+struct names_attribute_data : public attr_data {
+    list<name> m_names;
+    names_attribute_data(list<name> const & names) : m_names(names) {}
+    names_attribute_data() : names_attribute_data(list<name>()) {}
+
+    virtual unsigned hash() const override {
+        unsigned h = 0;
+        for (name n : m_names)
+            h = ::lean::hash(h, n.hash());
+        return h;
+    }
+    void write(serializer & s) const {
+        write_list(s, m_names);
+    }
+    void read(deserializer & d) {
+        m_names = read_list<name>(d);
+    }
+    ast_id parse(abstract_parser & p) override;
+    virtual void print(std::ostream & out) override {
+        for (auto n : m_names) {
+            out << " " << n;
+        }
+    }
+};
+
 struct key_value_data : public attr_data {
     // generalize: name_map<std::string> m_pairs;
     std::string m_symbol;
@@ -260,7 +285,10 @@ struct key_value_data : public attr_data {
 /** \brief Attribute that represents a list of indices. input and output are 1-indexed for convenience. */
 typedef typed_attribute<indices_attribute_data> indices_attribute;
 
-/** \brief Attribute that represents a list of indices. input and output are 1-indexed for convenience. */
+/** \brief Attribute that represents a list of names. */
+typedef typed_attribute<names_attribute_data> names_attribute;
+
+/** \brief Attribute that represents a single key/value pair. */
 typedef typed_attribute<key_value_data> key_value_attribute;
 
 class user_attribute_ext {

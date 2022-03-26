@@ -246,23 +246,120 @@ private:
     expr visit_equation(expr const & eq, unsigned num_fns);
     expr visit_inaccessible(expr const & e, optional<expr> const & expected_type);
 
-    struct field_resolution {
-        name m_S_name; // structure name of field expression type
-        name m_base_S_name; // structure name of field
-        name m_fname;
-        optional<local_decl> m_ldecl; // projection is a local constant: recursive call
+    /** Field resolution: this is a field projection */
+    struct field_resolution_proj_fn {
+        /** Name of the structure that is the source of the field. Is ancestor of \c m_struct_name */
+        name m_base_struct_name;
+        /** Name of the structure for the projected expression */
+        name m_struct_name;
+        /** The field name for the projection */
+        name m_field_name;
 
-        field_resolution(name const & full_fname, optional<local_decl> ldecl = {}):
-                m_S_name(full_fname.get_prefix()), m_base_S_name(full_fname.get_prefix()),
-                m_fname(full_fname.get_string()), m_ldecl(ldecl) {}
-        field_resolution(const name & S_name, const name & base_S_name, const name & fname):
-                m_S_name(S_name), m_base_S_name(base_S_name), m_fname(fname) {}
+        field_resolution_proj_fn(name const & base_struct_name, name const & struct_name, name const & field_name):
+            m_base_struct_name(base_struct_name), m_struct_name(struct_name), m_field_name(field_name) {}
 
-        name get_full_fname() const { return m_base_S_name + m_fname; }
+        /** Get the name of the projection function */
+        name get_full_name() const { return m_base_struct_name + m_field_name; }
     };
 
-    field_resolution field_to_decl(expr const & e, expr const & s, expr const & s_type);
-    field_resolution find_field_fn(expr const & e, expr const & s, expr const & s_type);
+    /** Field resolution: this is a "method" (a.k.a. extended dot notation) */
+    struct field_resolution_const {
+        /** If this is not equal to \c m_struct_name then we should insert parent projections, and this is
+         * the name of the structure that is the source of the field. Is ancestor of \c m_struct_name */
+        name m_base_struct_name;
+        /** Generalized structure name for the method expression */
+        name m_struct_name;
+        /** Name of the constant to use as a function */
+        name m_const_name;
+        /** Whether to find the first explicit argument in \c m_const_name that accepts the expression.
+         * If false, just use the first explicit argument. */
+        bool m_find_matching;
+
+        field_resolution_const(name const & base_struct_name, name const & struct_name, name const & const_name, bool find_matching = true):
+            m_base_struct_name(base_struct_name), m_struct_name(struct_name), m_const_name(const_name), m_find_matching(find_matching) {}
+
+        /** Get the structure name to search for when \c m_find_matching is true */
+        name const & get_base_name() const { return m_base_struct_name; }
+    };
+
+    /** Field resolution: projection is being used to make a "local" recursive call */
+    struct field_resolution_local_rec {
+        /** The generalized structure name for the argument to the call. */
+        name m_base_name;
+        /** The resolved name for the recursive call (for error reporting). */
+        name m_full_name;
+        /** The declaration for the "local" recursive call. */
+        local_decl m_ldecl;
+
+        field_resolution_local_rec(name const & base_name, name const & full_name, local_decl const & ldecl):
+            m_base_name(base_name), m_full_name(full_name), m_ldecl(ldecl) {}
+    };
+
+    struct field_resolution {
+        enum class kind { ProjFn, Const, LocalRec };
+
+        kind m_kind;
+        union {
+            field_resolution_proj_fn m_proj_fn;
+            field_resolution_const m_const;
+            field_resolution_local_rec m_local_rec;
+        };
+
+        field_resolution(field_resolution_proj_fn const & fr_proj_fn):
+            m_kind(kind::ProjFn), m_proj_fn(fr_proj_fn) {}
+        field_resolution(field_resolution_const const & fr_const):
+            m_kind(kind::Const), m_const(fr_const) {}
+        field_resolution(field_resolution_local_rec const & fr_local_rec):
+            m_kind(kind::LocalRec), m_local_rec(fr_local_rec) {}
+
+        field_resolution(field_resolution const & fr):m_kind(fr.m_kind) {
+            switch (m_kind) {
+                case kind::ProjFn: new (&m_proj_fn) auto(fr.m_proj_fn); break;
+                case kind::Const: new (&m_const) auto(fr.m_const); break;
+                case kind::LocalRec: new (&m_local_rec) auto(fr.m_local_rec); break;
+                default: lean_unreachable();
+            }
+        }
+
+        ~field_resolution() {
+            switch (m_kind) {
+                case kind::ProjFn: m_proj_fn.~field_resolution_proj_fn(); break;
+                case kind::Const: m_const.~field_resolution_const(); break;
+                case kind::LocalRec: m_local_rec.~field_resolution_local_rec(); break;
+            }
+        }
+
+        field_resolution_proj_fn const & get_proj_fn() { lean_assert(m_kind == kind::ProjFn); return m_proj_fn; }
+        field_resolution_const const & get_const() { lean_assert(m_kind == kind::Const); return m_const; }
+        field_resolution_local_rec const & get_local_rec() { lean_assert(m_kind == kind::LocalRec); return m_local_rec; }
+
+        /** The function name to use when reporting errors associated to this field resolution. */
+        name get_full_name() {
+            switch (m_kind) {
+                case kind::ProjFn: return get_proj_fn().get_full_name();
+                case kind::Const: return get_const().m_const_name;
+                case kind::LocalRec: return get_local_rec().m_full_name;
+                default: lean_unreachable();
+            }
+        }
+
+        /** The structure name to use when reporting errors associated to this field resolution. */
+        name get_base_name() {
+            switch (m_kind) {
+                case kind::ProjFn: return get_proj_fn().m_base_struct_name;
+                case kind::Const: return get_const().m_base_struct_name;
+                case kind::LocalRec: return get_local_rec().m_base_name;
+                default: lean_unreachable();
+            }
+        }
+    };
+
+    field_resolution resolve_field_notation_method(expr const & e, expr const & s, expr const & s_type, name const & struct_name, bool find_matching = true,
+                                                    buffer<name> const & extra_base_names = buffer<name>());
+    field_resolution resolve_field_notation_aux(expr const & e, expr const & s, expr const & s_type);
+    /** \c e is the field notation expression, \c s is the elaborated expression, \c s_type is its type */
+    field_resolution resolve_field_notation(expr const & e, expr const & s, expr const & s_type);
+
     expr visit_field(expr const & e, optional<expr> const & expected_type);
     expr instantiate_mvars(expr const & e, std::function<bool(expr const &)> pred); // NOLINT
     expr visit_structure_instance(expr const & e, optional<expr> expected_type);
