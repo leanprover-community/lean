@@ -185,6 +185,8 @@ comp_val
 <|>
 `[apply nat.zero_lt_one_add]
 <|>
+`[apply nat.lt_succ_self]
+<|>
 assumption
 <|>
 (do check_target_is_value_lt,
