@@ -1,0 +1,4 @@
+local_notation_meta_bug.lean:2:9: error: command does not accept attributes
+local_notation_meta_bug.lean:3:14: error: command does not accept modifiers
+local_notation_meta_bug.lean:4:23: error: command does not accept modifiers
+local_notation_meta_bug.lean:5:11: error: command does not accept doc string

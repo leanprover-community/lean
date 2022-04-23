@@ -414,6 +414,7 @@ static environment local_cmd(parser & p, ast_id & cmd_id, cmd_meta const & meta)
         p.next();
         return local_attribute_cmd(p, cmd_id, meta);
     } else {
+        meta.throw_exception_if_nonempty();
         return local_notation_cmd(p, cmd_id);
     }
 }
