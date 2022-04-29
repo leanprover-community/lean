@@ -24,6 +24,15 @@ struct cmd_meta {
     cmd_meta(decl_attributes const & attrs, decl_modifiers const & mods,
              optional<std::string> const & doc = optional<std::string>()):
         m_attrs(attrs), m_modifiers(mods), m_doc_string(doc) {}
+
+    void throw_exception_if_nonempty() const & {
+        if (m_modifiers)
+            throw exception("command does not accept modifiers");
+        if (m_attrs)
+            throw exception("command does not accept attributes");
+        if (m_doc_string)
+            throw exception("command does not accept doc string");
+    }
 };
 
 typedef std::function<environment(parser&, ast_id &, cmd_meta const &)> command_fn;
@@ -39,12 +48,7 @@ public:
         m_name(n), m_descr(d), m_fn(fn), m_skip_token(skip_token) {}
     cmd_info_tmpl(name const & n, char const * d, std::function<environment(parser&, ast_id&)> const & fn, bool skip_token = true):
         cmd_info_tmpl(n, d, [=](parser & p, ast_id & cmd_id, cmd_meta const & meta) {
-            if (meta.m_modifiers)
-                throw exception("command does not accept modifiers");
-            if (meta.m_attrs)
-                throw exception("command does not accept attributes");
-            if (meta.m_doc_string)
-                throw exception("command does not accept doc string");
+            meta.throw_exception_if_nonempty();
             return fn(p, cmd_id);
         }, skip_token) {}
     cmd_info_tmpl() {}
