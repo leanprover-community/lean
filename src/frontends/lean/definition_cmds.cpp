@@ -220,9 +220,19 @@ static void validate_noncomputable(noncomputable_policy policy, environment cons
         && is_marked_noncomputable(env, c_real_name)) {
         auto reason = get_noncomputable_reason(env, c_real_name);
         lean_assert(reason);
-        if (*reason == c_real_name) {
+        declaration const & decl = env.get(c_real_name);
+        if (decl.is_theorem()) {
+            if (has_sorry(decl.get_type())) {
+                // When there is a sorry in the type of a theorem, this error message is very likely
+                // to be irrelevant (partially-written theorems will have a synthetic sorry as their
+                // type).
+                return;
+            }
             report_message(message(file_name, pos, ERROR,
-                (sstream() << "missing 'noncomputable' modifier, definition '" << c_real_name << "' is not compiled").str()));
+                (sstream() << "theorems do not get VM compiled, use 'def' or add 'noncomputable' modifier to '" << c_real_name << "'").str()));
+        } else if (*reason == c_real_name) {
+            report_message(message(file_name, pos, ERROR,
+                (sstream() << "missing 'noncomputable' modifier since definition '" << c_real_name << "' will not be VM compiled").str()));
         } else {
             report_message(message(file_name, pos, ERROR,
                 (sstream() << "missing 'noncomputable' modifier, definition '" << c_name << "' depends on '" << *reason << "'").str()));

@@ -25,7 +25,7 @@ struct cmd_meta {
              optional<std::string> const & doc = optional<std::string>()):
         m_attrs(attrs), m_modifiers(mods), m_doc_string(doc) {}
 
-    void throw_exception_if_nonempty() const & {
+    void throw_exception_if_nonempty() const {
         if (m_modifiers)
             throw exception("command does not accept modifiers");
         if (m_attrs)

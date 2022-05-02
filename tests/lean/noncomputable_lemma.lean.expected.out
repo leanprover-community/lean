@@ -1,1 +1,4 @@
-noncomputable_lemma.lean:2:6: error: missing 'noncomputable' modifier, definition 'b' is not compiled
+noncomputable_lemma.lean:2:6: error: theorems do not get VM compiled, use 'def' or add 'noncomputable' modifier to 'b'
+noncomputable_lemma.lean:4:0: warning: declaration 'sorry_type' uses sorry
+noncomputable_lemma.lean:6:18: error: invalid expression, unexpected token
+noncomputable_lemma.lean:6:0: warning: declaration 'incomplete' uses sorry
