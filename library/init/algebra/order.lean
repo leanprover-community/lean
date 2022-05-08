@@ -112,8 +112,8 @@ lemma le_of_lt_or_eq : ∀ {a b : α}, (a < b ∨ a = b) → a ≤ b
 lemma le_of_eq_or_lt {a b : α} (h : a = b ∨ a < b) : a ≤ b :=
 or.elim h le_of_eq le_of_lt
 
-instance decidable_lt_of_decidable_le [decidable_rel ((≤) : α → α → Prop)] :
-  decidable_rel ((<) : α → α → Prop)
+/-- `<` is decidable if `≤` is. -/
+def decidable_lt_of_decidable_le [@decidable_rel α (≤)] : @decidable_rel α (<)
 | a b :=
   if hab : a ≤ b then
     if hba : b ≤ a then
@@ -146,8 +146,8 @@ lemma le_antisymm_iff {a b : α} : a = b ↔ a ≤ b ∧ b ≤ a :=
 lemma lt_of_le_of_ne {a b : α} : a ≤ b → a ≠ b → a < b :=
 λ h₁ h₂, lt_of_le_not_le h₁ $ mt (le_antisymm h₁) h₂
 
-instance decidable_eq_of_decidable_le [decidable_rel ((≤) : α → α → Prop)] :
-  decidable_eq α
+/-- Equality is decidable if `≤` is. -/
+def decidable_eq_of_decidable_le [@decidable_rel α (≤)] : decidable_eq α
 | a b :=
   if hab : a ≤ b then
     if hba : b ≤ a then
