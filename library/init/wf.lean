@@ -106,25 +106,6 @@ section
 end
 end inv_image
 
--- The transitive closure of a well-founded relation is well-founded
-namespace tc
-section
-  parameters {α : Sort u} {r : α → α → Prop}
-  local notation `r⁺` := tc r
-
-  lemma accessible {z : α} (ac : acc r z) : acc (tc r) z :=
-  acc.rec_on ac (λ x acx ih,
-    acc.intro x (λ y rel,
-      tc.rec_on rel
-        (λ a b rab acx ih, ih a rab)
-        (λ a b c rab rbc ih₁ ih₂ acx ih, acc.inv (ih₂ acx ih) rab)
-        acx ih))
-
-  lemma wf (h : well_founded r) : well_founded r⁺ :=
-  ⟨λ a, accessible (apply h a)⟩
-end
-end tc
-
 /-- less-than is well-founded -/
 lemma nat.lt_wf : well_founded nat.lt :=
 ⟨nat.rec
