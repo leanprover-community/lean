@@ -13,6 +13,8 @@ set_option pp.parens true
 def Union {ι β : Type*} (s : ι → set β) : set β := {x : β | ∃ i, x ∈ s i}
 notation `⋃` binders `, ` r:(scoped f, Union f) := r
 
+def set.univ {α : Type*} : set α := {x | true}
+
 #check (set.univ : set ℕ) = ⋃(n:ℕ), {m : ℕ | m < n}
 
 -- subtype notation is handled specially by the pretty printer, so isn't parenthesized

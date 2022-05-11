@@ -1,3 +1,4 @@
+instance {α} : has_union (set α) := ⟨λ s t, {a | a ∈ s ∨ a ∈ t}⟩
 constant union_is_assoc {α} : is_associative (set α) (∪)
 attribute [instance] union_is_assoc
 
