@@ -25,6 +25,9 @@ instance has_mem : has_mem α (set α) := ⟨λ x s, s x⟩
 
 instance : has_emptyc (set α) := ⟨{x | false}⟩
 
+/-- The set that contains all elements of a type. -/
+def univ : set α := {x | true}
+
 instance : has_insert α (set α) := ⟨λ a s, {b | b = a ∨ b ∈ s}⟩
 
 instance : has_singleton α (set α) := ⟨λ a, {b | b = a}⟩
