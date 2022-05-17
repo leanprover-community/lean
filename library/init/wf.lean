@@ -8,6 +8,13 @@ import init.data.nat.basic init.data.prod
 
 universes u v
 
+/-- A value `x : α` is accessible from `r` when every value that's lesser under `r` is also
+accessible. Note that any value that's minimal under `r` is vacuously accessible.
+
+Equivalently, `acc r x` when there is no infinite chain of elements starting at `x` that are related
+under `r`.
+
+This is used to state the definition of well-foundedness (see `well_founded`). -/
 inductive acc {α : Sort u} (r : α → α → Prop) : α → Prop
 | intro (x : α) (h : ∀ y, r y x → acc y) : acc x
 
@@ -19,7 +26,9 @@ acc.rec_on h₁ (λ x₁ ac₁ ih h₂, ac₁ y h₂) h₂
 
 end acc
 
-/-- A relation `r : α → α → Prop` is well-founded when `∀ x, (∀ y, r y x → P y → P x) → P x` for all predicates `P`.
+/-- A relation `r : α → α → Prop` is well-founded when `∀ x, (∀ y, r y x → P y → P x) → P x` for all
+predicates `P`. Equivalently, `acc r x` for all `x`.
+
 Once you know that a relation is well_founded, you can use it to define fixpoint functions on `α`.-/
 structure well_founded {α : Sort u} (r : α → α → Prop) : Prop :=
 intro :: (apply : ∀ a, acc r a)
