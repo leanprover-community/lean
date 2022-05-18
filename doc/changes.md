@@ -1,3 +1,18 @@
+3.43.0c (18 May 2022)
+---------------------
+
+Features:
+- Teach `well_founded_tactics.default_dec_tac` that `n < n.succ` (#710)
+- Improve docs for `acc`, `well_founded` (#715)
+
+Bug fixes:
+- Add modifiers/attrs/docstring check to `local` command (#711)
+- `noncomputable`: better error message for non-Prop theorems (#712)
+- Uninstance order decidability (#714)
+
+Changes:
+- Remove `tc` (#713)
+
 3.42.0c (24 March 2022)
 -----------------------
 
