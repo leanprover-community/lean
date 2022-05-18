@@ -12,6 +12,7 @@ Bug fixes:
 
 Changes:
 - Remove `tc` (#713)
+- Drop `set.sUnion` (#675)
 
 3.42.0c (24 March 2022)
 -----------------------
