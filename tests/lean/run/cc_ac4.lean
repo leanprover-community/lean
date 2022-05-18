@@ -1,6 +1,8 @@
 --import data.set.basic
 open tactic
 
+instance {α} : has_union (set α) := ⟨λ s t, {a | a ∈ s ∨ a ∈ t}⟩
+
 constant union_is_assoc {α} : is_associative (set α) (∪)
 constant union_is_comm {α} : is_commutative (set α) (∪)
 attribute [instance] union_is_assoc union_is_comm
