@@ -317,7 +317,9 @@ class has_subset   (α : Type u) := (subset : α → α → Prop)
 class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
 /- Type classes has_emptyc and has_insert are
    used to implement polymorphic notation for collections.
-   Example: {a, b, c}. -/
+   Example: {a, b, c}.    
+   
+   Note that we use `pair` for lemmas about `insert y (singleton x) = {x, y}`. -/-/
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
 class has_singleton (α : out_param $ Type u) (β : Type v) := (singleton : α → β)
