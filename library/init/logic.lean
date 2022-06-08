@@ -786,6 +786,10 @@ instance prop.inhabited : inhabited Prop :=
 instance pi.inhabited (α : Sort u) {β : α → Sort v} [Π x, inhabited (β x)] : inhabited (Π x, β x) :=
 ⟨λ a, default⟩
 
+theorem pi.inhabited_def (α : Sort u) {β : α → Sort v} [Π x, inhabited (β x)] : 
+  (default : Π x, β x) = λ a, default :=
+rfl
+
 instance : inhabited bool := ⟨ff⟩
 
 instance : inhabited true := ⟨trivial⟩
