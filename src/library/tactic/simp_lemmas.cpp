@@ -833,7 +833,7 @@ bool is_rfl_lemma(expr type, expr pf) {
         return true;
     }
     if (is_iff(type)) {
-        if (!is_app_of(pf, get_iff_refl_name(), 2) && !is_app_of(pf, get_iff_rfl_name(), 2)) return false;
+        if (!is_app_of(pf, get_iff_refl_name(), 1) && !is_app_of(pf, get_iff_rfl_name(), 1)) return false;
         return true;
     }
     return false;
