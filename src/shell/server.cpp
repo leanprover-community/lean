@@ -716,9 +716,12 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
     std::vector<json> results;
     env.for_each_declaration([&](declaration const & d) {
         json j;
-        add_source_info(env, d.get_name(), j);
-        j["name"] = d.get_name().escape();
-        results.push_back(j);
+        auto olean_name = get_decl_olean(env, d.get_name());
+        if (olean_name && *olean_name != fn) {
+            add_source_info(env, d.get_name(), j);
+            j["name"] = d.get_name().escape();
+            results.push_back(j);
+        }
     });
     json j;
     j["results"] = results;
