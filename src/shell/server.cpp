@@ -713,27 +713,15 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
     auto this_mod      = m_mod_mgr->get_module(fn);
     environment this_env = this_mod->get_latest_env();
 
-    // work out which declarations belong to this file
-    name_set this_names;
-    this_env.for_each_declaration([&](declaration const & d) {
-        this_names.insert(d.get_name());
-    });
-    for (auto & mod : this_mod->m_deps) {
-        auto env = mod.m_mod_info->get_latest_env();
-        env.for_each_declaration([&](declaration const & d) {
-            this_names.erase(d.get_name());
-        });
-    }
-
     std::vector<json> results;
-    this_names.for_each([&](name const & n) {
+    for (name const & n : get_curr_module_decl_names(this_env)) {
         json j;
         add_source_info(this_env, n, j);
         if (!j["source"].count("file"))
             j["source"]["file"] = fn;
         j["name"] = n.escape();
         results.push_back(j);
-    });
+    };
     json j;
     j["results"] = results;
     return cmd_res(req.m_seq_num, j);
