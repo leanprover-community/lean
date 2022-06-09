@@ -710,18 +710,29 @@ server::cmd_res server::handle_all_hole_commands(server::cmd_req const & req) {
 
 server::cmd_res server::handle_symbols(server::cmd_req const & req) {
     std::string fn     = req.m_payload.at("file_name");
-    auto mod_info      = m_mod_mgr->get_module(fn);
-    environment env    = mod_info->get_latest_env();
+    auto this_mod      = m_mod_mgr->get_module(fn);
+    environment this_env = this_mod->get_latest_env();
+
+    // work out which declarations belong to this file
+    name_set this_names;
+    this_env.for_each_declaration([&](declaration const & d) {
+        this_names.insert(d.get_name());
+    });
+    for (auto & mod : this_mod->m_deps) {
+        auto env = mod.m_mod_info->get_latest_env();
+        env.for_each_declaration([&](declaration const & d) {
+            this_names.erase(d.get_name());
+        });
+    }
 
     std::vector<json> results;
-    env.for_each_declaration([&](declaration const & d) {
+    this_names.for_each([&](name const & n) {
         json j;
-        auto olean_name = get_decl_olean(env, d.get_name());
-        if (olean_name && *olean_name != fn) {
-            add_source_info(env, d.get_name(), j);
-            j["name"] = d.get_name().escape();
-            results.push_back(j);
-        }
+        add_source_info(this_env, n, j);
+        if (!j["source"].count("file"))
+            j["source"]["file"] = fn;
+        j["name"] = n.escape();
+        results.push_back(j);
     });
     json j;
     j["results"] = results;
