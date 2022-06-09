@@ -25,6 +25,7 @@ Authors: Gabriel Ebner, Leonardo de Moura, Sebastian Ullrich
 #include "library/mt_task_queue.h"
 #include "library/st_task_queue.h"
 #include "library/attribute_manager.h"
+#include "library/class.h"
 #include "library/tactic/tactic_state.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/info_manager.h"
@@ -719,9 +720,43 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
         add_source_info(this_env, n, j);
         if (!j["source"].count("file"))
             j["source"]["file"] = fn;
+
+        // Split up the name components here
         j["name"] = n.escape();
+        std::vector<json> name_parts;
+        name n2 = n;
+        do {
+            name_parts.push_back(n2.drop_prefix().escape());
+            n2 = n2.get_prefix();
+        } while (n2);
+        std::reverse(std::begin(name_parts), std::end(name_parts));
+        j["name_parts"] = name_parts;
+
+        if (inductive::is_intro_rule(this_env, n)) {
+            j["kind"] = "constructor";
+        }
+        else if (is_projection(this_env, n)) {
+            j["kind"] = "field";
+        }
+        else if (is_class(this_env, n)) {
+            j["kind"] = "class";
+        }
+        else if (inductive::is_inductive_decl(this_env, n)) {
+            j["kind"] = "inductive";
+        }
+        else if (is_instance(this_env, n)) {
+            j["kind"] = "instance";
+        }
+        else if (module::is_definition(this_env, n)) {
+            j["kind"] = "def";
+        }
+        else {
+            j["kind"] = "theorem";
+        }
         results.push_back(j);
     };
+    // get_curr_module_decl_names is in reverse order!
+    std::reverse(std::begin(results), std::end(results));
     json j;
     j["results"] = results;
     return cmd_res(req.m_seq_num, j);
