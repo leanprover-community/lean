@@ -448,8 +448,6 @@ void server::handle_request(server::cmd_req const & req) {
         send_msg(handle_hole_commands(req));
     } else if (command == "all_hole_commands") {
         send_msg(handle_all_hole_commands(req));
-    } else if (command == "symbols") {
-        send_msg(handle_symbols(req));
     } else if (command == "search") {
         send_msg(handle_search(req));
     } else if (command == "roi") {
@@ -705,23 +703,6 @@ server::cmd_res server::handle_all_hole_commands(server::cmd_req const & req) {
     std::vector<info_manager> im = get_info_managers(m_lt);
     json j;
     get_all_hole_commands(*mod_info, im, j);
-    return cmd_res(req.m_seq_num, j);
-}
-
-server::cmd_res server::handle_symbols(server::cmd_req const & req) {
-    std::string fn     = req.m_payload.at("file_name");
-    auto mod_info      = m_mod_mgr->get_module(fn);
-    environment env    = mod_info->get_latest_env();
-
-    std::vector<json> results;
-    env.for_each_declaration([&](declaration const & d) {
-        json j;
-        add_source_info(env, d.get_name(), j);
-        j["name"] = d.get_name().escape();
-        results.push_back(j);
-    });
-    json j;
-    j["results"] = results;
     return cmd_res(req.m_seq_num, j);
 }
 
