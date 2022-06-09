@@ -734,23 +734,17 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
 
         if (inductive::is_intro_rule(this_env, n)) {
             j["kind"] = "constructor";
-        }
-        else if (is_projection(this_env, n)) {
+        } else if (is_projection(this_env, n)) {
             j["kind"] = "field";
-        }
-        else if (is_class(this_env, n)) {
+        } else if (is_class(this_env, n)) {
             j["kind"] = "class";
-        }
-        else if (inductive::is_inductive_decl(this_env, n)) {
+        } else if (inductive::is_inductive_decl(this_env, n)) {
             j["kind"] = "inductive";
-        }
-        else if (is_instance(this_env, n)) {
+        } else if (is_instance(this_env, n)) {
             j["kind"] = "instance";
-        }
-        else if (module::is_definition(this_env, n)) {
+        } else if (module::is_definition(this_env, n)) {
             j["kind"] = "def";
-        }
-        else {
+        } else {
             j["kind"] = "theorem";
         }
         results.push_back(j);
