@@ -66,22 +66,24 @@ static std::string get_decl_kind(name const & name, declaration const & d, envir
     // We deliberately avoid distinguishing "projection"s and "constructor"s because:
     // * the def/theorem distinction is more useful
     // * a user shouldn't care what the "real" constructors and projections are when doing symbol search
-    if (is_structure_like(env, name)) {
+    if (is_class(env, name)) {
+        return "class";
+    } else if (is_structure_like(env, name)) {
         return "structure";
     } else if (inductive::is_inductive_decl(env, name)) {
         return "inductive";
     } else if (is_instance(env, name)) {
         return "instance";
-    } else if (d.is_axiom()) {
-        return "axiom";
-    } else if (d.is_constant_assumption()) {
-        return "const";
-    } else if (is_class(env, name)) {
-        return "class";
-    } else if (d.is_theorem()) {
-        return "theorem";
     } else {
-        return "definition";
+        // theorem vs definition isn't that useful when guessing names; the prop/data distinction is.
+        type_checker tc(env);
+        if (!d.is_trusted()) {
+            return "meta";
+        } else if (tc.is_prop(d.get_type())) {
+            return "theorem";
+        } else {
+            return "definition";
+        }
     }
 }
 
