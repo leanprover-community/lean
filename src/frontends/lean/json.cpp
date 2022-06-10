@@ -63,10 +63,11 @@ void add_source_info(environment const & env, name const & d, json & record) {
 /* Produce a rough categorization of the kind of a symbol, for use in intellisense.
 This takes `d` only to avoid having to look it up a second time. */
 static std::string get_decl_kind(name const & name, declaration const & d, environment const & env) {
-    if (inductive::is_intro_rule(env, name)) {
-        return "constructor";
-    } else if (is_projection(env, name)) {
-        return "projection";
+    // We deliberately avoid distinguishing "projection"s and "constructor"s because:
+    // * the def/theorem distinction is more useful
+    // * a user shouldn't care what the "real" constructors and projections are when doing symbol search
+    if (is_structure_like(env, name)) {
+        return "structure";
     } else if (inductive::is_inductive_decl(env, name)) {
         return "inductive";
     } else if (is_instance(env, name)) {
