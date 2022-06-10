@@ -7,7 +7,7 @@
         {
             "name": "Debug single lean file",
             "cwd": "${workspaceFolder}/library",
-            "program": "${workspaceRoot}/build/debug/shell/lean",
+            "program": "${workspaceRoot}/bin/lean",
             "args": ["${file}"],
             "type": "cppdbg",
             "request": "launch",
