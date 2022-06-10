@@ -7,6 +7,7 @@ Author: Gabriel Ebner
 #ifdef LEAN_JSON
 #include "frontends/lean/json.h"
 #include <string>
+#include "library/class.h"
 #include "library/documentation.h"
 #include "library/scoped_ext.h"
 #include "library/protected.h"
@@ -59,6 +60,30 @@ void add_source_info(environment const & env, name const & d, json & record) {
     }
 }
 
+/* Produce a rough categorization of the kind of a symbol, for use in intellisense.
+This takes `d` only to avoid having to look it up a second time. */
+static std::string get_decl_kind(name const & name, declaration const & d, environment const & env) {
+    if (inductive::is_intro_rule(env, name)) {
+        return "constructor";
+    } else if (is_projection(env, name)) {
+        return "projection";
+    } else if (inductive::is_inductive_decl(env, name)) {
+        return "inductive";
+    } else if (is_instance(env, name)) {
+        return "instance";
+    } else if (d.is_axiom()) {
+        return "axiom";
+    } else if (d.is_constant_assumption()) {
+        return "const";
+    } else if (is_class(env, name)) {
+        return "class";
+    } else if (d.is_theorem()) {
+        return "theorem";
+    } else {
+        return "definition";
+    }
+}
+
 json serialize_decl(name const & short_name, name const & long_name, environment const & env, options const & o) {
     declaration const & d = env.get(long_name);
     type_context_old tc(env);
@@ -78,6 +103,7 @@ json serialize_decl(name const & short_name, name const & long_name, environment
     }
     json completion;
     completion["text"] = short_name.escape();
+    completion["kind"] = get_decl_kind(long_name, d, env);
     interactive_report_type(env, o, type, completion);
     add_source_info(env, long_name, completion);
     if (auto doc = get_doc_string(env, long_name))
