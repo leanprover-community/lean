@@ -1048,7 +1048,7 @@ def anti_symmetric := ∀ ⦃x y⦄, x ≺ y → y ≺ x → x = y
 
 def empty_relation := λ a₁ a₂ : α, false
 
-@[simp] lemma empty_relation_apply (a b : α) : empty_relation a b = false := rfl
+@[simp] lemma empty_relation_apply (a b : α) : empty_relation a b ↔ false := iff.rfl
 
 def subrelation (q r : β → β → Prop) := ∀ ⦃x y⦄, q x y → r x y
 
