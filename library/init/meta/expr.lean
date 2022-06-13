@@ -265,6 +265,9 @@ meta constant expr.get_delayed_abstraction_locals : expr → option (list name)
 @[inline] meta def reflected.to_expr {α : Sort u} {a : α} : reflected a → expr :=
 id
 
+/-- This is a more strongly-typed version of `expr.subst` that keeps track of the value being
+reflected. When working with `reflected`, use `` (`(λ x y, foo x y).subst ex).subst ey`` instead of
+using `` `(foo %%ex %%ey) ``. -/
 @[inline] meta def reflected.subst {α : Sort v} {β : α → Sort u} {f : Π a : α, β a} {a : α} :
   reflected f → reflected a → reflected (f a) :=
 expr.subst
