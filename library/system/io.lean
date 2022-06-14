@@ -263,10 +263,6 @@ This is the "back door" into the `io` monad, allowing IO computation to be perfo
 For this to be safe, the IO computation should be ideally free of side effects and independent of its environment.
 This primitive is used to invoke external tools (e.g., SAT and SMT solvers) from a tactic.
 
-IMPORTANT: this primitive can be used to implement `unsafe_perform_io {α : Type} : io α → option α`
-or `unsafe_perform_io {α : Type} [inhabited α] : io α → α`. This can be accomplished by executing
-the resulting tactic using an empty `tactic_state` (we have `tactic_state.mk_empty`).
-
 -/
 meta constant tactic.unsafe_run_io {α : Type} : io α → tactic α
 
