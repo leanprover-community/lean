@@ -732,21 +732,8 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
         std::reverse(std::begin(name_parts), std::end(name_parts));
         j["name_parts"] = name_parts;
 
-        if (inductive::is_intro_rule(this_env, n)) {
-            j["kind"] = "constructor";
-        } else if (is_projection(this_env, n)) {
-            j["kind"] = "field";
-        } else if (is_class(this_env, n)) {
-            j["kind"] = "class";
-        } else if (inductive::is_inductive_decl(this_env, n)) {
-            j["kind"] = "inductive";
-        } else if (is_instance(this_env, n)) {
-            j["kind"] = "instance";
-        } else if (module::is_definition(this_env, n)) {
-            j["kind"] = "def";
-        } else {
-            j["kind"] = "theorem";
-        }
+        declaration const & d = this_env.get(n);
+        j["kind"] = get_decl_kind(n, d, this_env);
         results.push_back(j);
     };
     // get_curr_module_decl_names is in reverse order!
