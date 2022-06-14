@@ -266,17 +266,7 @@ This primitive is used to invoke external tools (e.g., SAT and SMT solvers) from
 IMPORTANT: this primitive can be used to implement `unsafe_perform_io {α : Type} : io α → option α`
 or `unsafe_perform_io {α : Type} [inhabited α] : io α → α`. This can be accomplished by executing
 the resulting tactic using an empty `tactic_state` (we have `tactic_state.mk_empty`).
-If `unsafe_perform_io` is defined, and used to perform side-effects, users need to take the following
-precautions:
 
-- Use `@[noinline]` attribute in any function to invokes `tactic.unsafe_perform_io`.
-  Reason: if the call is inlined, the IO may be performed more than once.
-
-- Set `set_option compiler.cse false` before any function that invokes `tactic.unsafe_perform_io`.
-  This option disables common subexpression elimination. Common subexpression elimination
-  might combine two side effects that were meant to be separate.
-
-TODO[Leo]: add `[noinline]` attribute and option `compiler.cse`.
 -/
 meta constant tactic.unsafe_run_io {α : Type} : io α → tactic α
 
@@ -289,3 +279,19 @@ meta constant tactic.unsafe_run_io {α : Type} : io α → tactic α
    This action is mainly useful for writing tactics that inspect
    the environment. -/
 meta constant io.run_tactic {α : Type} (a : tactic α) : io α
+
+/-- Similarly to `tactic.unsafe_run_io`, this gives an unsafe backdoor to run io inside a pure function.
+
+If `unsafe_perform_io` is used to perform side-effects, users need to take the following
+precautions:
+
+- Use `@[noinline]` attribute in any function to invokes `tactic.unsafe_perform_io`.
+  Reason: if the call is inlined, the IO may be performed more than once.
+
+- Set `set_option compiler.cse false` before any function that invokes `tactic.unsafe_perform_io`.
+  This option disables common subexpression elimination. Common subexpression elimination
+  might combine two side effects that were meant to be separate.
+
+TODO[Leo]: add `[noinline]` attribute and option `compiler.cse`.
+-/
+meta constant io.unsafe_perform_io {α : Type} (a : io α) : except io.error α
