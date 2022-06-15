@@ -6,10 +6,10 @@ Author: Gabriel Ebner
 */
 #ifdef LEAN_JSON
 #pragma once
+#include <string>
 #include "library/messages.h"
 #include "kernel/environment.h"
 #include "util/lean_json.h"
-#include <string>
 
 namespace lean {
 
