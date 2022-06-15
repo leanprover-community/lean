@@ -25,6 +25,7 @@ Authors: Gabriel Ebner, Leonardo de Moura, Sebastian Ullrich
 #include "library/mt_task_queue.h"
 #include "library/st_task_queue.h"
 #include "library/attribute_manager.h"
+#include "library/class.h"
 #include "library/tactic/tactic_state.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/info_manager.h"
@@ -448,6 +449,8 @@ void server::handle_request(server::cmd_req const & req) {
         send_msg(handle_hole_commands(req));
     } else if (command == "all_hole_commands") {
         send_msg(handle_all_hole_commands(req));
+    } else if (command == "symbols") {
+        send_msg(handle_symbols(req));
     } else if (command == "search") {
         send_msg(handle_search(req));
     } else if (command == "roi") {
@@ -703,6 +706,42 @@ server::cmd_res server::handle_all_hole_commands(server::cmd_req const & req) {
     std::vector<info_manager> im = get_info_managers(m_lt);
     json j;
     get_all_hole_commands(*mod_info, im, j);
+    return cmd_res(req.m_seq_num, j);
+}
+
+server::cmd_res server::handle_symbols(server::cmd_req const & req) {
+    std::string fn     = req.m_payload.at("file_name");
+    auto this_mod      = m_mod_mgr->get_module(fn);
+    environment this_env = this_mod->get_latest_env();
+
+    std::vector<json> results;
+    for (name const & n : get_curr_module_decl_names(this_env)) {
+        json j;
+        add_source_info(this_env, n, j);
+        if (!j["source"].count("file"))
+            j["source"]["file"] = fn;
+
+        // Split up the name components here
+        j["name"] = n.escape();
+        std::vector<json> name_parts;
+        name n2 = n;
+        do {
+            name_parts.push_back(n2.drop_prefix().escape());
+            n2 = n2.get_prefix();
+        } while (n2);
+        std::reverse(std::begin(name_parts), std::end(name_parts));
+        j["name_parts"] = name_parts;
+
+        declaration const & d = this_env.get(n);
+        expr type = consume_implicit_binders(d.get_type());
+        interactive_report_type(this_env, m_ios.get_options(), type, j);
+        j["kind"] = get_decl_kind(n, d, this_env);
+        results.push_back(j);
+    };
+    // get_curr_module_decl_names is in reverse order!
+    std::reverse(std::begin(results), std::end(results));
+    json j;
+    j["results"] = results;
     return cmd_res(req.m_seq_num, j);
 }
 
