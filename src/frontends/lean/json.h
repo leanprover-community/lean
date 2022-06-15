@@ -9,6 +9,7 @@ Author: Gabriel Ebner
 #include "library/messages.h"
 #include "kernel/environment.h"
 #include "util/lean_json.h"
+#include <string>
 
 namespace lean {
 
