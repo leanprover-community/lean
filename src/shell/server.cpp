@@ -733,6 +733,8 @@ server::cmd_res server::handle_symbols(server::cmd_req const & req) {
         j["name_parts"] = name_parts;
 
         declaration const & d = this_env.get(n);
+        expr type = consume_implicit_binders(d.get_type());
+        interactive_report_type(this_env, m_ios.get_options(), type, j);
         j["kind"] = get_decl_kind(n, d, this_env);
         results.push_back(j);
     };

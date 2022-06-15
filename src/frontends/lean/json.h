@@ -22,6 +22,7 @@ json to_json(name const &);
 
 void add_source_info(environment const & env, name const & d, json & record);
 std::string get_decl_kind(name const & name, declaration const & d, environment const & env);
+expr consume_implicit_binders(expr type);
 json serialize_decl(name const & short_name, name const & long_name, environment const & env, options const & o);
 json serialize_decl(name const & d, environment const & env, options const & o);
 
