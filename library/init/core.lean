@@ -265,14 +265,14 @@ def decidable_rel {α : Sort u} (r : α → α → Prop) :=
 def decidable_eq (α : Sort u) :=
 decidable_rel (@eq α)
 
-inductive option (α : Type u)
+inductive option (α : Sort u)
 | none : option
 | some (val : α) : option
 
 export option (none some)
 export bool (ff tt)
 
-inductive list (T : Type u)
+inductive list (T : Sort u)
 | nil : list
 | cons (hd : T) (tl : list) : list
 
