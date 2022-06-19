@@ -1,0 +1,2 @@
+sort.lean:1:7: error: invalid universe `Sort`, use `Sort 0` or `Prop` instead
+Prop : Type
