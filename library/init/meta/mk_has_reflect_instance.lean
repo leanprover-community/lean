@@ -48,7 +48,7 @@ private meta def has_reflect_case (I_name F_name : name) (field_names : list nam
 do field_quotes ← mk_reflect I_name F_name field_names 0,
    -- fn should be of the form `F_name ps fs`, where ps are the inductive parameter arguments,
    -- and `fs.length = field_names.length`
-   `(reflected %%fn) ← target,
+   `(reflected _ %%fn) ← target,
    -- `reflected _ (F_name ps)` should be synthesizable directly, using instances from the context
    let fn := field_names.foldl (λ fn _, expr.app_fn fn) fn,
    quote ← mk_mapp `reflected [none, some fn] >>= mk_instance,
