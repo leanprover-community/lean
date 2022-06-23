@@ -4,3 +4,5 @@ has type
   reflected ℕ 3
 but is expected to have type
   reflected (list ℕ) [10]
+synonym.of 1
+1
