@@ -1,2 +1,2 @@
-meta def foo (x : reflected (3 : ℕ)) : reflected ([10] : list ℕ) :=
+meta def foo (x : reflected ℕ 3) : reflected (list ℕ) [10] :=
 x -- ERROR
