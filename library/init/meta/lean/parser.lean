@@ -141,7 +141,7 @@ meta instance cast (p : lean.parser (reflected_value α)) : reflectable (val p) 
 meta instance has_reflect [r : has_reflect α] (p : lean.parser α) : reflectable p :=
 {full := do rp ← p, return ⟨rp⟩}
 
-meta instance optional {α : Type} [reflected α] (p : parser α)
+meta instance optional {α : Type} [reflected _ α] (p : parser α)
   [r : reflectable p] : reflectable (optional p) :=
 {full := reflected_value.subst some <$> r.full <|> return ⟨none⟩}
 

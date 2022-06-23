@@ -2,7 +2,7 @@ eval_expr_error.lean:5:8: error: failed to synthesize type class instance for
 A : Type,
 tst1 : tactic unit,
 a : expr
-⊢ reflected A
+⊢ reflected Type A
 eval_expr_error.lean:8:0: error: invalid eval_expr, type mismatch
 state:
 ⊢ true
