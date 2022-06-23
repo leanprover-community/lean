@@ -1,6 +1,6 @@
 reflect_type_defeq.lean:2:0: error: equation type mismatch, term
   x
 has type
-  reflected 3
+  reflected ℕ 3
 but is expected to have type
-  reflected [10]
+  reflected (list ℕ) [10]
