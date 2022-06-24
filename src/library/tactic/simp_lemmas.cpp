@@ -828,9 +828,15 @@ bool is_rfl_lemma(expr type, expr pf) {
         type = binding_body(type);
     }
     expr lhs, rhs;
-    if (!is_eq(type, lhs, rhs)) return false;
-    if (!is_app_of(pf, get_eq_refl_name(), 2) && !is_app_of(pf, get_rfl_name(), 2)) return false;
-    return true;
+    if (is_eq(type)) {
+        if (!is_app_of(pf, get_eq_refl_name(), 2) && !is_app_of(pf, get_rfl_name(), 2)) return false;
+        return true;
+    }
+    if (is_iff(type)) {
+        if (!is_app_of(pf, get_iff_refl_name(), 1) && !is_app_of(pf, get_iff_rfl_name(), 1)) return false;
+        return true;
+    }
+    return false;
 }
 
 bool is_rfl_lemma(environment const & env, name const & cname) {
@@ -864,7 +870,13 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             proof = mk_app(proof, mvar);
         }
         expr lhs, rhs;
-        lean_verify(is_eq(type, lhs, rhs));
+        if (is_iff(type, lhs, rhs)) {
+            // We need to turn the `iff` into a `eq` for `simp`. `dsimp` doesn't look at this proof,
+            // but does require that we use `get_eq_name()` below and not `get_iff_name()`.
+            proof = mk_propext(lhs, rhs, proof);
+        } else if (!is_eq(type, lhs, rhs)) {
+            lean_unreachable();
+        }
         if (symm) {
             proof = mk_eq_symm(ctx, proof);
             std::swap(lhs, rhs);

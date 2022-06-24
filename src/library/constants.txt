@@ -106,6 +106,7 @@ iff.intro
 iff.mp
 iff.mpr
 iff.refl
+iff.rfl
 iff.symm
 iff.trans
 iff_false_intro

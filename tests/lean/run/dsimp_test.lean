@@ -76,3 +76,16 @@ begin
   guard_target 20 + 0 + (20 + 1) = 41,
   reflexivity
 end
+
+def is_one (x : ℕ) : Prop := x = 1
+
+@[simp]
+lemma is_one_iff (x : ℕ) : is_one x ↔ x = 1 := iff.rfl
+
+example : ¬is_one 2 :=
+begin
+  dsimp only [is_one_iff],
+  guard_target ¬2 = 1,
+  intro h,
+  cases h,
+end
