@@ -871,7 +871,8 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
         }
         expr lhs, rhs;
         if (is_iff(type, lhs, rhs)) {
-            // We need to turn the `iff` into a `eq` for `simp` (`dsimp` doesn't care).
+            // We need to turn the `iff` into a `eq` for `simp`. `dsimp` doesn't look at this proof,
+            // but does require that we use `get_eq_name()` below and not `get_iff_name()`.
             proof = mk_propext(lhs, rhs, proof);
         } else if (!is_eq(type, lhs, rhs)) {
             lean_unreachable();
