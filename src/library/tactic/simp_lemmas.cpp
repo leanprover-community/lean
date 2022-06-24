@@ -870,15 +870,20 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             proof = mk_app(proof, mvar);
         }
         expr lhs, rhs;
-        lean_verify(is_eq(type, lhs, rhs) || is_iff(type, lhs, rhs));
-        if (symm) {
-            if (is_eq(type, lhs, rhs)) {
+        if (is_eq(type, lhs, rhs)) {
+            if (symm) {
                 proof = mk_eq_symm(ctx, proof);
                 std::swap(lhs, rhs);
             }
-        }
-        if (is_iff(type, lhs, rhs)) {
+        } else if (is_iff(type, lhs, rhs)) {
+            if (symm) {
+                std::swap(lhs, rhs);
+            }
+            // We need to turn the `iff` into a `eq. We could do this with `propext`, but since we
+            // know the proof is `iff.rfl`, we can just use `eq.rfl`.
             proof = mk_eq_refl(ctx, lhs);
+        } else {
+            lean_unreachable();
         }
         simp_lemmas new_s = s;
         new_s.insert(get_eq_name(), mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
