@@ -876,6 +876,18 @@ vm_obj io_run_tactic(vm_obj const &, vm_obj const & tac, vm_obj const &) {
     }
 }
 
+// io.unsafe_run {α} : io α → except io.error α
+vm_obj io_unsafe_perform_io(vm_obj const &, vm_obj const & a) {
+    vm_obj r = invoke(a, mk_vm_unit());
+    if (optional<vm_obj> a = is_io_result(r)) {
+        return mk_vm_constructor(1, *a); // except.ok
+    } else {
+        optional<vm_obj> e = is_io_error(r);
+        lean_assert(e);
+        return mk_vm_constructor(0, *e); // except.error
+    }
+}
+
 unsigned tactic_user_state::alloc(vm_obj const & v) {
     unsigned r;
     if (m_free_refs) {
@@ -1171,6 +1183,7 @@ void initialize_tactic_state() {
     DECLARE_VM_BUILTIN(name({"tactic", "frozen_local_instances"}),   tactic_frozen_local_instances);
     DECLARE_VM_BUILTIN(name({"tactic", "with_ast"}),             tactic_with_ast);
     DECLARE_VM_BUILTIN(name({"io", "run_tactic"}),               io_run_tactic);
+    DECLARE_VM_BUILTIN(name({"io", "unsafe_perform_io"}),               io_unsafe_perform_io);
 }
 
 void finalize_tactic_state() {

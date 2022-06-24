@@ -25,7 +25,7 @@ fail "mk_has_reflect_instance tactic failed, target type is expected to be of th
 private meta def mk_has_reflect_instance_for (a : expr) : tactic expr :=
 do t    ← infer_type a,
    do {
-     m    ← mk_app `reflected [a],
+     m    ← mk_mapp `reflected [none, some a],
      inst ← mk_instance m
      <|> do {
        f ← pp t,
@@ -48,11 +48,11 @@ private meta def has_reflect_case (I_name F_name : name) (field_names : list nam
 do field_quotes ← mk_reflect I_name F_name field_names 0,
    -- fn should be of the form `F_name ps fs`, where ps are the inductive parameter arguments,
    -- and `fs.length = field_names.length`
-   `(reflected %%fn) ← target,
-   -- `reflected (F_name ps)` should be synthesizable directly, using instances from the context
+   `(reflected _ %%fn) ← target,
+   -- `reflected _ (F_name ps)` should be synthesizable directly, using instances from the context
    let fn := field_names.foldl (λ fn _, expr.app_fn fn) fn,
-   quote ← mk_app `reflected [fn] >>= mk_instance,
-   -- now extend to an instance of `reflected (F_name ps fs)`
+   quote ← mk_mapp `reflected [none, some fn] >>= mk_instance,
+   -- now extend to an instance of `reflected _ (F_name ps fs)`
    quote ← field_quotes.mfoldl (λ quote fquote, to_expr ``(reflected.subst %%quote %%fquote)) quote,
    exact quote
 

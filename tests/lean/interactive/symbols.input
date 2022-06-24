@@ -1,0 +1,2 @@
+{"seq_num": 0, "command": "sync", "file_name": "symbols.lean", "content": "def foo : nat := 1\n\ndef foo.bar : nat := 2"}
+{"seq_num": 3, "command": "symbols", "file_name": "symbols.lean"}

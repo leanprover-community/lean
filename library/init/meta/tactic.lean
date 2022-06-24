@@ -363,7 +363,7 @@ meta def option_to_tactic_format {α : Type u} [has_to_tactic_format α] : optio
 meta instance {α : Type u} [has_to_tactic_format α] : has_to_tactic_format (option α) :=
 ⟨option_to_tactic_format⟩
 
-meta instance {α} (a : α) : has_to_tactic_format (reflected a) :=
+meta instance {α} (a : α) : has_to_tactic_format (reflected _ a) :=
 ⟨λ h, pp h.to_expr⟩
 
 @[priority 10] meta instance has_to_format_to_has_to_tactic_format (α : Type) [has_to_format α] : has_to_tactic_format α :=
@@ -412,7 +412,7 @@ inductive transparency
 export transparency (reducible semireducible)
 
 /-- (eval_expr α e) evaluates 'e' IF 'e' has type 'α'. -/
-meta constant eval_expr (α : Type u) [reflected α] : expr → tactic α
+meta constant eval_expr (α : Type u) [reflected _ α] : expr → tactic α
 
 /-- Return the partial term/proof constructed so far. Note that the resultant expression
    may contain variables that are not declarate in the current main goal. -/
@@ -1896,7 +1896,7 @@ do t ← target,
    let locked_pr := mk_tagged_proof pr_type pr tag,
    mk_eq_mpr locked_pr ht >>= exact
 
-meta def eval_pexpr (α) [reflected α] (e : pexpr) : tactic α :=
+meta def eval_pexpr (α) [reflected _ α] (e : pexpr) : tactic α :=
 to_expr ``(%%e : %%(reflect α)) ff ff >>= eval_expr α
 
 meta def run_simple {α} : tactic_state → tactic α → option α
