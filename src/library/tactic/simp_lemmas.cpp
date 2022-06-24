@@ -877,6 +877,9 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
                 std::swap(lhs, rhs);
             }
         }
+        if (is_iff(type, lhs, rhs)) {
+            proof = mk_eq_refl(ctx, lhs);
+        }
         simp_lemmas new_s = s;
         new_s.insert(get_eq_name(), mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
                                                  lhs, rhs, proof, priority));
