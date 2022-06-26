@@ -870,20 +870,25 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             proof = mk_app(proof, mvar);
         }
         expr lhs, rhs;
+        name head_name;
         if (is_iff(type, lhs, rhs)) {
-            // We need to turn the `iff` into a `eq` for `simp`. `dsimp` doesn't look at this proof,
-            // but does require that we use `get_eq_name()` below and not `get_iff_name()`.
-            proof = mk_propext(lhs, rhs, proof);
-        } else if (!is_eq(type, lhs, rhs)) {
+            head_name = get_iff_name();
+            if (symm) {
+                proof = mk_iff_symm(ctx, proof);
+                std::swap(lhs, rhs);
+            }
+        } else if (is_eq(type, lhs, rhs)) {
+            head_name = get_eq_name();
+            if (symm) {
+                proof = mk_eq_symm(ctx, proof);
+                std::swap(lhs, rhs);
+            }
+        } else {
             lean_unreachable();
         }
-        if (symm) {
-            proof = mk_eq_symm(ctx, proof);
-            std::swap(lhs, rhs);
-        }
         simp_lemmas new_s = s;
-        new_s.insert(get_eq_name(), mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
-                                                 lhs, rhs, proof, priority));
+        new_s.insert(head_name, mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
+                                             lhs, rhs, proof, priority));
         return new_s;
     } else {
         return add_core(ctx, s, cname, ls, type, proof, symm, priority);
