@@ -219,10 +219,7 @@ static dsimplify_fn mk_dsimp(type_context_old & ctx, defeq_can_state & dcs, smt_
        This is not an issue in this module since it assumes goals do not contain metavariables.
     */
     dcfg.m_eta               = true;
-    simp_lemmas_for eq_lemmas;
-    if (auto r = cfg.m_simp_lemmas.find(get_eq_name()))
-        eq_lemmas = *r;
-    return dsimplify_fn(ctx, dcs, eq_lemmas, list<name>(), dcfg);
+    return dsimplify_fn(ctx, dcs, cfg.m_simp_lemmas, list<name>(), dcfg);
 }
 
 static simplify_fn mk_simp(type_context_old & ctx, defeq_can_state & dcs, smt_pre_config const & cfg) {

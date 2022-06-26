@@ -343,11 +343,14 @@ optional<pair<expr, bool>> dsimplify_fn::post(expr const & e) {
     while (true) {
         check_system("dsimplify");
         inc_num_steps();
-        list<simp_lemma> const * simp_lemmas_ptr = m_simp_lemmas.find(curr_e);
-        if (!simp_lemmas_ptr) break;
+        // give the `eq` lemmas priority over the `iff`s, to match what `simp` does.
         buffer<simp_lemma> simp_lemmas;
-        to_buffer(*simp_lemmas_ptr, simp_lemmas);
-
+        if (list<simp_lemma> const * simp_lemmas_ptr = m_simp_lemmas.find(get_eq_name(), curr_e)) {
+            to_buffer(*simp_lemmas_ptr, simp_lemmas);
+        }
+        if (list<simp_lemma> const * simp_lemmas_ptr = m_simp_lemmas.find(get_iff_name(), curr_e)) {
+            to_buffer(*simp_lemmas_ptr, simp_lemmas);
+        }
         expr new_e = curr_e;
         for (simp_lemma const & sl : simp_lemmas) {
             if (sl.is_refl()) {
@@ -370,7 +373,7 @@ optional<pair<expr, bool>> dsimplify_fn::post(expr const & e) {
         return optional<pair<expr, bool>>(curr_e, true);
 }
 
-dsimplify_fn::dsimplify_fn(type_context_old & ctx, defeq_canonizer::state & dcs, simp_lemmas_for const & lemmas,
+dsimplify_fn::dsimplify_fn(type_context_old & ctx, defeq_canonizer::state & dcs, simp_lemmas const & lemmas,
                            list<name> const & to_unfold, dsimp_config const & cfg):
     dsimplify_core_fn(ctx, dcs, cfg),
     m_simp_lemmas(lemmas),
@@ -453,9 +456,7 @@ vm_obj simp_lemmas_dsimplify(vm_obj const & lemmas, vm_obj const & u, vm_obj con
         type_context_old ctx     = cache.mk_type_context(cfg.m_md);
         defeq_can_state dcs  = s.dcs();
         list<name> to_unfold = to_list_name(u);
-        simp_lemmas_for dlemmas;
-        if (auto * dls = to_simp_lemmas(lemmas).find(get_eq_name()))
-            dlemmas = *dls;
+        simp_lemmas dlemmas = to_simp_lemmas(lemmas);
         dsimplify_fn F(ctx, dcs, dlemmas, to_unfold, cfg);
         expr new_e = F(to_expr(e));
         if (cfg.m_fail_if_unchanged && to_expr(e) == new_e) {
