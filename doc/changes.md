@@ -1,3 +1,9 @@
+3.44.1c (27 June 2022)
+----------------------
+
+Changes:
+- Do not treat `iff` refl lemmas as if they were `eq` refl lemmas (#736)
+
 3.44.0c (24 June 2022)
 ---------------------
 
