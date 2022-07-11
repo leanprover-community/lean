@@ -189,13 +189,13 @@ optional<unsigned> to_char_core(expr const & e) {
     expr const & fn = get_app_args(e, args);
     if (fn == *g_char_mk && args.size() == 2) {
         if (auto n = to_num(args[0])) {
-            return optional<unsigned>(n->get_unsigned_int());
+            return optional<unsigned>(n->get<unsigned>());
         } else {
             return optional<unsigned>();
         }
     } else if (fn == *g_char_of_nat && args.size() == 1) {
         if (auto n = to_num(args[0])) {
-            return optional<unsigned>(n->get_unsigned_int());
+            return optional<unsigned>(n->get<unsigned>());
         } else {
             return optional<unsigned>();
         }
