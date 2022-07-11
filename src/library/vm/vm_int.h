@@ -12,6 +12,7 @@ int to_int(vm_obj const & o);
 optional<int> try_to_int(vm_obj const & o);
 int force_to_int(vm_obj const & o, int def);
 template<typename T> vm_obj mk_vm_int(T i);
+vm_obj mk_vm_int(mpz const & n);
 void initialize_vm_int();
 void finalize_vm_int();
 }

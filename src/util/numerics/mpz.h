@@ -31,6 +31,7 @@ public:
     explicit mpz(long int v) { mpz_init_set_si(m_val, v); }
     explicit mpz(unsigned int v) { mpz_init_set_ui(m_val, v); }
     explicit mpz(int v) { mpz_init_set_si(m_val, v); }
+    explicit mpz(double f) { mpz_init_set_d (m_val, f); }
     explicit mpz(uint64 v);
     explicit mpz(int64 v);
     mpz(mpz const & s) { mpz_init_set(m_val, s.m_val); }

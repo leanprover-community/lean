@@ -41,12 +41,15 @@ vm_obj mk_vm_int(T n) {
     return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(n));
 }
 
+// instantiate the above template for the usual integer types
 template vm_obj mk_vm_int<int>(int param); 
 template vm_obj mk_vm_int<unsigned int>(unsigned int param);
 template vm_obj mk_vm_int<long>(long param); 
 template vm_obj mk_vm_int<unsigned long>(unsigned long param);
 template vm_obj mk_vm_int<long long>(long long param);
 template vm_obj mk_vm_int<unsigned long long>(unsigned long long param);
+// and also for floats
+template vm_obj mk_vm_int<float>(float param);
 
 vm_obj mk_vm_int(mpz const & n) {
     return is_small_int(n) ? mk_vm_simple(to_unsigned(n.get<int>())) : mk_vm_mpz(n);
