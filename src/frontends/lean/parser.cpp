@@ -721,11 +721,11 @@ static unsigned g_level_add_prec = 10;
 unsigned parser::get_small_nat() {
     mpz val = get_num_val().get_numerator();
     lean_assert(val >= 0);
-    if (!val.is_unsigned_int()) {
+    if (!val.is<unsigned>()) {
         maybe_throw_error({"invalid numeral, value does not fit in a machine integer", pos()});
         return 0;
     }
-    return val.get_unsigned_int();
+    return val.get<unsigned>();
 }
 
 pair<ast_id, std::string> parser::parse_string_lit() {
