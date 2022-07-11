@@ -228,7 +228,7 @@ template<> inline bool mpz::is<int>() const { return mpz_fits_sint_p(m_val) != 0
 template<> inline bool mpz::is<unsigned int>() const { return mpz_fits_uint_p(m_val) != 0; }
 template<> inline bool mpz::is<long int>() const { return mpz_fits_slong_p(m_val) != 0; }
 template<> inline bool mpz::is<unsigned long int>() const { return mpz_fits_ulong_p(m_val) != 0; }
-// TODO: these could be faster, but gmp has no API for us
+// TODO(eric-wieser): these could be faster, but gmp has no API for us
 template<> inline bool mpz::is<long long>() const {
     return mpz(std::numeric_limits<long long>::min()) <= *this && *this <= mpz(std::numeric_limits<long long>::max()); }
 template<> inline bool mpz::is<unsigned long long>() const {
