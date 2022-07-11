@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include <gmp.h>
 #include <string>
 #include <iostream>
+#include <limits>
 #include "util/debug.h"
 #include "util/serializer.h"
 
@@ -57,22 +58,22 @@ public:
     bool even() const { return mpz_even_p(m_val) != 0; }
     bool odd() const { return !even(); }
 
-    template <typename T, typename std::enable_if<std::is_same<int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<int, T>::value, int>::type = 0>
     bool is() const { return mpz_fits_sint_p(m_val) != 0; }
-    template <typename T, typename std::enable_if<std::is_same<unsigned int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<unsigned int, T>::value, int>::type = 0>
     bool is() const { return mpz_fits_uint_p(m_val) != 0; }
-    template <typename T, typename std::enable_if<std::is_same<long int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<long int, T>::value, int>::type = 0>
     bool is() const { return mpz_fits_slong_p(m_val) != 0; }
-    template <typename T, typename std::enable_if<std::is_same<unsigned long int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<unsigned long int, T>::value, int>::type = 0>
     bool is() const { return mpz_fits_ulong_p(m_val) != 0; }
 
-    template <typename T, typename std::enable_if<std::is_same<long int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<long int, T>::value, int>::type = 0>
     long int get() const { lean_assert(is<long int>()); return mpz_get_si(m_val); }
-    template <typename T, typename std::enable_if<std::is_same<int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<int, T>::value, int>::type = 0>
     int get() const { lean_assert(is<int>()); return static_cast<int>(get<long int>()); }
-    template <typename T, typename std::enable_if<std::is_same<unsigned long int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<unsigned long int, T>::value, int>::type = 0>
     unsigned long int get() const { lean_assert(is<unsigned long int>()); return mpz_get_ui(m_val); }
-    template <typename T, typename std::enable_if<std::is_same<unsigned int, T>::value, int>::type = 0> 
+    template <typename T, typename std::enable_if<std::is_same<unsigned int, T>::value, int>::type = 0>
     unsigned int get() const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(get<unsigned long int>()); }
 
     double get_double() const { return mpz_get_d(m_val); }
