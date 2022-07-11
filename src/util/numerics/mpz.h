@@ -224,9 +224,9 @@ public:
     std::string to_string() const;
 };
 
-template<> inline bool mpz::is<int>() const { return mpz_fits_sint_p(m_val) != 0; }
-template<> inline bool mpz::is<unsigned int>() const { return mpz_fits_uint_p(m_val) != 0; }
-template<> inline bool mpz::is<long int>() const { return mpz_fits_slong_p(m_val) != 0; }
+template<> inline bool mpz::is<int>()               const { return mpz_fits_sint_p(m_val) != 0; }
+template<> inline bool mpz::is<unsigned int>()      const { return mpz_fits_uint_p(m_val) != 0; }
+template<> inline bool mpz::is<long int>()          const { return mpz_fits_slong_p(m_val) != 0; }
 template<> inline bool mpz::is<unsigned long int>() const { return mpz_fits_ulong_p(m_val) != 0; }
 // TODO(eric-wieser): these could be faster, but gmp has no API for us
 template<> inline bool mpz::is<long long>() const {
@@ -234,12 +234,12 @@ template<> inline bool mpz::is<long long>() const {
 template<> inline bool mpz::is<unsigned long long>() const {
     return mpz(std::numeric_limits<unsigned long long>::min()) <= *this && *this <= mpz(std::numeric_limits<unsigned long long>::max()); }
 
-template<> inline long int mpz::get() const { lean_assert(is<long int>()); return mpz_get_si(m_val); }
-template<> inline int mpz::get() const { lean_assert(is<int>()); return static_cast<int>(get<long int>()); }
+template<> inline long int mpz::get()          const { lean_assert(is<long int>());          return mpz_get_si(m_val); }
 template<> inline unsigned long int mpz::get() const { lean_assert(is<unsigned long int>()); return mpz_get_ui(m_val); }
-template<> inline unsigned int mpz::get() const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(get<unsigned long int>()); }
-template<> long long int mpz::get() const;
-template<> unsigned long long int mpz::get() const;
+template<> inline int mpz::get()               const { lean_assert(is<int>());          return static_cast<int>(get<long int>()); }
+template<> inline unsigned int mpz::get()      const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(get<unsigned long int>()); }
+template<> long long int mpz::get()            const;
+template<> unsigned long long int mpz::get()   const;
 
 struct mpz_cmp_fn {
     int operator()(mpz const & v1, mpz const & v2) const { return cmp(v1, v2); }

@@ -26,12 +26,14 @@ mpz::mpz(int64 v) : mpz(static_cast<unsigned>(v)) {
 }
 
 template<> long long int mpz::get() const {
+    lean_assert(is<long long int>());
     mpz high_m, low_m;
     mpz_fdiv_r_2exp(low_m.m_val, m_val, 32);
     mpz_fdiv_q_2exp(high_m.m_val, m_val, 32);
     return static_cast<long long int>(high_m.get<signed>()) << 32 | low_m.get<unsigned>();
 }
 template<> unsigned long long int mpz::get() const {
+    lean_assert(is<unsigned long long int>());
     mpz high_m, low_m;
     mpz_fdiv_r_2exp(low_m.m_val, m_val, 32);
     mpz_fdiv_q_2exp(high_m.m_val, m_val, 32);
