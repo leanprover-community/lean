@@ -1,3 +1,25 @@
+3.44.1c (27 June 2022)
+----------------------
+
+Changes:
+- Do not treat `iff` refl lemmas as if they were `eq` refl lemmas (#736)
+
+3.44.0c (24 June 2022)
+---------------------
+
+Features:
+- Add a debug configuration for vscode (#726)
+- Add a docstring for `reflected.subst` (#729)
+- Record symbol kinds in auto-completion info (#727)
+- Add support for listing symbols in a file in vscode (#724)
+- `io.unsafe_perform_io` (#730)
+- Use lemmas proved with `iff.rfl` as refl lemmas in dsimp (#723)
+
+Changes:
+- Turn implicit arguments to `↔` in nat lemmas (#719)
+- Reject `Sort` and suggest `Prop` (#732)
+- Make the type argument to `reflected` explicit (#734)
+
 3.43.0c (18 May 2022)
 ---------------------
 

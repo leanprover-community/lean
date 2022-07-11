@@ -795,7 +795,7 @@ static void check_example(environment const & decl_env, options const & opts,
 }
 
 static bool is_rfl_preexpr(expr const & e) {
-    return is_constant(e, get_rfl_name());
+    return is_constant(e, get_rfl_name()) || is_constant(e, get_iff_rfl_name());
 }
 
 environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_data * parent, cmd_meta meta) {

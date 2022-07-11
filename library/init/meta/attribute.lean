@@ -73,14 +73,14 @@ meta def user_attribute.parse_reflect {α β : Type} (attr : user_attribute α �
 
 meta constant user_attribute.get_param_untyped {α β : Type} (attr : user_attribute α β) (decl : name)
   : tactic expr
-meta constant user_attribute.set_untyped {α β : Type} [reflected β] (attr : user_attribute α β) (decl : name)
+meta constant user_attribute.set_untyped {α β : Type} [reflected _ β] (attr : user_attribute α β) (decl : name)
   (val : expr) (persistent : bool) (prio : option nat := none) : tactic unit
 
 /-- Get the value of the parameter for the attribute on a given declatation. Will fail if the attribute does not exist.-/
-meta def user_attribute.get_param {α β : Type} [reflected β] (attr : user_attribute α β) (n : name) : tactic β :=
+meta def user_attribute.get_param {α β : Type} [reflected _ β] (attr : user_attribute α β) (n : name) : tactic β :=
 attr.get_param_untyped n >>= tactic.eval_expr β
 
-meta def user_attribute.set {α β : Type} [reflected β] (attr : user_attribute α β) (n : name)
+meta def user_attribute.set {α β : Type} [reflected _ β] (attr : user_attribute α β) (n : name)
   (val : β) (persistent : bool) (prio : option nat := none) : tactic unit :=
 attr.set_untyped n (attr.reflect_param val) persistent prio
 
@@ -89,7 +89,7 @@ open tactic
 /-- Alias for attribute.register -/
 meta def register_attribute := attribute.register
 
-meta def get_attribute_cache_dyn {α : Type} [reflected α] (attr_decl_name : name) : tactic α :=
+meta def get_attribute_cache_dyn {α : Type} [reflected _ α] (attr_decl_name : name) : tactic α :=
 let attr : pexpr := expr.const attr_decl_name [] in
 do e ← to_expr ``(user_attribute.get_cache %%attr),
    t ← eval_expr (tactic α) e,

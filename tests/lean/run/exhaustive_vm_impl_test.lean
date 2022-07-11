@@ -72,7 +72,7 @@ meta def mk_checker_core : list expr → expr → tactic expr
 
 meta def mk_checker := mk_checker_core []
 
-meta def verify (p : Prop) [rp : reflected p] : tactic unit := do
+meta def verify (p : Prop) [rp : reflected _ p] : tactic unit := do
 prove_goal_async $ do
 checker ← mk_checker rp,
 program ← to_expr ``(%%checker : bool),
