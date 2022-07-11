@@ -77,7 +77,7 @@ vm_obj to_obj(json const & j) {
         return mk_vm_constructor(json_idx::vfloat, to_obj(f));
     } else if (j.is_number()) {
         int i = j;
-        return mk_vm_constructor(json_idx::vint, mk_vm_nat(i));
+        return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
     } else if (j.is_string()) {
         std::string s = j;
         return mk_vm_constructor(json_idx::vstring, to_obj(s));

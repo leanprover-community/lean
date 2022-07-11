@@ -31,8 +31,9 @@ meta def test_parse_unparse : tactic unit := do {
               json.null
             , tt
             , ff
+            , json.of_int (-1)
             , json.of_int 1
-            , json.of_int 2
+            , json.of_int (-1000)
             , json.of_int 3
             , "this is a \"string with an annoying quote in it"
           ]
@@ -47,3 +48,10 @@ meta def test_parse_unparse : tactic unit := do {
 }
 
 #eval test_parse_unparse
+
+-- negative numbers should unparse to signed numbers
+run_cmd do
+  j@(json.of_int i) ← json.parse "-1",
+  tactic.trace (to_string i),-- buggy version gave 4294967295
+  tactic.trace j.to_format,
+  tactic.trace j.unparse
