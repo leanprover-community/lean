@@ -14,33 +14,40 @@ Author: Leonardo de Moura
 namespace lean {
 // =======================================
 // Builtin int operations
-inline bool is_small_int(int n)         { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(unsigned n)    { return n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(long long n)   { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(mpz const & n) { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
+template<typename T>
+inline typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type is_small_int(const T& n) {
+    return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT;
+}
+template<typename T>
+inline typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type is_small_int(const T& n) {
+    return n < LEAN_MAX_SMALL_INT;
+}
 
-inline unsigned to_unsigned(int n) {
+template<typename T>
+inline unsigned to_unsigned(T n) {
     lean_assert(is_small_int(n));
     unsigned r = static_cast<unsigned>(n) & 0x7FFFFFFF;
     lean_assert(r < LEAN_MAX_SMALL_NAT);
     return r;
 }
 
-inline  int of_unsigned(unsigned n) {
+inline int of_unsigned(unsigned n) {
     return static_cast<int>(n << 1) / 2;
 }
 
-vm_obj mk_vm_int(int n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(n));
+template<typename T>
+vm_obj mk_vm_int_impl(T && n) {
+    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(std::forward<T>(n)));
 }
 
-vm_obj mk_vm_int(unsigned n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(n));
-}
-
-vm_obj mk_vm_int(mpz const & n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(static_cast<int>(n))) : mk_vm_mpz(n);
-}
+vm_obj mk_vm_int(int n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned int n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(long long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned long long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(double n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(mpz const & n) { return mk_vm_int_impl(n); }
 
 inline int to_small_int(vm_obj const & o) {
     lean_assert(is_simple(o));

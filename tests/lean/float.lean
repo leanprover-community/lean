@@ -95,6 +95,11 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval cos pi
 #eval tan pi ≃ 0
 
+#eval of_nat 0x100000000  -- 2 ^ 32
+#eval of_int 0x100000000  -- 2 ^ 32
+#eval of_nat 0x10000000000000000   -- 2 ^ 64
+#eval of_int 0x10000000000000000   -- 2 ^ 64
+
 #eval (of_int (-12341234))
 
 #eval to_bool $ float.floor (2.5)  =  2
@@ -105,6 +110,9 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval to_bool $ float.trunc (-2.5) = -2
 #eval to_bool $ float.round (2.5)  =  3
 #eval to_bool $ float.round (-2.5) = -3
+
+#eval to_bool $ float.round (of_int 0x100000000) = 0x100000000
+#eval to_bool $ float.round (of_int 0x10000000000000000) = 0x10000000000000000
 
 #eval (of_string "hello")
 #eval (of_string "0.123E4")
