@@ -77,10 +77,10 @@ vm_obj to_obj(json const & j) {
         return mk_vm_constructor(json_idx::vfloat, to_obj(f));
     } else if (j.is_number_unsigned()) {
         std::uint64_t i = j.get<std::uint64_t>();
-        return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
+        return mk_vm_constructor(json_idx::vint, mk_vm_mpz(mpz(i)));
     } else if (j.is_number_integer()) {
         std::int64_t i = j.get<std::int64_t>();
-        return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
+        return mk_vm_constructor(json_idx::vint, mk_vm_mpz(mpz(i)));
     } else if (j.is_string()) {
         std::string s = j;
         return mk_vm_constructor(json_idx::vstring, to_obj(s));

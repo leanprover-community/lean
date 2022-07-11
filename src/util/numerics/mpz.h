@@ -28,6 +28,7 @@ public:
     explicit mpz(char const * v) { mpz_init_set_str(m_val, const_cast<char*>(v), 10); }
     explicit mpz(unsigned long int v) { mpz_init_set_ui(m_val, v); }
     explicit mpz(long int v) { mpz_init_set_si(m_val, v); }
+    explicit mpz(std::int64_t v) { mpz_init_set_si(m_val, v); }
     explicit mpz(unsigned int v) { mpz_init_set_ui(m_val, v); }
     explicit mpz(int v) { mpz_init_set_si(m_val, v); }
     explicit mpz(uint64 v);
