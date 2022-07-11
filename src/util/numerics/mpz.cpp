@@ -18,6 +18,12 @@ mpz::mpz(uint64 v):
     mpz_mul_2exp(tmp.m_val, tmp.m_val, 32);
     mpz_add(m_val, m_val, tmp.m_val);
 }
+mpz::mpz(int64 v):
+    mpz(static_cast<unsigned>(v)) {
+    mpz tmp(static_cast<signed>(v >> 32));
+    mpz_mul_2exp(tmp.m_val, tmp.m_val, 32);
+    mpz_add(m_val, m_val, tmp.m_val);
+}
 
 unsigned mpz::log2() const {
     if (is_nonpos())

@@ -7,6 +7,7 @@ Author: Mario Carneiro
 #pragma once
 #ifdef LEAN_JSON
 #include "util/json.hpp"
+#include "util/numerics/mpz.h"
 
 namespace lean {
 using json = nlohmann::json;

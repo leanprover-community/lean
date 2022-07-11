@@ -32,8 +32,18 @@ json to_json(vm_obj const & o) {
         std::string s = to_string(cfield(o, 0));
         return json(s);
     } case json_idx::vint: {
-        int i = to_int(cfield(o, 0));
-        return json(i);
+        auto oval = cfield(o, 0);
+        if (is_simple(oval)) {
+            return json(to_small_int(oval));
+        }
+        auto m = to_mpz(oval);
+        if (m.is_unsigned_long_int()) {
+            return json(m.get_unsigned_long_int());
+        } else if (m.is_long_int()) {
+            return json(m.get_unsigned_long_int());
+        } else {
+            return json(static_cast<float>(m.get_double()));
+        }
     } case json_idx::vfloat: {
         float f = to_float(cfield(o, 0));
         return json(f);

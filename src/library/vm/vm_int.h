@@ -11,7 +11,7 @@ namespace lean {
 int to_int(vm_obj const & o);
 optional<int> try_to_int(vm_obj const & o);
 int force_to_int(vm_obj const & o, int def);
-vm_obj mk_vm_int(int i);
+template<typename T> vm_obj mk_vm_int(T i);
 void initialize_vm_int();
 void finalize_vm_int();
 }
