@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 
 Author: Leonardo de Moura
 */
+#include <limits>
 #include <memory>
 #include "util/sstream.h"
 #include "util/thread.h"
@@ -12,6 +13,7 @@ Author: Leonardo de Moura
 #include <vector>
 
 namespace lean {
+
 mpz::mpz(uint64 v) : mpz(static_cast<unsigned>(v)) {
     mpz tmp(static_cast<unsigned>(v >> 32));
     mpz_mul_2exp(tmp.m_val, tmp.m_val, 32);
@@ -21,6 +23,19 @@ mpz::mpz(int64 v) : mpz(static_cast<unsigned>(v)) {
     mpz tmp(static_cast<signed int>(v >> 32));
     mpz_mul_2exp(tmp.m_val, tmp.m_val, 32);
     mpz_add(m_val, m_val, tmp.m_val);
+}
+
+template<> long long int mpz::get() const {
+    mpz high_m, low_m;
+    mpz_fdiv_r_2exp(low_m.m_val, m_val, 32);
+    mpz_fdiv_q_2exp(high_m.m_val, m_val, 32);
+    return static_cast<long long int>(high_m.get<unsigned>()) << 32 | low_m.get<unsigned>();
+}
+template<> unsigned long long int mpz::get() const {
+    mpz high_m, low_m;
+    mpz_fdiv_r_2exp(low_m.m_val, m_val, 32);
+    mpz_fdiv_q_2exp(high_m.m_val, m_val, 32);
+    return static_cast<unsigned long long int>(high_m.get<signed>()) << 32 | low_m.get<unsigned>();
 }
 
 unsigned mpz::log2() const {

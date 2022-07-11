@@ -99,7 +99,7 @@ int main() {
     tst5<unsigned int>();
     tst5<long>();
     tst5<unsigned long>();
-    // tst5<long long>();
-    // tst5<unsigned long long>();
+    tst5<long long>();
+    tst5<unsigned long long>();
     return has_violations() ? 1 : 0;
 }
