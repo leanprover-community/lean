@@ -75,10 +75,31 @@ static void tst4() {
     lean_assert(n1 == n2);
 }
 
+template<typename T>
+static void tst5() {
+    T max = std::numeric_limits<T>::max();
+    mpz m_max(max);
+    lean_assert(m_max.is<T>());
+    lean_assert(!(m_max + 1).is<T>());
+    lean_assert(m_max.get<T>() == max);
+
+    T min = std::numeric_limits<T>::min();
+    mpz m_min(min);
+    lean_assert(m_min.is<T>());
+    lean_assert(!(m_min - 1).is<T>());
+    lean_assert(m_min.get<T>() == min);
+}
+
 int main() {
     tst1();
     tst2();
     tst3();
     tst4();
+    tst5<int>();
+    tst5<unsigned int>();
+    tst5<long>();
+    tst5<unsigned long>();
+    // tst5<long long>();
+    // tst5<unsigned long long>();
     return has_violations() ? 1 : 0;
 }
