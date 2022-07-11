@@ -257,4 +257,28 @@ template<> struct std::numeric_limits<lean::mpz> {
     static constexpr bool is_signed = true;
     static constexpr bool is_integer = true;
     static constexpr bool is_exact = true;
+    static constexpr bool has_infinity = false;
+    static constexpr bool has_quiet_NaN = false;
+    static constexpr bool has_signaling_NaN = false;
+    static constexpr std::float_denorm_style has_denorm = std::denorm_absent;
+    static constexpr bool has_denorm_loss = false;
+    static constexpr std::float_round_style round_style = std::round_toward_zero;
+    static constexpr bool is_iec559 = false;
+    static constexpr bool is_bounded = false;
+    static constexpr bool is_modulo = false;
+
+    // these fields don't make sense for mpz
+    // digits
+    // digits10
+    // max_digits10
+    // radix
+
+    // these are copied from the values for integers
+    static constexpr int min_exponent = 0;
+    static constexpr int min_exponent10 = 0;
+    static constexpr int max_exponent = 0;
+    static constexpr int max_exponent10 = 0;
+
+    static constexpr bool traps = true;
+    static constexpr bool tinyness_before = false;
 };
