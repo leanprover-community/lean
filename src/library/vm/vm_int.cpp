@@ -39,7 +39,7 @@ vm_obj mk_vm_int(unsigned n) {
 }
 
 vm_obj mk_vm_int(mpz const & n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n.get<int>())) : mk_vm_mpz(n);
+    return is_small_int(n) ? mk_vm_simple(to_unsigned(static_cast<int>(n))) : mk_vm_mpz(n);
 }
 
 inline int to_small_int(vm_obj const & o) {
@@ -51,7 +51,7 @@ int to_int(vm_obj const & o) {
     if (is_simple(o))
         return to_small_int(o);
     else
-        return to_mpz(o).get<int>();
+        return static_cast<int>(to_mpz(o));
 }
 
 optional<int> try_to_int(vm_obj const & o) {
@@ -60,7 +60,7 @@ optional<int> try_to_int(vm_obj const & o) {
     } else {
         mpz const & v = to_mpz(o);
         if (v.is<int>())
-            return optional<int>(v.get<int>());
+            return optional<int>(static_cast<int>(v));
         else
             return optional<int>();
     }
@@ -235,7 +235,7 @@ vm_obj int_test_bit(vm_obj const & a1, vm_obj const & a2) {
         mpz const & v1 = to_mpz1(a1);
         mpz const & v2 = to_mpz2(a2);
         if (v2.is<unsigned long int>())
-            return mk_vm_bool(v1.test_bit(v2.get<unsigned long int>()));
+            return mk_vm_bool(v1.test_bit(static_cast<unsigned long int>(v2)));
         else
             return mk_vm_bool(false);
     }
