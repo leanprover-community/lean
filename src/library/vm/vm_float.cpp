@@ -110,22 +110,10 @@ void initialize_vm_float() {
     DECLARE_VM_BUILTIN(name({"native", "float", "sqrt"}),  [](vm_obj const & a) {return mk_vm_float(std::sqrt(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "cbrt"}),  [](vm_obj const & a) {return mk_vm_float(std::cbrt(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "abs"}),   [](vm_obj const & a) {return mk_vm_float(std::abs(to_float(a)));});
-    DECLARE_VM_BUILTIN(name({"native", "float", "ceil"}),  [](vm_obj const & a) {
-        auto b = std::ceil(to_float(a));
-        if (!std::isfinite(b)) throw exception("native.float.ceil: result is not finite");
-        return mk_vm_int(b); });
-    DECLARE_VM_BUILTIN(name({"native", "float", "floor"}), [](vm_obj const & a) {
-        auto b = std::floor(to_float(a));
-        if (!std::isfinite(b)) throw exception("native.float.floor: result is not finite");
-        return mk_vm_int(b); });
-    DECLARE_VM_BUILTIN(name({"native", "float", "trunc"}), [](vm_obj const & a) {
-        auto b = std::trunc(to_float(a));
-        if (!std::isfinite(b)) throw exception("native.float.trunc: result is not finite");
-        return mk_vm_int(b); });
-    DECLARE_VM_BUILTIN(name({"native", "float", "round"}), [](vm_obj const & a) {
-        auto b = std::round(to_float(a));
-        if (!std::isfinite(b)) throw exception("native.float.round: result is not finite");
-        return mk_vm_int(b); });
+    DECLARE_VM_BUILTIN(name({"native", "float", "ceil"}),  [](vm_obj const & a) {return mk_vm_int(std::ceil(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "floor"}), [](vm_obj const & a) {return mk_vm_int(std::floor(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "trunc"}), [](vm_obj const & a) {return mk_vm_int(std::trunc(to_float(a)));});
+    DECLARE_VM_BUILTIN(name({"native", "float", "round"}), [](vm_obj const & a) {return mk_vm_int(std::round(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "exp"}),   [](vm_obj const & a) {return mk_vm_float(std::exp(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "exp2"}),  [](vm_obj const & a) {return mk_vm_float(std::exp2(to_float(a)));});
     DECLARE_VM_BUILTIN(name({"native", "float", "log"}),   [](vm_obj const & a) {return mk_vm_float(std::log(to_float(a)));});

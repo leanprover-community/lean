@@ -85,10 +85,10 @@ tt
 tt
 tt
 tt
-float.lean:117:0: error: native.float.floor: result is not finite
-float.lean:118:0: error: native.float.ceil: result is not finite
-float.lean:119:0: error: native.float.trunc: result is not finite
-float.lean:120:0: error: native.float.round: result is not finite
+0
+0
+0
+0
 none
 (some 1230)
 (some -123.123)
