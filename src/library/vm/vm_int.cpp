@@ -49,7 +49,7 @@ vm_obj mk_vm_int(long n) { return mk_vm_int_impl(n); }
 vm_obj mk_vm_int(unsigned long n) { return mk_vm_int_impl(n); }
 vm_obj mk_vm_int(long long n) { return mk_vm_int_impl(n); }
 vm_obj mk_vm_int(unsigned long long n) { return mk_vm_int_impl(n); }
-vm_obj mk_vm_int(double n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(double n) { return mk_vm_int_impl(n); }  // the caller is responsible for ensuring the double is finite
 vm_obj mk_vm_int(mpz const & n) { return mk_vm_int_impl(n); }
 
 inline int to_small_int(vm_obj const & o) {

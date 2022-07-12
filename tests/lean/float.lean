@@ -114,6 +114,11 @@ list.foldl band tt $ floats.map (λ ⟨x,y⟩, prop x y)
 #eval to_bool $ float.round (of_int 0x100000000) = 0x100000000
 #eval to_bool $ float.round (of_int 0x10000000000000000) = 0x10000000000000000
 
+#eval (native.float.infinity : native.float).floor
+#eval (native.float.infinity : native.float).ceil
+#eval (native.float.infinity : native.float).trunc
+#eval (native.float.infinity : native.float).round
+
 #eval (of_string "hello")
 #eval (of_string "0.123E4")
 #eval (of_string "-123.123")
