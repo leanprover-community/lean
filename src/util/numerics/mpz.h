@@ -31,9 +31,9 @@ public:
     explicit mpz(long int v) { mpz_init_set_si(m_val, v); }
     explicit mpz(unsigned int v) { mpz_init_set_ui(m_val, v); }
     explicit mpz(int v) { mpz_init_set_si(m_val, v); }
-    explicit mpz(double f) { mpz_init_set_d (m_val, f); }
     explicit mpz(uint64 v);
     explicit mpz(int64 v);
+    explicit mpz(double v) { mpz_init_set_d(m_val, v); }
     mpz(mpz const & s) { mpz_init_set(m_val, s.m_val); }
     mpz(mpz && s):mpz() { mpz_swap(m_val, s.m_val); }
     ~mpz() { mpz_clear(m_val); }
@@ -59,9 +59,16 @@ public:
     bool even() const { return mpz_even_p(m_val) != 0; }
     bool odd() const { return !even(); }
 
-    template <typename T> bool is() const;
-    template <typename T> T get() const;
+    template <typename T> bool is() const = delete;
 
+    explicit operator long int() const;
+    explicit operator unsigned long int() const;
+    explicit operator int() const;
+    explicit operator unsigned int() const;
+    explicit operator long long int() const;
+    explicit operator unsigned long long int() const;
+
+    // not a cast operator, to match `mpz`
     double get_double() const { return mpz_get_d(m_val); }
 
     mpz & operator=(mpz const & v) { mpz_set(m_val, v.m_val); return *this; }
@@ -71,6 +78,7 @@ public:
     mpz & operator=(long int v) { mpz_set_si(m_val, v); return *this; }
     mpz & operator=(unsigned int v) { return operator=(static_cast<unsigned long int>(v)); }
     mpz & operator=(int v) { return operator=(static_cast<long int>(v)); }
+    mpz & operator=(double v) { mpz_set_d(m_val, v); return *this; }
 
     friend int cmp(mpz const & a, mpz const & b) { return mpz_cmp(a.m_val, b.m_val); }
     friend int cmp(mpz const & a, unsigned b) { return mpz_cmp_ui(a.m_val, b); }
@@ -235,12 +243,11 @@ template<> inline bool mpz::is<long long>() const {
 template<> inline bool mpz::is<unsigned long long>() const {
     return mpz(std::numeric_limits<unsigned long long>::min()) <= *this && *this <= mpz(std::numeric_limits<unsigned long long>::max()); }
 
-template<> inline long int mpz::get()          const { lean_assert(is<long int>());          return mpz_get_si(m_val); }
-template<> inline unsigned long int mpz::get() const { lean_assert(is<unsigned long int>()); return mpz_get_ui(m_val); }
-template<> inline int mpz::get()               const { lean_assert(is<int>());          return static_cast<int>(get<long int>()); }
-template<> inline unsigned int mpz::get()      const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(get<unsigned long int>()); }
-template<> long long int mpz::get()            const;
-template<> unsigned long long int mpz::get()   const;
+// we can't define these until the `is` specializations are declared
+inline mpz::operator long int()          const { lean_assert(is<long int>());          return mpz_get_si(m_val); }
+inline mpz::operator unsigned long int() const { lean_assert(is<unsigned long int>()); return mpz_get_ui(m_val); }
+inline mpz::operator int()               const { lean_assert(is<int>());          return static_cast<long>(operator long int()); }
+inline mpz::operator unsigned int()      const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(operator unsigned long int()); }
 
 struct mpz_cmp_fn {
     int operator()(mpz const & v1, mpz const & v2) const { return cmp(v1, v2); }

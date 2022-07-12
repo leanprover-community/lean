@@ -21,7 +21,7 @@ vm_obj mk_vm_nat(unsigned n) {
 
 vm_obj mk_vm_nat(mpz const & n) {
     if (LEAN_LIKELY(n < LEAN_MAX_SMALL_NAT))
-        return mk_vm_simple(n.get<unsigned>());
+        return mk_vm_simple(static_cast<unsigned>(n));
     else
         return mk_vm_mpz(n);
 }
@@ -30,7 +30,7 @@ unsigned to_unsigned(vm_obj const & o) {
     if (LEAN_LIKELY(is_simple(o)))
         return cidx(o);
     else
-        return to_mpz(o).get<unsigned>();
+        return static_cast<unsigned>(to_mpz(o));
 }
 
 optional<unsigned> try_to_unsigned(vm_obj const & o) {
@@ -39,7 +39,7 @@ optional<unsigned> try_to_unsigned(vm_obj const & o) {
     } else {
         mpz const & v = to_mpz(o);
         if (v.is<unsigned>())
-            return optional<unsigned>(v.get<unsigned>());
+            return optional<unsigned>(static_cast<unsigned>(v));
         else
             return optional<unsigned>();
     }
@@ -262,7 +262,7 @@ vm_obj nat_test_bit(vm_obj const & a1, vm_obj const & a2) {
         mpz const & v1 = to_mpz1(a1);
         mpz const & v2 = to_mpz2(a2);
         if (v2.is<unsigned long int>())
-            return mk_vm_bool(v1.test_bit(v2.get<unsigned long int>()));
+            return mk_vm_bool(v1.test_bit(static_cast<unsigned long int>(v2)));
         else
             return mk_vm_bool(false);
     }

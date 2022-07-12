@@ -38,13 +38,13 @@ json to_json(vm_obj const & o) {
         }
         auto m = to_mpz(oval);
         if (m.is<uint64_t>()) {
-            return json(m.get<uint64_t>());
+            return json(static_cast<uint64_t>(m));
         } else if (m.is<int64_t>()) {
-            return json(m.get<int64_t>());
+            return json(static_cast<int64_t>(m));
         } else {
             // lose precision and store as a double, because that's how the nlohmann/json
             // parser behaves anyway.
-            return json(static_cast<float>(m.get_double()));
+            return json(m.get_double());
         }
     } case json_idx::vfloat: {
         float f = to_float(cfield(o, 0));
@@ -85,13 +85,14 @@ vm_obj to_obj(json const & j) {
     } else if (j.is_boolean()) {
         return mk_vm_constructor(json_idx::vbool, mk_vm_bool(j));
     } else if (j.is_number_float()) {
-        float f = j;
+        // note that this throws away a lot of precision, as the vm floats are not doubles
+        auto f = j.get<double>();
         return mk_vm_constructor(json_idx::vfloat, to_obj(f));
     } else if (j.is_number_unsigned()) {
-        std::uint64_t i = j.get<std::uint64_t>();
+        auto i = j.get<std::uint64_t>();
         return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
     } else if (j.is_number_integer()) {
-        std::int64_t i = j.get<std::int64_t>();
+        auto i = j.get<std::int64_t>();
         return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
     } else if (j.is_string()) {
         std::string s = j;

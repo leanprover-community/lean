@@ -82,13 +82,27 @@ static void tst5() {
     mpz m_max(max);
     lean_assert(m_max.is<T>());
     lean_assert(!(m_max + 1).is<T>());
-    lean_assert(m_max.get<T>() == max);
+    lean_assert(static_cast<T>(m_max) == max);
 
     T min = std::numeric_limits<T>::min();
     mpz m_min(min);
     lean_assert(m_min.is<T>());
     lean_assert(!(m_min - 1).is<T>());
-    lean_assert(m_min.get<T>() == min);
+    lean_assert(static_cast<T>(m_min) == min);
+
+    if (std::numeric_limits<T>::is_signed) {
+        T neg_one = -1;
+        mpz m_neg_one(neg_one);
+        lean_assert(m_neg_one.is<T>());
+        lean_assert(static_cast<T>(m_neg_one) == neg_one);
+    }
+}
+
+static void tst6() {
+    // the largest representable double is integral, so is fine to store in mpz
+    double max = std::numeric_limits<double>::max();
+    mpz n1(max);
+    lean_assert(n1.get_double() == max);
 }
 
 int main() {
@@ -102,5 +116,6 @@ int main() {
     tst5<unsigned long>();
     tst5<long long>();
     tst5<unsigned long long>();
+    tst6();
     return has_violations() ? 1 : 0;
 }
