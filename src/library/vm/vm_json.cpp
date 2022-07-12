@@ -83,20 +83,16 @@ vm_obj to_obj(json const & j) {
     if (j.is_null()) {
         return mk_vm_simple(json_idx::vnull);
     } else if (j.is_boolean()) {
-        return mk_vm_constructor(json_idx::vbool, mk_vm_bool(j));
+        return mk_vm_constructor(json_idx::vbool, mk_vm_bool(j.get<bool>()));
     } else if (j.is_number_float()) {
         // note that this throws away a lot of precision, as the vm floats are not doubles
-        auto f = j.get<double>();
-        return mk_vm_constructor(json_idx::vfloat, to_obj(f));
+        return mk_vm_constructor(json_idx::vfloat, to_obj(j.get<double>()));
     } else if (j.is_number_unsigned()) {
-        auto i = j.get<std::uint64_t>();
-        return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
+        return mk_vm_constructor(json_idx::vint, mk_vm_int(j.get<std::uint64_t>()));
     } else if (j.is_number_integer()) {
-        auto i = j.get<std::int64_t>();
-        return mk_vm_constructor(json_idx::vint, mk_vm_int(i));
+        return mk_vm_constructor(json_idx::vint, mk_vm_int(j.get<std::int64_t>()));
     } else if (j.is_string()) {
-        std::string s = j;
-        return mk_vm_constructor(json_idx::vstring, to_obj(s));
+        return mk_vm_constructor(json_idx::vstring, to_obj(j.get<std::string>()));
     } else if (j.is_array()) {
         vm_obj o = mk_vm_nil();
         for (auto i = j.crbegin(); i != j.crend(); i++) {
