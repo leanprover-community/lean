@@ -89,6 +89,13 @@ static void tst5() {
     lean_assert(m_min.is<T>());
     lean_assert(!(m_min - 1).is<T>());
     lean_assert(static_cast<T>(m_min) == min);
+
+    if (std::numeric_limits<T>::is_signed) {
+        T neg_one = -1;
+        mpz m_neg_one(neg_one);
+        lean_assert(m_neg_one.is<T>());
+        lean_assert(static_cast<T>(m_neg_one) == neg_one);
+    }
 }
 
 static void tst6() {

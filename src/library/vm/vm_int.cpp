@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #include <iostream>
+#include <limits>
 #include "library/vm/vm.h"
 #include "library/vm/vm_nat.h"
 
@@ -26,7 +27,9 @@ inline typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type i
 template<typename T>
 inline unsigned to_unsigned(T n) {
     lean_assert(is_small_int(n));
-    unsigned r = static_cast<unsigned>(n) & 0x7FFFFFFF;
+    // small ints are strictly smaller than `signed`, so this is safe for `T = mpz`
+    signed ns = static_cast<signed>(n);
+    unsigned r = static_cast<unsigned>(ns) & 0x7FFFFFFF;
     lean_assert(r < LEAN_MAX_SMALL_NAT);
     return r;
 }
