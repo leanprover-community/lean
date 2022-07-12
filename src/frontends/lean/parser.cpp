@@ -725,7 +725,7 @@ unsigned parser::get_small_nat() {
         maybe_throw_error({"invalid numeral, value does not fit in a machine integer", pos()});
         return 0;
     }
-    return val.get<unsigned>();
+    return static_cast<unsigned>(val);
 }
 
 pair<ast_id, std::string> parser::parse_string_lit() {

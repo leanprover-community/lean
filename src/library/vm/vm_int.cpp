@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura
 */
 #include <iostream>
+#include <limits>
 #include "library/vm/vm.h"
 #include "library/vm/vm_nat.h"
 
@@ -14,33 +15,42 @@ Author: Leonardo de Moura
 namespace lean {
 // =======================================
 // Builtin int operations
-inline bool is_small_int(int n)         { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(unsigned n)    { return n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(long long n)   { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
-inline bool is_small_int(mpz const & n) { return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT; }
+template<typename T>
+inline typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type is_small_int(const T& n) {
+    return LEAN_MIN_SMALL_INT <= n && n < LEAN_MAX_SMALL_INT;
+}
+template<typename T>
+inline typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type is_small_int(const T& n) {
+    return n < LEAN_MAX_SMALL_INT;
+}
 
-inline unsigned to_unsigned(int n) {
+template<typename T>
+inline unsigned to_unsigned(T n) {
     lean_assert(is_small_int(n));
-    unsigned r = static_cast<unsigned>(n) & 0x7FFFFFFF;
+    // small ints are strictly smaller than `signed`, so this is safe for `T = mpz`
+    signed ns = static_cast<signed>(n);
+    unsigned r = static_cast<unsigned>(ns) & 0x7FFFFFFF;
     lean_assert(r < LEAN_MAX_SMALL_NAT);
     return r;
 }
 
-inline  int of_unsigned(unsigned n) {
+inline int of_unsigned(unsigned n) {
     return static_cast<int>(n << 1) / 2;
 }
 
-vm_obj mk_vm_int(int n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(n));
+template<typename T>
+vm_obj mk_vm_int_impl(T && n) {
+    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(std::forward<T>(n)));
 }
 
-vm_obj mk_vm_int(unsigned n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n)) : mk_vm_mpz(mpz(n));
-}
-
-vm_obj mk_vm_int(mpz const & n) {
-    return is_small_int(n) ? mk_vm_simple(to_unsigned(n.get<int>())) : mk_vm_mpz(n);
-}
+vm_obj mk_vm_int(int n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned int n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(long long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(unsigned long long n) { return mk_vm_int_impl(n); }
+vm_obj mk_vm_int(double n) { return std::isfinite(n) ? mk_vm_int_impl(n) : mk_vm_int(0); }
+vm_obj mk_vm_int(mpz const & n) { return mk_vm_int_impl(n); }
 
 inline int to_small_int(vm_obj const & o) {
     lean_assert(is_simple(o));
@@ -51,7 +61,7 @@ int to_int(vm_obj const & o) {
     if (is_simple(o))
         return to_small_int(o);
     else
-        return to_mpz(o).get<int>();
+        return static_cast<int>(to_mpz(o));
 }
 
 optional<int> try_to_int(vm_obj const & o) {
@@ -60,7 +70,7 @@ optional<int> try_to_int(vm_obj const & o) {
     } else {
         mpz const & v = to_mpz(o);
         if (v.is<int>())
-            return optional<int>(v.get<int>());
+            return optional<int>(static_cast<int>(v));
         else
             return optional<int>();
     }
@@ -235,7 +245,7 @@ vm_obj int_test_bit(vm_obj const & a1, vm_obj const & a2) {
         mpz const & v1 = to_mpz1(a1);
         mpz const & v2 = to_mpz2(a2);
         if (v2.is<unsigned long int>())
-            return mk_vm_bool(v1.test_bit(v2.get<unsigned long int>()));
+            return mk_vm_bool(v1.test_bit(static_cast<unsigned long int>(v2)));
         else
             return mk_vm_bool(false);
     }

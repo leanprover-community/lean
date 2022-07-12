@@ -2962,7 +2962,7 @@ static optional<mpz> eval_num(expr const & e) {
 optional<unsigned> type_context_old::to_small_num(expr const & e) {
     if (optional<mpz> r = eval_num(e)) {
         if (r->is<unsigned>()) {
-            unsigned r1 = r->get<unsigned>();
+            unsigned r1 = static_cast<unsigned>(*r);
             if (r1 <= m_cache->get_nat_offset_cnstr_threshold())
                 return optional<unsigned>(r1);
         }
