@@ -6,7 +6,6 @@ Bug fixes:
 - `json.parse` no longer parses `-1` as `4294967295`, along with various other problems with integers (#743)
 - `native.float.of_nat`, `native.float.of_int`, `native.float.floor`, `native.float.ceil`, `native.float.round`, and `native.float.trunc`
   no longer truncate to 32 bits of range (#742)
-- `float.floor` (#742)
 - `environment.is_structure` is now true on `structure`s with no fields (#739)
 
 Changes:
