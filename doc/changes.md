@@ -1,3 +1,16 @@
+3.45.0c (27 June 2022)
+----------------------
+
+Bug fixes:
+- End position information sent by the lean server used for command annotations no longer includes trailing whitespace and comments (#744)
+- `json.parse` no longer parses `-1` as `4294967295`, along with various other problems with integers (#743)
+- `native.float.of_nat`, `native.float.of_int`, `native.float.floor`, `native.float.ceil`, `native.float.round`, and `native.float.trunc`
+  no longer truncate to 32 bits of range (#742)
+- `environment.is_structure` is now true on `structure`s with no fields (#739)
+
+Changes:
+- `native.float.floor`, `native.float.ceil`, `native.float.round`, and `native.float.trunc` now return 0 on infinite inputs (#742)
+
 3.44.1c (27 June 2022)
 ----------------------
 
