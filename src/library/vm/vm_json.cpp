@@ -42,9 +42,9 @@ json to_json(vm_obj const & o) {
         } else if (m.is<int64_t>()) {
             return json(static_cast<int64_t>(m));
         } else {
-            // lose precision and store as a double, because that's how the nlohmann/json
-            // parser behaves anyway.
-            return json(m.get_double());
+            // lose precision and store as a float. We do not store as a double, as this leads to
+            // asymmetric behavior between the parser and serializer.
+            return json(static_cast<float>(m.get_double()));
         }
     } case json_idx::vfloat: {
         float f = to_float(cfield(o, 0));

@@ -3,11 +3,6 @@
 #eval to_string $ json.unparse (json.object [])
 run_cmd tactic.success_if_fail $ json.parse "spurgles"
 
-meta def ball : list bool → bool :=
-λ xs, xs.foldl band tt
-
-meta instance : decidable_eq native.float := by apply_instance
-
 meta def test_parse_unparse : tactic unit := do {
   f ← native.float.of_string "0.4",
   let obj : json := json.object
@@ -39,3 +34,34 @@ meta def test_parse_unparse : tactic unit := do {
 }
 
 #eval test_parse_unparse
+
+run_cmd do
+  -- this is the maximum value of a float32
+  let obj_i : json := json.of_int 0xFFFFFF00000000000000000000000000,
+  let msg := json.unparse obj_i,
+  obj_f ← json.parse msg,
+  -- the large int is turned into a float
+  guard (obj_f = json.of_float (0xFFFFFF00000000000000000000000000 : native.float))
+
+run_cmd do
+  -- this is the maximum integer that after truncation fits a float32
+  let obj_i : json := json.of_int 0xFFFFFF7FFFFFFFFFFFFFFFFFFFFFFFFF,
+  let msg := json.unparse obj_i,
+  obj_f ← json.parse msg,
+  -- the large int is truncated
+  guard (obj_f = json.of_float (0xFFFFFF00000000000000000000000000 : native.float))
+
+run_cmd do
+  -- this is the smallest integer that does not fit in a float32
+  let obj_i : json := json.of_int 0xFFFFFF80000000000000000000000000,
+  let msg := json.unparse obj_i,
+  obj_f ← json.parse msg,
+  -- the large int overflows to infinity, which cannot be stored in json
+  guard (obj_f = json.null)
+
+run_cmd do
+  -- this is the smallest integer that does not fit in a float32
+  let msg : string := to_string 0xFFFFFF80000000000000000000000000,
+  obj_f ← json.parse msg,
+  -- the large int overflows to (https://github.com/nlohmann/json does not support big integers)
+  guard (obj_f = json.of_float native.float.infinity)
