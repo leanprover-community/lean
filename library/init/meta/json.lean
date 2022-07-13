@@ -43,4 +43,18 @@ meta instance : has_to_format json := ⟨to_format⟩
 meta instance : has_to_string json := ⟨json.unparse⟩
 meta instance : has_repr json := ⟨json.unparse⟩
 
+meta instance : decidable_eq json :=
+λ j₁ j₂, begin
+  cases j₁; cases j₂; simp; try {apply decidable.false},
+  -- do this explicitly casewise to be extra sure we don't recurse unintentionally, as meta code
+  -- doesn't protect against this.
+  case json.of_string { exact string.has_decidable_eq _ _ },
+  case json.of_float { exact native.float.dec_eq _ _ },
+  case json.of_int { exact int.decidable_eq _ _ },
+  case json.of_bool { exact bool.decidable_eq _ _ },
+  case json.null { exact decidable.true },
+  case json.array { letI := decidable_eq, exact list.decidable_eq _ _ },
+  case json.object { letI := decidable_eq, exact list.decidable_eq _ _ },
+end
+
 end json
