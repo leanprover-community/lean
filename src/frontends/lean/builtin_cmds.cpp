@@ -207,7 +207,7 @@ environment check_cmd(parser & p, ast_id & cmd_id) {
         // do not show useless type-checking results such as ?? : ?M_1
         return p.env();
     }
-    auto out              = p.mk_message(data.m_start, p.pos(), INFORMATION);
+    auto out              = p.mk_message(data.m_start, p.end_pos(), INFORMATION);
     formatter fmt         = out.get_formatter();
     unsigned indent       = get_pp_indent(p.get_options());
     format e_fmt    = fmt(e);
@@ -238,7 +238,7 @@ environment reduce_cmd(parser & p, ast_id & cmd_id) {
         bool eta = false;
         r = normalize(ctx, e, eta);
     }
-    auto out = p.mk_message(data.m_start, p.pos(), INFORMATION);
+    auto out = p.mk_message(data.m_start, p.end_pos(), INFORMATION);
     out.set_caption("reduce result") << r;
     out.report();
     return p.env();
@@ -493,7 +493,7 @@ static environment unify_cmd(parser & p, ast_id & cmd_id) {
     local_context   lctx;
     e1 = convert_metavars(mctx, e1);
     e2 = convert_metavars(mctx, e2);
-    auto rep = p.mk_message(data.m_start, p.pos(), INFORMATION);
+    auto rep = p.mk_message(data.m_start, p.end_pos(), INFORMATION);
     rep << e1 << " =?= " << e2 << "\n";
     type_context_old ctx(env, p.get_options(), mctx, lctx, transparency_mode::Semireducible);
     bool success = ctx.is_def_eq(e1, e2);
@@ -551,7 +551,7 @@ static environment eval_cmd(parser & p, ast_id & cmd_id) {
     name fn_name = "_main";
     auto new_env = compile_expr(p.env(), p.get_options(), fn_name, ls, type, e, pos);
 
-    auto out = p.mk_message(data.m_start, p.pos(), INFORMATION);
+    auto out = p.mk_message(data.m_start, p.end_pos(), INFORMATION);
     out.set_caption("eval result");
     scope_traces_as_messages scope_traces(p.get_stream_name(), data.m_start);
     bool should_report = false;
