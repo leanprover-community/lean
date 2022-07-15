@@ -160,7 +160,7 @@ instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s
 (trichotomous : ∀ a b, lt a b ∨ a = b ∨ lt b a)
 
 @[algebra] class is_strict_total_order (α : Type u) (lt : α → α → Prop)
-  extends is_trichotomous α lt, is_strict_weak_order α lt : Prop.
+  extends is_trichotomous α lt, is_strict_order α lt : Prop.
 
 instance eq_is_equiv (α : Type u) : is_equiv α (=) :=
 {symm := @eq.symm _, trans := @eq.trans _, refl := eq.refl}
