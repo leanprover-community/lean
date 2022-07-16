@@ -147,10 +147,12 @@ instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s
   is_partial_order α r, is_total α r : Prop.
 
 /-- `is_linear_order X r` means that the binary relation `r` on `X` is an equivalence relation, that
-is, `is_partial_order X r` and `is_symm X r`. -/
+is, `is_preorder X r` and `is_symm X r`. -/
 @[algebra] class is_equiv (α : Type u) (r : α → α → Prop) extends
   is_preorder α r, is_symm α r : Prop.
 
+/-- `is_per X r` means that the binary relation `r` on `X` is a partial equivalence relation, that
+is, `is_symm X r` and `is_trans X r`. -/
 @[algebra] class is_per (α : Type u) (r : α → α → Prop) extends is_symm α r, is_trans α r : Prop.
 
 /-- `is_strict_order X r` means that the binary relation `r` on `X` is a strict order, that is, 
