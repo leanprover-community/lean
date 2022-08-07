@@ -18,6 +18,8 @@ Author: Leonardo de Moura, Daniel Selsam
 
 namespace lean {
 
+static void check_system() { check_system("tlean exporter"); }
+
 unsigned tlean_exporter::export_name(name const & n) {
     auto it = m_name2idx.find(n);
     if (it != m_name2idx.end()) {
@@ -92,8 +94,8 @@ void tlean_exporter::export_binder_info(binder_info const & bi) {
 
 unsigned tlean_exporter::export_binding(expr const & e, char const * k) {
     unsigned n  = export_name(binding_name(e));
-    unsigned e1 = export_expr_core(binding_domain(e));
-    unsigned e2 = export_expr_core(binding_body(e));
+    unsigned e1 = export_expr(binding_domain(e));
+    unsigned e2 = export_expr(binding_body(e));
     unsigned i = static_cast<unsigned>(m_expr2idx.size());
     m_out << i << " " << k << " ";
     export_binder_info(binding_info(e));
@@ -114,7 +116,7 @@ unsigned tlean_exporter::export_const(expr const & e) {
     return i;
 }
 
-unsigned tlean_exporter::export_expr_core(expr const & e) {
+unsigned tlean_exporter::export_expr(expr const & e) {
     auto it = m_expr2idx.find(e);
     if (it != m_expr2idx.end())
         return it->second;
@@ -134,24 +136,28 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
         i = export_const(e);
         break;
     case expr_kind::App:
-        e1 = export_expr_core(app_fn(e));
-        e2 = export_expr_core(app_arg(e));
+        check_system();
+        e1 = export_expr(app_fn(e));
+        e2 = export_expr(app_arg(e));
         i = static_cast<unsigned>(m_expr2idx.size());
         m_out << i << " #EA " << e1 << " " << e2 << "\n";
         break;
     case expr_kind::Let: {
+        check_system();
         auto n = export_name(let_name(e));
-        e1 = export_expr_core(let_type(e));
-        e2 = export_expr_core(let_value(e));
-        auto e3 = export_expr_core(let_body(e));
+        e1 = export_expr(let_type(e));
+        e2 = export_expr(let_value(e));
+        auto e3 = export_expr(let_body(e));
         i = static_cast<unsigned>(m_expr2idx.size());
         m_out << i << " #EZ " << n << " " << e1 << " " << e2 << " " << e3 << "\n";
         break;
     }
     case expr_kind::Lambda:
+        check_system();
         i = export_binding(e, "#EL");
         break;
     case expr_kind::Pi:
+        check_system();
         i = export_binding(e, "#EP");
         break;
     case expr_kind::Meta:
@@ -159,10 +165,11 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     case expr_kind::Local:
         throw exception("invalid 'export', local constants cannot be exported");
     case expr_kind::Macro:
+        check_system();
         if (macro_def(e).can_textualize()) {
             buffer<unsigned> args;
             for (unsigned i = 0; i < macro_num_args(e); ++i) {
-                args.push_back(export_expr_core(macro_arg(e, i)));
+                args.push_back(export_expr(macro_arg(e, i)));
             }
             i = static_cast<unsigned>(m_expr2idx.size());
             m_out << i << " ";
@@ -173,7 +180,7 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
         } else {
             type_checker checker(m_env);
             if (auto t = macro_def(e).expand(e, checker)) {
-                return export_expr_core(*t);
+                return export_expr(*t);
             } else {
                 throw exception(sstream() << "found macro that cannot textualize nor expand\n" << e);
             }
@@ -181,10 +188,6 @@ unsigned tlean_exporter::export_expr_core(expr const & e) {
     }
     m_expr2idx[e] = i;
     return i;
-}
-
-unsigned tlean_exporter::export_expr(expr const & e) {
-    return export_expr_core(e);
 }
 
 void tlean_exporter::export_definition(declaration const & d) {
