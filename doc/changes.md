@@ -1,3 +1,15 @@
+3.46.0c (8 August 2022)
+-----------------------
+
+Features:
+- Add docstrings for algebra classes (#747)
+
+Bug fixes:
+- Add recursion guard in tlean exporter (#752)
+
+Changes:
+- Remove redundant assumption from `is_strict_total_order` (#746)
+
 3.45.0c (27 June 2022)
 ----------------------
 
