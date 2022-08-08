@@ -1,6 +1,9 @@
 3.46.0c (8 August 2022)
 -----------------------
 
+Features:
+- Add docstrings for algebra classes (#747)
+
 Bug fixes:
 - Add recursion guard in tlean exporter (#752)
 
