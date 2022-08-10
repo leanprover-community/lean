@@ -338,6 +338,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
         o = o.update_if_undef(get_pp_implicit_name(), true);
         o = o.update_if_undef(get_pp_proofs_name(), true);
         o = o.update_if_undef(get_pp_coercions_name(), true);
+        o = o.update_if_undef(get_pp_ascript_coercions_name(), true);
         o = o.update_if_undef(get_pp_notation_name(), false);
         o = o.update_if_undef(get_pp_universes_name(), true);
         o = o.update_if_undef(get_pp_full_names_name(), true);
@@ -354,6 +355,7 @@ void pretty_fn<T>::set_options_core(options const & _o) {
     m_implict           = get_pp_implicit(o);
     m_proofs            = get_pp_proofs(o);
     m_unicode           = get_pp_unicode(o);
+    m_ascript_coercion  = get_pp_ascript_coercions(o);
     m_coercion          = get_pp_coercions(o);
     m_notation          = get_pp_notation(o);
     m_parens            = get_pp_parens(o);
@@ -649,6 +651,32 @@ auto pretty_fn<T>::pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_
         return pp_child(new_e, bp, ignore_hide);
     }
 }
+
+template<class T>
+auto pretty_fn<T>::pp_ascripted_coercion(expr const & e) -> result {
+    lean_assert(is_coercion(e));
+    buffer<expr> args;
+    get_app_args(e, args);
+    if (args.size() == 4) { // e = (@coe α β _ x : β)
+        return result(paren(T("↑") + pp_child(args[3], get_max_prec()).fmt() + space() + colon() + space() + pp_child(args[1], 0).fmt()));
+    } else {
+        return pp_app(e);
+    }
+}
+template<class T>
+auto pretty_fn<T>::pp_ascripted_coercion_fn(expr const & e) -> result {
+    lean_assert(is_coercion_fn(e));
+    buffer<expr> args;
+    get_app_args(e, args);
+    if (args.size() == 4) { // e = (@coe_fn α β _ f : β f)
+        // WHNF reduce the expected type, so that we see `ℕ → ℕ` instead of `(λ f, ℕ → ℕ) f`.
+        auto ty = m_ctx.whnf(mk_app(args[1], args[3]));
+        return result(paren(T("⇑") + pp_child(args[3], get_max_prec()).fmt() + space() + colon() + space() + pp_child(ty, 0).fmt()));
+    } else {
+        return pp_app(e);
+    }
+}
+
 template<class T>
 auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool below_implicit) -> result {
     if (is_app(e)) {
@@ -682,10 +710,18 @@ auto pretty_fn<T>::pp_child(expr const & e, unsigned bp, bool ignore_hide, bool 
               }
               return tag(ars.m_adr, e, r);
             }
-        } else if (!m_coercion && is_coercion(e)) {
-            return pp_hide_coercion(e, bp, ignore_hide);
-        } else if (!m_coercion && is_coercion_fn(e)) {
-            return pp_hide_coercion_fn(e, bp, ignore_hide);
+        } else if (is_coercion(e)) {
+            if (!m_coercion) {
+                return pp_hide_coercion(e, bp, ignore_hide);
+            } else if (m_ascript_coercion) {
+                return pp_ascripted_coercion(e);
+            }
+        } else if (is_coercion_fn(e)) {
+            if (!m_coercion) {
+                return pp_hide_coercion_fn(e, bp, ignore_hide);
+            } else if (m_ascript_coercion) {
+                return pp_ascripted_coercion_fn(e);
+            }
         }
     }
     result r = below_implicit ? pp_core(e, ignore_hide) : pp(e, ignore_hide);
@@ -1571,10 +1607,18 @@ auto pretty_fn<T>::pp_notation_child(expr const & e, unsigned rbp, unsigned lbp,
                 }
                 return r.with(tag(ars.m_adr, e, r.fmt()));
             }
-        } else if (!m_coercion && is_coercion(e)) {
-            return pp_hide_coercion(e, rbp);
-        } else if (!m_coercion && is_coercion_fn(e)) {
-            return pp_hide_coercion_fn(e, rbp);
+        } else if (is_coercion(e)) {
+            if (!m_coercion) {
+                return pp_hide_coercion(e, rbp);
+            } else if (m_ascript_coercion) {
+                return pp_ascripted_coercion(e);
+            }
+        } else if (is_coercion_fn(e)) {
+            if (!m_coercion) {
+                return pp_hide_coercion_fn(e, rbp);
+            } else if (m_ascript_coercion) {
+                return pp_ascripted_coercion_fn(e);
+            }
         }
     }
     result r = below_implicit ? pp_core(e) : pp(e);

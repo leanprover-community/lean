@@ -74,6 +74,7 @@ private:
     bool                    m_proofs;           //!< if true show proof terms
     bool                    m_unicode;          //!< if true use unicode chars
     bool                    m_coercion;         //!< if true show coercions
+    bool                    m_ascript_coercion; //!< if true show result type of coercions
     bool                    m_notation;
     bool                    m_parens;
     bool                    m_universes;
@@ -143,6 +144,8 @@ private:
 
     result pp_hide_coercion(expr const & e, unsigned bp, bool ignore_hide = false);
     result pp_hide_coercion_fn(expr const & e, unsigned bp, bool ignore_hide = false);
+    result pp_ascripted_coercion(expr const & e);
+    result pp_ascripted_coercion_fn(expr const & e);
     result pp_child(expr const & e, unsigned bp, bool ignore_hide = false, bool below_implicit = false);
     result pp_child_at(expr const & e, unsigned bp, address adr, bool ignore_hide = false);
     result pp_subtype(expr const & e);

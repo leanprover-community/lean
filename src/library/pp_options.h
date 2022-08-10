@@ -10,6 +10,7 @@ namespace lean {
 name const & get_pp_implicit_name();
 name const & get_pp_proofs_name();
 name const & get_pp_coercions_name();
+name const & get_pp_ascript_coercions_name();
 name const & get_pp_full_names_name();
 name const & get_pp_universes_name();
 name const & get_pp_notation_name();
@@ -32,6 +33,7 @@ bool     get_pp_parens(options const & opts);
 bool     get_pp_implicit(options const & opts);
 bool     get_pp_proofs(options const & opts);
 bool     get_pp_coercions(options const & opts);
+bool     get_pp_ascript_coercions(options const & opts);
 bool     get_pp_universes(options const & opts);
 bool     get_pp_full_names(options const & opts);
 bool     get_pp_private_names(options const & opts);

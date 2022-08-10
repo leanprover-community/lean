@@ -36,6 +36,10 @@ Author: Leonardo de Moura
 #define LEAN_DEFAULT_PP_COERCIONS true
 #endif
 
+#ifndef LEAN_DEFAULT_PP_ASCRIPT_COERCIONS
+#define LEAN_DEFAULT_PP_ASCRIPT_COERCIONS true
+#endif
+
 #ifndef LEAN_DEFAULT_PP_UNIVERSES
 #define LEAN_DEFAULT_PP_UNIVERSES false
 #endif
@@ -148,6 +152,7 @@ static name * g_pp_parens            = nullptr;
 static name * g_pp_implicit          = nullptr;
 static name * g_pp_proofs            = nullptr;
 static name * g_pp_coercions         = nullptr;
+static name * g_pp_ascript_coercions = nullptr;
 static name * g_pp_universes         = nullptr;
 static name * g_pp_full_names        = nullptr;
 static name * g_pp_private_names     = nullptr;
@@ -184,6 +189,7 @@ void initialize_pp_options() {
     g_pp_implicit          = new name{"pp", "implicit"};
     g_pp_proofs            = new name{"pp", "proofs"};
     g_pp_coercions         = new name{"pp", "coercions"};
+    g_pp_ascript_coercions = new name{"pp", "ascript_coercions"};
     g_pp_universes         = new name{"pp", "universes"};
     g_pp_full_names        = new name{"pp", "full_names"};
     g_pp_private_names     = new name{"pp", "private_names"};
@@ -224,7 +230,9 @@ void initialize_pp_options() {
     register_bool_option(*g_pp_proofs,  LEAN_DEFAULT_PP_PROOFS,
                          "(pretty printer) if set to false, the type will be displayed instead of the value for every proof appearing as an argument to a function");
     register_bool_option(*g_pp_coercions,  LEAN_DEFAULT_PP_COERCIONS,
-                         "(pretty printer) display coercionss");
+                         "(pretty printer) display coercions");
+    register_bool_option(*g_pp_ascript_coercions,  LEAN_DEFAULT_PP_ASCRIPT_COERCIONS,
+                         "(pretty printer) display types when displaying coercions");
     register_bool_option(*g_pp_universes,  LEAN_DEFAULT_PP_UNIVERSES,
                          "(pretty printer) display universes");
     register_bool_option(*g_pp_full_names,  LEAN_DEFAULT_PP_FULL_NAMES,
@@ -313,6 +321,7 @@ void finalize_pp_options() {
     delete g_pp_implicit;
     delete g_pp_proofs;
     delete g_pp_coercions;
+    delete g_pp_ascript_coercions;
     delete g_pp_universes;
     delete g_pp_full_names;
     delete g_pp_private_names;
@@ -338,6 +347,7 @@ void finalize_pp_options() {
 name const & get_pp_implicit_name() { return *g_pp_implicit; }
 name const & get_pp_proofs_name() { return *g_pp_proofs; }
 name const & get_pp_coercions_name() { return *g_pp_coercions; }
+name const & get_pp_ascript_coercions_name() { return *g_pp_ascript_coercions; }
 name const & get_pp_full_names_name() { return *g_pp_full_names; }
 name const & get_pp_universes_name() { return *g_pp_universes; }
 name const & get_pp_notation_name() { return *g_pp_notation; }
@@ -360,6 +370,7 @@ bool     get_pp_parens(options const & opts)            { return opts.get_bool(*
 bool     get_pp_implicit(options const & opts)          { return opts.get_bool(*g_pp_implicit, LEAN_DEFAULT_PP_IMPLICIT); }
 bool     get_pp_proofs(options const & opts)            { return opts.get_bool(*g_pp_proofs, LEAN_DEFAULT_PP_PROOFS); }
 bool     get_pp_coercions(options const & opts)         { return opts.get_bool(*g_pp_coercions, LEAN_DEFAULT_PP_COERCIONS); }
+bool     get_pp_ascript_coercions(options const & opts) { return opts.get_bool(*g_pp_ascript_coercions, LEAN_DEFAULT_PP_ASCRIPT_COERCIONS); }
 bool     get_pp_universes(options const & opts)         { return opts.get_bool(*g_pp_universes, LEAN_DEFAULT_PP_UNIVERSES); }
 bool     get_pp_full_names(options const & opts)        { return opts.get_bool(*g_pp_full_names, LEAN_DEFAULT_PP_FULL_NAMES); }
 bool     get_pp_private_names(options const & opts)     { return opts.get_bool(*g_pp_private_names, LEAN_DEFAULT_PP_PRIVATE_NAMES); }
