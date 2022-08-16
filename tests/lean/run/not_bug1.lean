@@ -4,8 +4,8 @@ constant List : Type.{1}
 constant nil  : List
 constant cons : bool → List → List
 
-infixr `::` := cons
-notation `[` l:(foldr `,` (h t, cons h t) nil `]`) := l
+infixr (name := cons) `::` := cons
+notation (name := list) `[` l:(foldr `,` (h t, cons h t) nil `]`) := l
 
 #check []
 #check [tt]

@@ -2,8 +2,8 @@ prelude constant A : Type.{1}
 constant f : A → A → A
 constant g : A → A → A
 precedence `+` : 65
-infixl + := f
-infixl + := g
+infixl (name := f) + := f
+infixl (name := g) + := g
 constant a : A
 constant b : A
 #print raw a+b -- + is overloaded

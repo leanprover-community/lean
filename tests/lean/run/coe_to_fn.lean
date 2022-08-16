@@ -12,7 +12,7 @@ instance: has_coe_to_fun (α ≃ β) (λ _, α → β) := ⟨equiv.f⟩
 @[symm] def equiv.inv : α ≃ β → β ≃ α
 | ⟨f,g⟩ := ⟨g,f⟩
 
-local postfix `⁻¹` := equiv.inv
+local postfix (name := inv) `⁻¹` := equiv.inv
 
 -- coe_fn should be applied at function arguments
 def equiv.trans (f : α ≃ β) (g : β ≃ γ) : α ≃ γ :=

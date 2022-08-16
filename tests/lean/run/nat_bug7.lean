@@ -5,7 +5,7 @@ inductive nat : Type
 
 namespace nat
 definition add (x y : nat) : nat := nat.rec x (λn r, succ r) y
-infixl `+` := add
+infixl (name := add) `+` := add
 
 axiom add_right_comm (n m k : nat) : n + m + k = n + k + m
 open eq

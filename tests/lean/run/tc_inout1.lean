@@ -50,7 +50,7 @@ run_cmd do
 
 
 section
-local infix + := nat.add
+local infix (name := add) + := nat.add
 
 example (a b c : nat) : (a + b) + c = a + (b + c) :=
 assoc a b c
@@ -63,7 +63,7 @@ class has_mem2 (α : out_param $ Type u) (γ : Type v) :=
 def mem2 {α : Type u} {γ : Type v} [has_mem2 α γ] : α → γ → Prop :=
 has_mem2.mem
 
-local infix ∈ := mem2
+local infix (name := mem) ∈ := mem2
 
 instance (α : Type u) : has_mem2 α (list α) :=
 ⟨list.mem⟩

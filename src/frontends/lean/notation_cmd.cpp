@@ -112,8 +112,7 @@ static optional<unsigned> get_precedence(environment const & env, char const * t
 }
 
 void check_notation_name(environment const & env, notation_entry_group grp,
-    const pos_info & pos, name const & name, bool was_anon)
-{
+    const pos_info & pos, name const & name, bool was_anon) {
     if (grp == notation_entry_group::Reserve || !has_notation(env, name)) return;
     if (was_anon)
         throw parser_error(sstream() <<
