@@ -429,7 +429,7 @@ public:
     /** \brief Lookahead version of \c curr_is_token. See \c ahead(). */
     bool ahead_is_token(name const & tk, int n = 0);
 
-    /** \brief Check current token, and move to next characther, throw exception if current token is not \c tk.  Returns true if succesful. */
+    /** \brief Check current token, and move to next character, throw exception if current token is not \c tk.  Returns true if succesful. */
     bool check_token_next(name const & tk, char const * msg);
     void check_token_or_id_next(name const & tk, char const * msg);
     /** \brief Check if the current token is an identifier, if it is return it and move to next token,

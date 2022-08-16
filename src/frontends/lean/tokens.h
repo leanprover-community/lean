@@ -117,6 +117,7 @@ name const & get_infixr_tk();
 name const & get_postfix_tk();
 name const & get_prefix_tk();
 name const & get_notation_tk();
+name const & get_name_tk();
 name const & get_calc_tk();
 name const & get_root_tk();
 name const & get_fields_tk();

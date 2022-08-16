@@ -1066,10 +1066,10 @@ variables {α : Type u} {β : Type v}
 variable f : α → α → α
 variable inv : α → α
 variable one : α
-local notation a * b := f a b
-local notation a ⁻¹  := inv a
+local notation (name := f) a * b := f a b
+local notation (name := inv) a ⁻¹  := inv a
 variable g : α → α → α
-local notation a + b := g a b
+local notation (name := g) a + b := g a b
 
 def commutative        := ∀ a b, a * b = b * a
 def associative        := ∀ a b c, (a * b) * c = a * (b * c)

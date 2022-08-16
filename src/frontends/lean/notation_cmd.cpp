@@ -111,10 +111,36 @@ static optional<unsigned> get_precedence(environment const & env, char const * t
     return get_expr_precedence(get_token_table(env), tk);
 }
 
+void check_notation_name(environment const & env, notation_entry_group grp,
+    const pos_info & pos, name const & name, bool was_anon)
+{
+    if (grp == notation_entry_group::Reserve || !has_notation(env, name)) return;
+    if (was_anon)
+        throw parser_error(sstream() <<
+            "invalid notation: notation already declared. Consider using 'notation (name := ...)'", pos);
+    else
+        throw parser_error(sstream() <<
+            "invalid notation: notation '" << name << "' already declared", pos);
+}
+
+static pair<ast_id, name> parse_optional_name(parser & p) {
+    if (!p.curr_is_token(get_lparen_tk())) return {0, {}};
+    p.next();
+    auto tk = p.check_id_next("invalid notation declaration, expected 'name'");
+    if (tk.second != get_name_tk())
+        p.maybe_throw_error({"invalid notation declaration, expected 'name'", p.get_ast(tk.first).m_start});
+    p.check_token_next(get_assign_tk(), "invalid notation declaration, expected ':='");
+    auto r = p.check_id_next("invalid notation declaration, expected identifier");
+    p.check_token_next(get_rparen_tk(), "invalid notation declaration, expected ')'");
+    return r;
+}
+
 static auto parse_mixfix_notation(parser & p, ast_data & parent, mixfix_kind k, bool overload, notation_entry_group grp, bool parse_only,
                                   unsigned priority)
 -> pair<notation_entry, optional<token_entry>> {
     bool explicit_pp = p.curr_is_quoted_symbol();
+    auto name = parse_optional_name(p);
+    parent.push(name.first);
     pos_info tk_pos = p.pos();
     std::string pp_tk = parse_symbol(p, parent, "invalid notation declaration, quoted symbol or identifier expected");
     std::string tk = utf8_trim(pp_tk);
@@ -211,26 +237,29 @@ static auto parse_mixfix_notation(parser & p, ast_data & parent, mixfix_kind k, 
     if (reserved_action && !explicit_pp)
         pp_tk = reserved_transition->get_pp_token().to_string_unescaped();
 
+    bool is_nud = k == mixfix_kind::prefix;
+    list<transition> ts;
+    switch (k) {
+    case mixfix_kind::infixl:
+        ts = to_list(transition(tks, mk_expr_action(*prec), pp_tk));
+        break;
+    case mixfix_kind::infixr:
+        ts = to_list(transition(tks, mk_expr_action(*prec), pp_tk));
+        break;
+    case mixfix_kind::postfix:
+        ts = to_list(transition(tks, mk_skip_action(), pp_tk));
+        break;
+    case mixfix_kind::prefix:
+        ts = to_list(transition(tks, mk_expr_action(*prec), pp_tk));
+        break;
+    }
+    expr e;
     if (grp == notation_entry_group::Reserve) {
         // reserve notation commands do not have a denotation
         parent.push(0);
-        expr dummy = mk_Prop();
+        e = mk_Prop();
         if (p.curr_is_token(get_assign_tk()))
             throw parser_error("invalid reserve notation, found `:=`", p.pos());
-        switch (k) {
-        case mixfix_kind::infixl:
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          dummy, overload, priority, grp, parse_only), new_token);
-        case mixfix_kind::infixr:
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          dummy, overload, priority, grp, parse_only), new_token);
-        case mixfix_kind::postfix:
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_skip_action(), pp_tk)),
-                                          dummy, overload, priority, grp, parse_only), new_token);
-        case mixfix_kind::prefix:
-            return mk_pair(notation_entry(true, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          dummy, overload, priority, grp, parse_only), new_token);
-        }
     } else {
         p.check_token_next(get_assign_tk(), "invalid notation declaration, ':=' expected");
         auto f_pos = p.pos();
@@ -242,20 +271,22 @@ static auto parse_mixfix_notation(parser & p, ast_data & parent, mixfix_kind k, 
 #if defined(__GNUC__) && !defined(__CLANG__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          mk_app(f, Var(1), Var(0)), overload, priority, grp, parse_only), new_token);
+            e = mk_app(f, Var(1), Var(0));
+            break;
         case mixfix_kind::infixr:
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          mk_app(f, Var(1), Var(0)), overload, priority, grp, parse_only), new_token);
+            e = mk_app(f, Var(1), Var(0));
+            break;
         case mixfix_kind::postfix:
-            return mk_pair(notation_entry(false, to_list(transition(tks, mk_skip_action(), pp_tk)),
-                                          mk_app(f, Var(0)), overload, priority, grp, parse_only), new_token);
+            e = mk_app(f, Var(0));
+            break;
         case mixfix_kind::prefix:
-            return mk_pair(notation_entry(true, to_list(transition(tks, mk_expr_action(*prec), pp_tk)),
-                                          mk_app(f, Var(0)), overload, priority, grp, parse_only), new_token);
+            e = mk_app(f, Var(0));
+            break;
         }
     }
-    lean_unreachable(); // LCOV_EXCL_LINE
+    notation_entry entry(is_nud, ts, e, overload, priority, grp, parse_only, name.second);
+    check_notation_name(p.env(), grp, tk_pos, entry.get_name(), name.second.is_anonymous());
+    return mk_pair(entry, new_token);
 }
 
 static notation_entry parse_mixfix_notation(parser & p, ast_data & data, mixfix_kind k, bool overload, notation_entry_group grp,
@@ -521,6 +552,8 @@ static notation_entry parse_notation_core(parser & p, ast_data & parent, bool ov
     bool is_nud = true;
     optional<parse_table> pt;
     optional<parse_table> reserved_pt;
+    auto notation_name = parse_optional_name(p);
+    parent.push(notation_name.first);
     auto& args = p.new_ast("args", p.pos());
     parent.push(args.m_id);
     if (p.curr_is_numeral()) {
@@ -661,7 +694,9 @@ static notation_entry parse_notation_core(parser & p, ast_data & parent, bool ov
         std::tie(id, n) = parse_notation_expr(p, locals);
         parent.push(id);
     }
-    return notation_entry(is_nud, to_list(ts.begin(), ts.end()), n, overload, priority, grp, parse_only);
+    notation_entry entry(is_nud, to_list(ts.begin(), ts.end()), n, overload, priority, grp, parse_only, notation_name.second);
+    check_notation_name(p.env(), grp, parent.m_start, entry.get_name(), notation_name.second.is_anonymous());
+    return entry;
 }
 
 bool curr_is_notation_decl(parser & p) {
