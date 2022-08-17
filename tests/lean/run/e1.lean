@@ -9,8 +9,8 @@ infix `=`:50 := eq
 constant f : Prop → N → N
 constant g : N → N → N
 precedence `+`:50
-infixl + := f
-infixl + := g
+infixl (name := f) + := f
+infixl (name := g) + := g
 #check a + b + c
 constant p : Prop
 #check p + a + b + c

@@ -46,7 +46,7 @@ meta definition flat : expr → expr → expr → tactic (expr × expr)
        return (e, pr)
   end
 
-local infix `+` := nat.add
+local infix (name := and) `+` := nat.add
 set_option trace.app_builder true
 set_option pp.all true
 

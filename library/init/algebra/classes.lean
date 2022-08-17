@@ -155,7 +155,7 @@ is, `is_preorder X r` and `is_symm X r`. -/
 is, `is_symm X r` and `is_trans X r`. -/
 @[algebra] class is_per (α : Type u) (r : α → α → Prop) extends is_symm α r, is_trans α r : Prop.
 
-/-- `is_strict_order X r` means that the binary relation `r` on `X` is a strict order, that is, 
+/-- `is_strict_order X r` means that the binary relation `r` on `X` is a strict order, that is,
 `is_irrefl X r` and `is_trans X r`. -/
 @[algebra] class is_strict_order (α : Type u) (r : α → α → Prop) extends
   is_irrefl α r, is_trans α r : Prop.
@@ -170,7 +170,7 @@ that is, `is_strict_order X lt` and `is_incomp_trans X lt`. -/
 @[algebra] class is_strict_weak_order (α : Type u) (lt : α → α → Prop) extends
   is_strict_order α lt, is_incomp_trans α lt : Prop.
 
-/-- `is_trichotomous X lt` means that the binary relation `lt` on `X` is trichotomous, that is, 
+/-- `is_trichotomous X lt` means that the binary relation `lt` on `X` is trichotomous, that is,
 either `lt a b` or `a = b` or `lt b a` for any `a` and `b`. -/
 @[algebra] class is_trichotomous (α : Type u) (lt : α → α → Prop) : Prop :=
 (trichotomous : ∀ a b, lt a b ∨ a = b ∨ lt b a)
@@ -258,7 +258,7 @@ def equiv (a b : α) : Prop :=
 
 parameter [is_strict_weak_order α r]
 
-local infix ` ≈ `:50 := equiv
+local infix (name := equiv) ` ≈ `:50 := equiv
 
 lemma erefl (a : α) : a ≈ a :=
 ⟨irrefl a, irrefl a⟩

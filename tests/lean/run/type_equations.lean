@@ -46,7 +46,7 @@ definition subterm := tc direct_subterm
 theorem subterm_wf : well_founded subterm :=
 tc.wf direct_subterm_wf
 
-local infix `+` := Expr.add
+local infix (name := add) `+` := Expr.add
 
 set_option pp.notation false
 

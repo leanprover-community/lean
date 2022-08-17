@@ -71,7 +71,7 @@ structure Functor (C : Category.{ u1 v1 }) (D : Category.{ u2 v2 }) :=
   }
 
 namespace ProductCategory
-  notation C `×` D := ProductCategory C D
+  notation (name := prod) C `×` D := ProductCategory C D
 end ProductCategory
 
 structure PreMonoidalCategory

@@ -5,9 +5,9 @@ inductive nat : Type
 | succ : nat → nat
 namespace nat
 definition add (x y : nat) : nat := nat.rec x (λn r, succ r) y
-infixl `+` := add
+infixl (name := add) `+` := add
 definition mul (n m : nat) : nat := nat.rec zero (fun m x, x + n) m
-infixl `*` := mul
+infixl (name := mul) `*` := mul
 
 axiom mul_succ_right (n m : nat) : n * succ m = n * m + n
 open eq

@@ -110,6 +110,7 @@ infixr       infixr
 postfix      postfix
 prefix       prefix
 notation     notation
+name         name
 calc         calc
 root         _root_
 fields       fields
@@ -118,6 +119,7 @@ inductive    inductive
 instance     instance
 this         this
 noncomputable noncomputable
+exclam       !
 theory       theory
 key_equivalences key_equivalences
 using        using

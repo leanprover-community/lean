@@ -13,7 +13,7 @@ inductive List (T : Type) : Type
 namespace List
 section
 variable {T : Type}
-notation `[` l:(foldr `,` (h t, cons h t) nil) `]` := l
+notation (name := list) `[` l:(foldr `,` (h t, cons h t) nil) `]` := l
 #check [(10:nat), 20, 30]
 end
 end List

@@ -25,8 +25,8 @@ inductive PropF
 
 namespace PropF
   notation `#`:max P:max := Var P
-  local notation A ∨ B   := Disj A B
-  local notation A ∧ B   := Conj A B
+  local notation (name := Disj) A ∨ B   := Disj A B
+  local notation (name := Conj) A ∧ B   := Conj A B
   local infixr `⇒`:27    := Impl
   notation `⊥`           := Bot
 

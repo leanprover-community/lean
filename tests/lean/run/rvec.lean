@@ -7,7 +7,7 @@ inductive rvec (α : Type u) : nat → Type u
 
 namespace rvec
 
-local infix :: := cons
+local infix (name := cons) :: := cons
 variables {α β δ : Type u}
 
 def map (f : α → β) : Π {n : nat}, rvec α n → rvec β n
