@@ -681,9 +681,7 @@ section
 
   protected def or.by_cases [decidable p] [decidable q] {α : Sort u}
                                    (h : p ∨ q) (h₁ : p → α) (h₂ : q → α) : α :=
-  if hp : p then h₁ hp else
-    if hq : q then h₂ hq else
-      false.rec _ (or.elim h hp hq)
+  if hp : p then h₁ hp else h₂ (h.resolve_left hp)
 end
 
 section
