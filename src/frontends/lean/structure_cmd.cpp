@@ -189,6 +189,19 @@ optional<pair<name, name>> find_method(environment const & env, name const & str
     return {};
 }
 
+optional<pair<name, name>> find_method_alias(environment const & env, name const & struct_name, name const & field_name) {
+    optional<pair<name, name>> res = {};
+    for (auto const & alias : get_expr_aliases(env, struct_name + field_name)) {
+        if (alias.drop_prefix() == field_name) {
+            if (res) {
+                return {};
+            }
+            res = some(mk_pair(alias.get_prefix(), alias));
+        }
+    }
+    return res;
+}
+
 void get_structure_fields_flattened(environment const & env, name const & structure_name, buffer<name> & full_fnames) {
     for (auto const & fname : get_structure_fields(env, structure_name)) {
         full_fnames.push_back(structure_name + fname);

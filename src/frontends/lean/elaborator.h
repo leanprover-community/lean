@@ -271,15 +271,9 @@ private:
         name m_struct_name;
         /** Name of the constant to use as a function */
         name m_const_name;
-        /** Whether to find the first explicit argument in \c m_const_name that accepts the expression.
-         * If false, just use the first explicit argument. */
-        bool m_find_matching;
 
-        field_resolution_const(name const & base_struct_name, name const & struct_name, name const & const_name, bool find_matching = true):
-            m_base_struct_name(base_struct_name), m_struct_name(struct_name), m_const_name(const_name), m_find_matching(find_matching) {}
-
-        /** Get the structure name to search for when \c m_find_matching is true */
-        name const & get_base_name() const { return m_base_struct_name; }
+        field_resolution_const(name const & base_struct_name, name const & struct_name, name const & const_name):
+            m_base_struct_name(base_struct_name), m_struct_name(struct_name), m_const_name(const_name) {}
     };
 
     /** Field resolution: projection is being used to make a "local" recursive call */
@@ -343,7 +337,8 @@ private:
             }
         }
 
-        /** The structure name to use when reporting errors associated to this field resolution. */
+        /** The structure name associated to arguments; some kinds use this to search for a relevant
+         * argument position. Also used when reporting errors associated to this field resolution. */
         name get_base_name() {
             switch (m_kind) {
                 case kind::ProjFn: return get_proj_fn().m_base_struct_name;
@@ -354,8 +349,6 @@ private:
         }
     };
 
-    field_resolution resolve_field_notation_method(expr const & e, expr const & s, expr const & s_type, name const & struct_name, bool find_matching = true,
-                                                    buffer<name> const & extra_base_names = buffer<name>());
     field_resolution resolve_field_notation_aux(expr const & e, expr const & s, expr const & s_type);
     /** \c e is the field notation expression, \c s is the elaborated expression, \c s_type is its type */
     field_resolution resolve_field_notation(expr const & e, expr const & s, expr const & s_type);

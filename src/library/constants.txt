@@ -58,7 +58,6 @@ false.rec
 false_of_true_eq_false
 fin.mk
 fin.ne_of_vne
-forall
 forall_congr
 forall_congr_eq
 forall_not_of_not_exists
@@ -214,7 +213,6 @@ of_eq_true
 opt_param
 or
 out_param
-pi
 pprod
 pprod.fst
 pprod.mk

@@ -63,7 +63,6 @@ name const * g_false_rec = nullptr;
 name const * g_false_of_true_eq_false = nullptr;
 name const * g_fin_mk = nullptr;
 name const * g_fin_ne_of_vne = nullptr;
-name const * g_forall = nullptr;
 name const * g_forall_congr = nullptr;
 name const * g_forall_congr_eq = nullptr;
 name const * g_forall_not_of_not_exists = nullptr;
@@ -219,7 +218,6 @@ name const * g_of_eq_true = nullptr;
 name const * g_opt_param = nullptr;
 name const * g_or = nullptr;
 name const * g_out_param = nullptr;
-name const * g_pi = nullptr;
 name const * g_pprod = nullptr;
 name const * g_pprod_fst = nullptr;
 name const * g_pprod_mk = nullptr;
@@ -348,7 +346,6 @@ void initialize_constants() {
     g_false_of_true_eq_false = new name{"false_of_true_eq_false"};
     g_fin_mk = new name{"fin", "mk"};
     g_fin_ne_of_vne = new name{"fin", "ne_of_vne"};
-    g_forall = new name{"forall"};
     g_forall_congr = new name{"forall_congr"};
     g_forall_congr_eq = new name{"forall_congr_eq"};
     g_forall_not_of_not_exists = new name{"forall_not_of_not_exists"};
@@ -504,7 +501,6 @@ void initialize_constants() {
     g_opt_param = new name{"opt_param"};
     g_or = new name{"or"};
     g_out_param = new name{"out_param"};
-    g_pi = new name{"pi"};
     g_pprod = new name{"pprod"};
     g_pprod_fst = new name{"pprod", "fst"};
     g_pprod_mk = new name{"pprod", "mk"};
@@ -634,7 +630,6 @@ void finalize_constants() {
     delete g_false_of_true_eq_false;
     delete g_fin_mk;
     delete g_fin_ne_of_vne;
-    delete g_forall;
     delete g_forall_congr;
     delete g_forall_congr_eq;
     delete g_forall_not_of_not_exists;
@@ -790,7 +785,6 @@ void finalize_constants() {
     delete g_opt_param;
     delete g_or;
     delete g_out_param;
-    delete g_pi;
     delete g_pprod;
     delete g_pprod_fst;
     delete g_pprod_mk;
@@ -919,7 +913,6 @@ name const & get_false_rec_name() { return *g_false_rec; }
 name const & get_false_of_true_eq_false_name() { return *g_false_of_true_eq_false; }
 name const & get_fin_mk_name() { return *g_fin_mk; }
 name const & get_fin_ne_of_vne_name() { return *g_fin_ne_of_vne; }
-name const & get_forall_name() { return *g_forall; }
 name const & get_forall_congr_name() { return *g_forall_congr; }
 name const & get_forall_congr_eq_name() { return *g_forall_congr_eq; }
 name const & get_forall_not_of_not_exists_name() { return *g_forall_not_of_not_exists; }
@@ -1075,7 +1068,6 @@ name const & get_of_eq_true_name() { return *g_of_eq_true; }
 name const & get_opt_param_name() { return *g_opt_param; }
 name const & get_or_name() { return *g_or; }
 name const & get_out_param_name() { return *g_out_param; }
-name const & get_pi_name() { return *g_pi; }
 name const & get_pprod_name() { return *g_pprod; }
 name const & get_pprod_fst_name() { return *g_pprod_fst; }
 name const & get_pprod_mk_name() { return *g_pprod_mk; }

@@ -1,0 +1,16 @@
+field_resolution.lean:13:7: error: unknown identifier 'foo.c'
+37
+17
+22
+37
+17
+22
+38
+18
+23
+field_resolution.lean:39:12: error: invalid field notation, insufficient number of arguments for 'foo.add_a'
+field_resolution.lean:41:12: error: invalid field notation, insufficient number of arguments for 'foo.add_a'
+field_resolution.lean:47:12: error: invalid field notation, insufficient number of arguments for 'foo.add_b_of_eq'
+field_resolution.lean:52:12: error: invalid field notation, function 'foo.blah' does not have explicit argument with type (foo ...)
+field_resolution.lean:53:12: error: invalid field notation, function 'foo.blah' does not have explicit argument with type (foo ...)
+field_resolution.lean:96:27: error: invalid field notation, insufficient number of arguments for 'function.apply'

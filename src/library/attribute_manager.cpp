@@ -16,7 +16,6 @@ Author: Leonardo de Moura
 
 namespace lean {
 template class typed_attribute<indices_attribute_data>;
-template class typed_attribute<names_attribute_data>;
 template class typed_attribute<key_value_data>;
 
 ast_id key_value_data::parse(abstract_parser & p) {
@@ -289,21 +288,6 @@ ast_id indices_attribute_data::parse(abstract_parser & p) {
         vs.push_back(v.second - 1);
     }
     m_idxs = to_list(vs);
-    return data.m_id;
-}
-
-ast_id names_attribute_data::parse(abstract_parser & p) {
-    buffer<name> names;
-    lean_assert(dynamic_cast<parser *>(&p));
-    auto& p2 = *static_cast<parser *>(&p);
-    auto& data = p2.new_ast("names", p2.pos());
-    while (p2.curr_is_identifier()) {
-        name n = p2.get_name_val();
-        data.push(p2.new_ast("ident", p2.pos(), n).m_id);
-        names.push_back(n);
-        p2.next();
-    }
-    m_names = to_list(names);
     return data.m_id;
 }
 
