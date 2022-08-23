@@ -116,13 +116,17 @@ meta constant acosh : float → float
 meta constant atanh : float → float
 
 meta constant abs : float → float
-/-- Nearest integer not less than the given value. -/
+/-- Nearest integer not less than the given value.
+Returns 0 if the input is not finite. -/
 meta constant ceil : float → int
-/-- Nearest integer not greater than the given value. -/
+/-- Nearest integer not greater than the given value.
+Returns 0 if the input is not finite. -/
 meta constant floor : float → int
-/-- Nearest integer not greater in magnitude than the given value. -/
+/-- Nearest integer not greater in magnitude than the given value.
+Returns 0 if the input is not finite. -/
 meta constant trunc : float → int
-/-- Round to the nearest integer, rounding away from zero in halfway cases. -/
+/-- Round to the nearest integer, rounding away from zero in halfway cases.
+Returns 0 if the input is not finite. -/
 meta constant round : float → int
 
 meta constant lt : float → float → bool

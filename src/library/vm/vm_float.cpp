@@ -41,10 +41,11 @@ float to_float(vm_obj const & o) {
 }
 
 vm_obj float_of_nat(vm_obj const & a) {
-    // [TODO] check that the nat isn't too big to fit in an unsigned
-    return mk_vm_float(static_cast<float>(to_unsigned(a)));
+    return is_simple(a) ? mk_vm_float(cidx(a)) : mk_vm_float(to_mpz(a).get_double());
 }
-vm_obj float_of_int(vm_obj const & i) { return mk_vm_float(static_cast<float>(to_int(i))); }
+vm_obj float_of_int(vm_obj const & i) {
+    return is_simple(i) ? mk_vm_float(to_int(i)) : mk_vm_float(to_mpz(i).get_double());
+}
 
 vm_obj float_repr(vm_obj const & a) {
     std::ostringstream out;

@@ -3611,7 +3611,11 @@ expr elaborator::visit(expr const & e, optional<expr> const & expected_type) {
         } else if (is_emptyc_or_emptys(e)) {
             return visit_emptyc_or_emptys(e, expected_type);
         } else if (is_sort_wo_universe(e)) {
-            return visit(get_annotation_arg(e), expected_type);
+            auto& arg = get_annotation_arg(e);
+            if (sort_level(arg) == mk_level_zero())
+                report_or_throw(elaborator_exception(arg,
+                    "invalid universe `Sort`, use `Sort 0` or `Prop` instead"));
+            return visit(arg, expected_type);
         } else {
             switch (e.kind()) {
                 case expr_kind::Var: lean_unreachable();  // LCOV_EXCL_LINE

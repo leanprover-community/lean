@@ -187,7 +187,9 @@ struct ast_exporter : abstract_ast_exporter {
                         }
                         gs.push_back({hs, export_expr(g.m_target_type)});
                     }
-                    ss.push_back({{"decl", json_of_name(s.decl_name())}, {"goals", gs}});
+                    json sj = {{"decl", json_of_name(s.decl_name())}, {"goals", gs}};
+                    if (s.pp()) sj["pp"] = *s.pp();
+                    ss.push_back(sj);
                 }
             }
         }

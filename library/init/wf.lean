@@ -8,6 +8,13 @@ import init.data.nat.basic init.data.prod
 
 universes u v
 
+/-- A value `x : α` is accessible from `r` when every value that's lesser under `r` is also
+accessible. Note that any value that's minimal under `r` is vacuously accessible.
+
+Equivalently, `acc r x` when there is no infinite chain of elements starting at `x` that are related
+under `r`.
+
+This is used to state the definition of well-foundedness (see `well_founded`). -/
 inductive acc {α : Sort u} (r : α → α → Prop) : α → Prop
 | intro (x : α) (h : ∀ y, r y x → acc y) : acc x
 
@@ -19,7 +26,9 @@ acc.rec_on h₁ (λ x₁ ac₁ ih h₂, ac₁ y h₂) h₂
 
 end acc
 
-/-- A relation `r : α → α → Prop` is well-founded when `∀ x, (∀ y, r y x → P y → P x) → P x` for all predicates `P`.
+/-- A relation `r : α → α → Prop` is well-founded when `∀ x, (∀ y, r y x → P y → P x) → P x` for all
+predicates `P`. Equivalently, `acc r x` for all `x`.
+
 Once you know that a relation is well_founded, you can use it to define fixpoint functions on `α`.-/
 structure well_founded {α : Sort u} (r : α → α → Prop) : Prop :=
 intro :: (apply : ∀ a, acc r a)
@@ -105,25 +114,6 @@ section
   ⟨λ a, accessible (apply h (f a))⟩
 end
 end inv_image
-
--- The transitive closure of a well-founded relation is well-founded
-namespace tc
-section
-  parameters {α : Sort u} {r : α → α → Prop}
-  local notation `r⁺` := tc r
-
-  lemma accessible {z : α} (ac : acc r z) : acc (tc r) z :=
-  acc.rec_on ac (λ x acx ih,
-    acc.intro x (λ y rel,
-      tc.rec_on rel
-        (λ a b rab acx ih, ih a rab)
-        (λ a b c rab rbc ih₁ ih₂ acx ih, acc.inv (ih₂ acx ih) rab)
-        acx ih))
-
-  lemma wf (h : well_founded r) : well_founded r⁺ :=
-  ⟨λ a, accessible (apply h a)⟩
-end
-end tc
 
 /-- less-than is well-founded -/
 lemma nat.lt_wf : well_founded nat.lt :=

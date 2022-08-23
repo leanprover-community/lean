@@ -13,7 +13,7 @@ noncomputable definition count {A} (a : A) (b : bag A) : nat :=
 quotient.lift_on b (λ l, list.count a l)
   (λ l₁ l₂ h, sorry)
 definition subbag {A} (b₁ b₂ : bag A) := ∀ a, count a b₁ ≤ count a b₂
-infix ` ⊆ ` := subbag
+infix (name := subbag) ` ⊆ ` := subbag
 
 noncomputable definition decidable_subbag_1 {A} (b₁ b₂ : bag A) : decidable (b₁ ⊆ b₂) :=
 quotient.rec_on_subsingleton₂ b₁ b₂ (λ l₁ l₂,

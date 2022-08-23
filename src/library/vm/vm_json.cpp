@@ -32,8 +32,20 @@ json to_json(vm_obj const & o) {
         std::string s = to_string(cfield(o, 0));
         return json(s);
     } case json_idx::vint: {
-        int i = to_int(cfield(o, 0));
-        return json(i);
+        auto oval = cfield(o, 0);
+        if (is_simple(oval)) {
+            return json(to_int(oval));
+        }
+        auto m = to_mpz(oval);
+        if (m.is<uint64_t>()) {
+            return json(static_cast<uint64_t>(m));
+        } else if (m.is<int64_t>()) {
+            return json(static_cast<int64_t>(m));
+        } else {
+            // lose precision and store as a float. We do not store as a double, as this leads to
+            // asymmetric behavior between the parser and serializer.
+            return json(static_cast<float>(m.get_double()));
+        }
     } case json_idx::vfloat: {
         float f = to_float(cfield(o, 0));
         return json(f);
@@ -71,16 +83,16 @@ vm_obj to_obj(json const & j) {
     if (j.is_null()) {
         return mk_vm_simple(json_idx::vnull);
     } else if (j.is_boolean()) {
-        return mk_vm_constructor(json_idx::vbool, mk_vm_bool(j));
+        return mk_vm_constructor(json_idx::vbool, mk_vm_bool(j.get<bool>()));
     } else if (j.is_number_float()) {
-        float f = j;
-        return mk_vm_constructor(json_idx::vfloat, to_obj(f));
-    } else if (j.is_number()) {
-        int i = j;
-        return mk_vm_constructor(json_idx::vint, mk_vm_nat(i));
+        // note that this throws away a lot of precision, as the vm floats are not doubles
+        return mk_vm_constructor(json_idx::vfloat, to_obj(j.get<double>()));
+    } else if (j.is_number_unsigned()) {
+        return mk_vm_constructor(json_idx::vint, mk_vm_int(j.get<std::uint64_t>()));
+    } else if (j.is_number_integer()) {
+        return mk_vm_constructor(json_idx::vint, mk_vm_int(j.get<std::int64_t>()));
     } else if (j.is_string()) {
-        std::string s = j;
-        return mk_vm_constructor(json_idx::vstring, to_obj(s));
+        return mk_vm_constructor(json_idx::vstring, to_obj(j.get<std::string>()));
     } else if (j.is_array()) {
         vm_obj o = mk_vm_nil();
         for (auto i = j.crbegin(); i != j.crend(); i++) {

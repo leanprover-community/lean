@@ -2,7 +2,7 @@ open nat
 
 reserve postfix ⁻¹:(max + 1)
 
-postfix ⁻¹ := eq.symm
+postfix (name := symm) ⁻¹ := eq.symm
 
 constant foo (a b : nat) : a + b = 0
 

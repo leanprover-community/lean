@@ -258,28 +258,34 @@ meta constant expr.get_delayed_abstraction_locals : expr → option (list name)
     by nested inference of `reflected` instances.
 
     The quotation expression `` `(a) `` (outside of patterns) is equivalent to `reflect a`
-    and thus can be used as an explicit way of inferring an instance of `reflected a`. -/
-@[class] meta def reflected {α : Sort u} : α → Type :=
+    and thus can be used as an explicit way of inferring an instance of `reflected a`.
+    
+    Note that the `α` argument is explicit to prevent it being treated as reducible by typeclass
+    inference, as this breaks `reflected` instances on type synonyms. -/
+@[class] meta def reflected (α : Sort u) : α → Type :=
 λ _, expr
 
-@[inline] meta def reflected.to_expr {α : Sort u} {a : α} : reflected a → expr :=
+@[inline] meta def reflected.to_expr {α : Sort u} {a : α} : reflected _ a → expr :=
 id
 
+/-- This is a more strongly-typed version of `expr.subst` that keeps track of the value being
+reflected. To obtain a term of type `reflected _`, use `` (`(λ x y, foo x y).subst ex).subst ey`` instead of
+using `` `(foo %%ex %%ey) `` (which returns an `expr`). -/
 @[inline] meta def reflected.subst {α : Sort v} {β : α → Sort u} {f : Π a : α, β a} {a : α} :
-  reflected f → reflected a → reflected (f a) :=
+  reflected _ f → reflected _ a → reflected _ (f a) :=
 expr.subst
 
 attribute [irreducible] reflected reflected.subst reflected.to_expr
 
-@[instance] protected meta constant expr.reflect (e : expr elab) : reflected e
-@[instance] protected meta constant string.reflect (s : string) : reflected s
+@[instance] protected meta constant expr.reflect (e : expr elab) : reflected _ e
+@[instance] protected meta constant string.reflect (s : string) : reflected _ s
 
-@[inline] meta instance {α : Sort u} (a : α) : has_coe (reflected a) expr :=
+@[inline] meta instance {α : Sort u} (a : α) : has_coe (reflected _ a) expr :=
 ⟨reflected.to_expr⟩
 
-protected meta def reflect {α : Sort u} (a : α) [h : reflected a] : reflected a := h
+protected meta def reflect {α : Sort u} (a : α) [h : reflected _ a] : reflected _ a := h
 
-meta instance {α} (a : α) : has_to_format (reflected a) :=
+meta instance {α} (a : α) : has_to_format (reflected _ a) :=
 ⟨λ h, to_fmt h.to_expr⟩
 
 namespace expr

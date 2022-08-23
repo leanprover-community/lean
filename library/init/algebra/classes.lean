@@ -136,32 +136,51 @@ instance is_total_preorder_is_preorder (α : Type u) (r : α → α → Prop) [s
 {trans := s.trans,
  refl  := λ a, or.elim (@is_total.total _ r _ a a) id id}
 
+/-- `is_partial_order X r` means that the binary relation `r` on `X` is a partial order, that is,
+`is_preorder X r` and `is_antisymm X r`. -/
 @[algebra] class is_partial_order (α : Type u) (r : α → α → Prop) extends
   is_preorder α r, is_antisymm α r : Prop.
 
+/-- `is_linear_order X r` means that the binary relation `r` on `X` is a linear order, that is,
+`is_partial_order X r` and `is_total X r`. -/
 @[algebra] class is_linear_order (α : Type u) (r : α → α → Prop) extends
   is_partial_order α r, is_total α r : Prop.
 
+/-- `is_equiv X r` means that the binary relation `r` on `X` is an equivalence relation, that
+is, `is_preorder X r` and `is_symm X r`. -/
 @[algebra] class is_equiv (α : Type u) (r : α → α → Prop) extends
   is_preorder α r, is_symm α r : Prop.
 
+/-- `is_per X r` means that the binary relation `r` on `X` is a partial equivalence relation, that
+is, `is_symm X r` and `is_trans X r`. -/
 @[algebra] class is_per (α : Type u) (r : α → α → Prop) extends is_symm α r, is_trans α r : Prop.
 
+/-- `is_strict_order X r` means that the binary relation `r` on `X` is a strict order, that is,
+`is_irrefl X r` and `is_trans X r`. -/
 @[algebra] class is_strict_order (α : Type u) (r : α → α → Prop) extends
   is_irrefl α r, is_trans α r : Prop.
 
+/-- `is_incomp_trans X lt` means that for `lt` a binary relation on `X`, the incomparable relation
+`λ a b, ¬ lt a b ∧ ¬ lt b a` is transitive. -/
 @[algebra] class is_incomp_trans (α : Type u) (lt : α → α → Prop) : Prop :=
 (incomp_trans : ∀ a b c, (¬ lt a b ∧ ¬ lt b a) → (¬ lt b c ∧ ¬ lt c b) → (¬ lt a c ∧ ¬ lt c a))
 
+/-- `is_strict_weak_order X lt` means that the binary relation `lt` on `X` is a strict weak order,
+that is, `is_strict_order X lt` and `is_incomp_trans X lt`. -/
 @[algebra] class is_strict_weak_order (α : Type u) (lt : α → α → Prop) extends
   is_strict_order α lt, is_incomp_trans α lt : Prop.
 
+/-- `is_trichotomous X lt` means that the binary relation `lt` on `X` is trichotomous, that is,
+either `lt a b` or `a = b` or `lt b a` for any `a` and `b`. -/
 @[algebra] class is_trichotomous (α : Type u) (lt : α → α → Prop) : Prop :=
 (trichotomous : ∀ a b, lt a b ∨ a = b ∨ lt b a)
 
+/-- `is_strict_total_order X lt` means that the binary relation `lt` on `X` is a strict total order,
+that is, `is_trichotomous X lt` and `is_strict_order X lt`. -/
 @[algebra] class is_strict_total_order (α : Type u) (lt : α → α → Prop)
-  extends is_trichotomous α lt, is_strict_weak_order α lt : Prop.
+  extends is_trichotomous α lt, is_strict_order α lt : Prop.
 
+/-- Equality is an equivalence relation. -/
 instance eq_is_equiv (α : Type u) : is_equiv α (=) :=
 {symm := @eq.symm _, trans := @eq.trans _, refl := eq.refl}
 
@@ -239,7 +258,7 @@ def equiv (a b : α) : Prop :=
 
 parameter [is_strict_weak_order α r]
 
-local infix ` ≈ `:50 := equiv
+local infix (name := equiv) ` ≈ `:50 := equiv
 
 lemma erefl (a : α) : a ≈ a :=
 ⟨irrefl a, irrefl a⟩

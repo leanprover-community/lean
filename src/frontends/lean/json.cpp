@@ -7,6 +7,7 @@ Author: Gabriel Ebner
 #ifdef LEAN_JSON
 #include "frontends/lean/json.h"
 #include <string>
+#include "library/class.h"
 #include "library/documentation.h"
 #include "library/scoped_ext.h"
 #include "library/protected.h"
@@ -59,11 +60,34 @@ void add_source_info(environment const & env, name const & d, json & record) {
     }
 }
 
-json serialize_decl(name const & short_name, name const & long_name, environment const & env, options const & o) {
-    declaration const & d = env.get(long_name);
-    type_context_old tc(env);
-    auto fmter = mk_pretty_formatter_factory()(env, o, tc);
-    expr type = d.get_type();
+/* Produce a rough categorization of the kind of a symbol, for use in intellisense.
+This takes `d` only to avoid having to look it up a second time. */
+std::string get_decl_kind(name const & name, declaration const & d, environment const & env) {
+    // We deliberately avoid distinguishing "projection"s and "constructor"s because:
+    // * the def/theorem distinction is more useful
+    // * a user shouldn't care what the "real" constructors and projections are when doing symbol search
+    if (is_class(env, name)) {
+        return "class";
+    } else if (is_structure_like(env, name)) {
+        return "structure";
+    } else if (inductive::is_inductive_decl(env, name)) {
+        return "inductive";
+    } else if (is_instance(env, name)) {
+        return "instance";
+    } else {
+        // theorem vs definition isn't that useful when guessing names; the prop/data distinction is.
+        type_checker tc(env);
+        if (!d.is_trusted()) {
+            return "meta";
+        } else if (tc.is_prop(d.get_type())) {
+            return "theorem";
+        } else {
+            return "definition";
+        }
+    }
+}
+
+expr consume_implicit_binders(expr type) {
     if (LEAN_COMPLETE_CONSUME_IMPLICIT) {
         while (true) {
             if (!is_pi(type))
@@ -76,8 +100,17 @@ json serialize_decl(name const & short_name, name const & long_name, environment
             type   = instantiate(binding_body(type), m);
         }
     }
+    return type;
+}
+
+json serialize_decl(name const & short_name, name const & long_name, environment const & env, options const & o) {
+    declaration const & d = env.get(long_name);
+    type_context_old tc(env);
+    auto fmter = mk_pretty_formatter_factory()(env, o, tc);
     json completion;
     completion["text"] = short_name.escape();
+    completion["kind"] = get_decl_kind(long_name, d, env);
+    expr type = consume_implicit_binders(d.get_type());
     interactive_report_type(env, o, type, completion);
     add_source_info(env, long_name, completion);
     if (auto doc = get_doc_string(env, long_name))

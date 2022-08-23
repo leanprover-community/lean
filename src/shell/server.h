@@ -100,6 +100,7 @@ class server : public module_vfs {
     task<cmd_res> handle_hole(cmd_req const & req);
     cmd_res handle_hole_commands(cmd_req const & req);
     cmd_res handle_all_hole_commands(cmd_req const & req);
+    cmd_res handle_symbols(cmd_req const & req);
     cmd_res handle_search(cmd_req const & req);
     cmd_res handle_roi(cmd_req const & req);
 

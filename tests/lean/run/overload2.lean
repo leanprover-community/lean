@@ -10,7 +10,7 @@ definition add : F2 → F2 → F2
 | I O := I
 | I I := O
 
-infix + := F2.add
+infix (name := add) + := F2.add
 
 end F2
 

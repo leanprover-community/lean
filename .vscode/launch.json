@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug single lean file",
+            "cwd": "${workspaceFolder}/library",
+            "program": "${workspaceRoot}/bin/lean",
+            "args": ["${file}"],
+            "type": "cppdbg",
+            "request": "launch",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-interpreter-exec console \"source ${workspaceRoot}/bin/lean-gdb.py\"",
+                    "ignoreFailures": false
+                }
+            ],
+        }
+    ]
+}

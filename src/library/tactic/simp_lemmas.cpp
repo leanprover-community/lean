@@ -828,9 +828,15 @@ bool is_rfl_lemma(expr type, expr pf) {
         type = binding_body(type);
     }
     expr lhs, rhs;
-    if (!is_eq(type, lhs, rhs)) return false;
-    if (!is_app_of(pf, get_eq_refl_name(), 2) && !is_app_of(pf, get_rfl_name(), 2)) return false;
-    return true;
+    if (is_eq(type)) {
+        if (!is_app_of(pf, get_eq_refl_name(), 2) && !is_app_of(pf, get_rfl_name(), 2)) return false;
+        return true;
+    }
+    if (is_iff(type)) {
+        if (!is_app_of(pf, get_iff_refl_name(), 1) && !is_app_of(pf, get_iff_rfl_name(), 1)) return false;
+        return true;
+    }
+    return false;
 }
 
 bool is_rfl_lemma(environment const & env, name const & cname) {
@@ -864,14 +870,25 @@ static simp_lemmas add_core(type_context_old & ctx, simp_lemmas const & s, name 
             proof = mk_app(proof, mvar);
         }
         expr lhs, rhs;
-        lean_verify(is_eq(type, lhs, rhs));
-        if (symm) {
-            proof = mk_eq_symm(ctx, proof);
-            std::swap(lhs, rhs);
+        name head_name;
+        if (is_iff(type, lhs, rhs)) {
+            head_name = get_iff_name();
+            if (symm) {
+                proof = mk_iff_symm(ctx, proof);
+                std::swap(lhs, rhs);
+            }
+        } else if (is_eq(type, lhs, rhs)) {
+            head_name = get_eq_name();
+            if (symm) {
+                proof = mk_eq_symm(ctx, proof);
+                std::swap(lhs, rhs);
+            }
+        } else {
+            lean_unreachable();
         }
         simp_lemmas new_s = s;
-        new_s.insert(get_eq_name(), mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
-                                                 lhs, rhs, proof, priority));
+        new_s.insert(head_name, mk_rfl_lemma(cname, length(ls), to_list(emetas), to_list(instances),
+                                             lhs, rhs, proof, priority));
         return new_s;
     } else {
         return add_core(ctx, s, cname, ls, type, proof, symm, priority);

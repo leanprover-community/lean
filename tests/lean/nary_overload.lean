@@ -7,8 +7,8 @@ constant lst.nil {A : Type} : lst A
 constant vec.cons {A : Type} : A → vec A → vec A
 constant lst.cons {A : Type} : A → lst A → lst A
 
-notation `[` l:(foldr `, ` (h t, vec.cons h t) vec.nil `]`) := l
-notation `[` l:(foldr `, ` (h t, lst.cons h t) lst.nil `]`) := l
+notation (name := list1) `[` l:(foldr `, ` (h t, vec.cons h t) vec.nil `]`) := l
+notation (name := list2) `[` l:(foldr `, ` (h t, lst.cons h t) lst.nil `]`) := l
 
 constant A : Type
 variables a b c : A

@@ -115,6 +115,7 @@ name const & get_iff_intro_name();
 name const & get_iff_mp_name();
 name const & get_iff_mpr_name();
 name const & get_iff_refl_name();
+name const & get_iff_rfl_name();
 name const & get_iff_symm_name();
 name const & get_iff_trans_name();
 name const & get_iff_false_intro_name();

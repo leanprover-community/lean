@@ -84,7 +84,7 @@ else pure false
 instance_derive_handler ``has_reflect mk_has_reflect_instance ff (λ n params tgt,
   -- add additional `reflected` assumption for each parameter
   params.mfoldr (λ param tgt,
-  do param_cls ← mk_app `reflected [param],
+  do param_cls ← mk_mapp `reflected [none, some param],
     pure $ expr.pi `a binder_info.inst_implicit param_cls tgt
   ) tgt)
 

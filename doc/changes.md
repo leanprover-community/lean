@@ -1,3 +1,75 @@
+3.46.0c (8 August 2022)
+-----------------------
+
+Features:
+- Add docstrings for algebra classes (#747)
+
+Bug fixes:
+- Add recursion guard in tlean exporter (#752)
+
+Changes:
+- Remove redundant assumption from `is_strict_total_order` (#746)
+
+3.45.0c (27 June 2022)
+----------------------
+
+Bug fixes:
+- End position information sent by the lean server used for command annotations no longer includes trailing whitespace and comments (#744)
+- `json.parse` no longer parses `-1` as `4294967295`, along with various other problems with integers (#743)
+- `native.float.of_nat`, `native.float.of_int`, `native.float.floor`, `native.float.ceil`, `native.float.round`, and `native.float.trunc`
+  no longer truncate to 32 bits of range (#742)
+- `environment.is_structure` is now true on `structure`s with no fields (#739)
+
+Changes:
+- `native.float.floor`, `native.float.ceil`, `native.float.round`, and `native.float.trunc` now return 0 on infinite inputs (#742)
+
+3.44.1c (27 June 2022)
+----------------------
+
+Changes:
+- Do not treat `iff` refl lemmas as if they were `eq` refl lemmas (#736)
+
+3.44.0c (24 June 2022)
+---------------------
+
+Features:
+- Add a debug configuration for vscode (#726)
+- Add a docstring for `reflected.subst` (#729)
+- Record symbol kinds in auto-completion info (#727)
+- Add support for listing symbols in a file in vscode (#724)
+- `io.unsafe_perform_io` (#730)
+- Use lemmas proved with `iff.rfl` as refl lemmas in dsimp (#723)
+
+Changes:
+- Turn implicit arguments to `↔` in nat lemmas (#719)
+- Reject `Sort` and suggest `Prop` (#732)
+- Make the type argument to `reflected` explicit (#734)
+
+3.43.0c (18 May 2022)
+---------------------
+
+Features:
+- Teach `well_founded_tactics.default_dec_tac` that `n < n.succ` (#710)
+- Improve docs for `acc`, `well_founded` (#715)
+
+Bug fixes:
+- Add modifiers/attrs/docstring check to `local` command (#711)
+- `noncomputable`: better error message for non-Prop theorems (#712)
+- Uninstance order decidability (#714)
+
+Changes:
+- Remove `tc` (#713)
+- Drop `set.sUnion` (#675)
+
+3.42.0c (24 March 2022)
+-----------------------
+
+Features:
+- Export pretty-printed tactic states (#702)
+
+Bug fixes:
+- Make `async` aware of instance cache (#706)
+
 3.42.0c (18 March 2022)
 -----------------------
 

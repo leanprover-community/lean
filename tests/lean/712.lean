@@ -6,11 +6,11 @@ local infix `~~~` := eq
 
 #print notation ~~~
 
-local infix `~~~`:50 := eq
+local infix (name := eq2) `~~~`:50 := eq
 
 #print notation ~~~
 
-local infix `~~~`:100 := eq
+local infix (name := eq3) `~~~`:100 := eq
 
 infix `~~~`:100 := eq  -- FAIL
 

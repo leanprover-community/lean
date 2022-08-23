@@ -62,7 +62,7 @@ notation_entry::notation_entry(bool is_nud, list<transition> const & ts, expr co
     m_name(n), m_expr(e), m_overload(overload), m_group(g), m_parse_only(parse_only), m_priority(priority) {
     new (&m_transitions) list<transition>(ts);
     m_safe_ascii = std::all_of(ts.begin(), ts.end(), [](transition const & t) { return t.is_safe_ascii(); });
-    if (n.is_anonymous()) m_name = heuristic_name();
+    if (g == notation_entry_group::Main && n.is_anonymous()) m_name = heuristic_name();
 }
 notation_entry::notation_entry(notation_entry const & e, bool overload):
     notation_entry(e) {
@@ -264,9 +264,11 @@ struct notation_prio_fn { unsigned operator()(notation_entry const & v) const { 
 struct notation_state {
     typedef rb_map<mpz, list<expr>, mpz_cmp_fn> num_map;
     typedef head_map_prio<notation_entry, notation_prio_fn> head_to_entries;
+    typedef name_set notation_names;
     parse_table      m_nud;
     parse_table      m_led;
     num_map          m_num_map;
+    name_set         m_notation_names;
     head_to_entries  m_inv_map;
     // The following two tables are used to implement `reserve notation` commands
     parse_table      m_reserved_nud;
@@ -306,6 +308,11 @@ struct notation_config {
     }
 
     static void add_entry(environment const &, io_state const &, state & s, entry const & e) {
+        if (e.group() == notation_entry_group::Main) {
+            if (s.m_notation_names.contains(e.get_name()))
+                throw exception(sstream() << "invalid notation, a notation named '" << e.get_name() << "' has already been declared");
+            s.m_notation_names.insert(e.get_name());
+        }
         buffer<transition> ts;
         switch (e.kind()) {
         case notation_entry_kind::NuD: {
@@ -450,6 +457,10 @@ parse_table const & get_reserved_nud_table(environment const & env) {
 
 parse_table const & get_reserved_led_table(environment const & env) {
     return notation_ext::get_state(env).m_reserved_led;
+}
+
+bool has_notation(environment const & env, name const & n) {
+    return notation_ext::get_state(env).m_notation_names.contains(n);
 }
 
 environment add_mpz_notation(environment const & env, mpz const & n, expr const & e, bool overload, bool parse_only) {

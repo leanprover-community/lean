@@ -95,6 +95,7 @@ expr mk_heq_refl(type_context_old & ctx, expr const & a);
 expr mk_symm(type_context_old & ctx, name const & relname, expr const & H);
 expr mk_eq_symm(type_context_old & ctx, expr const & H);
 expr mk_eq_symm(type_context_old & ctx, expr const & a, expr const & b, expr const & H);
+expr mk_iff_symm(type_context_old & ctx, expr const & H);
 expr mk_heq_symm(type_context_old & ctx, expr const & H);
 
 /** \brief Similar a transitivity proof for the given relation */

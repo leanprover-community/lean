@@ -679,11 +679,10 @@ section
   def  decidable_of_decidable_of_eq (hp : decidable p) (h : p = q) : decidable q :=
   decidable_of_decidable_of_iff hp h.to_iff
 
-  protected def or.by_cases [decidable p] [decidable q] {α : Sort u}
+  /-- A version of `or.elim` in `Type`. If both `p` and `q` are true, `h₁` is used. -/
+  protected def or.by_cases [decidable p] {α : Sort u}
                                    (h : p ∨ q) (h₁ : p → α) (h₂ : q → α) : α :=
-  if hp : p then h₁ hp else
-    if hq : q then h₂ hq else
-      false.rec _ (or.elim h hp hq)
+  if hp : p then h₁ hp else h₂ (h.resolve_left hp)
 end
 
 section
@@ -1059,9 +1058,6 @@ lemma inv_image.trans (f : α → β) (h : transitive r) : transitive (inv_image
 lemma inv_image.irreflexive (f : α → β) (h : irreflexive r) : irreflexive (inv_image r f) :=
 λ (a : α) (h₁ : inv_image r f a a), h (f a) h₁
 
-inductive tc {α : Sort u} (r : α → α → Prop) : α → α → Prop
-| base  : ∀ a b, r a b → tc a b
-| trans : ∀ a b c, tc a b → tc b c → tc a c
 end relation
 
 section binary
@@ -1069,10 +1065,10 @@ variables {α : Type u} {β : Type v}
 variable f : α → α → α
 variable inv : α → α
 variable one : α
-local notation a * b := f a b
-local notation a ⁻¹  := inv a
+local notation (name := f) a * b := f a b
+local notation (name := inv) a ⁻¹  := inv a
 variable g : α → α → α
-local notation a + b := g a b
+local notation (name := g) a + b := g a b
 
 def commutative        := ∀ a b, a * b = b * a
 def associative        := ∀ a b c, (a * b) * c = a * (b * c)

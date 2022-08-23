@@ -41,7 +41,7 @@ attribute [trans] le_lt_trans
           ... < d : H5
 
 constant le2 : A → A → bool
-infixl ` ≤ `:50 := le2
+infixl (name := le2) ` ≤ `:50 := le2
 constant le2_trans (a b c : A) (H1 : le2 a b) (H2 : le2 b c) : le2 a c
 attribute [trans] le2_trans
 -- print raw calc b   ≤ c : H2

@@ -20,6 +20,7 @@ Author: Leonardo de Moura
 #include "library/tactic/tactic_state.h"
 #include "library/tactic/backward/backward_lemmas.h"
 #include "frontends/lean/parser.h"
+#include "frontends/lean/tokens.h"
 
 namespace lean {
 static optional<head_index> get_backward_target(type_context_old & ctx, expr type) {
@@ -54,10 +55,10 @@ struct intro_attr_data : public attr_data {
 
     ast_id parse(abstract_parser & p) override {
         ast_id r = 0;
-        if (p.curr_is_token("!")) {
+        if (p.curr_is_token(get_exclam_tk())) {
             lean_assert(dynamic_cast<parser *>(&p));
             auto& p2 = *static_cast<parser *>(&p);
-            r = p2.new_ast("!", p2.pos()).m_id;
+            r = p2.new_ast(get_exclam_tk(), p2.pos()).m_id;
             p2.next();
             m_eager = true;
         }

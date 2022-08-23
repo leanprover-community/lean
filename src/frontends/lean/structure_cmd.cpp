@@ -127,7 +127,7 @@ bool is_structure(environment const & env, name const & S) {
         intro_type = binding_body(intro_type);
     }
     if (!is_pi(intro_type))
-        return false;
+        return true;  // no fields
     name field_name = S + deinternalize_field_name(binding_name(intro_type));
     return get_projection_info(env, field_name) != nullptr;
 }

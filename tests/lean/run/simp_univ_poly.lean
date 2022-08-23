@@ -4,7 +4,7 @@ universes u v
 def equinumerous (α : Type u) (β : Type v) :=
 ∃ f : α → β, function.bijective f
 
-local infix ` ≈ `:50 := equinumerous
+local infix (name := equiv) ` ≈ `:50 := equinumerous
 
 @[refl] lemma refl {α} : α ≈ α := sorry
 @[trans] lemma trans {α β γ} :

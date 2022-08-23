@@ -7,6 +7,7 @@ Author: Mario Carneiro
 #pragma once
 #include <atomic>
 #include <vector>
+#include <string>
 #include <unordered_map>
 #include "library/abstract_parser.h"
 #include "library/tactic/tactic_state.h"
@@ -57,11 +58,12 @@ public:
         struct cell {
             name m_decl_name;
             std::vector<goal> m_goals;
+            optional<std::string> m_pp;
             unsigned m_hash;
             MK_LEAN_RC();
             unsigned mk_hash() const;
             cell(name const & decl_name, std::vector<goal> && goals):
-                m_decl_name(decl_name), m_goals(std::move(goals)), m_hash(mk_hash()), m_rc(1) {}
+                m_decl_name(decl_name), m_goals(std::move(goals)), m_pp(), m_hash(mk_hash()), m_rc(1) {}
             void dealloc() { delete this; }
         };
         friend bool operator==(cell const & c1, cell const & c2) {
@@ -80,6 +82,8 @@ public:
         unsigned hash() const { return m_ptr->m_hash; }
         name decl_name() const { return m_ptr->m_decl_name; }
         std::vector<goal> const & goals() const { return m_ptr->m_goals; }
+        void set_pp(std::string const & pp) const { m_ptr->m_pp = optional<std::string>(pp); }
+        optional<std::string> const & pp() const { return m_ptr->m_pp; }
     };
 
     struct summary_hash { unsigned operator()(summary const & n) const { return n.hash(); } };
@@ -98,7 +102,7 @@ public:
     mutable std::atomic_bool m_exported{false};
     tactic_log() {}
 
-    tactic_state_id get_id(summary const & s) const;
+    tactic_state_id get_id(tactic_state const & ts, summary const & s) const;
     tactic_state_id push_invocation(ast_id id, tactic_state_id start, tactic_state_id end, bool success) const;
     inline std::vector<tactic_invocation> & get_invocs(lock_guard<mutex> &) const { return m_invocs; }
     inline std::vector<summary> & get_states(lock_guard<mutex> &) const { return m_states; }

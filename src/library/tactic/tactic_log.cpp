@@ -5,8 +5,11 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Mario Carneiro
 */
 #include <vector>
+#include <string>
 #include "util/thread.h"
+#include "library/module_mgr.h"
 #include "library/tactic/tactic_log.h"
+
 
 namespace lean {
 
@@ -28,12 +31,17 @@ unsigned tactic_log::summary::cell::mk_hash() const {
     return h;
 }
 
-tactic_state_id tactic_log::get_id(summary const & s) const {
+tactic_state_id tactic_log::get_id(tactic_state const & ts, summary const & s) const {
     lock_guard<mutex> l(m_mutex);
     auto& map = get_state_map(l);
     auto it = map.find(s);
     if (it != map.end()) return it->second;
     tactic_state_id r = get_states(l).size();
+    if (get_global_module_mgr()->get_export_tspp()) {
+        std::ostringstream os;
+        os << ts.pp();
+        s.set_pp(os.str());
+    }
     get_states(l).push_back(s);
     map.emplace(s, r);
     return r;
@@ -79,14 +87,16 @@ static tactic_log::goal summarize(metavar_decl const & d) {
 static tactic_log::summary summarize(tactic_state const & s) {
     std::vector<tactic_log::goal> goals;
     for (auto& g : s.goals()) goals.push_back(summarize(s.mctx().get_metavar_decl(g)));
+
     return {s.decl_name(), std::move(goals)};
 }
 
 void log_tactic(ast_id id, tactic_state const & before, tactic_state const & after, bool success) {
+    if (!get_global_module_mgr()->get_export_tsast()) return;
     if (auto log = get_tactic_log()) {
         lean_assert(!log->m_exported);
-        auto s1 = log->get_id(summarize(before));
-        auto s2 = is_eqp(before, after) ? s1 : log->get_id(summarize(after));
+        auto s1 = log->get_id(before, summarize(before));
+        auto s2 = is_eqp(before, after) ? s1 : log->get_id(after, summarize(after));
         log->push_invocation(id, s1, s2, success);
     }
 }

@@ -111,6 +111,7 @@ run_cmd script_check_id `iff.intro
 run_cmd script_check_id `iff.mp
 run_cmd script_check_id `iff.mpr
 run_cmd script_check_id `iff.refl
+run_cmd script_check_id `iff.rfl
 run_cmd script_check_id `iff.symm
 run_cmd script_check_id `iff.trans
 run_cmd script_check_id `iff_false_intro

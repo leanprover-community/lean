@@ -80,6 +80,7 @@ parse_table const & get_led_table(environment const & env);
 parse_table const & get_reserved_nud_table(environment const & env);
 parse_table const & get_reserved_led_table(environment const & env);
 cmd_table const & get_cmd_table(environment const & env);
+bool has_notation(environment const & env, name const & n);
 environment add_command(environment const & env, name const & n, cmd_info const & info);
 
 /** \brief Add \c n as notation for \c e */

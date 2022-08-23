@@ -9,6 +9,7 @@ Author: Leonardo de Moura
 #include <gmp.h>
 #include <string>
 #include <iostream>
+#include <limits>
 #include "util/debug.h"
 #include "util/serializer.h"
 
@@ -31,6 +32,8 @@ public:
     explicit mpz(unsigned int v) { mpz_init_set_ui(m_val, v); }
     explicit mpz(int v) { mpz_init_set_si(m_val, v); }
     explicit mpz(uint64 v);
+    explicit mpz(int64 v);
+    explicit mpz(double v) { mpz_init_set_d(m_val, v); }
     mpz(mpz const & s) { mpz_init_set(m_val, s.m_val); }
     mpz(mpz && s):mpz() { mpz_swap(m_val, s.m_val); }
     ~mpz() { mpz_clear(m_val); }
@@ -56,15 +59,17 @@ public:
     bool even() const { return mpz_even_p(m_val) != 0; }
     bool odd() const { return !even(); }
 
-    bool is_int() const { return mpz_fits_sint_p(m_val) != 0; }
-    bool is_unsigned_int() const { return mpz_fits_uint_p(m_val) != 0; }
-    bool is_long_int() const { return mpz_fits_slong_p(m_val) != 0; }
-    bool is_unsigned_long_int() const { return mpz_fits_ulong_p(m_val) != 0; }
+    template <typename T> bool is() const = delete;
 
-    long int get_long_int() const { lean_assert(is_long_int()); return mpz_get_si(m_val); }
-    int get_int() const { lean_assert(is_int()); return static_cast<int>(get_long_int()); }
-    unsigned long int get_unsigned_long_int() const { lean_assert(is_unsigned_long_int()); return mpz_get_ui(m_val); }
-    unsigned int get_unsigned_int() const { lean_assert(is_unsigned_int()); return static_cast<unsigned>(get_unsigned_long_int()); }
+    explicit operator long int() const;
+    explicit operator unsigned long int() const;
+    explicit operator int() const;
+    explicit operator unsigned int() const;
+    explicit operator long long int() const;
+    explicit operator unsigned long long int() const;
+
+    // not a cast operator, to match `mpz`
+    double get_double() const { return mpz_get_d(m_val); }
 
     mpz & operator=(mpz const & v) { mpz_set(m_val, v.m_val); return *this; }
     mpz & operator=(mpz && v) { swap(*this, v); return *this; }
@@ -73,6 +78,7 @@ public:
     mpz & operator=(long int v) { mpz_set_si(m_val, v); return *this; }
     mpz & operator=(unsigned int v) { return operator=(static_cast<unsigned long int>(v)); }
     mpz & operator=(int v) { return operator=(static_cast<long int>(v)); }
+    mpz & operator=(double v) { mpz_set_d(m_val, v); return *this; }
 
     friend int cmp(mpz const & a, mpz const & b) { return mpz_cmp(a.m_val, b.m_val); }
     friend int cmp(mpz const & a, unsigned b) { return mpz_cmp_ui(a.m_val, b); }
@@ -227,12 +233,60 @@ public:
     std::string to_string() const;
 };
 
+template<> inline bool mpz::is<int>()               const { return mpz_fits_sint_p(m_val) != 0; }
+template<> inline bool mpz::is<unsigned int>()      const { return mpz_fits_uint_p(m_val) != 0; }
+template<> inline bool mpz::is<long int>()          const { return mpz_fits_slong_p(m_val) != 0; }
+template<> inline bool mpz::is<unsigned long int>() const { return mpz_fits_ulong_p(m_val) != 0; }
+// TODO(eric-wieser): these could be faster, but gmp has no API for us
+template<> inline bool mpz::is<long long>() const {
+    return mpz(std::numeric_limits<long long>::min()) <= *this && *this <= mpz(std::numeric_limits<long long>::max()); }
+template<> inline bool mpz::is<unsigned long long>() const {
+    return mpz(std::numeric_limits<unsigned long long>::min()) <= *this && *this <= mpz(std::numeric_limits<unsigned long long>::max()); }
+
+// we can't define these until the `is` specializations are declared
+inline mpz::operator long int()          const { lean_assert(is<long int>());          return mpz_get_si(m_val); }
+inline mpz::operator unsigned long int() const { lean_assert(is<unsigned long int>()); return mpz_get_ui(m_val); }
+inline mpz::operator int()               const { lean_assert(is<int>());          return static_cast<long>(operator long int()); }
+inline mpz::operator unsigned int()      const { lean_assert(is<unsigned int>()); return static_cast<unsigned>(operator unsigned long int()); }
+
 struct mpz_cmp_fn {
     int operator()(mpz const & v1, mpz const & v2) const { return cmp(v1, v2); }
 };
+
 
 serializer & operator<<(serializer & s, mpz const & n);
 mpz read_mpz(deserializer & d);
 inline deserializer & operator>>(deserializer & d, mpz & n) { n = read_mpz(d); return d; }
 
 }
+
+template<> struct std::numeric_limits<lean::mpz> {
+    static constexpr bool is_specialized = true;
+    static constexpr bool is_signed = true;
+    static constexpr bool is_integer = true;
+    static constexpr bool is_exact = true;
+    static constexpr bool has_infinity = false;
+    static constexpr bool has_quiet_NaN = false;
+    static constexpr bool has_signaling_NaN = false;
+    static constexpr std::float_denorm_style has_denorm = std::denorm_absent;
+    static constexpr bool has_denorm_loss = false;
+    static constexpr std::float_round_style round_style = std::round_toward_zero;
+    static constexpr bool is_iec559 = false;
+    static constexpr bool is_bounded = false;
+    static constexpr bool is_modulo = false;
+
+    // these fields don't make sense for mpz
+    // digits
+    // digits10
+    // max_digits10
+    // radix
+
+    // these are copied from the values for integers
+    static constexpr int min_exponent = 0;
+    static constexpr int min_exponent10 = 0;
+    static constexpr int max_exponent = 0;
+    static constexpr int max_exponent10 = 0;
+
+    static constexpr bool traps = true;
+    static constexpr bool tinyness_before = false;
+};
