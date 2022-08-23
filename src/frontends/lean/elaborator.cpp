@@ -1907,6 +1907,7 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
 
         name base_name = field_res.get_base_name();
         buffer<expr> new_args;
+        bool insufficient = false;
         unsigned i = 0;
         while (is_pi(proj_type)) {
             if (is_explicit(binding_info(proj_type))) {
@@ -1923,8 +1924,12 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
                     new_args.push_back(args[i]);
                     i++;
                 } else {
-                     throw elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
-                                                << field_res.get_full_name() << "'");
+                    if (!insufficient) {
+                        report_or_throw(elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
+                                                                    << field_res.get_full_name() << "'"));
+                    }
+                    insufficient = true;
+                    new_args.push_back(mk_sorry(none_expr(), fn));
                 }
             }
             proj_type = binding_body(proj_type);

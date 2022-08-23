@@ -93,7 +93,8 @@ def function.apply {α β : Type*} (x : α) (f : α → β) : β := f x
 
 example : (+ 3).apply 1 = 4 := rfl
 -- (error) insufficient number of arguments is error (yet could be a lambda like in Lean 4)
-example : (λ (x : ℕ), (+ x).apply) = (λ x y, y + x) := rfl
+#check λ (x : ℕ), (+ x).apply
+--example : (λ (x : ℕ), (+ x).apply) = (λ x y, y + x) := rfl
 --example : (λ (x : ℕ), (+ x).apply) = (λ (y : ℕ), (+ y).apply) := rfl
 
 end functions

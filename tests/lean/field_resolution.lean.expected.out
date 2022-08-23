@@ -9,8 +9,12 @@ field_resolution.lean:13:7: error: unknown identifier 'foo.c'
 18
 23
 field_resolution.lean:39:12: error: invalid field notation, insufficient number of arguments for 'foo.add_a'
+foo.add_a ⁇ foo.s : ℕ
 field_resolution.lean:41:12: error: invalid field notation, insufficient number of arguments for 'foo.add_a'
+foo.add_a ⁇ bar.s.to_foo : ℕ
 field_resolution.lean:47:12: error: invalid field notation, insufficient number of arguments for 'foo.add_b_of_eq'
+foo.add_b_of_eq ⁇ _ foo.s : ℕ
 field_resolution.lean:52:12: error: invalid field notation, function 'foo.blah' does not have explicit argument with type (foo ...)
 field_resolution.lean:53:12: error: invalid field notation, function 'foo.blah' does not have explicit argument with type (foo ...)
-field_resolution.lean:96:27: error: invalid field notation, insufficient number of arguments for 'function.apply'
+field_resolution.lean:96:23: error: invalid field notation, insufficient number of arguments for 'function.apply'
+λ (x : ℕ), function.apply ⁇ (λ (_x : ℕ), _x + x) : ℕ → ℕ
