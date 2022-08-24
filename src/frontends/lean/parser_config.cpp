@@ -350,8 +350,8 @@ struct notation_config {
     }
     static char const * get_serialization_key() { return "NOTA"; }
 
-    static void  write_entry(serializer & s, entry const & e) {
-        s << static_cast<char>(e.kind()) << e.overload() << e.parse_only() << e.get_expr();
+    static void write_entry(serializer & s, entry const & e) {
+        s << static_cast<char>(e.kind()) << e.get_name() << e.overload() << e.parse_only() << e.get_expr();
         if (e.is_numeral()) {
             s << e.get_num();
         } else {
@@ -408,12 +408,12 @@ struct notation_config {
 
     static entry read_entry(deserializer & d) {
         notation_entry_kind k = static_cast<notation_entry_kind>(d.read_char());
-        bool overload, parse_only; expr e;
-        d >> overload >> parse_only >> e;
+        name n; bool overload, parse_only; expr e;
+        d >> n >> overload >> parse_only >> e;
         if (k == notation_entry_kind::Numeral) {
             mpz val;
             d >> val;
-            return entry(val, e, overload, parse_only);
+            return entry(val, e, overload, parse_only, n);
         } else {
             bool is_nud = k == notation_entry_kind::NuD;
             unsigned sz; char _g;
@@ -424,7 +424,7 @@ struct notation_config {
                 ts.push_back(read_transition(d));
             unsigned priority;
             d >> priority;
-            return entry(is_nud, to_list(ts.begin(), ts.end()), e, overload, priority, g, parse_only);
+            return entry(is_nud, to_list(ts.begin(), ts.end()), e, overload, priority, g, parse_only, n);
         }
     }
     static optional<unsigned> get_fingerprint(entry const &) {
