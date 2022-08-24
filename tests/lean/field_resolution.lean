@@ -52,6 +52,11 @@ def foo.blah (n : ℕ) : ℕ := n
 #check foo.s.blah 37
 #check bar.s.blah 37
 
+structure implicit_test := (f : ∀ {m : ℕ}, m = 0)
+
+variables (s : implicit_test)
+#check (s.f : 37 = 0) -- before #757 would have been (s.f : ∀ {m : ℕ}, m = 0)
+
 end structures
 
 section local_constants

@@ -1881,31 +1881,28 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
         expr proj, proj_type;
         switch (field_res.m_kind) {
             case field_resolution::kind::ProjFn: {
-                auto fr = field_res.get_proj_fn();
-                expr coerced_s = *mk_base_projections(m_env, fr.m_struct_name, fr.m_base_struct_name, mk_as_is(s));
-                expr proj_app = mk_proj_app(m_env, fr.m_base_struct_name, fr.m_field_name, coerced_s, ref);
+                expr coerced_s = *mk_base_projections(m_env, field_res.get_struct_name(), field_res.get_base_struct_name(), mk_as_is(s));
+                expr proj_app = mk_proj_app(m_env, field_res.get_base_struct_name(), field_res.get_field_name(), coerced_s, ref);
                 expr new_proj = visit_function(proj_app, has_args, has_args ? none_expr() : expected_type, ref);
                 return visit_base_app(new_proj, arg_mask::Default, args, expected_type, ref);
             }
             case field_resolution::kind::LocalRec: {
-                auto fr = field_res.get_local_rec();
                 s = mk_as_is(s);
-                proj = copy_tag(fn, fr.m_ldecl.mk_ref());
-                proj_type = fr.m_ldecl.get_type();
+                proj = copy_tag(fn, field_res.m_ldecl.mk_ref());
+                proj_type = field_res.m_ldecl.get_type();
                 break;
             }
             case field_resolution::kind::Const: {
-                auto fr = field_res.get_const();
-                expr coerced_s = *mk_base_projections(m_env, fr.m_struct_name, fr.m_base_struct_name, mk_as_is(s));
+                expr coerced_s = *mk_base_projections(m_env, field_res.get_struct_name(), field_res.get_base_struct_name(), mk_as_is(s));
                 s = copy_tag(s, std::move(coerced_s));
-                proj = copy_tag(fn, mk_constant(fr.m_const_name));
+                proj = copy_tag(fn, mk_constant(field_res.get_const_name()));
                 proj_type = m_env.get(field_res.get_full_name()).get_type();
                 break;
             }
             default: lean_unreachable();
         }
 
-        name base_name = field_res.get_base_name();
+        name base_name = field_res.get_base_struct_name();
         buffer<expr> new_args;
         bool insufficient = false;
         unsigned i = 0;
@@ -1936,7 +1933,7 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
         }
         throw elaborator_exception(ref, sstream() << "invalid field notation, function '"
                                    << field_res.get_full_name() << "' does not have explicit argument with type ("
-                                   << field_res.get_base_name() << " ...)");
+                                   << field_res.get_base_struct_name() << " ...)");
     } else {
         expr new_fn = visit_function(fn, has_args, has_args ? none_expr() : expected_type, ref);
         /* Check if we should use a custom elaboration procedure for this application. */
