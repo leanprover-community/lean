@@ -112,14 +112,18 @@ static optional<unsigned> get_precedence(environment const & env, char const * t
 }
 
 void check_notation_name(environment const & env, notation_entry_group grp,
-    const pos_info & pos, name const & name, bool was_anon) {
-    if (grp == notation_entry_group::Reserve || !has_notation(env, name)) return;
-    if (was_anon)
-        throw parser_error(sstream() <<
-            "invalid notation: notation already declared. Consider using 'notation (name := ...)'", pos);
-    else
-        throw parser_error(sstream() <<
-            "invalid notation: notation '" << name << "' already declared", pos);
+    const pos_info & pos, notation_entry const & entry, bool was_anon) {
+    if (grp == notation_entry_group::Reserve) return;
+    auto name = entry.get_name();
+    if (auto other = get_notation_entry(env, name)) {
+        if (entry == *other) return;
+        if (was_anon)
+            throw parser_error(sstream() <<
+                "invalid notation: notation already declared. Consider using 'notation (name := ...)'", pos);
+        else
+            throw parser_error(sstream() <<
+                "invalid notation: notation '" << name << "' already declared", pos);
+    }
 }
 
 static pair<ast_id, name> parse_optional_name(parser & p) {
@@ -284,7 +288,7 @@ static auto parse_mixfix_notation(parser & p, ast_data & parent, mixfix_kind k, 
         }
     }
     notation_entry entry(is_nud, ts, e, overload, priority, grp, parse_only, name.second);
-    check_notation_name(p.env(), grp, tk_pos, entry.get_name(), name.second.is_anonymous());
+    check_notation_name(p.env(), grp, tk_pos, entry, name.second.is_anonymous());
     return mk_pair(entry, new_token);
 }
 
@@ -694,7 +698,7 @@ static notation_entry parse_notation_core(parser & p, ast_data & parent, bool ov
         parent.push(id);
     }
     notation_entry entry(is_nud, to_list(ts.begin(), ts.end()), n, overload, priority, grp, parse_only, notation_name.second);
-    check_notation_name(p.env(), grp, parent.m_start, entry.get_name(), notation_name.second.is_anonymous());
+    check_notation_name(p.env(), grp, parent.m_start, entry, notation_name.second.is_anonymous());
     return entry;
 }
 

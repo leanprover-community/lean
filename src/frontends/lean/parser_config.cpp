@@ -264,11 +264,11 @@ struct notation_prio_fn { unsigned operator()(notation_entry const & v) const { 
 struct notation_state {
     typedef rb_map<mpz, list<expr>, mpz_cmp_fn> num_map;
     typedef head_map_prio<notation_entry, notation_prio_fn> head_to_entries;
-    typedef name_set notation_names;
+    typedef name_map<std::shared_ptr<notation_entry>> notation_names;
     parse_table      m_nud;
     parse_table      m_led;
     num_map          m_num_map;
-    name_set         m_notation_names;
+    notation_names   m_notation_names;
     head_to_entries  m_inv_map;
     // The following two tables are used to implement `reserve notation` commands
     parse_table      m_reserved_nud;
@@ -309,9 +309,10 @@ struct notation_config {
 
     static void add_entry(environment const &, io_state const &, state & s, entry const & e) {
         if (e.group() == notation_entry_group::Main) {
-            if (s.m_notation_names.contains(e.get_name()))
-                throw exception(sstream() << "invalid notation, a notation named '" << e.get_name() << "' has already been declared");
-            s.m_notation_names.insert(e.get_name());
+            if (auto other = s.m_notation_names.find(e.get_name()))
+                if (e != **other)
+                    throw exception(sstream() << "invalid notation, a notation named '" << e.get_name() << "' has already been declared");
+            s.m_notation_names.insert(e.get_name(), std::make_shared<entry>(e));
         }
         buffer<transition> ts;
         switch (e.kind()) {
@@ -361,7 +362,7 @@ struct notation_config {
         }
     }
 
-    static void  textualize_entry(tlean_exporter & x, entry const & e) {
+    static void textualize_entry(tlean_exporter & x, entry const & e) {
         // Note: we do not export all notations, only simple ones
         // (e.g. prefix, postfix, infix)
         if (e.parse_only()) return;
@@ -459,8 +460,10 @@ parse_table const & get_reserved_led_table(environment const & env) {
     return notation_ext::get_state(env).m_reserved_led;
 }
 
-bool has_notation(environment const & env, name const & n) {
-    return notation_ext::get_state(env).m_notation_names.contains(n);
+notation_entry const * get_notation_entry(environment const & env, name const & n) {
+    if (auto ptr = notation_ext::get_state(env).m_notation_names.find(n))
+        return ptr->get();
+    return nullptr;
 }
 
 environment add_mpz_notation(environment const & env, mpz const & n, expr const & e, bool overload, bool parse_only) {
