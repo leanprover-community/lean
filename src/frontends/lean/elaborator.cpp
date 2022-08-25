@@ -1881,8 +1881,10 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
         expr proj, proj_type;
         switch (field_res.m_kind) {
             case field_resolution::kind::ProjFn: {
+                // Projections are handled specially since `s` is inserted at a specific argument, whether
+                // or not it is explicit.
                 expr coerced_s = *mk_base_projections(m_env, field_res.get_struct_name(), field_res.get_base_struct_name(), mk_as_is(s));
-                expr proj_app = mk_proj_app(m_env, field_res.get_base_struct_name(), field_res.get_field_name(), coerced_s, ref);
+                expr proj_app = mk_proj_app(m_env, field_res.get_base_struct_name(), field_res.get_field_name(), coerced_s, fn);
                 expr new_proj = visit_function(proj_app, has_args, has_args ? none_expr() : expected_type, ref);
                 return visit_base_app(new_proj, arg_mask::Default, args, expected_type, ref);
             }
@@ -1902,38 +1904,57 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
             default: lean_unreachable();
         }
 
+        expr new_proj = visit_function(proj, has_args, has_args ? none_expr() : expected_type, ref);
+
         name base_name = field_res.get_base_struct_name();
         buffer<expr> new_args;
-        bool insufficient = false;
+        optional<elaborator_exception> insufficient;
         unsigned i = 0;
         while (is_pi(proj_type)) {
             if (is_explicit(binding_info(proj_type))) {
                 if (is_app_of(binding_domain(proj_type), base_name)
                     || (is_pi(binding_domain(proj_type)) && base_name == get_function_name())) {
                     /* found s location */
+
+                    if (insufficient) {
+                        // We defer reporting this to here to prefer the "does not have explicit argument with type" error
+                        report_or_throw(*insufficient);
+                    }
+
                     new_args.push_back(s);
                     for (; i < args.size(); i++)
                         new_args.push_back(args[i]);
 
-                    expr new_proj = visit_function(proj, has_args, has_args ? none_expr() : expected_type, ref);
                     return visit_base_app(new_proj, arg_mask::Default, new_args, expected_type, ref);
                 } else if (i < args.size()) {
                     new_args.push_back(args[i]);
                     i++;
                 } else {
                     if (!insufficient) {
-                        report_or_throw(elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
-                                                                    << field_res.get_full_name() << "'"));
+                        insufficient = elaborator_exception(ref, sstream() << "invalid field notation, insufficient number of arguments for '"
+                                                                    << field_res.get_full_name() << "'");
                     }
-                    insufficient = true;
                     new_args.push_back(mk_sorry(none_expr(), fn));
                 }
             }
             proj_type = binding_body(proj_type);
         }
-        throw elaborator_exception(ref, sstream() << "invalid field notation, function '"
-                                   << field_res.get_full_name() << "' does not have explicit argument with type ("
-                                   << field_res.get_base_struct_name() << " ...)");
+
+        // If there is no explicit argument of the right type, we try inserting it as the first explicit argument.
+        // This gives some ability to use dot notation with terms that have a `has_coe_to_fun` instance.
+
+        new_args.clear();
+        new_args.push_back(s);
+        new_args.append(args);
+
+        try {
+            return visit_base_app(new_proj, arg_mask::Default, new_args, expected_type, ref);
+        } catch (elaborator_exception & ex) {
+            throw nested_elaborator_exception(ref, ex, format("invalid field notation, function '")
+                                                + format(field_res.get_full_name())
+                                                + format("' does not have explicit argument with type (")
+                                                + format(field_res.get_base_struct_name()) + format(" ...)"));
+        }
     } else {
         expr new_fn = visit_function(fn, has_args, has_args ? none_expr() : expected_type, ref);
         /* Check if we should use a custom elaboration procedure for this application. */

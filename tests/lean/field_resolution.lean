@@ -66,10 +66,14 @@ def list.double {α : Type*} : list α → list α
 | [] := []
 | (x :: xs) := x :: x :: xs.double
 
--- With arguments
+-- With arguments (and list argument after first, fixed in #757)
 def list.map' {α β : Type*} : (α → β) → list α → list β
 | _ [] := []
 | f (x :: xs) := f x :: xs.map' f
+
+def list.map'' {α β : Type*} : list α → (α → β) → list β
+| [] _ := []
+| (x :: xs) f := f x :: xs.map' f
 
 end local_constants
 
@@ -116,3 +120,16 @@ example (x y : FinSet 10) : FinSet 10 :=
   x.union y -- Works
 
 end aliases
+
+section first_arg
+
+instance (p q : Prop) : has_coe_to_fun (p ↔ q) (λ _, p → q) := ⟨λ h, h.mp⟩
+
+structure my_prop (p : Prop) : Prop := (h : p)
+
+def my_prop.iff {p : Prop} : my_prop p ↔ p := ⟨my_prop.h, λ h, ⟨h⟩⟩
+
+-- Use the first explicit argument
+example (p : Prop) (h : my_prop p) : p := h.iff
+
+end first_arg
