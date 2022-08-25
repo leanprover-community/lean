@@ -56,6 +56,7 @@ structure implicit_test := (f : ∀ {m : ℕ}, m = 0)
 
 variables (s : implicit_test)
 #check (s.f : 37 = 0) -- before #757 would have been (s.f : ∀ {m : ℕ}, m = 0)
+#check (λ _, s.f : ∀ {m : ℕ}, m = 0)
 
 end structures
 
