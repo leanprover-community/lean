@@ -8,12 +8,13 @@ import init.data.nat.basic
 open nat
 
 /-- `fin n` is the subtype of `ℕ` consisting of natural numbers strictly smaller than `n`. -/
-def fin (n : ℕ) := {i : ℕ // i < n}
+structure fin (n : ℕ) :=
+(val : nat)
+(property : val < n)
+
+attribute [pp_using_anonymous_constructor] fin
 
 namespace fin
-
-/-- Backwards-compatible constructor for `fin n`. -/
-def mk {n : ℕ} (i) (h) : fin n := ⟨i, h⟩
 
 protected def lt {n} (a b : fin n) : Prop :=
 a.val < b.val

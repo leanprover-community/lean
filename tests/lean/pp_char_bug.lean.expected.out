@@ -1,5 +1,5 @@
-fin.mk 2 _ : fin 5
-fin.mk 1 _ : fin 3
+⟨2, _⟩ : fin 5
+⟨1, _⟩ : fin 3
 'a' : char
 to_string 'a' : string
 "a"
