@@ -1,3 +1,12 @@
+3.47.0c (25 August 2022)
+------------------------
+
+Features:
+- `notation (name := ...)` syntax (#754, #758, #759)
+- Remove an unnecessary case split from `or.by_cases` (#755)
+- Store command end position in AST (#756)
+- Backport Lean 4 field notation (#757)
+
 3.46.0c (8 August 2022)
 -----------------------
 
