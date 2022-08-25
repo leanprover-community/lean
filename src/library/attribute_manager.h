@@ -260,7 +260,7 @@ struct key_value_data : public attr_data {
 /** \brief Attribute that represents a list of indices. input and output are 1-indexed for convenience. */
 typedef typed_attribute<indices_attribute_data> indices_attribute;
 
-/** \brief Attribute that represents a list of indices. input and output are 1-indexed for convenience. */
+/** \brief Attribute that represents a single key/value pair. */
 typedef typed_attribute<key_value_data> key_value_attribute;
 
 class user_attribute_ext {

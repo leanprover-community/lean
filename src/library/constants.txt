@@ -62,6 +62,7 @@ forall_congr
 forall_congr_eq
 forall_not_of_not_exists
 format
+function
 funext
 has_add
 has_add.add

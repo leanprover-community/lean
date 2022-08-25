@@ -27,6 +27,15 @@ optional<name> find_field(environment const & env, name const & S_name, name con
 optional<expr> mk_base_projections(environment const & env, name const & S_name, name const & base_S_name, expr const & e);
 /** \brief Return an unelaborated expression applying a field projection */
 expr mk_proj_app(environment const & env, name const & S_name, name const & fname, expr const & e, expr const & ref = {});
+/** \brief Searches for `struct_name.field_name` in the environment, and if `struct_name` is a structure,
+ * recursively does the same for its parent structures if the environment contains no such name.
+ * Returns `(S', n)` where S' is the name of the (generalized) structure and n is the name corresponding to \c field_name */
+optional<pair<name, name>> find_method(environment const & env, name const & struct_name, name const & field_name);
+/** \brief If `struct_name.field_name` is uniquely an alias for `struct_name'.field_name` then
+ * returns `(struct_name', struct_name'.field_name)`.
+ *
+ * Should consider generating an error or warning if there is more than one such alias. */
+optional<pair<name, name>> find_method_alias(environment const & env, name const & struct_name, name const & field_name);
 
 /* Default value support */
 optional<name> has_default_value(environment const & env, name const & S_name, name const & fname);

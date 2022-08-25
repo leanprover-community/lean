@@ -69,6 +69,7 @@ name const & get_forall_congr_name();
 name const & get_forall_congr_eq_name();
 name const & get_forall_not_of_not_exists_name();
 name const & get_format_name();
+name const & get_function_name();
 name const & get_funext_name();
 name const & get_has_add_name();
 name const & get_has_add_add_name();

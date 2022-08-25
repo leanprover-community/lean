@@ -1,1 +1,19 @@
-assertion1.lean:37:21: error: invalid field notation, function 'MonoidalCategory.tensorObjects' does not have explicit argument with type (MonoidalCategory ...)
+assertion1.lean:37:21: error: type mismatch at application
+  MonoidalCategory.tensorObjects C
+term
+  C
+has type
+  MonoidalCategory : Type (max (u+1) (v+1))
+but is expected to have type
+  ?m_1.carrier.Obj : Type ?
+Additional information:
+assertion1.lean:37:21: context: switched to simple application elaboration procedure because failed to use expected type to elaborate it, error message
+  type mismatch at application
+    MonoidalCategory.tensorObjects C
+  term
+    C
+  has type
+    MonoidalCategory : Type (max (u+1) (v+1))
+  but is expected to have type
+    ?m_1.carrier.Obj : Type ?
+assertion1.lean:37:21: context: invalid field notation, function 'MonoidalCategory.tensorObjects' does not have explicit argument with type (MonoidalCategory ...)
