@@ -63,6 +63,13 @@ do t ← target >>= instantiate_mvars,
        pr     ← mk_nat_val_ne_proof a b,
        exact pr)
    <|>
+   (do type   ← whnf type,
+       guard (type.app_fn = `(@fin)),
+       applyc ``fin.ne_of_vne,
+       (`(fin.mk %%a %%ha), `(fin.mk %%b %%hb)) ← is_ne t,
+       pr     ← mk_nat_val_ne_proof a b,
+       exact pr)
+   <|>
    (do (a, b) ← is_eq t,
         unify a b, to_expr ``(eq.refl %%a) >>= exact)
 end tactic
