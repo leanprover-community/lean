@@ -64,13 +64,25 @@ size_t get_current_rss() {
    --------------------------------------------------- */
 #else
 /* ----------------------------------------------------
-   Linux/OSX version for get_peak_rss and get_current_rss
+   Linux/FreeBSD/OSX version for get_peak_rss and get_current_rss
    --------------------------------------------------- */
 #include <unistd.h>
 #include <sys/resource.h>
 
 #if defined(__APPLE__)
 #include <mach/mach.h>
+#endif
+
+#if defined(__FreeBSD__)
+// for procstat_*
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/socket.h>
+#include <libprocstat.h>
+// for struct kinfo_proc
+#include <sys/user.h>
+// for KERN_PROC_PID
+#include <sys/sysctl.h>
 #endif
 
 namespace lean {
@@ -91,6 +103,28 @@ size_t get_current_rss() {
     if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&info), &infoCount) != KERN_SUCCESS)
         return static_cast<size_t>(0);
     return static_cast<size_t>(info.resident_size);
+#elif defined(__FreeBSD__)
+    // initialize
+    unsigned int count = 0;
+
+    struct procstat *pstat = procstat_open_sysctl();
+    if (!pstat)
+        return static_cast<size_t>(0);
+
+    struct kinfo_proc *kp = procstat_getprocs(pstat, KERN_PROC_PID, getpid(), &count);
+    if (!kp) {
+        procstat_close(pstat);
+        return static_cast<size_t>(0);
+    }
+
+    // compute
+    size_t rss_size = kp->ki_rssize*getpagesize();
+
+    // cleanup
+    procstat_freeprocs(pstat, kp);
+    procstat_close(pstat);
+
+    return rss_size;
 #else
     long rss  = 0;
     FILE * fp = nullptr;

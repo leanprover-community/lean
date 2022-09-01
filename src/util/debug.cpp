@@ -118,7 +118,11 @@ void invoke_debugger() {
         case 'g': {
             std::cerr << "INVOKING GDB...\n";
             std::ostringstream buffer;
+#if defined(__FreeBSD__)
+            buffer << "gdb -nw /proc/" << getpid() << "/file " << getpid();
+#else
             buffer << "gdb -nw /proc/" << getpid() << "/exe " << getpid();
+#endif
             if (system(buffer.str().c_str()) == 0) {
                 std::cerr << "continuing the execution...\n";
             } else {
