@@ -1102,32 +1102,38 @@ static bool is_default_arrow(expr const & e) {
 }
 template<class T>
 auto pretty_fn<T>::pp_pi(expr const & e) -> result {
-    if (is_default_arrow(e)) {
-        result lhs = pp_child_at(binding_domain(e), get_arrow_prec(), expr_address::binding_type(e));
-        expr   b   = lift_free_vars(binding_body(e), 1);
-        address pb = expr_address::pi_body();
-        result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
-        T r   = group(lhs.fmt() + space() + (m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
-        return result(get_arrow_prec(), get_arrow_prec()-1, r);
-    } else {
-        expr b = e;
-        address adr;
-        buffer<subexpr> locals;
-        while (is_pi(b) && !is_default_arrow(b)) {
-            auto p = binding_body_fresh(b, true);
-            locals.push_back(mk_pair(p.second, cons(expr_coord::pi_var_type, adr)));
-            b = p.first;
-            adr = cons(expr_coord::pi_body, adr);
+    expr b = e;
+    address adr;
+    buffer<subexpr> locals;
+    while (is_pi(b)) {
+        auto p = binding_body_fresh(b, true);
+        if (is_default_arrow(b) && !(!is_prop(binding_domain(b)) && is_prop(p.first))) {
+            // Then this is an arrow that isn't from a Type to a Prop (we prefer forall notation for such a case)
+            if (locals.size() == 0) {
+                // Then we pretty print an arrow immediately
+                result lhs = pp_child_at(binding_domain(b), get_arrow_prec(), expr_address::binding_type(b));
+                b = p.first;
+                address pb = expr_address::pi_body();
+                result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
+                T r = group(lhs.fmt() + space() + (m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
+                return result(get_arrow_prec(), get_arrow_prec()-1, r);
+            } else {
+                // Then we are done with the loop and pretty print the pi/forall
+                break;
+            }
         }
-        T r;
-        if (is_prop(b))
-            r = m_unicode ? *g_forall_n_fmt : *g_forall_fmt;
-        else
-            r = m_unicode ? *g_pi_n_fmt : *g_pi_fmt;
-        r += pp_binders(locals);
-        r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
-        return result(0, r);
+        locals.push_back(mk_pair(p.second, cons(expr_coord::pi_var_type, adr)));
+        b = p.first;
+        adr = cons(expr_coord::pi_body, adr);
     }
+    T r;
+    if (is_prop(b))
+        r = m_unicode ? *g_forall_n_fmt : *g_forall_fmt;
+    else
+        r = m_unicode ? *g_pi_n_fmt : *g_pi_fmt;
+    r += pp_binders(locals);
+    r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
+    return result(0, r);
 }
 
 static bool is_have(expr const & e) {

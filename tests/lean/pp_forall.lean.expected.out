@@ -1,0 +1,11 @@
+p → q : Prop
+p → ℕ : Type
+∀ (ᾰ : ℕ), p : Prop
+ℕ → ℕ : Type
+ℕ → Prop : Type
+ℕ → Type : Type 1
+∀ (n : ℕ), n > 0 : Prop
+∀ (n : ℕ), 1 = 2 : Prop
+ℕ → ℤ : Type
+Π (n : ℕ), fin n : Type
+∀ (n : ℕ), ¬∃ (x : ℕ), x ≠ x : Prop
