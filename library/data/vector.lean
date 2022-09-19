@@ -51,7 +51,7 @@ def to_list (v : vector α n) : list α := v.1
 
 def nth : Π (v : vector α n), fin n → α | ⟨ l, h ⟩ i := l.nth_le i.1 (by rw h; exact i.2)
 
-def append {n m : nat} : vector α n → vector α m → vector α (n + m)
+def concat {n m : nat} : vector α n → vector α m → vector α (n + m)
 | ⟨ l₁, h₁ ⟩ ⟨ l₂, h₂ ⟩ := ⟨ l₁ ++ l₂, by simp * ⟩
 
 @[elab_as_eliminator] def elim {α} {C : Π {n}, vector α n → Sort u} (H : ∀l : list α, C ⟨l, rfl⟩)
@@ -121,7 +121,7 @@ rfl
 @[simp] theorem to_list_cons (a : α) (v : vector α n) : to_list (cons a v) = a :: to_list v :=
 begin cases v, reflexivity end
 
-@[simp] theorem to_list_append {n m : nat} (v : vector α n) (w : vector α m) : to_list (append v w) = to_list v ++ to_list w :=
+@[simp] theorem to_list_concat {n m : nat} (v : vector α n) (w : vector α m) : to_list (concat v w) = to_list v ++ to_list w :=
 begin cases v, cases w, reflexivity end
 
 @[simp] theorem to_list_drop {n m : ℕ} (v : vector α m) : to_list (drop n v) = list.drop n (to_list v) :=

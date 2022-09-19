@@ -85,7 +85,7 @@ def append_array {α : Type u} {n : nat} (nz : 0 < n) :
   let i : fin n := ⟨n - 2 - j, lt_aux_3 h⟩ in
   append_array ⟨m+1, b.push_back (a.read i)⟩ a j (lt_aux_1 h)
 
-protected def append {α : Type u} : buffer α → buffer α → buffer α
+protected def concat {α : Type u} : buffer α → buffer α → buffer α
 | b ⟨0, a⟩   := b
 | b ⟨n+1, a⟩ := append_array (nat.zero_lt_succ _) b a n (nat.lt_succ_self _)
 
@@ -127,8 +127,7 @@ protected def mem (v : α) (a : buffer α) : Prop := ∃i, read a i = v
 
 instance : has_mem α (buffer α) := ⟨buffer.mem⟩
 
-instance : has_append (buffer α) :=
-⟨buffer.append⟩
+instance : has_concat (buffer α) := ⟨buffer.concat⟩
 
 instance [has_repr α] : has_repr (buffer α) :=
 ⟨repr ∘ to_list⟩

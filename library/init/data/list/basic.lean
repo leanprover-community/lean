@@ -33,12 +33,11 @@ protected def has_dec_eq [s : decidable_eq α] : decidable_eq (list α)
 instance [decidable_eq α] : decidable_eq (list α) :=
 list.has_dec_eq
 
-@[simp] protected def append : list α → list α → list α
+@[simp] protected def concat : list α → list α → list α
 | []       l := l
-| (h :: s) t := h :: (append s t)
+| (h :: s) t := h :: concat s t
 
-instance : has_append (list α) :=
-⟨list.append⟩
+instance : has_concat (list α) := ⟨list.concat⟩
 
 protected def mem : α → list α → Prop
 | a []       := false

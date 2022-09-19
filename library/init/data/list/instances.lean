@@ -24,7 +24,7 @@ instance : is_lawful_monad list :=
 
 instance : alternative list :=
 { failure := @list.nil,
-  orelse  := @list.append,
+  orelse  := @list.concat,
   ..list.monad }
 
 namespace list

@@ -77,7 +77,7 @@ instance has_repr : has_repr address := ⟨address.to_string⟩
 instance has_to_string : has_to_string address := ⟨address.to_string⟩
 meta instance has_to_format : has_to_format address := ⟨list.to_format⟩
 
-instance : has_append address := ⟨list.append⟩
+instance : has_concat address := ⟨list.concat⟩
 
 /-- `as_below x y` is some z when it finds `∃ z, x = y ++ z` -/
 meta def as_below : address → address → option address

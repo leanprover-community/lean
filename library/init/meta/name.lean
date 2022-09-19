@@ -86,7 +86,7 @@ meta constant name.has_decidable_eq : decidable_eq name
 /- Both cmp and lex_cmp are total orders, but lex_cmp implements a lexicographical order. -/
 meta constant name.cmp : name → name → ordering
 meta constant name.lex_cmp : name → name → ordering
-meta constant name.append : name → name → name
+meta constant name.concat : name → name → name
 meta constant name.is_internal : name → bool
 
 protected meta def name.lt (a b : name) : Prop :=
@@ -100,8 +100,8 @@ meta instance : has_lt name :=
 
 attribute [instance] name.has_decidable_eq
 
-meta instance : has_append name :=
-⟨name.append⟩
+meta instance : has_concat name :=
+⟨name.concat⟩
 
 /-- `name.append_after n i` return a name of the form n_i -/
 meta constant name.append_after : name → nat → name

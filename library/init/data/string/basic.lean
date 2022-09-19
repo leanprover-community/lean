@@ -48,7 +48,7 @@ def push : string → char → string
 
 /- The internal implementation uses dynamic arrays and will perform destructive updates
    if the string is not shared. -/
-def append : string → string → string
+def concat : string → string → string
 | ⟨a⟩ ⟨b⟩ := ⟨a ++ b⟩
 
 /- O(n) in the VM, where n is the length of the string -/
@@ -146,8 +146,7 @@ instance : inhabited string :=
 instance : has_sizeof string :=
 ⟨string.length⟩
 
-instance : has_append string :=
-⟨string.append⟩
+instance : has_concat string := ⟨string.concat⟩
 
 namespace string
 def str : string → char → string := push
@@ -206,14 +205,14 @@ to_nat_core s.mk_iterator s.length 0
 
 namespace string
 
-private lemma nil_ne_append_singleton : ∀ (c : char) (l : list char), [] ≠ l ++ [c]
+private lemma nil_ne_concat_singleton : ∀ (c : char) (l : list char), [] ≠ l ++ [c]
 | c []     := λ h, list.no_confusion h
 | c (d::l) := λ h, list.no_confusion h
 
 lemma empty_ne_str : ∀ (c : char) (s : string), empty ≠ str s c
 | c ⟨l⟩ :=
   λ h : string_imp.mk [] = string_imp.mk (l ++ [c]),
-    string_imp.no_confusion h $ λ h, nil_ne_append_singleton _ _ h
+    string_imp.no_confusion h $ λ h, nil_ne_concat_singleton _ _ h
 
 lemma str_ne_empty (c : char) (s : string) : str s c ≠ empty :=
 (empty_ne_str c s).symm
@@ -223,11 +222,11 @@ private lemma str_ne_str_left_aux : ∀ {c₁ c₂ : char} (l₁ l₂ : list cha
 | c₁ c₂ (d₁::l₁) [] h₁ h₂ :=
   have d₁ :: (l₁ ++ [c₁]) = [c₂], from h₂,
   have l₁ ++ [c₁] = [], from list.no_confusion this (λ _ h, h),
-  absurd this.symm (nil_ne_append_singleton _ _)
+  absurd this.symm (nil_ne_concat_singleton _ _)
 | c₁ c₂ [] (d₂::l₂) h₁ h₂ :=
   have [c₁] = d₂ :: (l₂ ++ [c₂]), from h₂,
   have []   = l₂ ++ [c₂], from list.no_confusion this (λ _ h, h),
-  absurd this (nil_ne_append_singleton _ _)
+  absurd this (nil_ne_concat_singleton _ _)
 | c₁ c₂ (d₁::l₁) (d₂::l₂) h₁ h₂ :=
   have d₁ :: (l₁ ++ [c₁]) = d₂ :: (l₂ ++ [c₂]), from h₂,
   have l₁ ++ [c₁] = l₂ ++ [c₂], from list.no_confusion this (λ _ h, h),
@@ -243,11 +242,11 @@ private lemma str_ne_str_right_aux : ∀ (c₁ c₂ : char) {l₁ l₂ : list ch
 | c₁ c₂ (d₁::l₁) [] h₁ h₂ :=
   have d₁ :: (l₁ ++ [c₁]) = [c₂], from h₂,
   have l₁ ++ [c₁] = [], from list.no_confusion this (λ _ h, h),
-  absurd this.symm (nil_ne_append_singleton _ _)
+  absurd this.symm (nil_ne_concat_singleton _ _)
 | c₁ c₂ [] (d₂::l₂) h₁ h₂ :=
   have [c₁] = d₂ :: (l₂ ++ [c₂]), from h₂,
   have []   = l₂ ++ [c₂], from list.no_confusion this (λ _ h, h),
-  absurd this (nil_ne_append_singleton _ _)
+  absurd this (nil_ne_concat_singleton _ _)
 | c₁ c₂ (d₁::l₁) (d₂::l₂) h₁ h₂ :=
   have aux₁ : d₁ :: (l₁ ++ [c₁]) = d₂ :: (l₂ ++ [c₂]), from h₂,
   have d₁ = d₂, from list.no_confusion aux₁ (λ h _, h),

@@ -58,8 +58,7 @@ meta constant trace_fmt {α : Type u} : format → (unit → α) → α
 meta instance : inhabited format :=
 ⟨format.space⟩
 
-meta instance : has_append format :=
-⟨format.compose⟩
+meta instance : has_concat format := ⟨format.compose⟩
 
 meta instance : has_to_string format :=
 ⟨λ f, f.to_string options.mk⟩

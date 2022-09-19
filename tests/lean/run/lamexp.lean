@@ -25,15 +25,15 @@ end lamexp_core
 
 namespace lamexp
 
-lemma nth_append {α} {ys : list α} : Π {n xs}, list.nth xs n ≠ none → list.nth (xs ++ ys) n = list.nth xs n
+lemma nth_concat {α} {ys : list α} : Π {n xs}, list.nth xs n ≠ none → list.nth (xs ++ ys) n = list.nth xs n
 | 0     []      h := by contradiction
 | (n+1) []      h := by contradiction
 | 0     (x::xs) h := rfl
-| (n+1) (x::xs) h := @nth_append n xs h
+| (n+1) (x::xs) h := @nth_concat n xs h
 
 def weaken_core : ∀ {Γ Δ t}, lamexp_core Γ t → lamexp_core (Γ ++ Δ) t
 | Γ Δ .(t) (@lamexp_core.var .(Γ) t n h) := lamexp_core.var n $
-    begin rw nth_append, assumption, rw h, intro, contradiction end
+    begin rw nth_concat, assumption, rw h, intro, contradiction end
 | Γ Δ .(t) (lamexp_core.fv n t) := lamexp_core.fv n t
 | Γ Δ .(t) (lamexp_core.con n t) := lamexp_core.con n t
 | Γ Δ .(s) (@lamexp_core.app .(Γ) t s a b) := lamexp_core.app (weaken_core a) (weaken_core b)

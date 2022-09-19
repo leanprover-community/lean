@@ -13,18 +13,18 @@ variables {α : Type u} {β : Type v} {γ : Type w}
 namespace list
 open nat
 
-/- append -/
+/- concat -/
 
-@[simp] lemma nil_append (s : list α) : [] ++ s = s :=
+@[simp] lemma nil_concat (s : list α) : [] ++ s = s :=
 rfl
 
-@[simp] lemma cons_append (x : α) (s t : list α) : (x::s) ++ t = x::(s ++ t) :=
+@[simp] lemma cons_concat (x : α) (s t : list α) : (x::s) ++ t = x::(s ++ t) :=
 rfl
 
-@[simp] lemma append_nil (t : list α) : t ++ [] = t :=
+@[simp] lemma concat_nil (t : list α) : t ++ [] = t :=
 by induction t; simp [*]
 
-@[simp] lemma append_assoc (s t u : list α) : s ++ t ++ u = s ++ (t ++ u) :=
+@[simp] lemma concat_assoc (s t u : list α) : s ++ t ++ u = s ++ (t ++ u) :=
 by induction s; simp [*]
 
 /- length -/
@@ -32,7 +32,7 @@ by induction s; simp [*]
 lemma length_cons (a : α) (l : list α) : length (a :: l) = length l + 1 :=
 rfl
 
-@[simp] lemma length_append (s t : list α) : length (s ++ t) = length s + length t :=
+@[simp] lemma length_concat (s t : list α) : length (s ++ t) = length s + length t :=
 begin
   induction s,
   { show length t = 0 + length t, by rw nat.zero_add },
@@ -59,7 +59,7 @@ by cases l; refl
 lemma map_cons (f : α → β) (a l) : map f (a::l) = f a :: map f l :=
 rfl
 
-@[simp] lemma map_append (f : α → β) : ∀ l₁ l₂, map f (l₁ ++ l₂) = (map f l₁) ++ (map f l₂) :=
+@[simp] lemma map_concat (f : α → β) : ∀ l₁ l₂, map f (l₁ ++ l₂) = map f l₁ ++ map f l₂ :=
 by intro l₁; induction l₁; intros; simp [*]
 
 lemma map_singleton (f : α → β) (a : α) : map f [a] = [f a] :=
@@ -82,7 +82,7 @@ by simp [join, list.bind]
 @[simp] lemma cons_bind (x xs) (f : α → list β) : list.bind (x :: xs) f = f x ++ list.bind xs f :=
 by simp [join, list.bind]
 
-@[simp] lemma append_bind (xs ys) (f : α → list β) :
+@[simp] lemma concat_bind (xs ys) (f : α → list β) :
   list.bind (xs ++ ys) f = list.bind xs f ++ list.bind ys f :=
 by induction xs; [refl, simp [*, cons_bind]]
 
@@ -109,17 +109,17 @@ assume H, or.inr H
 lemma eq_or_mem_of_mem_cons {a y : α} {l : list α} : a ∈ y::l → a = y ∨ a ∈ l :=
 assume h, h
 
-@[simp] lemma mem_append {a : α} {s t : list α} : a ∈ s ++ t ↔ a ∈ s ∨ a ∈ t :=
+@[simp] lemma mem_concat {a : α} {s t : list α} : a ∈ s ++ t ↔ a ∈ s ∨ a ∈ t :=
 by induction s; simp [*, or_assoc]
 
-@[rsimp] lemma mem_append_eq (a : α) (s t : list α) : (a ∈ s ++ t) = (a ∈ s ∨ a ∈ t) :=
-propext mem_append
+@[rsimp] lemma mem_concat_eq (a : α) (s t : list α) : (a ∈ s ++ t) = (a ∈ s ∨ a ∈ t) :=
+propext mem_concat
 
-lemma mem_append_left {a : α} {l₁ : list α} (l₂ : list α) (h : a ∈ l₁) : a ∈ l₁ ++ l₂ :=
-mem_append.2 (or.inl h)
+lemma mem_concat_left {a : α} {l₁ : list α} (l₂ : list α) (h : a ∈ l₁) : a ∈ l₁ ++ l₂ :=
+mem_concat.2 (or.inl h)
 
-lemma mem_append_right {a : α} (l₁ : list α) {l₂ : list α} (h : a ∈ l₂) : a ∈ l₁ ++ l₂ :=
-mem_append.2 (or.inr h)
+lemma mem_concat_right {a : α} (l₁ : list α) {l₂ : list α} (h : a ∈ l₂) : a ∈ l₁ ++ l₂ :=
+mem_concat.2 (or.inr h)
 
 lemma not_bex_nil (p : α → Prop) : ¬ (∃ x ∈ @nil α, p x) :=
 λ⟨x, hx, px⟩, hx
@@ -165,11 +165,11 @@ lemma cons_subset_cons {l₁ l₂ : list α} (a : α) (s : l₁ ⊆ l₂) : (a::
   (λ e : b = a,  or.inl e)
   (λ i : b ∈ l₁, or.inr (s i))
 
-@[simp] lemma subset_append_left (l₁ l₂ : list α) : l₁ ⊆ l₁++l₂ :=
-λ b, mem_append_left _
+@[simp] lemma subset_concat_left (l₁ l₂ : list α) : l₁ ⊆ l₁ ++ l₂ :=
+λ b, mem_concat_left _
 
-@[simp] lemma subset_append_right (l₁ l₂ : list α) : l₂ ⊆ l₁++l₂ :=
-λ b, mem_append_right _
+@[simp] lemma subset_concat_right (l₁ l₂ : list α) : l₂ ⊆ l₁ ++ l₂ :=
+λ b, mem_concat_right _
 
 lemma subset_cons_of_subset (a : α) {l₁ l₂ : list α} : l₁ ⊆ l₂ → l₁ ⊆ (a::l₂) :=
 λ (s : l₁ ⊆ l₂) (a : α) (i : a ∈ l₁), or.inr (s i)
@@ -226,10 +226,10 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
   ∀ l, ¬ p a → filter p (a::l) = filter p l :=
 λ l pa, if_neg pa
 
-@[simp] theorem filter_append {p : α → Prop} [h : decidable_pred p] :
-  ∀ (l₁ l₂ : list α), filter p (l₁++l₂) = filter p l₁ ++ filter p l₂
+@[simp] theorem filter_concat {p : α → Prop} [h : decidable_pred p] :
+  ∀ (l₁ l₂ : list α), filter p (l₁ ++ l₂) = filter p l₁ ++ filter p l₂
 | []      l₂ := rfl
-| (a::l₁) l₂ := by by_cases pa : p a; simp [pa, filter_append]
+| (a::l₁) l₂ := by by_cases pa : p a; simp [pa, filter_concat]
 
 @[simp] theorem filter_sublist {p : α → Prop} [h : decidable_pred p] : Π (l : list α), filter p l <+ l
 | []     := sublist.slnil

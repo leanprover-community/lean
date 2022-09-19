@@ -11,7 +11,7 @@ begin
 end
 
 
-@[unify] def {u} cons_append_hint (α : Type u) (a b : α) (l₁ l₂ l₃: list α) : unification_hint :=
+@[unify] def {u} cons_concat_hint (α : Type u) (a b : α) (l₁ l₂ l₃: list α) : unification_hint :=
 { pattern     := (a :: l₁) ++ l₂ =?= b :: l₃,
   constraints := [l₃ =?= l₁ ++ l₂, a =?= b] }
 
@@ -23,6 +23,6 @@ universe u
 
 example (α : Type u) (a b : α) (l₁ l₂ : list α) (i : G α l₂) : G.raise α (a::l₁) l₂ i = G.cons α a _ (G.raise α _ _ i) :=
 begin
-  trace_state, -- the result should not contain recursor applications because we declared cons_append_hint above
+  trace_state, -- the result should not contain recursor applications because we declared cons_concat_hint above
   admit
 end

@@ -9,8 +9,8 @@ open expr tactic
 
 declare_trace search_mem_list
 
-meta def match_append (e : expr) : tactic (expr × expr) :=
-do [_, _, l, r] ← match_app_of e ``has_append.append | failed, return (l, r)
+meta def match_concat (e : expr) : tactic (expr × expr) :=
+do [_, _, l, r] ← match_app_of e ``has_concat.concat | failed, return (l, r)
 
 meta def match_cons (e : expr) : tactic (expr × expr) :=
 do [_, a, t] ← match_app_of e ``list.cons | failed, return (a, t)
@@ -22,9 +22,9 @@ meta def search_mem_list : expr → expr → tactic expr
 | a e := when_tracing `search_mem_list (do f₁ ← pp a, f₂ ← pp e, trace (to_fmt "search " ++ f₁ ++ to_fmt " in " ++ f₂)) >>
 (do m ← to_expr ``(%%a ∈ %%e), find_assumption m)
 <|>
-(do (l, r) ← match_append e, h ← search_mem_list a l, to_expr ``(in_left %%r %%h))
+(do (l, r) ← match_concat e, h ← search_mem_list a l, to_expr ``(in_left %%r %%h))
 <|>
-(do (l, r) ← match_append e, h ← search_mem_list a r, to_expr ``(in_right %%l %%h))
+(do (l, r) ← match_concat e, h ← search_mem_list a r, to_expr ``(in_right %%l %%h))
 <|>
 (do (b, t) ← match_cons e, is_def_eq a b,             to_expr ``(in_head %%b %%t))
 <|>

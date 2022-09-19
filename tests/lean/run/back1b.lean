@@ -15,16 +15,16 @@ lemma in_head  {α : Type u} (a : α) (l : list α)              : a ∈ a::l :=
 mem_cons_self _ _
 
 lemma in_left  {α : Type u} {a : α}   {l : list α} (r : list α) : a ∈ l → a ∈ l ++ r :=
-mem_append_left _
+mem_concat_left _
 
 lemma in_right {α : Type u} {a : α}   (l : list α) {r : list α} : a ∈ r → a ∈ l ++ r :=
-mem_append_right _
+mem_concat_right _
 
 meta def match_cons (e : expr) : tactic (expr × expr) :=
 do [_, h, t] ← match_app_of e `list.cons | failed, return (h, t)
 
-meta def match_append (e : expr) : tactic (expr × expr) :=
-do [_, _, l, r] ← match_app_of e `has_append.append | failed, return (l, r)
+meta def match_concat (e : expr) : tactic (expr × expr) :=
+do [_, _, l, r] ← match_app_of e `has_concat.concat | failed, return (l, r)
 
 /- The command `declare_trace` add a new trace.search_mem_list to Lean -/
 declare_trace search_mem_list
@@ -49,9 +49,9 @@ when_tracing `search_mem_list (do
   A quoted term `(t) is a pre-term. The tactic to_expr elaborates a pre-term
   with respect to the current main goal. The notation %%t is an anti-quotation.
 -/
-(do (l, r) ← match_append e, h ← search_mem_list a l, to_expr ``(in_left %%r %%h))
+(do (l, r) ← match_concat e, h ← search_mem_list a l, to_expr ``(in_left %%r %%h))
 <|>
-(do (l, r) ← match_append e, h ← search_mem_list a r, to_expr ``(in_right %%l %%h))
+(do (l, r) ← match_concat e, h ← search_mem_list a r, to_expr ``(in_right %%l %%h))
 <|>
 (do (b, t) ← match_cons e, is_def_eq a b, to_expr ``(in_head %%b %%t))
 <|>

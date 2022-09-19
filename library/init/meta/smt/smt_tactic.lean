@@ -56,8 +56,7 @@ meta constant smt_state.classical       : smt_state → bool
 meta def smt_tactic :=
 state_t smt_state tactic
 
-meta instance : has_append smt_state :=
-list.has_append
+meta instance : has_concat smt_state := list.has_concat
 
 section
 local attribute [reducible] smt_tactic

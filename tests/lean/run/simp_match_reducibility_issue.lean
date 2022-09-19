@@ -8,7 +8,7 @@ section
   variable  v : vector α m
   variable  w : vector α n
 
-  theorem append_nil : append v nil = v :=
-  by cases v; simp [vector.append, vector.nil]; reflexivity
+  theorem concat_nil : concat v nil = v :=
+  by cases v; simp [vector.concat, vector.nil]; reflexivity
 end
 end test

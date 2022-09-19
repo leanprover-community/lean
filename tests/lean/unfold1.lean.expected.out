@@ -3,10 +3,10 @@
 
 h : ℕ,
 t : list ℕ,
-iH : t.append list.nil = t
-⊢ (h :: t).append list.nil = h :: t
+iH : t.concat list.nil = t
+⊢ (h :: t).concat list.nil = h :: t
 ------
 h : ℕ,
 t : list ℕ,
-iH : t.append list.nil = t
-⊢ h :: t.append list.nil = h :: t
+iH : t.concat list.nil = t
+⊢ h :: t.concat list.nil = h :: t

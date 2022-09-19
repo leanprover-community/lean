@@ -16,12 +16,12 @@ lemma in_head  {α : Type u} {a : α}   {l : list α}              : a ∈ a::l 
 mem_cons_self _ _
 
 lemma in_left  {α : Type u} {a : α}   {l : list α} (r : list α) : a ∈ l → a ∈ l ++ r :=
-mem_append_left _
+mem_concat_left _
 
 lemma in_right {α : Type u} {a : α}   (l : list α) {r : list α} : a ∈ r → a ∈ l ++ r :=
-mem_append_right _
+mem_concat_right _
 
-/- Now, we define two helper tactics for matching cons/append-applications.
+/- Now, we define two helper tactics for matching cons/concat-applications.
    For example, (match_cons e) succeeds and return a pair (h, t) iff
    it is of the form (h::t).
 -/
@@ -41,8 +41,8 @@ meta def match_cons (e : expr) : tactic (expr × expr) :=
 -/
 do [_, h, t] ← match_app_of e `list.cons | failed, return (h, t)
 
-meta def match_append (e : expr) : tactic (expr × expr) :=
-do [_, _, l, r] ← match_app_of e `has_append.append | failed, return (l, r)
+meta def match_concat (e : expr) : tactic (expr × expr) :=
+do [_, _, l, r] ← match_app_of e `has_concat.concat | failed, return (l, r)
 
 /- The tactic (search_mem_list a e) tries to build a proof-term for (a ∈ e). -/
 meta def search_mem_list : expr → expr → tactic expr
@@ -63,9 +63,9 @@ meta def search_mem_list : expr → expr → tactic expr
 <|>
 /- If e is of the form l++r, then we try to build a proof for (a ∈ l),
    if we succeed, we built a proof for (a ∈ l++r) using the lemma in_left. -/
-(do (l, r) ← match_append e, h ← search_mem_list a l, mk_app `in_left [l, r, h])
+(do (l, r) ← match_concat e, h ← search_mem_list a l, mk_app `in_left [l, r, h])
 <|>
-(do (l, r) ← match_append e, h ← search_mem_list a r, mk_app `in_right [l, r, h])
+(do (l, r) ← match_concat e, h ← search_mem_list a r, mk_app `in_right [l, r, h])
 <|>
 (do (b, t) ← match_cons e, is_def_eq a b, mk_app `in_head [b, t])
 <|>

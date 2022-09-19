@@ -98,7 +98,7 @@ namespace PropF
        OrE _ _ _ _ (weakening2 H₁ Hs) (weakening2 H₂ (cons_subset_cons A Hs)) (weakening2 H₃ (cons_subset_cons B Hs))
 
   def weakening : ∀ Γ Δ A, Γ ⊢ A → Γ++Δ ⊢ A :=
-  λ Γ Δ A H, weakening2 H (subset_append_left Γ Δ)
+  λ Γ Δ A H, weakening2 H (subset_concat_left Γ Δ)
 
   def deduction : ∀ Γ A B, Γ ⊢ A ⇒ B → A::Γ ⊢ B :=
   λ Γ A B H, ImpE _ _ _ (weakening2 H (subset_cons A Γ)) (Nax _ _ (mem_cons_self A Γ))

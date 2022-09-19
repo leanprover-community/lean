@@ -307,7 +307,7 @@ class has_dvd      (α : Type u) := (dvd : α → α → Prop)
 class has_mod      (α : Type u) := (mod : α → α → α)
 class has_le       (α : Type u) := (le : α → α → Prop)
 class has_lt       (α : Type u) := (lt : α → α → Prop)
-class has_append   (α : Type u) := (append : α → α → α)
+class has_concat   (α : Type u) := (concat : α → α → α)
 class has_andthen  (α : Type u) (β : Type v) (σ : out_param $ Type w) := (andthen : α → β → σ)
 class has_union    (α : Type u) := (union : α → α → α)
 class has_inter    (α : Type u) := (inter : α → α → α)
@@ -347,7 +347,7 @@ prefix `-`:75    := has_neg.neg
 infix ` <= `:50  := has_le.le
 infix ` ≤ `:50   := has_le.le
 infix ` < `:50   := has_lt.lt
-infixl ` ++ `:65 := has_append.append
+infixl ` ++ `:65 := has_concat.concat
 infixl `; `:1    := andthen
 notation `∅`     := has_emptyc.emptyc
 infixl ` ∪ `:65  := has_union.union
@@ -358,7 +358,7 @@ infix ` \ `:70   := has_sdiff.sdiff
 infix ` ≈ `:50   := has_equiv.equiv
 infixr ` ^ `:80  := has_pow.pow
 
-export has_append (append)
+export has_concat (concat)
 
 @[reducible] def ge {α : Type u} [has_le α] (a b : α) : Prop := has_le.le b a
 @[reducible] def gt {α : Type u} [has_lt α] (a b : α) : Prop := has_lt.lt b a

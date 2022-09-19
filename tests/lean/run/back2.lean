@@ -18,10 +18,10 @@ lemma in_head  {α : Type u} (a : α) (l : list α)              : a ∈ a::l :=
 mem_cons_self _ _
 
 lemma in_left  {α : Type u} {a : α}   {l : list α} (r : list α) : a ∈ l → a ∈ l ++ r :=
-mem_append_left _
+mem_concat_left _
 
 lemma in_right {α : Type u} {a : α}   (l : list α) {r : list α} : a ∈ r → a ∈ l ++ r :=
-mem_append_right _
+mem_concat_right _
 
 /- The command `declare_trace` add a new trace.search_mem_list to Lean -/
 declare_trace search_mem_list
