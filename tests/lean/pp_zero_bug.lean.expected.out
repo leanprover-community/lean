@@ -1,2 +1,2 @@
-has_zero.zero : Π {α : Type u_1} [self : has_zero α], α
-has_zero.zero : Π [self : has_zero ℕ], ℕ
+has_zero.zero : Π {α : Type u_1} [_ : has_zero α], α
+has_zero.zero : Π [_ : has_zero ℕ], ℕ
