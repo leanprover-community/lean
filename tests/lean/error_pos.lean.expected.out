@@ -16,7 +16,7 @@ error_pos.lean:11:36: error: type expected at
   B
 term has type
   A → Type
-λ (A : Type) (B : A → Type), ∀ (ᾰ : ⁇), true : Π (A : Type), (A → Type) → Prop
+λ (A : Type) (B : A → Type), ∀ (_ : ⁇), true : Π (A : Type), (A → Type) → Prop
 error_pos.lean:13:43: error: type expected at
   B
 term has type

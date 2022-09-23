@@ -7,6 +7,6 @@ The nested exception contains the failure state for the decreasing tactic.
 nested exception message:
 default_dec_tac failed
 state:
-foo : ∀ (ᾰ : ℕ), false,
+foo : ∀ (_ : ℕ), false,
 x y : ℕ
 ⊢ y < x
