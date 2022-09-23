@@ -8,5 +8,6 @@ variables (p q : Prop)
 #check ∀ (n : ℕ), n > 0
 #check ∀ (n : ℕ), 1 = 2
 #check Π (n : ℕ), ℤ
+#check Π {n : ℕ}, ℤ
 #check Π (n : ℕ), fin n
 #check ∀ n : ℕ, ¬∃ x : ℕ, x ≠ x

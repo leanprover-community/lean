@@ -1037,7 +1037,11 @@ T pretty_fn<T>::pp_binder_block(buffer<name> const & names, expr const & type, b
     if (m_binder_types || bi != binder_info())
         r += T(open_binder_string(bi, m_unicode));
     for (name const & n : names) {
-        r += escape(n);
+        if (n.is_anonymous()) {
+            r += T("_");
+        } else {
+            r += escape(n);
+        }
         r += space();
     }
     if (m_binder_types) {
@@ -1122,7 +1126,13 @@ auto pretty_fn<T>::pp_pi(expr const & e) -> result {
                 break;
             }
         }
-        locals.push_back(mk_pair(p.second, cons(expr_coord::pi_var_type, adr)));
+        expr local = p.second;
+        if (is_arrow(b)) {
+            // To let the user know this is a non-dependent pi we make the name for the local be anonymous.
+            // This prints as '_'.
+            local = mk_local(name(), name(), binding_domain(b), binding_info(b));
+        }
+        locals.push_back(mk_pair(local, cons(expr_coord::pi_var_type, adr)));
         b = p.first;
         adr = cons(expr_coord::pi_body, adr);
     }
