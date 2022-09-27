@@ -1,7 +1,6 @@
-densely_ordered : Π (α : Type u_1) [_ : preorder α], Prop
+densely_ordered : Π (α : Type u_1) [preorder α], Prop
 densely_ordered.mk :
   ∀ {α : Type u_1} [_inst_1 : preorder α],
     (∀ (a c : α), a < c → (∃ (b : α), a < b ∧ b < c)) → densely_ordered α
 densely_ordered.dense :
-  ∀ {α : Type u_1} [_inst_1 : preorder α] [_ : densely_ordered α] (a c : α),
-    a < c → (∃ (b : α), a < b ∧ b < c)
+  ∀ {α : Type u_1} [_inst_1 : preorder α] [densely_ordered α] (a c : α), a < c → (∃ (b : α), a < b ∧ b < c)
