@@ -5,7 +5,6 @@ meta def script_check_id (n : name) : tactic unit :=
 do env ← get_env, (env^.get n >> return ()) <|> (guard $ env^.is_namespace n) <|> (attribute.get_instances n >> return ()) <|> fail ("identifier '" ++ to_string n ++ "' is not a constant, namespace nor attribute")
 run_cmd script_check_id `absurd
 run_cmd script_check_id `acc.cases_on
-run_cmd script_check_id `acc.rec
 run_cmd script_check_id `and
 run_cmd script_check_id `and.cases_on
 run_cmd script_check_id `and.elim_left
@@ -32,7 +31,6 @@ run_cmd script_check_id `coe
 run_cmd script_check_id `coe_fn
 run_cmd script_check_id `coe_sort
 run_cmd script_check_id `coe_to_lift
-run_cmd script_check_id `combinator.K
 run_cmd script_check_id `congr
 run_cmd script_check_id `congr_arg
 run_cmd script_check_id `congr_fun
@@ -67,6 +65,8 @@ run_cmd script_check_id `forall_congr
 run_cmd script_check_id `forall_congr_eq
 run_cmd script_check_id `forall_not_of_not_exists
 run_cmd script_check_id `format
+run_cmd script_check_id `function
+run_cmd script_check_id `function.const
 run_cmd script_check_id `funext
 run_cmd script_check_id `has_add
 run_cmd script_check_id `has_add.add
