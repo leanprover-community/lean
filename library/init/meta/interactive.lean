@@ -1692,7 +1692,7 @@ focus1 $
 do e ← i_to_expr p,
    let h := expr.get_app_fn e,
    if h.is_local_constant
-   then tactic.note h.local_pp_name none e >> try (tactic.clear h) >> rotate 1
+   then tactic.note h.local_pp_name none e >> try (tactic.clear h)
    else tactic.fail "specialize requires a term of the form `h x_1 .. x_n` where `h` appears in the local context"
 
 meta def congr := tactic.congr
