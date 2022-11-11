@@ -189,7 +189,7 @@ section linear_order
 
 /-- Default definition of `max`. -/
 def max_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
-if b ≤ a then a else b
+if a ≤ b then b else a
 
 /-- Default definition of `min`. -/
 def min_default {α : Type u} [has_le α] [decidable_rel ((≤) : α → α → Prop)] (a b : α) :=
