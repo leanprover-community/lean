@@ -1,3 +1,17 @@
+3.49.0c (11 November 2022)
+--------------------------
+
+Features:
+- Extend `pp.links` to support Pi, Prop, Type, and Sort (#778)
+
+Fixes:
+- Markdown syntax in docstring (#766)
+- Name arguments in `expr` constructors (#773)
+
+Changes:
+- Remove unused theorems (#774)
+- Backport Lean 4 definitions of `min`/`max` (#779)
+
 3.48.0c (30 August 2022)
 ------------------------
 
