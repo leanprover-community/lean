@@ -1,6 +1,5 @@
 absurd
 acc.cases_on
-acc.rec
 and
 and.cases_on
 and.elim_left
@@ -27,7 +26,6 @@ coe
 coe_fn
 coe_sort
 coe_to_lift
-combinator.K
 congr
 congr_arg
 congr_fun
@@ -63,6 +61,7 @@ forall_congr_eq
 forall_not_of_not_exists
 format
 function
+function.const
 funext
 has_add
 has_add.add
