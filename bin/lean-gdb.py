@@ -49,6 +49,61 @@ class LeanNamePrinter:
         else:
             return rec(self.val['m_ptr'].dereference())
 
+class LeanSexprPrinter:
+    expr_kinds = [
+        (None, 'Nil', []),
+        ('lean::sexpr_string', 'String', ['m_value']),
+        ('lean::sexpr_bool', 'bool', ['m_value']),
+        ('lean::sexpr_int', 'Int', ['m_value']),
+        ('lean::sexpr_double', 'Double', ['m_value']),
+        ('lean::sexpr_name', 'Name', ['m_value']),
+        ('lean::sexpr_cons', 'Cons', ['m_head', 'm_tail']),
+        ('lean::sexpr_ext', 'Ext', ['m_value']),
+    ]
+
+    def __init__(self, val):
+        self.kind = int(val['m_ptr']['m_kind'] if val['m_ptr'] else 0)
+        type_name = self.expr_kinds[self.kind][0]
+        if type_name is not None:
+            subtype = gdb.lookup_type(self.expr_kinds[self.kind][0])
+            self.val = val['m_ptr'].cast(subtype.pointer()).dereference()
+        else:
+            self.val = None
+
+    def to_string(self):
+        return 'lean::sexpr[{}]'.format(self.expr_kinds[self.kind][1])
+
+    def children(self):
+        kind, _, fields = self.expr_kinds[self.kind]
+        for f in fields:
+            yield (f, self.val[f])
+    # case sexpr_kind::Nil:         out << "nil"; break;
+    # case sexpr_kind::String:      out << "\"" << escaped(to_string(s).c_str()) << "\""; break;
+    # case sexpr_kind::Bool:        out << (to_bool(s) ? "true" : "false"); break;
+    # case sexpr_kind::Int:         out << to_int(s); break;
+    # case sexpr_kind::Double:      out << to_double(s); break;
+    # case sexpr_kind::Name:        out << to_name(s); break;
+    # case sexpr_kind::Ext:         to_ext(s).display(out); break;
+    # case sexpr_kind::Cons: {
+    #     out << "(";
+    #     sexpr const * curr = &s;
+    #     while (true) {
+    #         out << head(*curr);
+    #         curr = &tail(*curr);
+    #         if (is_nil(*curr)) {
+    #             break;
+    #         } else if (!is_cons(*curr)) {
+    #             out << " . ";
+    #             out << *curr;
+    #             break;
+    #         } else {
+    #             out << " ";
+    #         }
+    #     }
+    #     out << ")";
+    # }}
+    # return out;
+
 class LeanExprPrinter:
     """Print a lean::expr object."""
 
