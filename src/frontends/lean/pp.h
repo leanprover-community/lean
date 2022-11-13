@@ -136,7 +136,7 @@ private:
     bool match(expr const & p, subexpr const & e, buffer<optional<subexpr>> & args);
     /** \brief pretty-print e parsed with rbp, terminated by a token with lbp */
     result pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit = false);
-    optional<result> pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args);
+    optional<result> pp_notation(notation_entry const & entry, expr const & e, buffer<optional<subexpr>> & args);
     optional<result> pp_notation(subexpr const & e);
 
     result add_paren_if_needed(result const & r, unsigned bp);

@@ -1623,11 +1623,11 @@ static T mk_tk_fmt(name const & tkn) {
     }
 }
 template<class T>
-auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args) -> optional<result> {
+auto pretty_fn<T>::pp_notation(notation_entry const & entry, expr const & src, buffer<optional<subexpr>> & args) -> optional<result> {
     if (entry.is_numeral()) {
         return some(result(T(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token().to_string_unescaped()));
+        T fmt   = mk_link(src, T(head(entry.get_transitions()).get_token().to_string_unescaped()));
         return some(result(fmt));
     } else {
         using notation::transition;
@@ -1646,7 +1646,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
             T curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
+            T tk_fmt = mk_link(src, mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1828,7 +1828,7 @@ auto pretty_fn<T>::pp_notation(subexpr const & ep) -> optional<result> {
         buffer<optional<subexpr>> args;
         args.resize(num_params);
         if (match(entry.get_expr(), ep, args)) {
-            if (auto r = pp_notation(entry, args))
+            if (auto r = pp_notation(entry, ep.first, args))
                 return r;
         }
     }

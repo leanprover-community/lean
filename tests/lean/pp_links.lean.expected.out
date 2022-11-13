@@ -1,3 +1,6 @@
+pp_links.lean:10:32: error: tactic failed, there are unsolved goals
+state:
+⊢ Exists∃ (i j : intℤ)Exists, truetrue
 pp_links.lean:6:63: error: tactic failed, there are unsolved goals
 state:
 ⊢ forall∀ (i : intℤ),
