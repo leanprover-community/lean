@@ -21,3 +21,5 @@ p → ℕ : Type
 ∀ (_ : ℕ), p → q : Prop
 p → ∀ (m : ℕ), q ∧ m = 1 : Prop
 p → ∀ (_ : ℕ), q : Prop
+let Prop' : Type := Prop, not' : Prop' → Prop := λ (p : Prop'), ¬p in ∀ (p : Prop') (_ : p), not' p : Prop
+let not' : Prop' → Prop := λ (p : Prop'), ¬p in ∀ (p : Prop'), p → not' p : Prop

@@ -22,3 +22,15 @@ variables (p q : Prop)
 #check ∀ (m : ℕ) (h : p), q
 #check ∀ (h : p) (m : ℕ), q ∧ m = 1
 #check ∀ (h : p) (m : ℕ), q
+
+section
+-- A limitation due to use of relaxed weak head normal form:
+
+#check let Prop' := Prop, not' (p : Prop') := ¬ p in ∀ (p : Prop'), p → not' p
+-- shows ∀ (p : Prop') (_ : p), not' p
+
+abbreviation Prop' := Sort 0
+#check let not' (p : Prop') := ¬ p in ∀ (p : Prop'), p → not' p
+-- shows ∀ (p : Prop'), p → not' p
+
+end
