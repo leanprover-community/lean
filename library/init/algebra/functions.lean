@@ -17,7 +17,7 @@ variables {α : Type u} [linear_order α]
 
 lemma min_def (a b : α) : min a b = if a ≤ b then a else b :=
 by rw [congr_fun linear_order.min_def a, min_default]
-lemma max_def (a b : α) : max a b = if b ≤ a then a else b :=
+lemma max_def (a b : α) : max a b = if a ≤ b then b else a :=
 by rw [congr_fun linear_order.max_def a, max_default]
 
 private meta def min_tac_step : tactic unit :=
@@ -40,13 +40,13 @@ lemma le_min {a b c : α} (h₁ : c ≤ a) (h₂ : c ≤ b) : c ≤ min a b :=
 by min_tac a b
 
 lemma le_max_left (a b : α) : a ≤ max a b :=
-by min_tac b a
+by min_tac a b
 
 lemma le_max_right (a b : α) : b ≤ max a b :=
-by min_tac b a
+by min_tac a b
 
 lemma max_le {a b c : α} (h₁ : a ≤ c) (h₂ : b ≤ c) : max a b ≤ c :=
-by min_tac b a
+by min_tac a b
 
 lemma eq_min {a b c : α} (h₁ : c ≤ a) (h₂ : c ≤ b) (h₃ : ∀{d}, d ≤ a → d ≤ b → d ≤ c) :
   c = min a b :=
@@ -131,5 +131,5 @@ or.elim (le_or_gt b c)
 lemma max_lt {a b c : α} (h₁ : a < c) (h₂ : b < c) : max a b < c :=
 or.elim (le_or_gt a b)
   (assume h : a ≤ b, by min_tac b a)
-  (assume h : a > b, by min_tac b a)
+  (assume h : a > b, by min_tac a b)
 end

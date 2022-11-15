@@ -119,6 +119,9 @@ private:
     result mk_link(name const & dest, result const & body);
     T mk_link(expr const & dest, T const & body);
 
+    T mk_builtin_link(std::string const & dest, T const & body);
+    result mk_builtin_link(std::string const & dest, result const & body);
+
     format pp_child(level const & l);
     format pp_max(level l);
     format pp_meta(level const & l);
@@ -133,7 +136,7 @@ private:
     bool match(expr const & p, subexpr const & e, buffer<optional<subexpr>> & args);
     /** \brief pretty-print e parsed with rbp, terminated by a token with lbp */
     result pp_notation_child(expr const & e, unsigned rbp, unsigned lbp, bool below_implicit = false);
-    optional<result> pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args);
+    optional<result> pp_notation(notation_entry const & entry, expr const & e, buffer<optional<subexpr>> & args);
     optional<result> pp_notation(subexpr const & e);
 
     result add_paren_if_needed(result const & r, unsigned bp);

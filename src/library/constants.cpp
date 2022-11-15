@@ -5,7 +5,6 @@
 namespace lean{
 name const * g_absurd = nullptr;
 name const * g_acc_cases_on = nullptr;
-name const * g_acc_rec = nullptr;
 name const * g_and = nullptr;
 name const * g_and_cases_on = nullptr;
 name const * g_and_elim_left = nullptr;
@@ -32,7 +31,6 @@ name const * g_coe = nullptr;
 name const * g_coe_fn = nullptr;
 name const * g_coe_sort = nullptr;
 name const * g_coe_to_lift = nullptr;
-name const * g_combinator_K = nullptr;
 name const * g_congr = nullptr;
 name const * g_congr_arg = nullptr;
 name const * g_congr_fun = nullptr;
@@ -68,6 +66,7 @@ name const * g_forall_congr_eq = nullptr;
 name const * g_forall_not_of_not_exists = nullptr;
 name const * g_format = nullptr;
 name const * g_function = nullptr;
+name const * g_function_const = nullptr;
 name const * g_funext = nullptr;
 name const * g_has_add = nullptr;
 name const * g_has_add_add = nullptr;
@@ -288,7 +287,6 @@ name const * g_widget_term_goal_widget = nullptr;
 void initialize_constants() {
     g_absurd = new name{"absurd"};
     g_acc_cases_on = new name{"acc", "cases_on"};
-    g_acc_rec = new name{"acc", "rec"};
     g_and = new name{"and"};
     g_and_cases_on = new name{"and", "cases_on"};
     g_and_elim_left = new name{"and", "elim_left"};
@@ -315,7 +313,6 @@ void initialize_constants() {
     g_coe_fn = new name{"coe_fn"};
     g_coe_sort = new name{"coe_sort"};
     g_coe_to_lift = new name{"coe_to_lift"};
-    g_combinator_K = new name{"combinator", "K"};
     g_congr = new name{"congr"};
     g_congr_arg = new name{"congr_arg"};
     g_congr_fun = new name{"congr_fun"};
@@ -351,6 +348,7 @@ void initialize_constants() {
     g_forall_not_of_not_exists = new name{"forall_not_of_not_exists"};
     g_format = new name{"format"};
     g_function = new name{"function"};
+    g_function_const = new name{"function", "const"};
     g_funext = new name{"funext"};
     g_has_add = new name{"has_add"};
     g_has_add_add = new name{"has_add", "add"};
@@ -572,7 +570,6 @@ void initialize_constants() {
 void finalize_constants() {
     delete g_absurd;
     delete g_acc_cases_on;
-    delete g_acc_rec;
     delete g_and;
     delete g_and_cases_on;
     delete g_and_elim_left;
@@ -599,7 +596,6 @@ void finalize_constants() {
     delete g_coe_fn;
     delete g_coe_sort;
     delete g_coe_to_lift;
-    delete g_combinator_K;
     delete g_congr;
     delete g_congr_arg;
     delete g_congr_fun;
@@ -635,6 +631,7 @@ void finalize_constants() {
     delete g_forall_not_of_not_exists;
     delete g_format;
     delete g_function;
+    delete g_function_const;
     delete g_funext;
     delete g_has_add;
     delete g_has_add_add;
@@ -855,7 +852,6 @@ void finalize_constants() {
 }
 name const & get_absurd_name() { return *g_absurd; }
 name const & get_acc_cases_on_name() { return *g_acc_cases_on; }
-name const & get_acc_rec_name() { return *g_acc_rec; }
 name const & get_and_name() { return *g_and; }
 name const & get_and_cases_on_name() { return *g_and_cases_on; }
 name const & get_and_elim_left_name() { return *g_and_elim_left; }
@@ -882,7 +878,6 @@ name const & get_coe_name() { return *g_coe; }
 name const & get_coe_fn_name() { return *g_coe_fn; }
 name const & get_coe_sort_name() { return *g_coe_sort; }
 name const & get_coe_to_lift_name() { return *g_coe_to_lift; }
-name const & get_combinator_K_name() { return *g_combinator_K; }
 name const & get_congr_name() { return *g_congr; }
 name const & get_congr_arg_name() { return *g_congr_arg; }
 name const & get_congr_fun_name() { return *g_congr_fun; }
@@ -918,6 +913,7 @@ name const & get_forall_congr_eq_name() { return *g_forall_congr_eq; }
 name const & get_forall_not_of_not_exists_name() { return *g_forall_not_of_not_exists; }
 name const & get_format_name() { return *g_format; }
 name const & get_function_name() { return *g_function; }
+name const & get_function_const_name() { return *g_function_const; }
 name const & get_funext_name() { return *g_funext; }
 name const & get_has_add_name() { return *g_has_add; }
 name const & get_has_add_add_name() { return *g_has_add_add; }

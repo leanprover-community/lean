@@ -700,13 +700,13 @@ template<class T>
 auto pretty_fn<T>::pp_sort(expr const & e) -> result {
     level u = sort_level(e);
     if (u == mk_level_zero()) {
-        return result(T("Prop"));
+        return result(mk_builtin_link("Prop", T("Prop")));
     } else if (u == mk_level_one()) {
-        return result(T("Type"));
+        return result(mk_builtin_link("Type", T("Type")));
     } else if (optional<level> u1 = dec_level(u)) {
-        return result(max_bp()-1, group(T("Type") + space() + nest(5, pp_child(*u1))));
+        return result(max_bp()-1, group(mk_builtin_link("Type", T("Type")) + space() + nest(5, pp_child(*u1))));
     } else {
-        return result(max_bp()-1, group(T("Sort") + space() + nest(5, pp_child(u))));
+        return result(max_bp()-1, group(mk_builtin_link("Sort", T("Sort")) + space() + nest(5, pp_child(u))));
     }
 }
 template<class T>
@@ -757,6 +757,20 @@ T pretty_fn<T>::mk_link(expr const & dest, T const & body) {
     }
 }
 template<class T>
+T pretty_fn<T>::mk_builtin_link(std::string const & dest, T const & body) {
+    if (m_links) {
+        return T((sstream() << "\xee\x80\x80\xee\x80\x83" << dest << "\xee\x80\x81").str()) +
+            body + T("\xee\x80\x82");
+    } else {
+        return body;
+    }
+}
+template<class T>
+auto pretty_fn<T>::mk_builtin_link(std::string const & dest, result const & body) -> result {
+    if (!m_links) return body;
+    return result(body.lbp(), body.rbp(), mk_builtin_link(dest, body.fmt()));
+}
+template<class T>
 auto pretty_fn<T>::pp_const(expr const & e, optional<unsigned> const & num_ref_univ_params) -> result {
     if (is_neutral_expr(e) && m_unicode)
         return T("◾");
@@ -764,7 +778,7 @@ auto pretty_fn<T>::pp_const(expr const & e, optional<unsigned> const & num_ref_u
         return T("⊥");
     name n = const_name(e);
     if (m_notation && n == get_unit_star_name())
-        return T("()");
+        return mk_link(n, T("()"));
     if (!num_ref_univ_params) {
         if (auto r = pp_local_ref(e))
             return *r;
@@ -1125,7 +1139,7 @@ auto pretty_fn<T>::pp_pi(expr const & e) -> result {
                 b = p.first;
                 address pb = expr_address::pi_body();
                 result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
-                T r = group(lhs.fmt() + space() + (m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
+                T r = group(lhs.fmt() + space() +  mk_builtin_link(is_prop(b) ? "implies" : "function", m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
                 return result(get_arrow_prec(), get_arrow_prec()-1, r);
             } else {
                 // Then we are done with the loop and pretty print the pi/forall
@@ -1144,9 +1158,9 @@ auto pretty_fn<T>::pp_pi(expr const & e) -> result {
     }
     T r;
     if (is_prop(b))
-        r = m_unicode ? *g_forall_n_fmt : *g_forall_fmt;
+        r = mk_builtin_link("forall", m_unicode ? *g_forall_n_fmt : *g_forall_fmt);
     else
-        r = m_unicode ? *g_pi_n_fmt : *g_pi_fmt;
+        r = mk_builtin_link("pi", m_unicode ? *g_pi_n_fmt : *g_pi_fmt);
     r += pp_binders(locals);
     r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
     return result(0, r);
@@ -1631,11 +1645,11 @@ static T mk_tk_fmt(name const & tkn) {
     }
 }
 template<class T>
-auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<subexpr>> & args) -> optional<result> {
+auto pretty_fn<T>::pp_notation(notation_entry const & entry, expr const & src, buffer<optional<subexpr>> & args) -> optional<result> {
     if (entry.is_numeral()) {
         return some(result(T(entry.get_num().to_string())));
     } else if (is_atomic_notation(entry)) {
-        T fmt   = mk_link(entry.get_expr(), T(head(entry.get_transitions()).get_token().to_string_unescaped()));
+        T fmt   = mk_link(src, T(head(entry.get_transitions()).get_token().to_string_unescaped()));
         return some(result(fmt));
     } else {
         using notation::transition;
@@ -1654,7 +1668,7 @@ auto pretty_fn<T>::pp_notation(notation_entry const & entry, buffer<optional<sub
             T curr;
             notation::action const & a = ts[i].get_action();
             name const & tk = ts[i].get_token();
-            T tk_fmt = mk_link(entry.get_expr(), mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
+            T tk_fmt = mk_link(src, mk_tk_fmt<T>(ts[i].get_pp_token().to_string_unescaped()));
             switch (a.kind()) {
             case notation::action_kind::Skip:
                 curr = tk_fmt;
@@ -1836,7 +1850,7 @@ auto pretty_fn<T>::pp_notation(subexpr const & ep) -> optional<result> {
         buffer<optional<subexpr>> args;
         args.resize(num_params);
         if (match(entry.get_expr(), ep, args)) {
-            if (auto r = pp_notation(entry, args))
+            if (auto r = pp_notation(entry, ep.first, args))
                 return r;
         }
     }

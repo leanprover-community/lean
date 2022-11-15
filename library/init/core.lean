@@ -317,8 +317,8 @@ class has_subset   (α : Type u) := (subset : α → α → Prop)
 class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
 /-! Type classes `has_emptyc` and `has_insert` are
    used to implement polymorphic notation for collections.
-   Example: `{a, b, c} = insert a (insert b (singleton c))`.    
-   
+   Example: `{a, b, c} = insert a (insert b (singleton c))`.
+
    Note that we use `pair` in the name of lemmas about `{x, y} = insert x (singleton y)`. -/
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
@@ -526,14 +526,6 @@ instance {α : Type u} [has_sizeof α] (p : α → Prop) : has_sizeof (subtype p
 ⟨subtype.sizeof⟩
 
 lemma nat_add_zero (n : nat) : n + 0 = n := rfl
-
-/- Combinator calculus -/
-namespace combinator
-universes u₁ u₂ u₃
-def I {α : Type u₁} (a : α) := a
-def K {α : Type u₁} {β : Type u₂} (a : α) (b : β) := a
-def S {α : Type u₁} {β : Type u₂} {γ : Type u₃} (x : α → β → γ) (y : α → β) (z : α) := x z (y z)
-end combinator
 
 /-- Auxiliary datatype for #[ ... ] notation.
     #[1, 2, 3, 4] is notation for

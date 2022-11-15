@@ -84,30 +84,30 @@ meta constant macro_def : Type
     The VM replaces instances of this datatype with the C++ implementation. -/
 meta inductive expr (elaborated : bool := tt)
 /- A bound variable with a de-Bruijn index. -/
-| var         : nat → expr
+| var         (i : nat) : expr
 /- A type universe: `Sort u` -/
-| sort        : level → expr
+| sort        (l : level) : expr
 /- A global constant. These include definitions, constants and inductive type stuff present
 in the environment as well as hard-coded definitions. -/
-| const       : name → list level → expr
+| const       (name : name) (ls : list level) : expr
 /- [WARNING] Do not trust the types for `mvar` and `local_const`,
 they are sometimes dummy values. Use `tactic.infer_type` instead. -/
 /- An `mvar` is a 'hole' yet to be filled in by the elaborator or tactic state. -/
-| mvar        (unique : name)  (pretty : name)  (type : expr) : expr
+| mvar        (unique : name) (pretty : name) (type : expr) : expr
 /- A local constant. For example, if our tactic state was `h : P ⊢ Q`, `h` would be a local constant. -/
 | local_const (unique : name) (pretty : name) (bi : binder_info) (type : expr) : expr
 /- Function application. -/
-| app         : expr → expr → expr
+| app         (f : expr) (x : expr) : expr
 /- Lambda abstraction. eg ```(λ a : α, x)`` -/
-| lam        (var_name : name) (bi : binder_info) (var_type : expr) (body : expr) : expr
+| lam         (var_name : name) (bi : binder_info) (var_type : expr) (body : expr) : expr
 /- Pi type constructor. eg ```(Π a : α, x)`` and ```(α → β)`` -/
-| pi         (var_name : name) (bi : binder_info) (var_type : expr) (body : expr) : expr
+| pi          (var_name : name) (bi : binder_info) (var_type : expr) (body : expr) : expr
 /- An explicit let binding. -/
-| elet       (var_name : name) (type : expr) (assignment : expr) (body : expr) : expr
+| elet        (var_name : name) (type : expr) (assignment : expr) (body : expr) : expr
 /- A macro, see the docstring for `macro_def`.
   The list of expressions are local constants and metavariables that the macro depends on.
   -/
-| macro       : macro_def → list expr → expr
+| macro       (m : macro_def) (args : list expr) : expr
 
 variable {elab : bool}
 
