@@ -4,3 +4,6 @@ state:
     (i, i).prod.sndsndeq =
       ihas_add.add + 0has_add.add +
         point.mk{point.xx := 0, point.yy := i}.point.xx
+pp_links.lean:10:32: error: tactic failed, there are unsolved goals
+state:
+⊢ Exists∃ (i j : intℤ)Exists, truetrue
