@@ -5,10 +5,10 @@ Authors: Luke Nelson, Jared Roesch and Leonardo de Moura
 -/
 import system.io_interface
 
-/- The following constants have a builtin implementation -/
+/-! The following constants have a builtin implementation -/
 constant io_core : Type → Type → Type
 
-/- Auxiliary definition used in the builtin implementation of monad_io_random_impl -/
+/-- Auxiliary definition used in the builtin implementation of monad_io_random_impl -/
 def io_rand_nat : std_gen → nat → nat → nat × std_gen :=
 rand_nat
 
@@ -34,7 +34,7 @@ monad_io_is_alternative io_core
 io_core io.error α
 
 namespace io
-/- Remark: the following definitions can be generalized and defined for any (m : Type -> Type -> Type)
+/-! Remark: the following definitions can be generalized and defined for any (m : Type -> Type -> Type)
    that implements the required type classes. However, the generalized versions are very inconvenient to use,
    (example: `#eval io.put_str "hello world"` does not work because we don't have enough information to infer `m`.).
 -/

@@ -5,11 +5,11 @@ Authors: Leonardo de Moura
 -/
 prelude
 import init.control.monad init.meta.format init.util
-/-
+
+/-- An exceptional is similar to `Result` in Haskell.
+
 Remark: we use a function that produces a format object as the exception information.
-Motivation: the formatting object may be big, and we may create it on demand.
--/
-/-- An exceptional is similar to `Result` in Haskell.-/
+Motivation: the formatting object may be big, and we may create it on demand.-/
 meta inductive exceptional (α : Type)
 | success   : α → exceptional
 | exception : (options → format) → exceptional

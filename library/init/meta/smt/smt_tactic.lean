@@ -182,7 +182,7 @@ private meta def mk_smt_goals_for (cfg : smt_config) : list expr → list smt_go
   [new_tg] ← get_goals | tactic.failed,
   mk_smt_goals_for tgs (new_sg::sr) (new_tg::tr)
 
-/- See slift -/
+/-- See slift -/
 meta def slift_aux {α : Type} (t : tactic α) (cfg : smt_config) : smt_tactic α :=
 ⟨λ ss, do
    _::sgs  ← return ss | tactic.fail "slift tactic failed, there no smt goals to be solved",

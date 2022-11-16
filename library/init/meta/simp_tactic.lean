@@ -148,7 +148,7 @@ end tactic
 meta constant simp_lemmas.dsimplify (s : simp_lemmas) (u : list name := []) (e : expr) (cfg : tactic.dsimp_config := {}) : tactic expr
 
 namespace tactic
-/- Remark: the configuration parameters `cfg.md` and `cfg.eta` are ignored by this tactic. -/
+/-- Remark: the configuration parameters `cfg.md` and `cfg.eta` are ignored by this tactic. -/
 meta constant dsimplify_core
   /- The user state type. -/
   {α : Type}
@@ -203,7 +203,7 @@ meta constant dunfold_head (e : expr) (md := transparency.instances) : tactic ex
 structure dunfold_config extends dsimp_config :=
 (md := transparency.instances)
 
-/- Remark: in principle, dunfold can be implemented on top of dsimp. We don't do it for
+/-! Remark: in principle, dunfold can be implemented on top of dsimp. We don't do it for
    performance reasons. -/
 
 meta constant dunfold (cs : list name) (e : expr) (cfg : dunfold_config := {}) : tactic expr
@@ -415,7 +415,7 @@ do (lhs, rhs)     ← target >>= match_eq,
    unify rhs new_rhs,
    exact heq
 
-/- Simp attribute support -/
+/-! Simp attribute support -/
 
 meta def to_simp_lemmas : simp_lemmas → list name → tactic simp_lemmas
 | S []      := return S
@@ -490,7 +490,7 @@ private meta def remove_deps (s : name_set) (h : expr) : name_set :=
 if s.empty then s
 else h.fold s (λ e o s, if e.is_local_constant then s.erase e.local_uniq_name else s)
 
-/- Return the list of hypothesis that are propositions and do not have
+/-- Return the list of hypothesis that are propositions and do not have
    forward dependencies. -/
 meta def non_dep_prop_hyps : tactic (list expr) :=
 do
@@ -518,7 +518,7 @@ meta structure simp_all_entry :=
 private meta def update_simp_lemmas (es : list simp_all_entry) (h : expr) : tactic (list simp_all_entry) :=
 es.mmap $ λ e, do new_s ← e.s.add h ff, return {s := new_s, ..e}
 
-/- Helper tactic for `init`.
+/-- Helper tactic for `init`.
    Remark: the following tactic is quadratic on the length of list expr (the list of non dependent propositions).
    We can make it more efficient as soon as we have an efficient simp_lemmas.erase. -/
 private meta def init_aux : list expr → simp_lemmas → list simp_all_entry → tactic (simp_lemmas × list simp_all_entry)
@@ -589,7 +589,7 @@ do hs      ← non_dep_prop_hyps,
 
 end simp_all
 
-/- debugging support for algebraic normalizer -/
+/-! debugging support for algebraic normalizer -/
 
 meta constant trace_algebra_info : expr → tactic unit
 

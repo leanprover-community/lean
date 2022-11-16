@@ -7,7 +7,7 @@ prelude
 import init.data.list.basic
 import init.data.char.basic
 
-/- In the VM, strings are implemented using a dynamic array and UTF-8 encoding.
+/-- In the VM, strings are implemented using a dynamic array and UTF-8 encoding.
 
    TODO: we currently cannot mark string_imp as private because
    we need to bind string_imp.mk and string_imp.cases_on in the VM.
@@ -25,7 +25,7 @@ namespace string
 instance : has_lt string :=
 ⟨λ s₁ s₂, s₁.data < s₂.data⟩
 
-/- Remark: this function has a VM builtin efficient implementation. -/
+/-- Remark: this function has a VM builtin efficient implementation. -/
 instance has_decidable_lt (s₁ s₂ : string) : decidable (s₁ < s₂) :=
 list.has_decidable_lt s₁.data s₂.data
 
@@ -41,24 +41,24 @@ def empty : string :=
 def length : string → nat
 | ⟨s⟩  := s.length
 
-/- The internal implementation uses dynamic arrays and will perform destructive updates
+/-- The internal implementation uses dynamic arrays and will perform destructive updates
    if the string is not shared. -/
 def push : string → char → string
 | ⟨s⟩ c := ⟨s ++ [c]⟩
 
-/- The internal implementation uses dynamic arrays and will perform destructive updates
+/-- The internal implementation uses dynamic arrays and will perform destructive updates
    if the string is not shared. -/
 def append : string → string → string
 | ⟨a⟩ ⟨b⟩ := ⟨a ++ b⟩
 
-/- O(n) in the VM, where n is the length of the string -/
+/-- O(n) in the VM, where n is the length of the string -/
 def to_list : string → list char
 | ⟨s⟩ := s
 
 def fold {α} (a : α) (f : α → char → α) (s : string) : α :=
 s.to_list.foldl f a
 
-/- In the VM, the string iterator is implemented as a pointer to the string being iterated + index.
+/-- In the VM, the string iterator is implemented as a pointer to the string being iterated + index.
 
    TODO: we currently cannot mark interator_imp as private because
    we need to bind string_imp.mk and string_imp.cases_on in the VM.
@@ -76,7 +76,7 @@ def curr : iterator → char
 | ⟨p, c::n⟩ := c
 | _         := default
 
-/- In the VM, `set_curr` is constant time if the string being iterated is not shared and linear time
+/-- In the VM, `set_curr` is constant time if the string being iterated is not shared and linear time
    if it is. -/
 def set_curr : iterator → char → iterator
 | ⟨p, c::n⟩ c' := ⟨p, c'::n⟩
@@ -104,7 +104,7 @@ def insert : iterator → string → iterator
 def remove : iterator → nat → iterator
 | ⟨p, n⟩ m := ⟨p, n.drop m⟩
 
-/- In the VM, `to_string` is a constant time operation. -/
+/-- In the VM, `to_string` is a constant time operation. -/
 def to_string : iterator → string
 | ⟨p, n⟩ := ⟨p.reverse ++ n⟩
 
@@ -138,7 +138,7 @@ def extract : iterator → iterator → option string
 end iterator
 end string
 
-/- The following definitions do not have builtin support in the VM -/
+/-! The following definitions do not have builtin support in the VM -/
 
 instance : inhabited string :=
 ⟨string.empty⟩

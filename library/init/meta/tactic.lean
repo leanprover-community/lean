@@ -591,9 +591,9 @@ structure apply_cfg :=
     The fields `cfg.auto_param` and `cfg.opt_param` are ignored by this tactic (See `tactic.apply`).
     It returns a list of all introduced meta variables and the parameter name associated with them, even the assigned ones. -/
 meta constant apply_core (e : expr) (cfg : apply_cfg := {}) : tactic (list (name × expr))
-/- Create a fresh meta universe variable. -/
+/-- Create a fresh meta universe variable. -/
 meta constant mk_meta_univ  : tactic level
-/- Create a fresh meta-variable with the given type.
+/-- Create a fresh meta-variable with the given type.
    The scope of the new meta-variable is the local context of the main goal. -/
 meta constant mk_meta_var   : expr → tactic expr
 /-- Return the value assigned to the given universe meta-variable.
@@ -783,7 +783,7 @@ meta constant unfreeze_local_instances : tactic unit
 Freeze the current set of local instances.
 -/
 meta constant freeze_local_instances : tactic unit
-/- Return the list of frozen local instances. Return `none` if local instances were not frozen. -/
+/-- Return the list of frozen local instances. Return `none` if local instances were not frozen. -/
 meta constant frozen_local_instances : tactic (option (list expr))
 
 /-- Run the provided tactic, associating it to the given AST node. -/
@@ -962,7 +962,7 @@ Example: with `x : ℕ, h : P(x) ⊢ T(x)`, `revert x` returns `2` and produces 
 meta def revert (l : expr) : tactic nat :=
 revert_lst [l]
 
-/- Revert "all" hypotheses. Actually, the tactic only reverts
+/-- Revert "all" hypotheses. Actually, the tactic only reverts
    hypotheses occurring after the last frozen local instance.
    Recall that frozen local instances cannot be reverted,
    use `unfreezing revert_all` instead. -/
@@ -1675,7 +1675,7 @@ do env ← get_env,
    env ← returnex $ f env,
    set_env env
 
-/- Add a new inductive datatype to the environment
+/-- Add a new inductive datatype to the environment
    name, universe parameters, number of parameters, type, constructors (name and type), is_meta -/
 meta def add_inductive (n : name) (ls : list name) (p : nat) (ty : expr) (is : list (name × expr))
   (is_meta : bool := ff) : tactic unit :=
@@ -1828,7 +1828,7 @@ do h_type ← infer_type h,
 meta def main_goal : tactic expr :=
 do g::gs ← get_goals, return g
 
-/- Goal tagging support -/
+/-! Goal tagging support -/
 meta def with_enable_tags {α : Type} (t : tactic α) (b := tt) : tactic α :=
 do old ← tags_enabled,
    enable_tags b,
@@ -1873,7 +1873,7 @@ meta def any_of {α β} : list α → (α → tactic β) → tactic β
                    end
 end list
 
-/- Install monad laws tactic and use it to prove some instances. -/
+/-! Install monad laws tactic and use it to prove some instances. -/
 
 /-- Try to prove with `iff.refl`.-/
 meta def order_laws_tac := whnf_target >> intros >> to_expr ``(iff.refl _) >>= exact

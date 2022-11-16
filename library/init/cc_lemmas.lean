@@ -6,7 +6,7 @@ Authors: Leonardo de Moura
 prelude
 import init.propext init.classical
 
-/- Lemmas use by the congruence closure module -/
+/-! Lemmas use by the congruence closure module -/
 
 lemma iff_eq_of_eq_true_left {a b : Prop} (h : a = true) : (a ↔ b) = b :=
 h.symm ▸ propext (true_iff _)
@@ -58,7 +58,7 @@ h.symm ▸ propext (iff.intro (λ h, trivial) (λ h₁ h₂, false.elim h₂))
 lemma imp_eq_of_eq_false_right {a b : Prop} (h : b = false) : (a → b) = not a :=
 h.symm ▸ propext (iff.intro (λ h, h) (λ hna ha, hna ha))
 
-/- Remark: the congruence closure module will only use the following lemma is
+/-- Remark: the congruence closure module will only use this lemma if
    cc_config.em is tt. -/
 lemma not_imp_eq_of_eq_false_right {a b : Prop} (h : b = false) : (not a → b) = a :=
 h.symm ▸ propext (iff.intro (λ h', classical.by_contradiction (λ hna, h' hna)) (λ ha hna, hna ha))
@@ -105,7 +105,7 @@ eq_false_intro (λ hb, false.elim (eq.mp h (or.inr hb)))
 lemma eq_false_of_not_eq_true {a : Prop} (h : (not a) = true) : a = false :=
 eq_false_intro (λ ha, absurd ha (eq.mpr h trivial))
 
-/- Remark: the congruence closure module will only use the following lemma is
+/-- Remark: the congruence closure module will only use this lemma if
    cc_config.em is tt. -/
 lemma eq_true_of_not_eq_false {a : Prop} (h : (not a) = false) : a = true :=
 eq_true_intro (classical.by_contradiction (λ hna, eq.mp h hna))

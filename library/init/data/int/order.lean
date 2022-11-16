@@ -107,7 +107,7 @@ lemma lt_of_coe_nat_lt_coe_nat {m n : ℕ} (h : (↑m : ℤ) < ↑n) : m < n :=
 lemma coe_nat_lt_coe_nat_of_lt {m n : ℕ} (h : m < n) : (↑m : ℤ) < ↑n :=
 (coe_nat_lt_coe_nat_iff _ _).mpr h
 
-/- show that the integers form an ordered additive group -/
+/-! show that the integers form an ordered additive group -/
 
 protected lemma le_refl (a : ℤ) : a ≤ a :=
 le.intro (int.add_zero a)
@@ -215,7 +215,7 @@ lemma eq_neg_succ_of_lt_zero : ∀ {a : ℤ}, a < 0 → ∃ n : ℕ, a = -[1+ n]
 | (n : ℕ) h := absurd h (not_lt_of_ge (coe_zero_le _))
 | -[1+ n] h := ⟨n, rfl⟩
 
-/- int is an ordered add comm group -/
+/-! int is an ordered add comm group -/
 
 protected lemma eq_neg_of_eq_neg {a b : ℤ} (h : a = -b) : b = -a :=
 by rw [h, int.neg_neg]
@@ -771,7 +771,7 @@ end
 
 end
 
-/- missing facts -/
+/-! missing facts -/
 
 protected lemma mul_lt_mul_of_pos_left {a b c : ℤ}
        (h₁ : a < b) (h₂ : 0 < c) : c * a < c * b :=
@@ -874,7 +874,7 @@ int.mul_le_mul h2 h2 h1 (le_trans h1 h2)
 protected lemma mul_self_lt_mul_self {a b : ℤ} (h1 : 0 ≤ a) (h2 : a < b) : a * a < b * b :=
 int.mul_lt_mul' (le_of_lt h2) h2 h1 (lt_of_le_of_lt h1 h2)
 
-/- more facts specific to int -/
+/-! more facts specific to int -/
 
 theorem of_nat_nonneg (n : ℕ) : 0 ≤ of_nat n := trivial
 

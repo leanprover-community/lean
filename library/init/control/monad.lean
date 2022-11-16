@@ -27,6 +27,6 @@ class monad (m : Type u → Type v) extends applicative m, has_bind m : Type (ma
 @[reducible, inline] def return {m : Type u → Type v} [monad m] {α : Type u} : α → m α :=
 pure
 
-/- Identical to has_bind.and_then, but it is not inlined. -/
+/-- Identical to `has_bind.and_then`, but it is not inlined. -/
 def has_bind.seq {α β : Type u} {m : Type u → Type v} [has_bind m] (x : m α) (y : m β) : m β :=
 do x, y

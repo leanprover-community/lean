@@ -2,14 +2,15 @@
 Copyright (c) 2016 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad
-
-The integers, with addition, multiplication, and subtraction.
 -/
 prelude
 import init.data.nat.lemmas init.data.nat.gcd
 open nat
 
-/- the type, coercions, and notation -/
+/-!
+# The integers, with addition, multiplication, and subtraction.
+
+the type, coercions, and notation -/
 
 @[derive decidable_eq]
 inductive int : Type
@@ -46,7 +47,7 @@ lemma of_nat_zero : of_nat (0 : nat) = (0 : int) := rfl
 
 lemma of_nat_one : of_nat (1 : nat) = (1 : int) := rfl
 
-/- definitions of basic functions -/
+/-! definitions of basic functions -/
 
 def neg_of_nat : ℕ → ℤ
 | 0        := 0
@@ -115,7 +116,7 @@ protected lemma coe_nat_add_out (m n : ℕ) : ↑m + ↑n = (m + n : ℤ) := rfl
 protected lemma coe_nat_mul_out (m n : ℕ) : ↑m * ↑n = (↑(m * n) : ℤ) := rfl
 protected lemma coe_nat_add_one_out (n : ℕ) : ↑n + (1 : ℤ) = ↑(succ n) := rfl
 
-/- these are only for internal use -/
+/-! these are only for internal use -/
 
 lemma of_nat_add_of_nat (m n : nat) : of_nat m + of_nat n = of_nat (m + n) := rfl
 lemma of_nat_add_neg_succ_of_nat (m n : nat) :
@@ -138,7 +139,7 @@ local attribute [simp] of_nat_add_of_nat of_nat_mul_of_nat neg_of_nat_zero neg_o
   neg_succ_of_nat_add_neg_succ_of_nat of_nat_mul_neg_succ_of_nat neg_succ_of_nat_of_nat
   mul_neg_succ_of_nat_neg_succ_of_nat
 
-/- some basic functions and properties -/
+/-!  some basic functions and properties -/
 
 protected lemma coe_nat_inj {m n : ℕ} (h : (↑m : ℤ) = ↑n) : m = n :=
 int.of_nat.inj h
@@ -154,7 +155,7 @@ lemma neg_succ_of_nat_inj_iff {m n : ℕ} : neg_succ_of_nat m = neg_succ_of_nat 
 
 lemma neg_succ_of_nat_eq (n : ℕ) : -[1+ n] = -(n + 1) := rfl
 
-/- neg -/
+/-! neg -/
 
 protected lemma neg_neg : ∀ a : ℤ, -(-a) = a
 | (of_nat 0)     := rfl
@@ -166,7 +167,7 @@ by rw [← int.neg_neg a, ← int.neg_neg b, h]
 
 protected lemma sub_eq_add_neg {a b : ℤ} : a - b = a + -b := rfl
 
-/- basic properties of sub_nat_nat -/
+/-! basic properties of sub_nat_nat -/
 
 lemma sub_nat_nat_elim (m n : ℕ) (P : ℕ → ℕ → ℤ → Prop)
   (hp : ∀i n, P (n + i) n (of_nat i))
@@ -220,7 +221,7 @@ lemma sub_nat_nat_of_lt {m n : ℕ} (h : m < n) : sub_nat_nat m n = -[1+ pred (n
 have n - m = succ (pred (n - m)), from eq.symm (succ_pred_eq_of_pos (nat.sub_pos_of_lt h)),
 by rewrite sub_nat_nat_of_sub_eq_succ this
 
-/- nat_abs -/
+/-! nat_abs -/
 
 @[simp] def nat_abs : ℤ → ℕ
 | (of_nat m) := m
@@ -252,7 +253,7 @@ lemma nat_abs_eq : Π (a : ℤ), a = nat_abs a ∨ a = -(nat_abs a)
 
 lemma eq_coe_or_neg (a : ℤ) : ∃n : ℕ, a = n ∨ a = -n := ⟨_, nat_abs_eq a⟩
 
-/- sign -/
+/-! sign -/
 
 def sign : ℤ → ℤ
 | (n+1:ℕ) := 1
@@ -263,7 +264,7 @@ def sign : ℤ → ℤ
 @[simp] theorem sign_one : sign 1 = 1 := rfl
 @[simp] theorem sign_neg_one : sign (-1) = -1 := rfl
 
-/- Quotient and remainder -/
+/-! Quotient and remainder -/
 
 -- There are three main conventions for integer division,
 -- referred here as the E, F, T rounding conventions.
@@ -314,7 +315,7 @@ def rem : ℤ → ℤ → ℤ
 instance : has_div ℤ := ⟨int.div⟩
 instance : has_mod ℤ := ⟨int.mod⟩
 
-/- gcd -/
+/-! gcd -/
 
 def gcd (m n : ℤ) : ℕ := gcd (nat_abs m) (nat_abs n)
 
@@ -322,7 +323,7 @@ def gcd (m n : ℤ) : ℕ := gcd (nat_abs m) (nat_abs n)
    int is a ring
 -/
 
-/- addition -/
+/-! addition -/
 
 protected lemma add_comm : ∀ a b : ℤ, a + b = b + a
 | (of_nat n) (of_nat m) := by simp [nat.add_comm]
@@ -394,7 +395,7 @@ protected lemma add_assoc : ∀ a b c : ℤ, a + b + c = a + (b + c)
                                          int.add_comm -[1+ k] ]
 | -[1+ m]    -[1+ n]    -[1+ k]    := by simp [add_succ, nat.add_comm, nat.add_left_comm, neg_of_nat_of_succ]
 
-/- negation -/
+/-! negation -/
 
 lemma sub_nat_self : ∀ n, sub_nat_nat n n = 0
 | 0        := rfl
@@ -410,7 +411,7 @@ protected lemma add_left_neg : ∀ a : ℤ, -a + a = 0
 protected lemma add_right_neg (a : ℤ) : a + -a = 0 :=
 by rw [int.add_comm, int.add_left_neg]
 
-/- multiplication -/
+/-! multiplication -/
 
 protected lemma mul_comm : ∀ a b : ℤ, a * b = b * a
 | (of_nat m) (of_nat n) := by simp [nat.mul_comm]

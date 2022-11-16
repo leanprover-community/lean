@@ -9,7 +9,7 @@ import init.data.subtype.basic init.funext
 namespace classical
 universes u v
 
-/- the axiom -/
+/-- The axiom -/
 axiom choice {α : Sort u} : nonempty α → α
 
 @[irreducible] noncomputable def indefinite_description {α : Sort u} (p : α → Prop)
@@ -79,7 +79,7 @@ noncomputable def inhabited_of_exists {α : Sort u} {p : α → Prop} (h : ∃ x
   inhabited α :=
 inhabited_of_nonempty (exists.elim h (λ w hw, ⟨w⟩))
 
-/- all propositions are decidable -/
+/-- All propositions are decidable -/
 noncomputable def prop_decidable (a : Prop) : decidable a :=
 choice $ or.elim (em a)
   (assume ha, ⟨is_true ha⟩)
@@ -106,8 +106,7 @@ if hp : ∃ x : α, p x then
   ⟨xp.val, λ h', xp.property⟩
 else ⟨choice h, λ h, absurd h hp⟩
 
-/- the Hilbert epsilon function -/
-
+/-- The Hilbert epsilon function -/
 noncomputable def epsilon {α : Sort u} [h : nonempty α] (p : α → Prop) : α :=
 (strong_indefinite_description p h).val
 
@@ -122,7 +121,7 @@ epsilon_spec_aux (nonempty_of_exists hex) p hex
 theorem epsilon_singleton {α : Sort u} (x : α) : @epsilon α ⟨x⟩ (λ y, y = x) = x :=
 @epsilon_spec α (λ y, y = x) ⟨x, rfl⟩
 
-/- the axiom of choice -/
+/-- The axiom of choice -/
 
 theorem axiom_of_choice {α : Sort u} {β : α → Sort v} {r : Π x, β x → Prop} (h : ∀ x, ∃ y, r x y) :
   ∃ (f : Π x, β x), ∀ x, r x (f x) :=

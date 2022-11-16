@@ -39,7 +39,7 @@ meta instance unsigned.reflect : has_reflect unsigned
 
 end
 
-/- Instances that [derive] depends on. All other basic instances are defined at the end of
+/-! Instances that [derive] depends on. All other basic instances are defined at the end of
    derive.lean. -/
 
 meta instance name.reflect : has_reflect name

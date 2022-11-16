@@ -36,7 +36,7 @@ a
 /-- Gadget for marking output parameters in type classes. -/
 @[reducible] def out_param (α : Sort u) : Sort u := α
 
-/-
+/--
   id_rhs is an auxiliary declaration used in the equation compiler to address performance
   issues when proving equational lemmas. The equation compiler uses it as a marker.
 -/
@@ -88,9 +88,9 @@ prefix `¬`:40 := not
 inductive eq {α : Sort u} (a : α) : α → Prop
 | refl [] : eq a
 
-/-
+/-!
 Initialize the quotient module, which effectively adds the following definitions:
-
+```lean
 constant quot {α : Sort u} (r : α → α → Prop) : Sort u
 
 constant quot.mk {α : Sort u} (r : α → α → Prop) (a : α) : quot r
@@ -100,11 +100,11 @@ constant quot.lift {α : Sort u} {r : α → α → Prop} {β : Sort v} (f : α 
 
 constant quot.ind {α : Sort u} {r : α → α → Prop} {β : quot r → Prop} :
   (∀ a : α, β (quot.mk r a)) → ∀ q : quot r, β q
-
+```
 Also the reduction rule:
-
+```
 quot.lift f _ (quot.mk a) ~~> f a
-
+```
 -/
 init_quotient
 
@@ -243,7 +243,7 @@ inductive bool : Type
 | ff : bool
 | tt : bool
 
-/- Remark: subtype must take a Sort instead of Type because of the axiom strong_indefinite_description. -/
+/-- Remark: subtype must take a Sort instead of Type because of the axiom strong_indefinite_description. -/
 structure subtype {α : Sort u} (p : α → Prop) :=
 (val : α) (property : p val)
 
@@ -293,7 +293,7 @@ structure unification_hint :=
 (pattern : unification_constraint)
 (constraints : list unification_constraint)
 
-/- Declare builtin and reserved notation -/
+/-! Declare builtin and reserved notation -/
 
 class has_zero     (α : Type u) := (zero : α)
 class has_one      (α : Type u) := (one : α)
@@ -323,10 +323,10 @@ class has_ssubset  (α : Type u) := (ssubset : α → α → Prop)
 class has_emptyc   (α : Type u) := (emptyc : α)
 class has_insert   (α : out_param $ Type u) (γ : Type v) := (insert : α → γ → γ)
 class has_singleton (α : out_param $ Type u) (β : Type v) := (singleton : α → β)
-/- Type class used to implement the notation { a ∈ c | p a } -/
+/-- Type class used to implement the notation { a ∈ c | p a } -/
 class has_sep (α : out_param $ Type u) (γ : Type v) :=
 (sep : (α → Prop) → γ → γ)
-/- Type class for set-like membership -/
+/-- Type class for set-like membership -/
 class has_mem (α : out_param $ Type u) (γ : Type v) := (mem : α → γ → Prop)
 
 class has_pow (α : Type u) (β : Type v) :=
@@ -389,7 +389,7 @@ export is_lawful_singleton (insert_emptyc_eq)
 
 attribute [simp] insert_emptyc_eq
 
-/- nat basic instances -/
+/-! nat basic instances -/
 
 namespace nat
   protected def add : nat → nat → nat
@@ -425,11 +425,10 @@ end nat
 def std.prec.max   : nat := 1024 -- the strength of application, identifiers, (, [, etc.
 def std.prec.arrow : nat := 25
 
-/-
-The next def is "max + 10". It can be used e.g. for postfix operations that should
+/--
+This def is "max + 10". It can be used e.g. for postfix operations that should
 be stronger than application.
 -/
-
 def std.prec.max_plus : nat := std.prec.max + 10
 
 postfix `⁻¹`:std.prec.max_plus := has_inv.inv  -- input with \sy or \-1 or \inv
@@ -445,12 +444,12 @@ class has_sizeof (α : Sort u) :=
 def sizeof {α : Sort u} [s : has_sizeof α] : α → nat :=
 has_sizeof.sizeof
 
-/-
+/-!
 Declare sizeof instances and lemmas for types declared before has_sizeof.
 From now on, the inductive compiler will automatically generate sizeof instances and lemmas.
 -/
 
-/- Every type `α` has a default has_sizeof instance that just returns 0 for every element of `α` -/
+/-- Every type `α` has a default has_sizeof instance that just returns 0 for every element of `α` -/
 protected def default.sizeof (α : Sort u) : α → nat
 | a := 0
 
