@@ -16,8 +16,7 @@ rfl
 def flip {α : Sort u} {β : Sort v} {φ : Sort w} (f : α → β → φ) : β → α → φ :=
 λ b a, f a b
 
-/- implication -/
-
+/-- implication -/
 def implies (a b : Prop) := a → b
 
 /-- Implication `→` is transitive. If `P → Q` and `Q → R` then `P → R`. -/
@@ -36,7 +35,7 @@ h
 /-- Modus tollens. If an implication is true, then so is its contrapositive. -/
 lemma mt {a b : Prop} (h₁ : a → b) (h₂ : ¬b) : ¬a := assume ha : a, h₂ (h₁ ha)
 
-/- not -/
+/-! not -/
 
 lemma not_false : ¬false := id
 
@@ -45,12 +44,12 @@ def non_contradictory (a : Prop) : Prop := ¬¬a
 lemma non_contradictory_intro {a : Prop} (ha : a) : ¬¬a :=
 assume hna : ¬a, absurd ha hna
 
-/- false -/
+/-! false -/
 
 @[inline] def false.elim {C : Sort u} (h : false) : C :=
 false.rec C h
 
-/- eq -/
+/-! eq -/
 
 -- proof irrelevance is built in
 lemma proof_irrel {a : Prop} (h₁ h₂ : a) : h₁ = h₂ := rfl
@@ -95,7 +94,7 @@ lemma cast_proof_irrel {α β : Sort u} (h₁ h₂ : α = β) (a : α) : cast h�
 
 lemma cast_eq {α : Sort u} (h : α = α) (a : α) : cast h a = a := rfl
 
-/- ne -/
+/-! ne -/
 
 @[reducible] def ne {α : Sort u} (a b : α) := ¬(a = b)
 infix ` ≠ `:50 := ne
@@ -181,7 +180,7 @@ lemma eq_rec_compose : ∀ {α β φ : Sort u} (p₁ : β = φ) (p₂ : α = β)
 lemma cast_heq : ∀ {α β : Sort u} (h : α = β) (a : α), cast h a == a
 | α _ rfl a := heq.refl a
 
-/- and -/
+/-! and -/
 
 infixr ` /\ `:35 := and
 infixr ` ∧ `:35 := and
@@ -196,7 +195,7 @@ assume ⟨ha, hb⟩, ⟨hb, ha⟩
 
 lemma and.symm : a ∧ b → b ∧ a := and.swap
 
-/- or -/
+/-! or -/
 
 infixr ` \/ `:30 := or
 infixr ` ∨ `:30 := or
@@ -216,10 +215,10 @@ lemma or.swap : a ∨ b → b ∨ a := or.rec or.inr or.inl
 
 lemma or.symm : a ∨ b → b ∨ a := or.swap
 
-/- xor -/
+/-! xor -/
 def xor (a b : Prop) := (a ∧ ¬ b) ∨ (b ∧ ¬ a)
 
-/- iff -/
+/-! iff -/
 /-- `iff P Q`, with notation `P ↔ Q`, is the proposition asserting that `P` and `Q` are equivalent,
 that is, have the same truth value. -/
 structure iff (a b : Prop) : Prop :=
@@ -361,7 +360,7 @@ false.elim
 lemma eq_comm {α : Sort u} {a b : α} : a = b ↔ b = a :=
 ⟨eq.symm, eq.symm⟩
 
-/- and simp rules -/
+/-! and simp rules -/
 lemma and.imp (hac : a → c) (hbd : b → d) : a ∧ b → c ∧ d :=
 assume ⟨ha, hb⟩, ⟨hac ha, hbd hb⟩
 
@@ -417,7 +416,7 @@ iff_false_intro (assume ⟨h₁, h₂⟩, absurd h₁ h₂)
 @[simp] lemma and_self (a : Prop) : a ∧ a ↔ a :=
 iff.intro and.left (assume h, ⟨h, h⟩)
 
-/- or simp rules -/
+/-! or simp rules -/
 
 lemma or.imp (h₂ : a → c) (h₃ : b → d) : a ∨ b → c ∨ d :=
 or.rec (λ h, or.inl (h₂ h)) (λ h, or.inr (h₃ h))
@@ -471,7 +470,7 @@ lemma not_or {a b : Prop} : ¬ a → ¬ b → ¬ (a ∨ b)
 | hna hnb (or.inl ha) := absurd ha hna
 | hna hnb (or.inr hb) := absurd hb hnb
 
-/- or resolution rulse -/
+/-! or resolution rulse -/
 
 lemma or.resolve_left {a b : Prop} (h : a ∨ b) (na : ¬ a) : b :=
   or.elim h (λ ha, absurd ha na) id
@@ -485,7 +484,7 @@ lemma or.resolve_right {a b : Prop} (h : a ∨ b) (nb : ¬ b) : a :=
 lemma or.neg_resolve_right {a b : Prop} (h : a ∨ ¬ b) (hb : b) : a :=
   or.elim h id (λ nb, absurd hb nb)
 
-/- iff simp rules -/
+/-! iff simp rules -/
 
 @[simp] lemma iff_true (a : Prop) : (a ↔ true) ↔ a :=
 iff.intro (assume h, iff.mpr h trivial) iff_true_intro
@@ -507,7 +506,7 @@ iff_true_intro iff.rfl
   ((and_congr (imp_congr h₁ h₂) (imp_congr h₂ h₁)).trans
     (iff_iff_implies_and_implies c d).symm)
 
-/- implies simp rule -/
+/-! implies simp rule -/
 @[simp] lemma implies_true_iff (α : Sort u) : (α → true) ↔ true :=
 iff.intro (λ h, trivial) (λ ha h, trivial)
 
@@ -543,7 +542,7 @@ lemma exists.elim {α : Sort u} {p : α → Prop} {b : Prop}
   (h₁ : ∃ x, p x) (h₂ : ∀ (a : α), p a → b) : b :=
 Exists.rec h₂ h₁
 
-/- exists unique -/
+/-! exists unique -/
 
 def exists_unique {α : Sort u} (p : α → Prop) :=
 ∃ x, p x ∧ ∀ y, p y → y = x
@@ -574,7 +573,7 @@ exists_unique.elim h
     assume unique : ∀ y, p y → y = x,
     show y₁ = y₂, from eq.trans (unique _ py₁) (eq.symm (unique _ py₂)))
 
-/- exists, forall, exists unique congruences -/
+/-! exists, forall, exists unique congruences -/
 @[congr] lemma forall_congr {α : Sort u} {p q : α → Prop} (h : ∀ a, (p a ↔ q a)) : (∀ a, p a) ↔ ∀ a, q a :=
 iff.intro (λ p a, iff.mp (h a) (p a)) (λ q a, iff.mpr (h a) (q a))
 
@@ -592,7 +591,7 @@ exists_congr (λ x, and_congr (h x) (forall_congr (λ y, imp_congr (h y) iff.rfl
 lemma forall_not_of_not_exists {α : Sort u} {p : α → Prop} : ¬(∃ x, p x) → (∀ x, ¬p x) :=
 λ hne x hp, hne ⟨x, hp⟩
 
-/- decidable -/
+/-! decidable -/
 
 def decidable.to_bool (p : Prop) [h : decidable p] : bool :=
 decidable.cases_on h (λ h₁, bool.ff) (λ h₂, bool.tt)
@@ -616,8 +615,7 @@ is_false not_false
 @[inline] def dite {α : Sort u} (c : Prop) [h : decidable c] : (c → α) → (¬ c → α) → α :=
 λ t e, decidable.rec_on h e t
 
-/- if-then-else -/
-
+/-- if-then-else -/
 @[inline] def ite {α : Sort u} (c : Prop) [h : decidable c] (t e : α) : α :=
 decidable.rec_on h (λ hnc, e) (λ hc, t)
 
@@ -769,7 +767,7 @@ match (h a b) with
 | (is_false n₁) := proof_irrel n n₁ ▸ eq.refl (is_false n)
 end
 
-/- inhabited -/
+/-! inhabited -/
 
 class inhabited (α : Sort u) :=
 (default : α)
@@ -802,7 +800,7 @@ instance nonempty_of_inhabited {α : Sort u} [inhabited α] : nonempty α :=
 lemma nonempty_of_exists {α : Sort u} {p : α → Prop} : (∃ x, p x) → nonempty α
 | ⟨w, h⟩ := ⟨w⟩
 
-/- subsingleton -/
+/-! subsingleton -/
 
 class inductive subsingleton (α : Sort u) : Prop
 | intro (h : ∀ a b : α, a = b) : subsingleton
@@ -987,7 +985,7 @@ structure {r s} ulift (α : Type s) : Type (max s r) :=
 up :: (down : α)
 
 namespace ulift
-/- Bijection between α and ulift.{v} α -/
+/-- Bijection between α and ulift.{v} α -/
 lemma up_down {α : Type u} : ∀ (b : ulift.{v} α), up (down b) = b
 | (up a) := rfl
 
@@ -999,14 +997,14 @@ structure plift (α : Sort u) : Type u :=
 up :: (down : α)
 
 namespace plift
-/- Bijection between α and plift α -/
+/-- Bijection between α and plift α -/
 lemma up_down {α : Sort u} : ∀ (b : plift α), up (down b) = b
 | (up a) := rfl
 
 lemma down_up {α : Sort u} (a : α) : down (up a) = a := rfl
 end plift
 
-/- Equalities for rewriting let-expressions -/
+/-- Equalities for rewriting let-expressions -/
 lemma let_value_eq {α : Sort u} {β : Sort v} {a₁ a₂ : α} (b : α → β) :
                    a₁ = a₂ → (let x : α := a₁ in b x) = (let x : α := a₂ in b x) :=
 λ h, eq.rec_on h rfl

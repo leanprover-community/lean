@@ -147,7 +147,7 @@ def lxor  : ℕ → ℕ → ℕ := bitwise bxor
     binary_rec z f 0 = z :=
 by {rw [binary_rec], refl}
 
-/- bitwise ops -/
+/-! bitwise ops -/
 
 lemma bodd_bit (b n) : bodd (bit b n) = b :=
 by rw bit_val; simp; cases b; cases bodd n; refl

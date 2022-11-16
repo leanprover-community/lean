@@ -11,7 +11,7 @@ import init.meta.rec_util
 namespace tactic
 open expr environment list
 
-/- Retrieve the name of the type we are building a has_reflect instance for. -/
+/-- Retrieve the name of the type we are building a has_reflect instance for. -/
 private meta def get_has_reflect_type_name : tactic name :=
 do {
   (app (const n ls) t) ← target,
@@ -21,7 +21,7 @@ do {
 <|>
 fail "mk_has_reflect_instance tactic failed, target type is expected to be of the form (has_reflect ...)"
 
-/- Try to synthesize constructor argument using type class resolution -/
+/-- Try to synthesize constructor argument using type class resolution -/
 private meta def mk_has_reflect_instance_for (a : expr) : tactic expr :=
 do t    ← infer_type a,
    do {
@@ -33,7 +33,7 @@ do t    ← infer_type a,
      },
      mk_app `reflect [a, inst] }
 
-/- Synthesize (recursive) instances of `reflected` for all fields -/
+/-- Synthesize (recursive) instances of `reflected` for all fields -/
 private meta def mk_reflect : name → name → list name → nat → tactic (list expr)
 | I_name F_name []              num_rec := return []
 | I_name F_name (fname::fnames) num_rec := do
@@ -43,7 +43,7 @@ private meta def mk_reflect : name → name → list name → nat → tactic (li
   quotes   ← mk_reflect I_name F_name fnames (if rec then num_rec + 1 else num_rec),
   return (quote :: quotes)
 
-/- Solve the subgoal for constructor `F_name` -/
+/-- Solve the subgoal for constructor `F_name` -/
 private meta def has_reflect_case (I_name F_name : name) (field_names : list name) : tactic unit :=
 do field_quotes ← mk_reflect I_name F_name field_names 0,
    -- fn should be of the form `F_name ps fs`, where ps are the inductive parameter arguments,

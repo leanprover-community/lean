@@ -145,7 +145,7 @@ structure ematch_config :=
 (max_instances  : nat := 10000)
 (max_generation : nat := 10)
 
-/- Ematching -/
+/-! Ematching -/
 meta constant ematch_state             : Type
 meta constant ematch_state.mk          : ematch_config → ematch_state
 meta constant ematch_state.internalize : ematch_state → expr → tactic ematch_state

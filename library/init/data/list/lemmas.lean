@@ -13,7 +13,7 @@ variables {α : Type u} {β : Type v} {γ : Type w}
 namespace list
 open nat
 
-/- append -/
+/-! append -/
 
 @[simp] lemma nil_append (s : list α) : [] ++ s = s :=
 rfl
@@ -27,7 +27,7 @@ by induction t; simp [*]
 @[simp] lemma append_assoc (s t u : list α) : s ++ t ++ u = s ++ (t ++ u) :=
 by induction s; simp [*]
 
-/- length -/
+/-! length -/
 
 lemma length_cons (a : α) (l : list α) : length (a :: l) = length l + 1 :=
 rfl
@@ -54,7 +54,7 @@ by cases l; refl
           = length l - i             : length_drop i l
       ... = succ (length l) - succ i : (nat.succ_sub_succ_eq_sub (length l) i).symm
 
-/- map -/
+/-! map -/
 
 lemma map_cons (f : α → β) (a l) : map f (a::l) = f a :: map f l :=
 rfl
@@ -74,7 +74,7 @@ by induction l; simp [*]
 @[simp] lemma length_map (f : α → β) (l : list α) : length (map f l) = length l :=
 by induction l; simp [*]
 
-/- bind -/
+/-! bind -/
 
 @[simp] lemma nil_bind (f : α → list β) : list.bind [] f = [] :=
 by simp [join, list.bind]
@@ -86,7 +86,7 @@ by simp [join, list.bind]
   list.bind (xs ++ ys) f = list.bind xs f ++ list.bind ys f :=
 by induction xs; [refl, simp [*, cons_bind]]
 
-/- mem -/
+/-! mem -/
 
 lemma mem_nil_iff (a : α) : a ∈ ([] : list α) ↔ false :=
 iff.rfl
@@ -139,7 +139,7 @@ lemma ball_cons (p : α → Prop) (a : α) (l : list α) :
 ⟨λal, ⟨al a (mem_cons_self _ _), λx h, al x (mem_cons_of_mem _ h)⟩,
  λ⟨pa, al⟩ x o, o.elim (λe, e.symm ▸ pa) (al x)⟩
 
-/- list subset -/
+/-! list subset -/
 
 protected def subset (l₁ l₂ : list α) := ∀ ⦃a : α⦄, a ∈ l₁ → a ∈ l₂
 
@@ -201,7 +201,7 @@ theorem length_remove_nth : ∀ (l : list α) (i : ℕ), i < length l → length
 | []     := rfl
 | (a::l) := by { by_cases pa : p a; simp [partition, filter, pa, partition_eq_filter_filter l] }
 
-/- sublists -/
+/-! sublists -/
 
 inductive sublist : list α → list α → Prop
 | slnil : sublist [] []
@@ -215,7 +215,7 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
 | _ _ (sublist.cons  l₁ l₂ a s) := le_succ_of_le (length_le_of_sublist s)
 | _ _ (sublist.cons2 l₁ l₂ a s) := succ_le_succ (length_le_of_sublist s)
 
-/- filter -/
+/-! filter -/
 @[simp] theorem filter_nil (p : α → Prop) [h : decidable_pred p] : filter p [] = [] := rfl
 
 @[simp] theorem filter_cons_of_pos {p : α → Prop} [h : decidable_pred p] {a : α} :
@@ -237,7 +237,7 @@ lemma length_le_of_sublist : ∀ {l₁ l₂ : list α}, l₁ <+ l₂ → length 
   then by simp [pa]; apply sublist.cons2; apply filter_sublist l
   else by simp [pa]; apply sublist.cons; apply filter_sublist l
 
-/- map_accumr -/
+/-! map_accumr -/
 section map_accumr
 variables {φ : Type w₁} {σ : Type w₂}
 

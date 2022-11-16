@@ -5,12 +5,13 @@ Authors: Leonardo de Moura
 -/
 universes u
 
-/-
-Basic random number generator support based on the one
-available on the Haskell library
+/-!
+# Basic random number generator support
+
+based on the one available on the Haskell library
 -/
 
-/- Interface for random number generators. -/
+/-- Interface for random number generators. -/
 class random_gen (g : Type u) :=
 /- `range` returns the range of values returned by
     the generator. -/
@@ -25,7 +26,7 @@ class random_gen (g : Type u) :=
   passing a random number generator down to recursive calls). -/
 (split : g → g × g)
 
-/- "Standard" random number generator. -/
+/-- "Standard" random number generator. -/
 structure std_gen :=
 (s1 : nat) (s2 : nat)
 
@@ -67,7 +68,7 @@ let q  := s / 2147483562,
     s2 := q % 2147483398 in
 ⟨s1 + 1, s2 + 1⟩
 
-/-
+/--
 Auxiliary function for random_nat_val.
 Generate random values until we exceed the target magnitude.
 `gen_lo` and `gen_mag` are the generator lower bound and magnitude.

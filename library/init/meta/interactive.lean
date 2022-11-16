@@ -18,19 +18,19 @@ local postfix `?`:9001 := optional
 local postfix *:9001 := many
 
 namespace tactic
-/- allows metavars -/
+/-- allows metavars -/
 meta def i_to_expr (q : pexpr) : tactic expr :=
 to_expr q tt
 
-/- allow metavars and no subgoals -/
+/-- allow metavars and no subgoals -/
 meta def i_to_expr_no_subgoals (q : pexpr) : tactic expr :=
 to_expr q tt ff
 
-/- doesn't allows metavars -/
+/-- doesn't allows metavars -/
 meta def i_to_expr_strict (q : pexpr) : tactic expr :=
 to_expr q ff
 
-/- Auxiliary version of i_to_expr for apply-like tactics.
+/-- Auxiliary version of i_to_expr for apply-like tactics.
    This is a workaround for comment
       https://github.com/leanprover/lean/issues/1342#issuecomment-307912291
    at issue #1342.
@@ -317,7 +317,7 @@ do {
   end
 }
 
-/- Version of to_expr that tries to bypass the elaborator if `p` is just a constant or local constant.
+/-- Version of to_expr that tries to bypass the elaborator if `p` is just a constant or local constant.
    This is not an optimization, by skipping the elaborator we make sure that no unwanted resolution is used.
    Example: the elaborator will force any unassigned ?A that must have be an instance of (has_one ?A) to nat.
    Remark: another benefit is that auxiliary temporary metavariables do not appear in error messages. -/
@@ -1788,7 +1788,7 @@ meta def mk_inj_eq : tactic unit :=
 ]
 end tactic
 
-/- Define inj_eq lemmas for inductive datatypes that were declared before `mk_inj_eq` -/
+/-! Define inj_eq lemmas for inductive datatypes that were declared before `mk_inj_eq` -/
 
 universes u v
 

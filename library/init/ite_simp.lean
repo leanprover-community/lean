@@ -6,8 +6,8 @@ Authors: Leonardo de Moura
 prelude
 import init.data.bool
 
-/-
-Simplification lemmas for ite.
+/-!
+# Simplification lemmas for ite.
 
 We don't prove them at logic.lean because it is easier to prove them using
 the tactic framework.

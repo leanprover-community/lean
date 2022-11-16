@@ -2,16 +2,16 @@
 Copyright (c) 2016 Microsoft Corporation. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Leonardo de Moura
-
-Auxiliary lemmas used to compare int numerals.
 -/
 prelude
 import init.data.int.order
 
 namespace int
-/- Auxiliary lemmas for proving that to int numerals are different -/
+/-!
+# Auxiliary lemmas for proving that two int numerals are differen
+-/
 
-/- 1. Lemmas for reducing the problem to the case where the numerals are positive -/
+/-! 1. Lemmas for reducing the problem to the case where the numerals are positive -/
 
 protected lemma ne_neg_of_ne {a b : ℤ} : a ≠ b → -a ≠ -b :=
 λ h₁ h₂, absurd (int.neg_inj h₂) h₁
@@ -37,7 +37,7 @@ end
 protected lemma ne_neg_of_pos {a b : ℤ} : 0 < a → 0 < b → a ≠ -b :=
 λ h₁ h₂, ne.symm (int.neg_ne_of_pos h₂ h₁)
 
-/- 2. Lemmas for proving that positive int numerals are nonneg and positive -/
+/-! 2. Lemmas for proving that positive int numerals are nonneg and positive -/
 
 protected lemma one_pos : 0 < (1:int) :=
 int.zero_lt_one
@@ -63,7 +63,7 @@ protected lemma bit1_nonneg {a : ℤ} : 0 ≤ a → 0 ≤ bit1 a :=
 protected lemma nonneg_of_pos {a : ℤ} : 0 < a → 0 ≤ a :=
 le_of_lt
 
-/- 3. nat_abs auxiliary lemmas -/
+/-! 3. nat_abs auxiliary lemmas -/
 
 lemma neg_succ_of_nat_lt_zero (n : ℕ) : neg_succ_of_nat n < 0 :=
 @lt.intro _ _ n (by simp [neg_succ_of_nat_coe, int.coe_nat_succ, int.coe_nat_add, int.coe_nat_one,
@@ -88,7 +88,7 @@ protected lemma ne_of_nat_ne_nonneg_case {a b : ℤ} {n m : nat} (ha : 0 ≤ a) 
 have nat_abs a ≠ nat_abs b, by rwa [e1, e2],
 ne_of_nat_abs_ne_nat_abs_of_nonneg ha hb this
 
-/- 4. Aux lemmas for pushing nat_abs inside numerals
+/-! 4. Aux lemmas for pushing nat_abs inside numerals
    nat_abs_zero and nat_abs_one are defined at init/data/int/basic.lean -/
 
 lemma nat_abs_of_nat_core (n : ℕ) : nat_abs (of_nat n) = n :=

@@ -9,15 +9,15 @@ import init.meta.tactic init.meta.set_get_option_tactics
 namespace tactic
 meta constant back_lemmas : Type
 
-/- Create a datastructure containing all lemmas tagged as [intro].
+/-- Create a datastructure containing all lemmas tagged as [intro].
    Lemmas are indexed using their head-symbol.
    The head-symbol is computed with respect to the given transparency setting. -/
 meta constant mk_back_lemmas_core     : transparency → tactic back_lemmas
-/- (back_lemmas_insert_core m lemmas lemma) adds the given lemma to the set back_lemmas.
+/-- (back_lemmas_insert_core m lemmas lemma) adds the given lemma to the set back_lemmas.
    It infers the type of the lemma, and uses its head-symbol as an index.
    The head-symbol is computed with respect to the given transparency setting. -/
 meta constant back_lemmas_insert_core : transparency → back_lemmas → expr → tactic back_lemmas
-/- Return the lemmas that have the same head symbol of the given expression -/
+/-- Return the lemmas that have the same head symbol of the given expression -/
 meta constant back_lemmas_find        : back_lemmas → expr → tactic (list expr)
 
 meta def mk_back_lemmas : tactic back_lemmas :=
@@ -27,7 +27,7 @@ meta def back_lemmas_insert : back_lemmas → expr → tactic back_lemmas :=
 back_lemmas_insert_core reducible
 
 
-/- (backward_chaining_core t insts max_depth pre_tactic leaf_tactic lemmas): perform backward chaining using
+/-- (backward_chaining_core t insts max_depth pre_tactic leaf_tactic lemmas): perform backward chaining using
    the lemmas marked as [intro] and extra_lemmas.
 
    The search maximum depth is \c max_depth.

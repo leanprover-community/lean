@@ -8,7 +8,7 @@ import init.logic
 
 constant propext {a b : Prop} : (a ↔ b) → a = b
 
-/- Additional congruence lemmas. -/
+/-! # Additional congruence lemmas. -/
 universes u v
 
 lemma forall_congr_eq {a : Sort u} {p q : a → Prop} (h : ∀ x, p x = q x) : (∀ x, p x) = ∀ x, q x :=

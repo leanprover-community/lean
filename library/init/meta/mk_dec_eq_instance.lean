@@ -13,7 +13,7 @@ import init.meta.rec_util init.meta.interactive
 namespace tactic
 open expr environment list
 
-/- Retrieve the name of the type we are building a decidable equality proof for. -/
+/-- Retrieve the name of the type we are building a decidable equality proof for. -/
 private meta def get_dec_eq_type_name : tactic name :=
 do {
   (pi x1 i1 d1 (pi x2 i2 d2 b)) ← target >>= whnf,
@@ -24,7 +24,7 @@ do {
 <|>
 fail "mk_dec_eq_instance tactic failed, target type is expected to be of the form (decidable_eq ...)"
 
-/- Extract (lhs, rhs) from a goal (decidable (lhs = rhs)) -/
+/-- Extract (lhs, rhs) from a goal (decidable (lhs = rhs)) -/
 private meta def get_lhs_rhs : tactic (expr × expr) :=
 do
   (app dec lhs_eq_rhs) ← target | fail "mk_dec_eq_instance failed, unexpected case",
@@ -34,7 +34,7 @@ private meta def find_next_target : list expr → list expr → tactic (expr × 
 | (t::ts) (r::rs) := if t = r then find_next_target ts rs else return (t, r)
 | l1       l2     := failed
 
-/- Create an inhabitant of (decidable (lhs = rhs)) -/
+/-- Create an inhabitant of (decidable (lhs = rhs)) -/
 private meta def mk_dec_eq_for (lhs : expr) (rhs : expr) : tactic expr :=
 do lhs_type ← infer_type lhs,
    dec_type ← mk_app `decidable_eq [lhs_type] >>= whnf,
@@ -51,7 +51,7 @@ do pr ← mk_app `eq_of_heq [h],
    ty ← infer_type pr,
    assertv `h' ty pr >> skip
 
-/- Target is of the form (decidable (C ... = C ...)) where C is a constructor -/
+/-- Target is of the form (decidable (C ... = C ...)) where C is a constructor -/
 private meta def dec_eq_same_constructor : name → name → nat → tactic unit
 | I_name F_name num_rec :=
 do
@@ -84,11 +84,11 @@ do
       contradiction },
     return () }
 
-/- Easy case: target is of the form (decidable (C_1 ... = C_2 ...)) where C_1 and C_2 are distinct constructors -/
+/-- Easy case: target is of the form (decidable (C_1 ... = C_2 ...)) where C_1 and C_2 are distinct constructors -/
 private meta def dec_eq_diff_constructor : tactic unit :=
 left >> intron 1 >> contradiction
 
-/- This tactic is invoked for each case of decidable_eq. There n^2 cases, where n is the number
+/-- This tactic is invoked for each case of decidable_eq. There n^2 cases, where n is the number
    of constructors. -/
 private meta def dec_eq_case_2 (I_name : name) (F_name : name) : tactic unit :=
 do

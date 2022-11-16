@@ -11,7 +11,7 @@ import init.meta.rec_util init.meta.constructor_tactic
 namespace tactic
 open expr environment list
 
-/- Retrieve the name of the type we are building a has_sizeof instance for. -/
+/-- Retrieve the name of the type we are building a has_sizeof instance for. -/
 private meta def get_has_sizeof_type_name : tactic name :=
 do {
   (app (const n ls) t) ← target >>= whnf,
@@ -21,7 +21,7 @@ do {
 <|>
 fail "mk_has_sizeof_instance tactic failed, target type is expected to be of the form (has_sizeof ...)"
 
-/- Try to synthesize constructor argument using type class resolution -/
+/-- Try to synthesize constructor argument using type class resolution -/
 private meta def mk_has_sizeof_instance_for (a : expr) (use_default : bool) : tactic expr :=
 do t    ← infer_type a,
    do {

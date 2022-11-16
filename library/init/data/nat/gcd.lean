@@ -3,16 +3,19 @@ Copyright (c) 2014 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura, Mario Carneiro
 
-Definitions and properties of gcd, lcm, and coprime.
 -/
 prelude
 import init.data.nat.lemmas init.meta.well_founded_tactics
+
+/-!
+# Definitions and properties of gcd, lcm, and coprime
+-/
 
 open well_founded
 
 namespace nat
 
-/- gcd -/
+/-! gcd -/
 
 def gcd : nat → nat → nat
 | 0        y := y

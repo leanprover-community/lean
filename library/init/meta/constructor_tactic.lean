@@ -8,7 +8,7 @@ import init.meta.tactic init.function
 
 namespace tactic
 
-/- Return target after instantiating metavars and whnf -/
+/-- Return target after instantiating metavars and whnf -/
 private meta def target' : tactic expr :=
 target >>= instantiate_mvars >>= whnf
 

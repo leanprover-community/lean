@@ -65,7 +65,7 @@ instance : inhabited ℕ :=
 @[simp] lemma nat_zero_eq_zero : nat.zero = 0 :=
 rfl
 
-/- properties of inequality -/
+/-! properties of inequality -/
 
 @[refl] protected lemma le_refl (a : ℕ) : a ≤ a :=
 less_than_or_equal.refl
@@ -152,7 +152,7 @@ protected lemma sub_lt : ∀ {a b : ℕ}, 0 < a → 0 < b → a - b < a
 protected lemma lt_of_lt_of_le {n m k : ℕ} : n < m → m ≤ k → n < k :=
 nat.le_trans
 
-/- Basic nat.add lemmas -/
+/-! Basic nat.add lemmas -/
 protected lemma zero_add : ∀ n : ℕ, 0 + n = n
 | 0     := rfl
 | (n+1) := congr_arg succ (zero_add n)
@@ -173,7 +173,7 @@ rfl
 lemma succ_eq_add_one (n : ℕ) : succ n = n + 1 :=
 rfl
 
-/- Basic lemmas for comparing numerals -/
+/-! Basic lemmas for comparing numerals -/
 
 protected lemma bit0_succ_eq (n : ℕ) : bit0 (succ n) = succ (succ (bit0 n)) :=
 show succ (succ n + n) = succ (succ (n + n)), from

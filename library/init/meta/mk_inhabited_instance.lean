@@ -13,7 +13,7 @@ import init.meta.injection_tactic init.meta.relation_tactics
 namespace tactic
 open expr environment list
 
-/- Retrieve the name of the type we are building an inhabitant instance for. -/
+/-- Retrieve the name of the type we are building an inhabitant instance for. -/
 private meta def get_inhabited_type_name : tactic name :=
 do {
   (app (const n ls) t) ← target >>= whnf,
@@ -23,7 +23,7 @@ do {
 <|>
 fail "mk_inhabited_instance tactic failed, target type is expected to be of the form (inhabited ...)"
 
-/- Try to synthesize constructor argument using type class resolution -/
+/-- Try to synthesize constructor argument using type class resolution -/
 private meta def mk_inhabited_arg : tactic unit :=
 do tgt  ← target,
    inh  ← mk_app `inhabited [tgt],

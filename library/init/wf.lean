@@ -80,7 +80,7 @@ lemma empty_wf {α : Sort u} : well_founded (@empty_relation α) :=
 well_founded.intro (λ (a : α),
   acc.intro a (λ (b : α) (lt : false), false.rec _ lt))
 
-/- Subrelation of a well-founded relation is well-founded -/
+/-! Subrelation of a well-founded relation is well-founded -/
 namespace subrelation
 section
   parameters {α : Sort u} {r Q : α → α → Prop}
