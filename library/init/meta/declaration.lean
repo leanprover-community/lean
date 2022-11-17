@@ -10,13 +10,13 @@ import init.meta.expr init.meta.name init.meta.task
 Reducibility hints are used in the convertibility checker.
 When trying to solve a constraint such a
 
-           (f ...) =?= (g ...)
+    (f ...) =?= (g ...)
 
-where f and g are definitions, the checker has to decide which one will be unfolded.
-  If      f (g) is opaque,     then g (f) is unfolded if it is also not marked as opaque,
-  Else if f (g) is abbrev,     then f (g) is unfolded if g (f) is also not marked as abbrev,
-  Else if f and g are regular, then we unfold the one with the biggest definitional height.
-  Otherwise both are unfolded.
+where `f` and `g` are definitions, the checker has to decide which one will be unfolded.
+* If      `f` (`g`) is opaque,     then `g` (`f`) is unfolded if it is also not marked as opaque,
+* Else if `f` (`g`) is abbrev,     then `f` (`g`) is unfolded if `g` (`f`) is also not marked as abbrev,
+* Else if `f` and `g` are regular, then we unfold the one with the biggest definitional height.
+* Otherwise both are unfolded.
 
 The arguments of the `regular` constructor are: the definitional height and the flag `self_opt`.
 
@@ -26,10 +26,10 @@ we can specify the definitional depth manually.
 
 For definitions marked as regular, we also have a hint for constraints such as
 
-          (f a) =?= (f b)
+    (f a) =?= (f b)
 
-if self_opt == true, then checker will first try to solve (a =?= b), only if it fails,
-it unfolds f.
+if `self_opt = tt`, then checker will first try to solve `a =?= b`, only if it fails,
+it unfolds `f`.
 
 Remark: the hint only affects performance. None of the hints prevent the kernel from unfolding a
 declaration during type checking.
@@ -39,20 +39,21 @@ These attributes are used by the elaborator. The reducibility_hints are used by 
 Moreover, the reducibility_hints cannot be changed after a declaration is added to the kernel.
 -/
 inductive reducibility_hints
-| opaque  : reducibility_hints
-| abbrev  : reducibility_hints
-| regular : nat → bool → reducibility_hints
+| opaque
+| abbrev
+| regular (height : nat) (self_opt : bool)
 
 /-- Reflect a C++ declaration object. The VM replaces it with the C++ implementation. -/
 meta inductive declaration
-/- definition: name, list universe parameters, type, value, is_trusted -/
-| defn : name → list name → expr → expr → reducibility_hints → bool → declaration
-/- theorem: name, list universe parameters, type, value (remark: theorems are always trusted) -/
-| thm  : name → list name → expr → task expr → declaration
-/- constant assumption: name, list universe parameters, type, is_trusted -/
-| cnst : name → list name → expr → bool → declaration
-/- axiom : name → list universe parameters, type (remark: axioms are always trusted) -/
-| ax   : name → list name → expr → declaration
+/- definition-/
+| defn (n : name) (univs : list name) (type : expr) (value : expr)
+       (red : reducibility_hints) (is_trusted : bool)
+/- theorem (remark: theorems are always trusted) -/
+| thm  (n : name) (univs : list name) (type : expr) (value : task expr)
+/- constant assumption -/
+| cnst (n : name) (univs : list name) (type : expr) (is_trusted : bool)
+/- axiom (remark: axioms are always trusted) -/
+| ax   (n : name) (univs : list name) (type : expr)
 
 open declaration
 
