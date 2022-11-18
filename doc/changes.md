@@ -1,3 +1,12 @@
+3.49.1c (18 November 2022)
+--------------------------
+
+Fixes:
+- Correct binder links in `pp.links` (#781)
+- Convert `/-` comments to `/--` or `/-!` comments (#782)
+- Give explicit names to declaration constructor arguments (#783)
+- Export `using_well_founded` AST node (#784)
+
 3.49.0c (11 November 2022)
 --------------------------
 
