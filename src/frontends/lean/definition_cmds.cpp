@@ -80,6 +80,7 @@ expr parse_equation(parser & p, ast_data & parent, expr const & fn) {
 optional<expr> parse_using_well_founded(parser & p, ast_data & parent) {
     if (p.curr_is_token(get_using_well_founded_tk())) {
         auto& data = p.new_ast(get_using_well_founded_tk(), p.pos());
+        parent.push(data.m_id);
         parser::local_scope _(p);
         p.clear_expr_locals();
         p.next();
