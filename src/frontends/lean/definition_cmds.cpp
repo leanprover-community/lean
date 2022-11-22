@@ -578,6 +578,7 @@ parser::parse_definition(ast_data * _parent, buffer<name> & lp_names, buffer<exp
             val = p.parse_expr();
             parent.push(p.get_id(val));
         }
+        parent.push(0);
     } else if (p.curr_is_token(get_bar_tk()) || p.curr_is_token(get_period_tk())) {
         if (is_abbrev)
             throw exception("invalid abbreviation, abbreviations should not be defined using pattern matching");
