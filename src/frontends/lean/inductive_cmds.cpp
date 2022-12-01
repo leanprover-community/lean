@@ -525,10 +525,13 @@ class inductive_cmd_fn {
 
         lean_assert(is_shifted_param || is_constant);
 
+        buffer<name> new_lp_names;
         for (name const & lp_name : implicit_lp_names) {
             if (!(is_shifted_param && param_id(m_u_meta_assignment_offset.first) == lp_name))
-                m_lp_names.emplace_back(lp_name);
+                new_lp_names.emplace_back(lp_name);
         }
+        new_lp_names.append(m_lp_names);
+        m_lp_names = std::move(new_lp_names);
 
         m_u_param = m_u_meta_assignment_offset.first;
         m_u_param_offset = m_u_meta_assignment_offset.second;
