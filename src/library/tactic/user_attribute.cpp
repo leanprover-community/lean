@@ -58,6 +58,10 @@ struct user_attribute_data : public attr_data {
             out << " " << m_param;
         }
     }
+    void textualize(tlean_exporter & x, std::ostringstream & s) const override {
+        unsigned n = x.export_expr(m_param);
+        s << "#USER_ATTR_DATA " << n;
+    }
 };
 
 class user_attribute : public typed_attribute<user_attribute_data> {
@@ -186,9 +190,9 @@ public:
         static_cast<user_attribute_data const *>(&data)->write(s);
     }
 
-    void textualize_entry(tlean_exporter & x, attr_data const & data) override {
+    void textualize_entry(tlean_exporter & x, std::ostringstream & s, attr_data const & data) override {
         lean_assert(dynamic_cast<user_attribute_data const *>(&data));
-        static_cast<user_attribute_data const *>(&data)->textualize(x);
+        static_cast<user_attribute_data const *>(&data)->textualize(x, s);
     }
 
     attr_data_ptr read_entry(deserializer & d) override {
