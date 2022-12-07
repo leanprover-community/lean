@@ -50,7 +50,7 @@ jobs:
           path: ./build/lean-*
 
   build_ubuntu_job:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Build linux ${{ matrix.build_type }}
     strategy:
       fail-fast: false
@@ -91,7 +91,7 @@ jobs:
         working-directory: ./build
 
   build_sanitize_job:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Build sanitized
     steps:
       - uses: actions/checkout@v2
@@ -209,7 +209,7 @@ jobs:
 
 
   build_emscripten_job:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: trzeci/emscripten:sdk-incoming-64bit
     name: Build emscripten
     steps:
@@ -241,7 +241,7 @@ jobs:
   # takes a long time (70 minutes) and a few tests fail
   #
   # test_emscripten_job:
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-20.04
   #   container: trzeci/emscripten:sdk-incoming-64bit
   #   name: Test emscripten
   #   steps:
