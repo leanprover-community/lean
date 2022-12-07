@@ -61,6 +61,8 @@ jobs:
       - run: mkdir -p ./build
       - name: Configure
         run: |
+          cat /proc/sys/kernel/core_pattern
+          exit 1
           cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
         working-directory: ./build
       - name: Build
