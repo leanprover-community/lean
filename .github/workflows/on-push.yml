@@ -59,10 +59,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: mkdir -p ./build
+      - name: Set up core dumps
+        run: |
+          # store in current directory, for easy uploading together with binary
+          echo $PWD/%e.%p.%t | sudo tee /proc/sys/kernel/core_pattern
       - name: Configure
         run: |
-          cat /proc/sys/kernel/core_pattern
-          exit 1
           cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
         working-directory: ./build
       - name: Build
@@ -91,6 +93,11 @@ jobs:
       - name: Test
         run: ctest -j2 --output-on-failure
         working-directory: ./build
+      - uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: coredumps
+          path: ./
 
   # build_sanitize_job:
   #   runs-on: ubuntu-latest
