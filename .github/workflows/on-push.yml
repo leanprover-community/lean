@@ -61,14 +61,17 @@ jobs:
       - run: mkdir -p ./build
       - name: Set up core dumps
         run: |
+          mkdir -p $PWD/coredumps
           # store in current directory, for easy uploading together with binary
-          echo $PWD/%e.%p.%t | sudo tee /proc/sys/kernel/core_pattern
+          echo $PWD/coredumps/%e.%p.%t | sudo tee /proc/sys/kernel/core_pattern
       - name: Configure
         run: |
           cmake ../src -DCMAKE_CXX_COMPILER=g++-9 -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSTATIC=ON
         working-directory: ./build
       - name: Build
         run: |
+          ulimit -c unlimited # coredumps
+          bash -c 'kill -s SIGSEGV $$'
           make -j2
           cpack
         working-directory: ./build
@@ -97,7 +100,9 @@ jobs:
         if: ${{ failure() }}
         with:
           name: coredumps
-          path: ./
+          path: |
+            ./coredumps
+            ./bin/lean
 
   # build_sanitize_job:
   #   runs-on: ubuntu-latest
