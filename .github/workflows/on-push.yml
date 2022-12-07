@@ -102,6 +102,7 @@ jobs:
           path: |
             ./coredumps
             ./bin/lean
+            ./bin/lean-gdb.py
 
   # build_sanitize_job:
   #   runs-on: ubuntu-latest
