@@ -71,7 +71,6 @@ jobs:
       - name: Build
         run: |
           ulimit -c unlimited # coredumps
-          bash -c 'kill -s SIGSEGV $$'
           make -j2
           cpack
         working-directory: ./build
