@@ -98,7 +98,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ failure() }}
         with:
-          name: coredumps
+          name: coredumps-${{ matrix.build_type }}
           path: |
             ./coredumps
             ./bin/lean
