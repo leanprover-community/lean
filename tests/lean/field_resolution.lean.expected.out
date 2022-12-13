@@ -35,6 +35,6 @@ but is expected to have type
 Additional information:
 field_resolution.lean:53:12: context: invalid field notation, function 'foo.blah' does not have explicit argument with type (foo ...)
 s.f : 37 = 0
-λ (_x : ℕ), s.f : ∀ (_x : ℕ), _x = 0
+λ {_x : ℕ}, s.f : ∀ {_x : ℕ}, _x = 0
 field_resolution.lean:106:23: error: invalid field notation, insufficient number of arguments for 'function.apply'
 λ (x : ℕ), function.apply ⁇ (λ (_x : ℕ), _x + x) : ℕ → ℕ

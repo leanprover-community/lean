@@ -3388,11 +3388,16 @@ expr elaborator::visit_lambda(expr const & e, optional<expr> const & expected_ty
         new_d      = ensure_type(new_d, ref_d);
         expr l     = copy_tag(binding_domain(it), push_local(locals, binding_name(it), new_d, binding_info(it), ref_d));
         save_identifier_info(l);
-        it = binding_body(it);
         if (has_expected) {
             lean_assert(is_pi(ex));
+            if ((binding_info(ex).is_implicit() || binding_info(ex).is_inst_implicit()) &&
+                !(binding_info(it).is_implicit() || binding_info(it).is_inst_implicit()))
+                if (auto pos = get_pos_info(it))
+                    report_message(message(logtree().get_location().m_file_name, *pos, WARNING,
+                        (sstream() << "using an explicit lambda to introduce an implicit variable is not lean 4 compatible").str()));
             ex = instantiate(binding_body(ex), l);
         }
+        it = binding_body(it);
     }
     expr b = instantiate_rev_locals(it, locals);
     expr new_b;

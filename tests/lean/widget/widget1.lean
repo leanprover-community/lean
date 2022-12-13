@@ -6,7 +6,7 @@ meta class has_show_html (π : Type) :=
 
 meta def show_html {π α : Type} [has_show_html π] : π → html α := has_show_html.show_html'
 
-meta instance string_show_html : has_show_html string := ⟨λ α p, html.of_string p⟩
+meta instance string_show_html : has_show_html string := ⟨λ {α} p, html.of_string p⟩
 
 meta class has_to_editor (π : Type) :=
 (comp : π → html π)
