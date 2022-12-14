@@ -1023,8 +1023,11 @@ struct structure_cmd_fn {
                             metavar_context mctx = m_ctx.mctx();
                             std::tie(new_tmp, new_ls) = m_p.elaborate_type(m_name, mctx, tmp, false);
                             m_ctx.set_mctx(mctx);
+                            buffer<name> new_lp_names;
                             for (auto new_l : new_ls)
-                                m_level_names.push_back(new_l);
+                                new_lp_names.push_back(new_l);
+                            new_lp_names.append(m_level_names);
+                            m_level_names = std::move(new_lp_names);
                             return new_tmp;
                         });
                     });

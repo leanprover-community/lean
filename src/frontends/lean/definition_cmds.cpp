@@ -189,7 +189,8 @@ static void finalize_definition(elaborator & elab, buffer<expr> const & params, 
         type = type_val[0];
         val  = type_val[1];
     }
-    lp_names.append(implicit_lp_names);
+    implicit_lp_names.append(lp_names);
+    lp_names = std::move(implicit_lp_names);
 }
 
 static certified_declaration check(parser_info const & p, environment const & env, name const & c_name, declaration const & d, pos_info const & pos) {
@@ -680,7 +681,8 @@ static void finalize_theorem_type(elaborator & elab, buffer<expr> const & params
     buffer<name> implicit_lp_names;
     std::tie(type, info) = elab.finalize_theorem_type(type, implicit_lp_names);
     type = unfold_untrusted_macros(elab.env(), type);
-    lp_names.append(implicit_lp_names);
+    implicit_lp_names.append(lp_names);
+    lp_names = std::move(implicit_lp_names);
 }
 
 static void finalize_theorem_proof(elaborator & elab, buffer<expr> const & params, expr & val,
