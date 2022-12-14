@@ -24,7 +24,7 @@ struct attr_data {
     }
     virtual ast_id parse(abstract_parser &) { return 0; }
     virtual void print(std::ostream &) {}
-    virtual void textualize(tlean_exporter &) const {}
+    virtual void textualize(tlean_exporter &, std::ostringstream &) const {}
     virtual ~attr_data() {}
 };
 
@@ -51,7 +51,7 @@ protected:
 
     virtual environment set_untyped(environment const &, io_state const &, name const &, unsigned, attr_data_ptr, bool) const = 0;
     virtual void write_entry(serializer &, attr_data const &) const = 0;
-    virtual void textualize_entry(tlean_exporter &, attr_data const &) const = 0;
+    virtual void textualize_entry(tlean_exporter &, std::ostringstream &, attr_data const &) const = 0;
     virtual attr_data_ptr read_entry(deserializer &) const = 0;
 public:
     attribute(name const & id, char const * descr, after_set_proc after_set = {}, before_unset_proc before_unset = {}) :
@@ -81,7 +81,7 @@ typedef std::shared_ptr<attribute const> attribute_ptr;
 class basic_attribute : public attribute {
 protected:
     virtual void write_entry(serializer &, attr_data const &) const override final {}
-    virtual void textualize_entry(tlean_exporter &, attr_data const &) const override final {}
+    virtual void textualize_entry(tlean_exporter &, std::ostringstream &, attr_data const &) const override final {}
     virtual attr_data_ptr read_entry(deserializer &) const override final { return get_default_attr_data(); }
     virtual environment set_untyped(environment const & env, io_state const & ios, name const & n, unsigned prio, attr_data_ptr,
                                     bool persistent) const override final {
@@ -122,9 +122,9 @@ protected:
         lean_assert(dynamic_cast<Data const *>(&data));
         static_cast<Data const &>(data).write(s);
     }
-    virtual void textualize_entry(tlean_exporter & x, attr_data const & data) const final override {
+    virtual void textualize_entry(tlean_exporter & x, std::ostringstream & s, attr_data const & data) const final override {
         lean_assert(dynamic_cast<Data const *>(&data));
-        static_cast<Data const &>(data).textualize(x);
+        static_cast<Data const &>(data).textualize(x, s);
     }
 
     virtual attr_data_ptr read_entry(deserializer & d) const final override {
@@ -270,7 +270,7 @@ public:
     virtual void write_entry(serializer &, attr_data const &) {
         lean_unreachable();
     }
-    virtual void textualize_entry(tlean_exporter &, attr_data const &) {
+    virtual void textualize_entry(tlean_exporter &, std::ostringstream &, attr_data const &) {
         lean_unreachable();
     }
     virtual attr_data_ptr read_entry(deserializer &) {

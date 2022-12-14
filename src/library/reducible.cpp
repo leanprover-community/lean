@@ -41,8 +41,8 @@ struct reducibility_attribute_data : public attr_data {
         s << static_cast<char>(m_status);
     }
 
-    void textualize(tlean_exporter & x) const override {
-        x.out() << reducible_status_to_string(m_status);
+    void textualize(tlean_exporter &, std::ostringstream & s) const override {
+        s << reducible_status_to_string(m_status);
     }
 
     void read(deserializer & d) {
