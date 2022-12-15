@@ -1,3 +1,16 @@
+3.50.0c (12 December 2022)
+--------------------------
+
+Fixes:
+- Push null `using_well_founded` AST node after `:=` (#787)
+- Use Ubuntu 20.04 for CI (#792)
+
+Features:
+- Export user attribute data in tlean files (#790)
+
+Changes:
+- Put auto-bound universes before explicit (#788)
+
 3.49.1c (18 November 2022)
 --------------------------
 
