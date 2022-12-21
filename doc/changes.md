@@ -1,3 +1,9 @@
+3.50.1c (21 December 2022)
+--------------------------
+
+Fixes:
+- Revert (#788): put auto-bound universes before explicit (#794)
+
 3.50.0c (12 December 2022)
 --------------------------
 
