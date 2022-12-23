@@ -161,9 +161,13 @@ unsigned tlean_exporter::export_expr(expr const & e) {
         i = export_binding(e, "#EP");
         break;
     case expr_kind::Meta:
-        throw exception("invalid 'export', meta-variables cannot be exported");
+        i = static_cast<unsigned>(m_expr2idx.size());
+        m_out << i << " #EMVAR\n";
+        break;
     case expr_kind::Local:
-        throw exception("invalid 'export', local constants cannot be exported");
+        i = static_cast<unsigned>(m_expr2idx.size());
+        m_out << i << " #ELC\n";
+        break;
     case expr_kind::Macro:
         check_system();
         if (macro_def(e).can_textualize()) {
