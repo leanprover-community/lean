@@ -1,3 +1,10 @@
+3.50.2c (23 December 2022)
+--------------------------
+
+Fixes:
+- Report tlean export errors (#796)
+- tlean export for local constants and mvars (#797)
+
 3.50.1c (21 December 2022)
 --------------------------
 
