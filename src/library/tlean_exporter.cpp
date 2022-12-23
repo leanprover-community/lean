@@ -172,11 +172,11 @@ unsigned tlean_exporter::export_expr(expr const & e) {
                 args.push_back(export_expr(macro_arg(e, i)));
             }
             i = static_cast<unsigned>(m_expr2idx.size());
-            m_out << i << " ";
-            macro_def(e).textualize(*this);
+            macro_def(e).textualize(*this, i);
             for (auto const & arg : args) {
-                m_out << " " << arg << "\n";
+                m_out << " " << arg;
             }
+            m_out << "\n";
         } else {
             type_checker checker(m_env);
             if (auto t = macro_def(e).expand(e, checker)) {

@@ -133,11 +133,11 @@ public:
 
     virtual bool can_textualize() const { return true; }
 
-    virtual void textualize(tlean_exporter & x) const {
+    virtual void textualize(tlean_exporter & x, unsigned i) const {
       unsigned I_name           = x.export_name(m_I_name);
       unsigned constructor_name = x.export_name(m_constructor_name);
       unsigned proj_name        = x.export_name(m_proj_name);
-      x.out() << "#PROJ_MACRO " << I_name << " " << constructor_name << " " << proj_name << " " << m_idx;
+      x.out() << i << " #PROJ_MACRO " << I_name << " " << constructor_name << " " << proj_name << " " << m_idx;
     }
 
 #ifdef LEAN_JSON

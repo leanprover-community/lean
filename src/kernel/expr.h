@@ -369,7 +369,7 @@ public:
     virtual unsigned hash() const;
     virtual void write(serializer & s) const = 0;
     virtual bool can_textualize() const { return false; }
-    virtual void textualize(tlean_exporter &) const { throw exception("macro::textualize not implemented by default"); }
+    virtual void textualize(tlean_exporter &, unsigned) const { throw exception("macro::textualize not implemented by default"); }
     typedef std::function<expr(deserializer&, unsigned, expr const *)> reader;
 #ifdef LEAN_JSON
     virtual void write_json(abstract_ast_exporter &, json &) const = 0;
@@ -403,7 +403,7 @@ public:
     unsigned hash() const { return m_ptr->hash(); }
     void write(serializer & s) const { return m_ptr->write(s); }
     bool can_textualize() const { return m_ptr->can_textualize(); }
-    void textualize(tlean_exporter & x) const { return m_ptr->textualize(x); };
+    void textualize(tlean_exporter & x, unsigned i) const { return m_ptr->textualize(x, i); };
     macro_definition_cell const * raw() const { return m_ptr; }
 
     friend bool is_eqp(macro_definition const & d1, macro_definition const & d2) {
