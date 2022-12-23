@@ -314,7 +314,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
         mod->m_ast_export = add_library_task(task_builder<unit>([mod_dep, mod_parser_fn] {
             export_ast(mod_parser_fn->get_parser());
             return unit();
-        }).depends_on(mod_dep), std::string("exporting AST"));
+        }).wrap(exception_reporter()).depends_on(mod_dep), std::string("exporting AST"));
     }
 
     if (m_export_tlean) {
@@ -328,7 +328,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
             out.close();
             if (!out) throw exception(sstream() << "failed to write tlean file: " << tlean_fn);
             return unit();
-        }).depends_on(mod_dep), std::string("exporting tlean"));
+        }).wrap(exception_reporter()).depends_on(mod_dep), std::string("exporting tlean"));
     }
 }
 
