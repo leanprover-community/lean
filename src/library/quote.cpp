@@ -44,6 +44,10 @@ public:
             return *g_pexpr;
         }
     }
+    virtual bool can_textualize() const override { return true; }
+    virtual void textualize(tlean_exporter & x) const override {
+        x.out() << "#QUOTE_MACRO";
+    }
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override {
         return optional<expr>();
     }
