@@ -46,8 +46,7 @@ public:
     }
     virtual bool can_textualize() const override { return true; }
     virtual void textualize(tlean_exporter & x, unsigned i) const override {
-        unsigned v = x.export_expr(m_value);
-        x.out() << i << " #QUOTE_MACRO " << (m_reflected ? 1 : 0) << " " << v;
+        x.out() << i << " #QUOTE_MACRO " << (m_reflected ? 1 : 0);
     }
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override {
         return optional<expr>();
