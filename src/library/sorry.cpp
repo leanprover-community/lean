@@ -39,8 +39,8 @@ public:
 
     virtual bool can_textualize() const { return true; }
 
-    virtual void textualize(tlean_exporter & x, unsigned i) const {
-        x.out() << i << " #SORRY_MACRO";
+    virtual std::string textualize(tlean_exporter &) const override {
+        return "#SORRY_MACRO";
     }
 
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override {
