@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura, Daniel Selsam
 */
 #include <iostream>
+#include <string>
 #include "library/tlean_exporter.h"
 #include "library/unfold_macros.h"
 #include "kernel/quotient/quotient.h"
@@ -171,12 +172,13 @@ unsigned tlean_exporter::export_expr(expr const & e) {
     case expr_kind::Macro:
         check_system();
         if (macro_def(e).can_textualize()) {
+            std::string macro_text = macro_def(e).textualize(*this);
             buffer<unsigned> args;
             for (unsigned i = 0; i < macro_num_args(e); ++i) {
                 args.push_back(export_expr(macro_arg(e, i)));
             }
             i = static_cast<unsigned>(m_expr2idx.size());
-            macro_def(e).textualize(*this, i);
+            m_out << i << " " << macro_text;
             for (auto const & arg : args) {
                 m_out << " " << arg;
             }
