@@ -5,6 +5,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Author: Leonardo de Moura, Daniel Selsam
 */
 #include <iostream>
+#include <string>
 #include "library/tlean_exporter.h"
 #include "library/unfold_macros.h"
 #include "kernel/quotient/quotient.h"
