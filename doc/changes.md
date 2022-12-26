@@ -1,3 +1,9 @@
+3.50.2c (26 December 2022)
+--------------------------
+
+Fixes:
+- tlean expression numbering (#799)
+
 3.50.2c (23 December 2022)
 --------------------------
 
