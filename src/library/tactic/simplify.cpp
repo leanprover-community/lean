@@ -658,7 +658,7 @@ simp_result simplify_core_fn::visit(expr const & e, optional<expr> const & paren
     lean_simp_trace(m_ctx, "simplify", tout() << m_rel << ": " << e << "\n";);
 
     if (m_cfg.m_memoize) {
-        auto cache = m_cache[m_rel];
+        const auto& cache = m_cache[m_rel];
         auto it = cache.find(e);
         if (it != cache.end())
             return it->second;
