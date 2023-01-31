@@ -14,6 +14,7 @@ Author: Gabriel Ebner
 #include "util/line_endings.h"
 #include "library/module_mgr.h"
 #include "library/module.h"
+#include "frontends/lean/info_manager.h"
 #include "frontends/lean/pp.h"
 #include "frontends/lean/parser.h"
 #include "library/library_task_builder.h"
@@ -229,6 +230,18 @@ void module_mgr::build_module(module_id const & id, bool can_use_olean, name_set
     }
 }
 
+    // TODO: copy paste from shell/server.cpp
+static void get_info_managers(log_tree::node const & n, std::vector<info_manager> & infoms) {
+    n.for_each([&] (log_tree::node const & c) {
+        for (auto & e : c.get_entries()) {
+            if (auto infom = dynamic_cast<info_manager const *>(e.get())) {
+                infoms.push_back(*infom);
+            }
+        }
+        return true;
+    });
+}
+
 void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set const & module_stack) {
     auto id = mod->m_id;
     auto & lt = logtree();
@@ -269,7 +282,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
 
     auto ldr = mk_loader(id, mod->m_deps);
     auto mod_parser_fn = std::make_shared<module_parser>(id, mod->m_contents, m_initial_env, ldr);
-    mod_parser_fn->save_info(m_server_mode);
+    mod_parser_fn->save_info(m_server_mode || m_export_ast);
 
     module_parser_result snapshots;
     std::tie(mod->m_cancel, snapshots) = build_lean_snapshots(
@@ -311,7 +324,21 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
 
     if (m_export_ast) {
         if (!mod_dep) mod_dep = module_deep_dependency(mod->m_result);
-        mod->m_ast_export = add_library_task(task_builder<unit>([mod_dep, mod_parser_fn] {
+        mod->m_ast_export = add_library_task(task_builder<unit>([mod_dep, mod_parser_fn, lt] {
+	    std::vector<info_manager> infoms;
+	    get_info_managers(lt, infoms);
+	    for (auto & infom : infoms) {
+		infom.get_line_info_sets().for_each([&](unsigned row, line_info_data_set const & S) {
+		    S.for_each([&](unsigned col, list<info_data> const & info_list) {
+			for (info_data const & info : info_list) {
+			    if (auto ii = dynamic_cast<identifier_info_data const *>(info.raw())) {
+				fprintf(stderr, "found %s at row %d col %d\n",
+					ii->get_full_id().to_string(".").c_str(),
+					row, col);
+			    }
+			}
+		    });});
+	    }
             export_ast(mod_parser_fn->get_parser());
             return unit();
         }).wrap(exception_reporter()).depends_on(mod_dep), std::string("exporting AST"));

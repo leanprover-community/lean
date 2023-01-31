@@ -33,6 +33,17 @@ public:
 #endif
 };
 
+class identifier_info_data : public info_data_cell {
+    name m_full_id;
+public:
+    identifier_info_data(name const & full_id): m_full_id(full_id) {}
+    name get_full_id() const { return m_full_id; };
+
+#ifdef LEAN_JSON
+    virtual void report(io_state_stream const & ios, json & record) const;
+#endif
+};
+
 /** A format thunk, as is generated through `tactic.save_info_thunk : pos -> (unit -> format) -> tactic unit`.  */
 class vm_obj_format_info : public info_data_cell {
     /** The environment of the tactic state at the moment that save_info_thunk was called */

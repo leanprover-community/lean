@@ -44,20 +44,16 @@ public:
 #endif
 };
 
-class identifier_info_data : public info_data_cell {
-    name m_full_id;
-public:
-    identifier_info_data(name const & full_id): m_full_id(full_id) {}
 
 #ifdef LEAN_JSON
-    virtual void report(io_state_stream const & ios, json & record) const override {
-        record["full-id"] = m_full_id.escape();
-        add_source_info(ios.get_environment(), m_full_id, record);
-        if (auto doc = get_doc_string_including_override(ios.get_environment(), m_full_id))
-            record["doc"] = *doc;
-    }
+void identifier_info_data::report(io_state_stream const & ios, json & record) const {
+    record["full-id"] = m_full_id.escape();
+    add_source_info(ios.get_environment(), m_full_id, record);
+    if (auto doc = get_doc_string_including_override(ios.get_environment(), m_full_id))
+	record["doc"] = *doc;
+}
 #endif
-};
+
 
 #ifdef LEAN_JSON
 void hole_info_data::report(io_state_stream const & ios, json & record) const {
