@@ -128,7 +128,7 @@ struct ast_exporter : abstract_ast_exporter {
         return r;
     }
 
-    void write_ast(std::ostream & out) {
+    void write_ast(std::ostream & out, ident_info_table ident_info) {
         json asts = json::array({nullptr});
         for (unsigned i = 1; i < m_ast.size(); i++) {
             if (!m_reachable[i] || !m_ast[i]) {
@@ -148,11 +148,24 @@ struct ast_exporter : abstract_ast_exporter {
             }
             if (!data.m_children.empty())
                 j["children"] = data.m_children;
+
+	    if (data.m_type == name("ident")) {
+		pos_info p = {data.m_start.first, data.m_start.second};
+		auto it = ident_info.find(p);
+		if (it != ident_info.end()) {
+		    pair<name, bool> q = it->second;
+		    if (q.second) { // it's a constant
+			data.m_pexpr = mk_constant(q.first);
+		    }
+		}
+	    }
+
             if (data.m_pexpr) j["pexpr"] = export_expr(*data.m_pexpr);
             if (data.m_expr) {
                 auto res = (*data.m_expr)->peek();
                 j["expr"] = res ? export_expr(*res) : 0;
             }
+
             asts.push_back(j);
         }
         json comments = json::array();
@@ -207,18 +220,18 @@ std::string json_of_lean(std::string const & lean_fn) {
     }
 }
 
-void export_ast(parser const & p) {
+void export_ast(parser const & p, ident_info_table ident_info) {
     if (p.m_ast.empty() || p.m_ast_invalid) return;
     auto ast_fn = json_of_lean(p.m_file_name);
     exclusive_file_lock output_lock(ast_fn);
     std::ofstream out(ast_fn);
-    ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get(), p.get_comments()).write_ast(out);
+    ast_exporter(p.m_ast, p.m_tag_ast_table, p.m_tactic_log.get(), p.get_comments()).write_ast(out, ident_info);
     out.close();
     if (!out) throw exception(sstream() << "failed to write ast file: " << ast_fn);
 }
 
 #else
-void export_ast(parser const &) {}
+void export_ast(parser const &, ident_info_table) {}
 #endif // LEAN_JSON
 
 }

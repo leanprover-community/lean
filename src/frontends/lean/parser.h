@@ -152,6 +152,7 @@ public:
 };
 
 typedef rb_map<unsigned, ast_id, unsigned_cmp> tag_ast_table;
+typedef std::map<pos_info,pair<name,bool>> ident_info_table;
 
 class parser : public abstract_parser, public parser_info {
     name_generator          m_ngen;
@@ -326,7 +327,7 @@ public:
         return old;
     }
     ast_data & new_modifiers(cmd_meta & meta);
-    friend void export_ast(parser const &);
+    friend void export_ast(parser const &, ident_info_table);
 
     void from_snapshot(snapshot const & snap);
 

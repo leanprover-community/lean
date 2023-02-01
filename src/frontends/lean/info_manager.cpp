@@ -218,7 +218,9 @@ void widget_info::update(json const & message, json & record) {
 
 info_data mk_type_info(expr const & e) { return info_data(new type_info_data(e)); }
 
-info_data mk_identifier_info(name const & full_id) { return info_data(new identifier_info_data(full_id)); }
+info_data mk_identifier_info(name const & full_id, bool is_const) {
+    return info_data(new identifier_info_data(full_id, is_const));
+}
 
 info_data mk_vm_obj_format_info(environment const & env, vm_obj const & thunk) {
     return info_data(new vm_obj_format_info(env, thunk));
@@ -291,15 +293,15 @@ void info_manager::add_type_info(pos_info pos, expr const & e) {
     add_info(pos, mk_type_info(e));
 }
 
-void info_manager::add_identifier_info(pos_info pos, name const & full_id) {
+void info_manager::add_identifier_info(pos_info pos, name const & full_id, bool is_const) {
 #ifdef LEAN_NO_INFO
     return;
 #endif
-    add_info(pos, mk_identifier_info(full_id));
+    add_info(pos, mk_identifier_info(full_id, is_const));
 }
 
 void info_manager::add_const_info(environment const & env, pos_info pos, name const & full_id) {
-    add_identifier_info(pos, full_id);
+    add_identifier_info(pos, full_id, true);
     add_type_info(pos, env.get(full_id).get_type());
 }
 

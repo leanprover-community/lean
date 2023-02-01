@@ -325,6 +325,7 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     if (m_export_ast) {
         if (!mod_dep) mod_dep = module_deep_dependency(mod->m_result);
         mod->m_ast_export = add_library_task(task_builder<unit>([mod_dep, mod_parser_fn, lt] {
+	    ident_info_table ident_info;
 	    std::vector<info_manager> infoms;
 	    get_info_managers(lt, infoms);
 	    for (auto & infom : infoms) {
@@ -332,14 +333,17 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
 		    S.for_each([&](unsigned col, list<info_data> const & info_list) {
 			for (info_data const & info : info_list) {
 			    if (auto ii = dynamic_cast<identifier_info_data const *>(info.raw())) {
-				fprintf(stderr, "found %s at row %d col %d\n",
-					ii->get_full_id().to_string(".").c_str(),
-					row, col);
+				pos_info p(row, col);
+				ident_info[p] = {ii->get_full_id(), ii->is_const()};
+				// fprintf(stderr, "found %s [is_const=%d] at row %d col %d\n",
+				// 	ii->get_full_id().to_string(".").c_str(),
+				// 	ii->is_const(),
+				// 	row, col);
 			    }
 			}
 		    });});
 	    }
-            export_ast(mod_parser_fn->get_parser());
+            export_ast(mod_parser_fn->get_parser(), ident_info);
             return unit();
         }).wrap(exception_reporter()).depends_on(mod_dep), std::string("exporting AST"));
     }

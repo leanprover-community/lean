@@ -911,7 +911,7 @@ expr elaborator::visit_const_core(expr const & e) {
 void elaborator::save_identifier_info(expr const & f) {
     if (!m_no_info && m_uses_infom && get_pos_info_provider() && (is_constant(f) || is_local(f))) {
         if (auto p = get_pos_info_provider()->get_pos_info(f)) {
-            m_info.add_identifier_info(*p, is_constant(f) ? const_name(f) : mlocal_pp_name(f));
+	    m_info.add_identifier_info(*p, is_constant(f) ? const_name(f) : mlocal_pp_name(f), is_constant(f));
             m_info.add_type_info(*p, infer_type(f));
         }
     }
@@ -3769,7 +3769,7 @@ void elaborator::process_hole(expr const & mvar, expr const & hole) {
             tactic_state s = elaborator::mk_tactic_state_for(val);
             m_info.add_hole_info(*begin_pos, *end_pos, s, args);
             /* The following command is a hack to make sure we see the hole's type in Emacs */
-            m_info.add_identifier_info(*begin_pos, "[goal]");
+            m_info.add_identifier_info(*begin_pos, "[goal]", false);
         }
     }
     m_ctx.assign(mvar, copy_tag(hole, mk_sorry(ty)));
@@ -4303,9 +4303,9 @@ static vm_obj tactic_save_type_info(vm_obj const &, vm_obj const & _e, vm_obj co
         expr type = ctx.infer(e);
         get_global_info_manager()->add_type_info(*pos, type);
         if (is_constant(e))
-            get_global_info_manager()->add_identifier_info(*pos, const_name(e));
+            get_global_info_manager()->add_identifier_info(*pos, const_name(e), true);
         else if (is_local(e))
-            get_global_info_manager()->add_identifier_info(*pos, mlocal_pp_name(e));
+            get_global_info_manager()->add_identifier_info(*pos, mlocal_pp_name(e), false);
     } catch (exception & ex) {
         return tactic::mk_exception(ex, s);
     }

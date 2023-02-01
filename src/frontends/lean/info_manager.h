@@ -35,9 +35,12 @@ public:
 
 class identifier_info_data : public info_data_cell {
     name m_full_id;
+    bool m_is_const;
 public:
-    identifier_info_data(name const & full_id): m_full_id(full_id) {}
+    identifier_info_data(name const & full_id, bool is_const):
+	m_full_id(full_id), m_is_const(is_const) {}
     name get_full_id() const { return m_full_id; };
+    bool is_const() const { return m_is_const; };
 
 #ifdef LEAN_JSON
     virtual void report(io_state_stream const & ios, json & record) const;
@@ -159,7 +162,7 @@ public:
     bool empty() const { return m_line_data.empty(); }
 
     void add_type_info(pos_info pos, expr const & e);
-    void add_identifier_info(pos_info pos, name const & full_id);
+    void add_identifier_info(pos_info pos, name const & full_id, bool is_const);
     /* Takes type info from global declaration with the given name. */
     void add_const_info(environment const & env, pos_info pos, name const & full_id);
     void add_vm_obj_format_info(pos_info pos, environment const & env, vm_obj const & thunk);
