@@ -64,6 +64,7 @@ Author: Leonardo de Moura
 #include "frontends/lean/builtin_exprs.h"
 #include "frontends/lean/brackets.h"
 #include "frontends/lean/definition_cmds.h"
+#include "frontends/lean/disambig_manager.h"
 #include "frontends/lean/util.h"
 #include "frontends/lean/parser.h"
 #include "frontends/lean/prenum.h"
@@ -909,6 +910,12 @@ expr elaborator::visit_const_core(expr const & e) {
 
 /** \brief Auxiliary function for saving information about which overloaded identifier was used by the elaborator. */
 void elaborator::save_identifier_info(expr const & f) {
+    if (get_global_disambig_manager()) {
+        if (is_constant(f)) {
+            if (get_global_disambig_manager() && f.get_tag() != nulltag)
+                get_global_disambig_manager()->add_field(f.get_tag(), const_name(f));
+        }
+    }
     if (!m_no_info && m_uses_infom && get_pos_info_provider() && (is_constant(f) || is_local(f))) {
         if (auto p = get_pos_info_provider()->get_pos_info(f)) {
             m_info.add_identifier_info(*p, is_constant(f) ? const_name(f) : mlocal_pp_name(f));

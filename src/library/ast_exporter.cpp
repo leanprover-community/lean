@@ -199,6 +199,21 @@ struct ast_exporter : abstract_ast_exporter {
     }
 };
 
+/** Apply fixups from the disambiguation manager */
+void fixup_ast(parser & p) {
+    p.get_disambig_manager().get_field_names().for_each([&] (unsigned tag, name field) {
+        ast_id i = p.m_tag_ast_table[tag];
+        if (i == 0) { return; }
+        ast_data *a = p.m_ast[i];
+        if (a->m_type == name("field")) {
+            ast_id j = a->m_children[1];
+            p.m_ast[j]->m_pexpr = mk_constant(field);
+        } else if (a->m_type == name("ident")) {
+            p.m_ast[i]->m_pexpr = mk_constant(field);
+        }
+    });
+}
+
 std::string json_of_lean(std::string const & lean_fn) {
     if (lean_fn.size() > 5 && lean_fn.substr(lean_fn.size() - 5) == ".lean") {
         return lean_fn.substr(0, lean_fn.size() - 5) + ".ast.json";
@@ -207,8 +222,9 @@ std::string json_of_lean(std::string const & lean_fn) {
     }
 }
 
-void export_ast(parser const & p) {
+void export_ast(parser & p) {
     if (p.m_ast.empty() || p.m_ast_invalid) return;
+    fixup_ast(p);
     auto ast_fn = json_of_lean(p.m_file_name);
     exclusive_file_lock output_lock(ast_fn);
     std::ofstream out(ast_fn);

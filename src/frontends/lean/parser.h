@@ -22,6 +22,7 @@ Author: Leonardo de Moura
 #include "library/message_builder.h"
 #include "library/tactic/tactic_log.h"
 #include "library/tactic/tactic_state.h"
+#include "frontends/lean/disambig_manager.h"
 #include "frontends/lean/parser_state.h"
 #include "frontends/lean/local_decls.h"
 #include "frontends/lean/local_level_decls.h"
@@ -172,6 +173,7 @@ class parser : public abstract_parser, public parser_info {
     bool                    m_ast_invalid = false;
     ast_id                  m_commands = 0;
     std::shared_ptr<tactic_log> m_tactic_log;
+    disambig_manager        m_disambig_manager;
     // By default, when the parser finds a unknown identifier, it signs an error.
     // When the following flag is true, it creates a constant.
     // This flag is when we are trying to parse mutually recursive declarations.
@@ -326,7 +328,8 @@ public:
         return old;
     }
     ast_data & new_modifiers(cmd_meta & meta);
-    friend void export_ast(parser const &);
+    friend void fixup_ast(parser &);
+    friend void export_ast(parser &);
 
     void from_snapshot(snapshot const & snap);
 
@@ -387,6 +390,7 @@ public:
     }
 
     std::shared_ptr<tactic_log> get_tactic_log() override;
+    disambig_manager const & get_disambig_manager() const { return m_disambig_manager; };
 
     expr mk_app(expr fn, expr arg, pos_info const & p);
     expr mk_app(expr fn, buffer<expr> const & args, pos_info const & p);

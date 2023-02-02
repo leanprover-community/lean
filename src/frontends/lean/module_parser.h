@@ -11,6 +11,7 @@ Author: Gabriel Ebner
 #include <vector>
 #include "util/log_tree.h"
 #include "util/task.h"
+#include "frontends/lean/disambig_manager.h"
 #include "frontends/lean/parser_state.h"
 #include "frontends/lean/parser.h"
 

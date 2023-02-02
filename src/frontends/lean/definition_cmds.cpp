@@ -718,13 +718,14 @@ static expr elaborate_proof(
         bool is_rfl_lemma, expr const & final_type,
         metavar_context const & mctx, local_context const & lctx,
         parser_pos_provider pos_provider, std::shared_ptr<tactic_log> log,
-        bool use_info_manager, std::string const & file_name) {
+        bool use_info_manager, disambig_manager * dm, std::string const & file_name) {
     auto tc = std::make_shared<type_context_old>(decl_env, opts, mctx, lctx);
     scope_trace_env scope2(decl_env, opts, *tc);
     scope_traces_as_messages scope2a(file_name, header_pos);
     scope_pos_info_provider scope3(pos_provider);
     auto_reporting_info_manager_scope scope4(file_name, use_info_manager);
     scope_tactic_log scope5(log.get());
+    scoped_disambig_manager scope6(dm);
 
     try {
         bool recover_from_errors = true;
@@ -758,13 +759,15 @@ static void check_example(environment const & decl_env, options const & opts,
                           level_param_names const & univ_params, list<expr> const & params,
                           expr const & fn, expr const & val0,
                           metavar_context const & mctx, local_context const & lctx,
-                          parser_pos_provider pos_provider, bool use_info_manager, std::string const & file_name) {
+                          parser_pos_provider pos_provider, bool use_info_manager,
+                          disambig_manager * dm, std::string const & file_name) {
     auto tc = std::make_shared<type_context_old>(decl_env, opts, mctx, lctx);
     scope_trace_env scope2(decl_env, opts, *tc);
     scope_traces_as_messages scope2a(file_name, pos_provider.get_some_pos());
     scope_pos_info_provider scope3(pos_provider);
     auto_reporting_info_manager_scope scope4(file_name, use_info_manager);
     module::scope_pos_info scope_pos(pos_provider.get_some_pos());
+    scoped_disambig_manager scope6(dm);
 
     name decl_name = "_example";
 
@@ -861,12 +864,13 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_
             auto pos_provider = p.get_parser_pos_provider(header_pos);
             auto tactic_log = p.get_tactic_log();
             bool use_info_manager = get_global_info_manager() != nullptr;
+            auto dm = get_global_disambig_manager();
             std::string file_name = p.get_file_name();
             auto proof = add_library_task(task_builder<expr>([=] {
                 return elaborate_proof(decl_env, opts, header_pos, new_params_list,
                                        new_fn, val, thm_finfo, is_rfl, type,
                                        mctx, lctx, pos_provider, tactic_log,
-                                       use_info_manager, file_name);
+                                       use_info_manager, dm, file_name);
             }), log_tree::ElaborationLevel);
             env_n = declare_definition(p, elab.env(), kind, lp_names, c_name, prv_name, type, opt_val, proof, meta, is_abbrev, header_pos);
         } else if (kind == decl_cmd_kind::Example) {
@@ -878,12 +882,13 @@ environment single_definition_cmd_core(parser_info & p, decl_cmd_kind kind, ast_
             auto lctx = elab.lctx();
             auto pos_provider = p.get_parser_pos_provider(p.cmd_pos());
             bool use_info_manager = get_global_info_manager() != nullptr;
+            auto dm = get_global_disambig_manager();
             noncomputable_policy noncomputable_pol = p.get_noncomputable_policy();
             std::string file_name = p.get_file_name();
             add_library_task<unit>([=] {
                 check_example(env, opts, meta.m_modifiers, noncomputable_pol,
                               lp_name_list, new_params_list, fn, val, mctx, lctx,
-                              pos_provider, use_info_manager, file_name);
+                              pos_provider, use_info_manager, dm, file_name);
                 return unit();
             }, log_tree::ElaborationLevel);
             return p.env();
