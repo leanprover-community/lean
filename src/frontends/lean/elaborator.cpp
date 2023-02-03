@@ -910,12 +910,6 @@ expr elaborator::visit_const_core(expr const & e) {
 
 /** \brief Auxiliary function for saving information about which overloaded identifier was used by the elaborator. */
 void elaborator::save_identifier_info(expr const & f) {
-    if (get_global_disambig_manager()) {
-        if (is_constant(f)) {
-            if (get_global_disambig_manager() && f.get_tag() != nulltag)
-                get_global_disambig_manager()->add_field(f.get_tag(), const_name(f));
-        }
-    }
     if (!m_no_info && m_uses_infom && get_pos_info_provider() && (is_constant(f) || is_local(f))) {
         if (auto p = get_pos_info_provider()->get_pos_info(f)) {
             m_info.add_identifier_info(*p, is_constant(f) ? const_name(f) : mlocal_pp_name(f));
@@ -1884,6 +1878,10 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
         expr s           = visit(macro_arg(fn, 0), none_expr());
         expr s_type      = head_beta_reduce(instantiate_mvars(infer_type(s)));
         auto field_res   = resolve_field_notation(fn, s, s_type);
+
+        if (auto dm = get_global_disambig_manager())
+            if (fn.get_tag() != nulltag)
+                dm->add_field(fn.get_tag(), field_res.get_full_name());
 
         expr proj, proj_type;
         switch (field_res.m_kind) {
@@ -4226,7 +4224,11 @@ struct resolve_names_fn : public replace_visitor {
             /* universe level were provided, so the constant was already resolved at parsing time */
             return e;
         } else {
-            return copy_tag(e, resolve_local_name(m_env, m_lctx, const_name(e), e, ignore_aliases, m_locals));
+            auto r = copy_tag(e, resolve_local_name(m_env, m_lctx, const_name(e), e, ignore_aliases, m_locals));
+            if (auto p = get_global_disambig_manager())
+                if (e.get_tag() != nulltag)
+                    p->add_local(e.get_tag(), r);
+            return r;
         }
     }
 
@@ -4235,7 +4237,11 @@ struct resolve_names_fn : public replace_visitor {
     }
 
     expr visit_local(expr const & e, bool ignore_aliases) {
-        return copy_tag(e, resolve_local_name(m_env, m_lctx, mlocal_pp_name(e), e, ignore_aliases, m_locals));
+        auto r = copy_tag(e, resolve_local_name(m_env, m_lctx, mlocal_pp_name(e), e, ignore_aliases, m_locals));
+        if (auto p = get_global_disambig_manager())
+            if (e.get_tag() != nulltag)
+                p->add_local(e.get_tag(), r);
+        return r;
     }
 
     virtual expr visit_local(expr const & e) override {
@@ -4301,6 +4307,9 @@ expr resolve_names(environment const & env, local_context const & lctx, expr con
 static vm_obj tactic_save_type_info(vm_obj const &, vm_obj const & _e, vm_obj const & ref, vm_obj const & _s) {
     expr const & e = to_expr(_e);
     tactic_state s = tactic::to_state(_s);
+    if (auto dm = get_global_disambig_manager())
+        if (to_expr(ref).get_tag() != nulltag)
+            dm->add_local(to_expr(ref).get_tag(), e);
     if (!get_global_info_manager() || !get_pos_info_provider()) return tactic::mk_success(s);
     auto pos = get_pos_info_provider()->get_pos_info(to_expr(ref));
     if (!pos) return tactic::mk_success(s);

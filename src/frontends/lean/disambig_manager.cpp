@@ -15,6 +15,12 @@ void disambig_manager::add_field(unsigned tag, name field) {
     m_field_names.insert(tag, field);
 }
 
+void disambig_manager::add_local(unsigned tag, expr r) {
+    unique_lock<mutex> lock(m_mutex);
+
+    m_resolved_locals.insert(tag, r);
+}
+
 LEAN_THREAD_PTR(disambig_manager, g_disambig_m);
 scoped_disambig_manager::scoped_disambig_manager(disambig_manager *dm) {
     m_old = g_disambig_m;
