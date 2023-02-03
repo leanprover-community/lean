@@ -270,6 +270,8 @@ void module_mgr::build_lean(std::shared_ptr<module_info> const & mod, name_set c
     auto ldr = mk_loader(id, mod->m_deps);
     auto mod_parser_fn = std::make_shared<module_parser>(id, mod->m_contents, m_initial_env, ldr);
     mod_parser_fn->save_info(m_server_mode);
+    if (m_export_ast)
+	mod_parser_fn->save_disambig();
 
     module_parser_result snapshots;
     std::tie(mod->m_cancel, snapshots) = build_lean_snapshots(

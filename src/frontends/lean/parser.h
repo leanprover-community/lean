@@ -148,6 +148,7 @@ public:
     virtual optional<pos_info> const & get_break_at_pos() const = 0;
     virtual parser_pos_provider get_parser_pos_provider(pos_info const & some_pos) const = 0;
     virtual std::shared_ptr<tactic_log> get_tactic_log() { return nullptr; }
+    virtual std::shared_ptr<disambig_manager> get_disambig_manager() { return nullptr; }
     expr mk_sorry(pos_info const & p, bool synthetic = false);
     bool has_error_recovery() const { return m_error_recovery; }
 };
@@ -173,7 +174,7 @@ class parser : public abstract_parser, public parser_info {
     bool                    m_ast_invalid = false;
     ast_id                  m_commands = 0;
     std::shared_ptr<tactic_log> m_tactic_log;
-    disambig_manager        m_disambig_manager;
+    std::shared_ptr<disambig_manager> m_disambig_manager;
     // By default, when the parser finds a unknown identifier, it signs an error.
     // When the following flag is true, it creates a constant.
     // This flag is when we are trying to parse mutually recursive declarations.
@@ -390,7 +391,9 @@ public:
     }
 
     std::shared_ptr<tactic_log> get_tactic_log() override;
-    disambig_manager const & get_disambig_manager() const { return m_disambig_manager; };
+    std::shared_ptr<disambig_manager> get_disambig_manager() override {
+      return m_disambig_manager;
+    };
 
     expr mk_app(expr fn, expr arg, pos_info const & p);
     expr mk_app(expr fn, buffer<expr> const & args, pos_info const & p);

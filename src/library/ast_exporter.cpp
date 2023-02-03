@@ -201,7 +201,8 @@ struct ast_exporter : abstract_ast_exporter {
 
 /** Apply fixups from the disambiguation manager */
 void fixup_ast(parser & p) {
-    p.get_disambig_manager().get_field_names().for_each([&] (unsigned tag, name field) {
+    lean_assert(p.get_disambig_manager());
+    p.get_disambig_manager()->get_field_names().for_each([&] (unsigned tag, name field) {
         ast_id i = p.m_tag_ast_table[tag];
         if (i == 0) { return; }
         ast_data *a = p.m_ast[i];

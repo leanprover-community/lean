@@ -32,6 +32,10 @@ module_parser::module_parser(std::string const & file_name, std::string const & 
 
 module_parser::~module_parser() {}
 
+void module_parser::save_disambig() {
+    m_parser.m_disambig_manager = std::make_shared<disambig_manager>();
+}
+
 pair<cancellation_token, task<module_parser_result>>
 module_parser::resume(module_parser_result const & res, optional<std::vector<gtask>> const & dependencies) {
     snapshot const & s = *res.m_snapshot_at_end;

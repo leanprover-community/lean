@@ -2838,7 +2838,7 @@ bool parser::parse_command_like(ast_data * parent) {
     // We disable hash-consing while parsing to make sure the pos-info are correct.
     scoped_expr_caching disable(false);
     scope_pos_info_provider scope1(*this);
-    scoped_disambig_manager scope1a(&m_disambig_manager);
+    scoped_disambig_manager scope1a(m_disambig_manager.get());
 
     check_interrupted();
 
