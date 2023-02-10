@@ -690,7 +690,11 @@ expr parse_interactive_tactic_block(parser & p, unsigned, expr const *, pos_info
     }
     p.check_token_next(get_rbracket_tk(), "invalid auto-quote tactic block, ']' expected");
     p.finalize_ast(data.m_id, r);
-    return erase_tags_visitor()(r);
+    // Keep only the tag of r itself, deleting all the internal ones.
+    auto tag = r.get_tag();
+    expr r2 = erase_tags_visitor()(r);
+    r2.set_tag(tag);
+    return r2;
 }
 
 void initialize_tactic_notation() {
