@@ -1768,6 +1768,9 @@ struct to_pattern_fn {
         }
 
         if (is_constant(new_e) && is_pattern_constant(const_name(new_e))) {
+	    if (auto p = get_global_disambig_manager())
+		if (e.get_tag() != nulltag)
+		    p->add_local(e.get_tag(), new_e);
             m_locals_map.insert(n, new_e);
             return;
         } else if (is_choice(new_e)) {

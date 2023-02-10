@@ -213,11 +213,26 @@ void fixup_ast(parser & p) {
             p.m_ast[i]->m_pexpr = mk_constant(field);
         }
     });
+    /*
     p.get_disambig_manager()->get_resolved_locals().for_each([&] (unsigned tag, expr r) {
         ast_id i = p.m_tag_ast_table[tag];
+        std::cerr << "get_local " << r << "[" << i << "]" << std::endl;
         if (i == 0) { return; }
         p.m_ast[i]->m_pexpr = r;
     });
+    */
+    auto & resolved_locals = p.get_disambig_manager()->get_resolved_locals();
+    for (unsigned i = 1; i < p.m_ast.size(); i++) {
+        if (!p.m_ast[i] || !p.m_ast[i]->m_pexpr)
+            continue;
+        auto& data = *p.m_ast[i];
+        unsigned tag = data.m_pexpr->get_tag();
+        if (tag == nulltag)
+            continue;
+        auto it = resolved_locals.find(tag);
+        if (it)
+            data.m_pexpr = optional<expr>(*it);
+    }
 }
 
 std::string json_of_lean(std::string const & lean_fn) {

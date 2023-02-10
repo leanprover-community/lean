@@ -14,6 +14,7 @@ Author: Leonardo de Moura
 #include "library/typed_expr.h"
 #include "library/placeholder.h"
 #include "library/explicit.h"
+#include "library/replace_visitor.h"
 #include "kernel/scope_pos_info_provider.h"
 #include "library/vm/vm_nat.h"
 #include "library/vm/vm_format.h"
@@ -659,6 +660,21 @@ static void erase_quoted_terms_pos_info(parser & p, expr const & e) {
         });
 }
 
+struct erase_tags_visitor : public replace_visitor {
+    virtual expr visit_macro(expr const & e) override {
+        if (is_pexpr_quote(e))
+            return mk_pexpr_quote(erase_tags_visitor()(get_pexpr_quote_value(e)));
+        else
+            return replace_visitor::visit_macro(e);
+    }
+    virtual expr visit(expr const & e) override {
+        expr e2 = e;
+        e2.set_tag(nulltag);
+        auto result = replace_visitor::visit(e2);
+        return result;
+    }
+};
+
 expr parse_interactive_tactic_block(parser & p, unsigned, expr const *, pos_info const & pos) {
     name const & tac_class = get_tactic_name();
     bool use_istep    = false;
@@ -674,7 +690,7 @@ expr parse_interactive_tactic_block(parser & p, unsigned, expr const *, pos_info
     }
     p.check_token_next(get_rbracket_tk(), "invalid auto-quote tactic block, ']' expected");
     p.finalize_ast(data.m_id, r);
-    return r;
+    return erase_tags_visitor()(r);
 }
 
 void initialize_tactic_notation() {
