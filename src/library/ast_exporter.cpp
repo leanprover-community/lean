@@ -202,10 +202,25 @@ struct ast_exporter : abstract_ast_exporter {
 /** Apply fixups from the disambiguation manager */
 void fixup_ast(parser & p) {
     lean_assert(p.get_disambig_manager());
+    auto & resolved_locals = p.get_disambig_manager()->get_resolved_locals();
+    for (unsigned i = 1; i < p.m_ast.size(); i++) {
+        if (!p.m_ast[i] || !p.m_ast[i]->m_pexpr)
+            continue;
+        auto& data = *p.m_ast[i];
+        unsigned tag = data.m_pexpr->get_tag();
+        if (tag == nulltag)
+            continue;
+        auto it = resolved_locals.find(tag);
+        if (it) {
+            std::cerr << "resolved local ast node " << i << " to " << *it << std::endl;
+            data.m_pexpr = optional<expr>(*it);
+        }
+    }
     p.get_disambig_manager()->get_field_names().for_each([&] (unsigned tag, name field) {
         ast_id i = p.m_tag_ast_table[tag];
         if (i == 0) { return; }
         ast_data *a = p.m_ast[i];
+        std::cerr << "overwriting ast node " << i << " which is a " << a->m_type << " = " << *(a->m_pexpr) << " with " << field << "(" << tag << ")" << std::endl;
         if (a->m_type == name("field")) {
             ast_id j = a->m_children[1];
             p.m_ast[j]->m_pexpr = mk_constant(field);
@@ -221,18 +236,6 @@ void fixup_ast(parser & p) {
         p.m_ast[i]->m_pexpr = r;
     });
     */
-    auto & resolved_locals = p.get_disambig_manager()->get_resolved_locals();
-    for (unsigned i = 1; i < p.m_ast.size(); i++) {
-        if (!p.m_ast[i] || !p.m_ast[i]->m_pexpr)
-            continue;
-        auto& data = *p.m_ast[i];
-        unsigned tag = data.m_pexpr->get_tag();
-        if (tag == nulltag)
-            continue;
-        auto it = resolved_locals.find(tag);
-        if (it)
-            data.m_pexpr = optional<expr>(*it);
-    }
 }
 
 std::string json_of_lean(std::string const & lean_fn) {

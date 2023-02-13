@@ -4128,7 +4128,9 @@ static optional<expr> resolve_local_name_core(environment const & env, local_con
     }
 
     if (!id.is_atomic() && id.is_string()) {
-        if (auto r = resolve_local_name_core(env, lctx, id.get_prefix(), src, extra_locals)) {
+        // The original expression `src` doesn't correspond to id.get_prefix()
+        // so don't copy its tag into the resolved expression `r`.
+        if (auto r = resolve_local_name_core(env, lctx, id.get_prefix(), expr(), extra_locals)) {
             return some_expr(copy_tag(src, mk_field_notation_compact(*r, id.get_string())));
         } else {
             return none_expr();
@@ -4183,7 +4185,7 @@ static expr resolve_local_name(environment const & env, local_context const & lc
     }
     if (!r && !id.is_atomic() && id.is_string()) {
         try {
-            expr s = resolve_local_name(env, lctx, id.get_prefix(), src, ignore_aliases, extra_locals);
+            expr s = resolve_local_name(env, lctx, id.get_prefix(), expr(), ignore_aliases, extra_locals);
             r      = mk_field_notation_compact(s, id.get_string());
             if (auto pos = get_pos_info(src)) {
                 pos->second += id.get_prefix().utf8_size();
