@@ -216,18 +216,16 @@ void fixup_ast(parser & p) {
             data.m_pexpr = optional<expr>(*it);
         }
     }
-    p.get_disambig_manager()->get_field_names().for_each([&] (unsigned tag, name field) {
-        ast_id i = p.m_tag_ast_table[tag];
-        if (i == 0) { return; }
-        ast_data *a = p.m_ast[i];
-        std::cerr << "overwriting ast node " << i << " which is a " << a->m_type << " = " << *(a->m_pexpr) << " with " << field << "(" << tag << ")" << std::endl;
-        if (a->m_type == name("field")) {
-            ast_id j = a->m_children[1];
-            p.m_ast[j]->m_pexpr = mk_constant(field);
-        } else if (a->m_type == name("ident")) {
-            p.m_ast[i]->m_pexpr = mk_constant(field);
-        }
-    });
+    // p.get_disambig_manager()->get_field_names().for_each([&] (unsigned tag, name field) {
+    //     ast_id i = p.m_tag_ast_table[tag];
+    //     if (i == 0) { return; }
+    //     ast_data *a = p.m_ast[i];
+    //     std::cerr << "overwriting ast node " << i << " which is a " << a->m_type << " = " << *(a->m_pexpr) << " with " << field << "(" << tag << ")" << std::endl;
+    //     if (a->m_type == name("field")) {
+    //         ast_id j = a->m_children[1];
+    //         p.m_ast[j]->m_pexpr = mk_constant(field);
+    //     }
+    // });
     /*
     p.get_disambig_manager()->get_resolved_locals().for_each([&] (unsigned tag, expr r) {
         ast_id i = p.m_tag_ast_table[tag];

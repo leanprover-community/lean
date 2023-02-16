@@ -1883,6 +1883,8 @@ expr elaborator::visit_app_core(expr fn, buffer<expr> const & args, optional<exp
             if (fn.get_tag() != nulltag)
                 dm->add_field(fn.get_tag(), field_res.get_full_name());
 
+	set_field_notation_resolved_field_name(fn, field_res.get_full_name());
+
         expr proj, proj_type;
         switch (field_res.m_kind) {
             case field_resolution::kind::ProjFn: {

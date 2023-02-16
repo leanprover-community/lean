@@ -413,10 +413,15 @@ static std::string * g_field_notation_opcode = nullptr;
 
 class field_notation_macro_cell : public macro_definition_cell {
     name     m_field;
+    atomic<name *> m_resolved_field;
     unsigned m_field_idx;
 public:
-    field_notation_macro_cell(name const & f):m_field(f), m_field_idx(0) {}
+    field_notation_macro_cell(name const & f):m_field(f), m_resolved_field(nullptr), m_field_idx(0) {}
     field_notation_macro_cell(unsigned fidx):m_field_idx(fidx) {}
+    ~field_notation_macro_cell() {
+	name * old = m_resolved_field.exchange(nullptr);
+	if (old) delete m_resolved_field;
+    }
     virtual name get_name() const override { return *g_field_notation_name; }
     virtual expr check_type(expr const &, abstract_type_context &, bool) const override { throw_pn_ex(); }
     virtual optional<expr> expand(expr const &, abstract_type_context &) const override { throw_pn_ex(); }
@@ -424,6 +429,7 @@ public:
 #ifdef LEAN_JSON
     virtual void write_json(abstract_ast_exporter &, json & j) const override {
         j["field"] = json_of_name(m_field);
+        j["resolved_field"] = json_of_name(*m_resolved_field);
         j["idx"] = m_field_idx;
     }
 #endif
@@ -436,6 +442,10 @@ public:
         } else {
             return false;
         }
+    }
+    void set_resolved_field_name(name r) {
+	name * old = m_resolved_field.exchange(new name(r));
+	if (old) delete old;
     }
 };
 
@@ -475,6 +485,11 @@ bool is_anonymous_field_notation(expr const & e) {
 name const & get_field_notation_field_name(expr const & e) {
     lean_assert(is_field_notation(e));
     return static_cast<field_notation_macro_cell const*>(macro_def(e).raw())->get_field_name();
+}
+
+void set_field_notation_resolved_field_name(expr & e, name r) {
+    lean_assert(is_field_notation(e));
+    static_cast<field_notation_macro_cell *>(macro_def(e).m_ptr)->set_resolved_field_name(r);
 }
 
 unsigned get_field_notation_field_idx(expr const & e) {
