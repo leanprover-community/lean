@@ -44,11 +44,13 @@ namespace interactive
 `unfreezingI { tac }` executes tac while temporarily unfreezing the instance cache.
 -/
 meta def unfreezingI (tac : itactic) :=
-unfreezing tac
+focus1 $
+  propagate_tags unfreeze_local_instances *> tac <*
+  all_goals (propagate_tags freeze_local_instances)
 
 /-- Reset the instance cache. This allows any new instances
 added to the context to be used in typeclass inference. -/
-meta def resetI := reset_instance_cache
+meta def resetI := propagate_tags reset_instance_cache
 
 /-- Like `revert`, but can also revert instance arguments. -/
 meta def revertI (ids : parse ident*) : tactic unit :=
@@ -65,12 +67,12 @@ unfreezingI (cases p q)
 /-- Like `intro`, but uses the introduced variable
 in typeclass inference. -/
 meta def introI (p : parse ident_?) : tactic unit :=
-intro p >> reset_instance_cache
+intro p >> resetI
 
 /-- Like `intros`, but uses the introduced variable(s)
 in typeclass inference. -/
 meta def introsI (p : parse ident_*) : tactic unit :=
-intros p >> reset_instance_cache
+intros p >> resetI
 
 /-- Used to add typeclasses to the context so that they can
 be used in typeclass inference. The syntax is the same as `have`. -/
@@ -82,8 +84,8 @@ do h ← match h with
   end,
   «have» (some h) q₁ q₂,
   match q₂ with
-  | none    := swap >> reset_instance_cache >> swap
-  | some p₂ := reset_instance_cache
+  | none    := swap >> resetI >> swap
+  | some p₂ := resetI
   end
 
 /-- Used to add typeclasses to the context so that they can
@@ -97,14 +99,14 @@ do h ← match h with
   end,
   «let» (some h) q₁ q₂,
   match q₂ with
-  | none    := swap >> reset_instance_cache >> swap
-  | some p₂ := reset_instance_cache
+  | none    := swap >> resetI >> swap
+  | some p₂ := resetI
   end
 
 /-- Like `exact`, but uses all variables in the context
 for typeclass inference. -/
 meta def exactI (q : parse texpr) : tactic unit :=
-reset_instance_cache >> exact q
+resetI >> exact q
 
 end interactive
 end tactic
