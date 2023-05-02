@@ -12,6 +12,8 @@ target_link_libraries(lean_js leanstatic)
 add_library(shell_js OBJECT lean_js.cpp server.cpp)
 
 if(${EMSCRIPTEN})
+    target_link_libraries(lean PRIVATE nodefs.js)
+
     add_dependencies(shell_js gmp)
     set(NODE_JS "node --stack_size=8192")
 

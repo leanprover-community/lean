@@ -209,8 +209,8 @@ jobs:
 
 
   build_emscripten_job:
-    runs-on: ubuntu-20.04
-    container: trzeci/emscripten:sdk-incoming-64bit
+    runs-on: ubuntu-22.04
+    container: emscripten/emsdk:3.1.37
     name: Build emscripten
     steps:
     - name: Install dependencies
@@ -219,7 +219,7 @@ jobs:
         apt-get install -y m4
     - uses: actions/checkout@v1
     - run: mkdir -p ./build
-    - run: emconfigure cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
+    - run: emcmake cmake ../src -DCMAKE_BUILD_TYPE=Emscripten -DLEAN_EMSCRIPTEN_BUILD=Main
       working-directory: ./build
     - run: |
         emmake make gmp
