@@ -13,8 +13,6 @@ add_library(shell_js OBJECT lean_js.cpp server.cpp)
 
 if(${EMSCRIPTEN})
     target_link_libraries(lean nodefs.js)
-    target_compile_options(lean PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
-    target_link_options(lean PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 
     add_dependencies(shell_js gmp)
     set(NODE_JS "node --stack_size=8192")
