@@ -1,4 +1,14 @@
-3.50.2c (26 December 2022)
+3.51.0c (17 May 2023)
+---------------------
+
+Fixes:
+- Propagate tags through `unfreezingI` (#804)
+- Avoid an expensive copy in simp (#801)
+
+Changes:
+- Update emscripten (#805, #806)
+
+3.50.3c (26 December 2022)
 --------------------------
 
 Fixes:
