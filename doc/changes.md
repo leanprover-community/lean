@@ -1,3 +1,9 @@
+3.51.1c (24 May 2023)
+---------------------
+
+Fixes:
+- Fix emscripten build for web editor (#808)
+
 3.51.0c (17 May 2023)
 ---------------------
 
