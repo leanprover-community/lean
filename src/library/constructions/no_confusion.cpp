@@ -75,6 +75,7 @@ optional<environment> mk_no_confusion_type(environment const & env, name const &
     expr cases_on1 = mk_app(cases_on, v1);
     expr cases_on2 = mk_app(cases_on, v2);
     type_checker tc(env);
+    type_context_old ctx(env, transparency_mode::Semireducible);
     expr t1        = tc.infer(cases_on1);
     expr t2        = tc.infer(cases_on2);
     buffer<expr> outer_cases_on_args;
@@ -104,7 +105,8 @@ optional<environment> mk_no_confusion_type(environment const & env, name const &
                         expr rhs_type = mlocal_type(rhs);
                         level l       = sort_level(tc.ensure_type(lhs_type));
                         expr h_type;
-                        if (tc.is_def_eq(lhs_type, rhs_type)) {
+                        // use `ctx` not `tc` here, as we want them to be reducibly defeq
+                        if (ctx.is_def_eq(lhs_type, rhs_type)) {
                             h_type = mk_app(mk_constant(get_eq_name(), to_list(l)), lhs_type, lhs, rhs);
                         } else {
                             h_type = mk_app(mk_constant(get_heq_name(), to_list(l)), lhs_type, lhs, rhs_type, rhs);

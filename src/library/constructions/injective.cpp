@@ -59,8 +59,8 @@ static void collect_args(type_context_old & tctx, expr const & type, unsigned nu
 }
 
 expr mk_injective_type_core(environment const & env, name const & ir_name, expr const & ir_type, unsigned num_params, level_param_names const & lp_names, bool use_eq) {
-    // The transparency needs to match the kernel since we need to be consistent with the no_confusion construction.
-    type_context_old ctx(env, transparency_mode::All);
+    // The transparency needs to match the one in `no_confusion`
+    type_context_old ctx(env, transparency_mode::Semireducible);
     buffer<expr> params, args1, args2, new_args;
     collect_args(ctx, ir_type, num_params, params, args1, args2, new_args);
     expr c_ir_params = mk_app(mk_constant(ir_name, param_names_to_levels(lp_names)), params);
