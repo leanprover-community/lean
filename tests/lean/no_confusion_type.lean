@@ -22,7 +22,7 @@ structure with_wrapped : Type :=
 (m : wrapped_nat n)
 
 #check with_wrapped.no_confusion_type
-constants (P : Type) (n1 n2 : nat) (m1 : fin n1) (m2 : fin n2)
+constants (P : Type) (n1 n2 : nat) (m1 : wrapped_nat n1) (m2 : wrapped_nat n2)
 #reduce with_wrapped.no_confusion_type P (with_wrapped.mk _ m1) (with_wrapped.mk _ m2)
 
-end Ex
+end ExSemiReducible

@@ -76,7 +76,7 @@ optional<environment> mk_no_confusion_type(environment const & env, name const &
     expr cases_on1 = mk_app(cases_on, v1);
     expr cases_on2 = mk_app(cases_on, v2);
     type_checker tc(env);
-    type_context_old ctx(env, transparency_mode::Semireducible);
+    type_context_old ctx(env, transparency_mode::Reducible);
     expr t1        = tc.infer(cases_on1);
     expr t2        = tc.infer(cases_on2);
     buffer<expr> outer_cases_on_args;
