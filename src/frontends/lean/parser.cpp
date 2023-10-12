@@ -2721,7 +2721,7 @@ bool parser::parse_imports(unsigned & fingerprint, ast_data * parent, std::vecto
                 auto& ast_mod = new_ast("module", p);
                 import_cmd.push(ast_mod.m_id);
                 if (k_init) {
-                    ast_mod.m_value = f.append_after(k);
+                    ast_mod.m_value = name(f, k);
                     module_name m(f, k);
                     imports.push_back(m);
                 } else {
