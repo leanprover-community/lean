@@ -19,6 +19,17 @@ inductive vec (α : Type u) : nat → Type u
 
 #check @vec.cons.inj_eq
 
+def wrapped_nat (n : nat) := nat
+
+structure with_wrapped : Type :=
+(n : nat)
+(m : wrapped_nat n)
+
+-- #812: this should use `==` not `=` as `m` and `m'` are not reducibly defeq
+#check (@with_wrapped.mk.inj_eq :
+  ∀ {n : ℕ} {m : wrapped_nat n} {n' : ℕ} {m' : wrapped_nat n'},
+    with_wrapped.mk n m = with_wrapped.mk n' m' = (n = n' ∧ m == m'))
+
 example (a b : nat) (h : a == b) : a + 1 = b + 1 :=
 begin
   subst h
