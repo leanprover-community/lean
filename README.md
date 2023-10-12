@@ -1,4 +1,4 @@
-<p align=center><a href="https://leanprover-community.github.io"><img src="https://leanprover.github.io/images/lean_logo.svg" alt="logo" width="300px"/></a></p>
+<p align=center><a href="https://leanprover-community.github.io/lean3"><img src="https://leanprover.github.io/images/lean_logo.svg" alt="logo" width="300px"/></a></p>
 <table>
   <tr>
     <th>License</th><th>Continuous integration</th><th>Chat</th>
@@ -18,7 +18,7 @@ About
 
 - **Important**: This is Lean 3.51.1c, a fork of Lean 3 maintained and updated by the Lean community. The last official release of Lean 3.x was Lean 3.4.2, which can be found [here](https://github.com/leanprover/lean). The Lean developers are currently developing [Lean 4](https://github.com/leanprover/lean4).
 - [Lean Homepage](http://leanprover.github.io)
-- [Lean Prover Community Homepage](https://leanprover-community.github.io)
+- [Lean Prover Community Homepage](https://leanprover-community.github.io/lean3)
 - [Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/index.html)
 - [Change Log](doc/changes.md)
 - [Lean 3.4.2 FAQ](doc/faq.md)
@@ -27,7 +27,7 @@ About
 Installation
 ------------
 
-If you want to use Lean, the recommended way to install Lean is following [these instructions under Regular install](https://leanprover-community.github.io/get_started.html#regular-install).
+If you want to use Lean, the recommended way to install Lean is following [these instructions under Regular install](https://leanprover-community.github.io/lean3/get_started.html#regular-install).
 
 If you want to modify the code of Lean or the core library, the recommended way is to [build Lean from source](doc/make/index.md).
 
