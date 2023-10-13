@@ -1,5 +1,7 @@
 open tactic
 
+run_cmd guard (module_info.get_all ≠ [] : bool)
+
 #eval (module_info.resolve_module_name `data.dlist).backn 10
 
 #eval (environment.from_imported_module_name `data.dlist).contains `dlist

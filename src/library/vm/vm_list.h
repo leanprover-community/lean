@@ -7,6 +7,7 @@ Author: Leonardo de Moura
 #pragma once
 #include "kernel/expr.h"
 #include "library/vm/vm.h"
+#include <vector>
 
 namespace lean {
 list<name> to_list_name(vm_obj const & o);
@@ -44,6 +45,14 @@ inline vm_obj tail(vm_obj const & o) { lean_assert(!is_nil(o)); return cfield(o,
 
 inline vm_obj mk_vm_nil() { return mk_vm_simple(0); }
 inline vm_obj mk_vm_cons(vm_obj const & h, vm_obj const & t) { return mk_vm_constructor(1, h, t); }
+
+template<typename T>
+vm_obj to_obj(std::vector<T> const & ls) {
+    vm_obj obj = mk_vm_nil();
+    for (auto i = ls.size(); i > 0; i--)
+        obj = mk_vm_cons(to_obj(ls[i - 1]), obj);
+    return obj;
+}
 
 template<typename A, typename F>
 list<A> to_list(vm_obj const & o, F const & fn) {
