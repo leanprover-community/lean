@@ -298,6 +298,11 @@ else()
     set(EXTRA_LIBS ${EXTRA_LIBS} ${GMP_LIBRARIES})
 endif()
 
+# system-specific libraries
+if (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    set(EXTRA_UTIL_LIBS ${EXTRA_UTIL_LIBS} "-lprocstat")
+endif()
+
 # DL
 if (EMSCRIPTEN)
     # no dlopen
