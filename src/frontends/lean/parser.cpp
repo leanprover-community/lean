@@ -1425,14 +1425,15 @@ static pair<notation::transition, parse_table> const * get_non_skip(list<pair<no
 expr parser::parse_notation(parse_table t, expr * left) {
     check_system("parse_notation");
     lean_assert(curr() == token_kind::Keyword);
-    auto p = pos();
+    auto cur_pos = pos();
+    auto p = left ? expr_ast(*left).m_start : cur_pos;
     auto first_token = get_token_info().value();
     auto check_break = [&]() {
         try {
             check_break_at_pos(break_at_pos_exception::token_context::notation);
         } catch (break_at_pos_exception & e) {
             // info is stored at position of first notation token
-            e.m_token_info.m_pos = p;
+            e.m_token_info.m_pos = cur_pos;
             throw;
         }
     };
@@ -1542,7 +1543,7 @@ expr parser::parse_notation(parse_table t, expr * left) {
             break;
         }
         case notation::action_kind::Ext:
-            args.push_back(a.get_parse_fn()(*this, args.size(), args.data(), p));
+            args.push_back(a.get_parse_fn()(*this, args.size(), args.data(), cur_pos));
             ast_ids.push_back(get_id(args.back()));
             kinds.push_back(a.kind());
             break;
@@ -1555,8 +1556,8 @@ expr parser::parse_notation(parse_table t, expr * left) {
         // TODO(gabriel): search children of t for accepting states
         sstream msg;
         msg << "invalid expression";
-        if (p != pos()) {
-            msg << " starting at " << p.first << ":" << p.second;
+        if (cur_pos != pos()) {
+            msg << " starting at " << cur_pos.first << ":" << cur_pos.second;
         }
         return parser_error_or_expr({msg, pos()});
     }
