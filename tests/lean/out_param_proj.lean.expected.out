@@ -1,3 +1,3 @@
 @[instance, priority 100, reducible]
-def module.to_add_comm_group : Π {α : Type u} {β : Type v} {_inst_1 : ring α} [self : module α β], add_comm_group β :=
+def module.to_add_comm_group : Π {α : Type u} {β : Type v} {_inst_1 : ring α} [module α β], add_comm_group β :=
 λ {α : Type u} (β : Type v) {_inst_1 : ring α} [self : module α β], [module.to_add_comm_group self]

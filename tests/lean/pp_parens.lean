@@ -7,6 +7,7 @@ set_option pp.parens true
 #check [1,2,3]++[3,4,5]
 
 #check ∀ (x y z : ℤ), x - (-3) = -2 + x
+#check Π (x y : ℤ), {x : ℤ // x - (-3) = -2 + x}
 #check ∀ (p : ℕ → ℕ → Prop), p (1 + 2) 3
 #check ∀ (f : ℕ → ℕ → ℕ), f 2 (f 3 4 + 1) + 2 = f 1 2
 

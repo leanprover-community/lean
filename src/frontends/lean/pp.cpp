@@ -1050,12 +1050,22 @@ T pretty_fn<T>::pp_binder_block(buffer<name> const & names, expr const & type, b
     T r;
     if (m_binder_types || bi != binder_info())
         r += T(open_binder_string(bi, m_unicode));
-    for (name const & n : names) {
-        r += escape(n);
-        r += space();
-    }
-    if (m_binder_types) {
-        r += compose(colon(), nest(m_indent, compose(line(), pp_child(type, 0).fmt())));
+    if (bi.is_inst_implicit() && names.size() == 1 && names[0].is_anonymous()) {
+        // Prefer printing non-dependent instance implicit binder as `[foo]` rather than `[_ : foo]`.
+        // (Note: instance implicits always have `names.size() == 1`.)
+        r += pp_child(type, 0).fmt();
+    } else {
+        for (name const & n : names) {
+            if (n.is_anonymous()) {
+                r += T("_");
+            } else {
+                r += escape(n);
+            }
+            r += space();
+        }
+        if (m_binder_types) {
+            r += compose(colon(), nest(m_indent, compose(line(), pp_child(type, 0).fmt())));
+        }
     }
     if (m_binder_types || bi != binder_info())
         r += T(close_binder_string(bi, m_unicode));
@@ -1116,32 +1126,44 @@ static bool is_default_arrow(expr const & e) {
 }
 template<class T>
 auto pretty_fn<T>::pp_pi(expr const & e) -> result {
-    if (is_default_arrow(e)) {
-        result lhs = pp_child_at(binding_domain(e), get_arrow_prec(), expr_address::binding_type(e));
-        expr   b   = lift_free_vars(binding_body(e), 1);
-        address pb = expr_address::pi_body();
-        result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
-        T r   = group(lhs.fmt() + space() + mk_builtin_link(is_prop(b) ? "implies" : "function", m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
-        return result(get_arrow_prec(), get_arrow_prec()-1, r);
-    } else {
-        expr b = e;
-        address adr;
-        buffer<subexpr> locals;
-        while (is_pi(b) && !is_default_arrow(b)) {
-            auto p = binding_body_fresh(b, true);
-            locals.push_back(mk_pair(p.second, cons(expr_coord::pi_var_type, adr)));
-            b = p.first;
-            adr = cons(expr_coord::pi_body, adr);
+    expr b = e;
+    address adr;
+    buffer<subexpr> locals;
+    while (is_pi(b)) {
+        auto p = binding_body_fresh(b, true);
+        if (is_default_arrow(b) && !(!is_prop(binding_domain(b)) && is_prop(p.first))) {
+            // Then this is an arrow that isn't from a Type to a Prop (we instead prefer forall notation in such cases)
+            if (locals.size() == 0) {
+                // Then we pretty print an arrow immediately
+                result lhs = pp_child_at(binding_domain(b), get_arrow_prec(), expr_address::binding_type(b));
+                b = p.first;
+                address pb = expr_address::pi_body();
+                result rhs = is_pi(b) ? pp_at(b, pb) : pp_child_at(b, get_arrow_prec() - 1, pb);
+                T r = group(lhs.fmt() + space() +  mk_builtin_link(is_prop(b) ? "implies" : "function", m_unicode ? *g_arrow_n_fmt : *g_arrow_fmt) + line() + rhs.fmt());
+                return result(get_arrow_prec(), get_arrow_prec()-1, r);
+            } else {
+                // Then we are done with the loop and pretty print the pi/forall
+                break;
+            }
         }
-        T r;
-        if (is_prop(b))
-            r = mk_builtin_link("forall", m_unicode ? *g_forall_n_fmt : *g_forall_fmt);
-        else
-            r = mk_builtin_link("pi", m_unicode ? *g_pi_n_fmt : *g_pi_fmt);
-        r += pp_binders(locals);
-        r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
-        return result(0, r);
+        expr local = p.second;
+        if (is_arrow(b)) {
+            // To let the user know this is a non-dependent pi we make the pp name for the local be anonymous,
+            // which is printed by `pp_binders` as '_'.
+            local = mk_local(binding_name(b), name(), binding_domain(b), binding_info(b));
+        }
+        locals.push_back(mk_pair(local, cons(expr_coord::pi_var_type, adr)));
+        b = p.first;
+        adr = cons(expr_coord::pi_body, adr);
     }
+    T r;
+    if (is_prop(b))
+        r = mk_builtin_link("forall", m_unicode ? *g_forall_n_fmt : *g_forall_fmt);
+    else
+        r = mk_builtin_link("pi", m_unicode ? *g_pi_n_fmt : *g_pi_fmt);
+    r += pp_binders(locals);
+    r += group(compose(comma(), nest(m_indent, compose(line(), pp_child_at(b, 0, adr).fmt()))));
+    return result(0, r);
 }
 
 static bool is_have(expr const & e) {

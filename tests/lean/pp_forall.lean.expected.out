@@ -1,0 +1,25 @@
+p → q : Prop
+p → ℕ : Type
+∀ (_ : ℕ), p : Prop
+ℕ → ℕ : Type
+ℕ → Prop : Type
+ℕ → Type : Type 1
+∀ (n : ℕ), n > 0 : Prop
+∀ (_ : ℕ), 1 = 2 : Prop
+ℕ → ℤ : Type
+Π {_ : ℕ}, ℤ : Type
+Π (n : ℕ), fin n : Type
+∀ (_ : ℕ), ¬∃ (x : ℕ), x ≠ x : Prop
+ℕ → ℕ → ℤ : Type
+Π (m : ℕ), ℕ → fin m : Type
+ℕ → Π (n : ℕ), fin n : Type
+∀ (_ _ : ℕ), 1 = 2 : Prop
+∀ (m _ : ℕ), m = 1 : Prop
+∀ (_ n : ℕ), n = 1 : Prop
+∀ (m n : ℕ), m = n : Prop
+∀ (m : ℕ), p → q ∧ m = 1 : Prop
+∀ (_ : ℕ), p → q : Prop
+p → ∀ (m : ℕ), q ∧ m = 1 : Prop
+p → ∀ (_ : ℕ), q : Prop
+let Prop' : Type := Prop, not' : Prop' → Prop := λ (p : Prop'), ¬p in ∀ (p : Prop') (_ : p), not' p : Prop
+let not' : Prop' → Prop := λ (p : Prop'), ¬p in ∀ (p : Prop'), p → not' p : Prop

@@ -3,7 +3,7 @@ elab_error_msgs.lean:2:0: error: type mismatch at application
 term
   λ (ha : ?m_1) (hb : ?m_2) (hb : ?m_3[ha, hb]), ha
 has type
-  Π (ha : ?m_1) (hb : ?m_2), ?m_3[ha, hb] → ?m_1
+  ∀ (ha : ?m_1) (hb : ?m_2) (_ : ?m_3[ha, hb]), ?m_1
 but is expected to have type
   ?m_1 → ?m_2 → ?m_3
 Additional information:

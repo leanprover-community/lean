@@ -12,6 +12,8 @@ prelude -- Correct version
 
 -- TODO(Leo): fix expected output as soon as elaborator starts #checking let-expression type again
 
+-- Note(kmill): some pretty printing oddities with forall since it's bool rather than Prop
+
 #check let bool                := Sort 0,
           and  (p q : bool)   := ∀ c : bool, (p → q → c) → c,
           infixl `∧`:25       := and,
