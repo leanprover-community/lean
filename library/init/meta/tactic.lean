@@ -751,6 +751,8 @@ open list nat
 /-- A `tag` is a list of `names`. These are attached to goals to help tactics track them.-/
 def tag : Type := list name
 
+meta instance : decidable_eq tag := list.decidable_eq
+
 /-- Enable/disable goal tagging.  -/
 meta constant enable_tags (b : bool) : tactic unit
 /-- Return tt iff goal tagging is enabled. -/

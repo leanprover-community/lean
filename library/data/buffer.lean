@@ -46,11 +46,11 @@ def write' : buffer α → nat → α → buffer α
 
 lemma read_eq_read' [inhabited α] (b : buffer α) (i : nat) (h : i < b.size) :
   read b ⟨i, h⟩ = read' b i :=
-by cases b; unfold read read'; simp [array.read_eq_read']
+by cases b; dunfold read read' size; simp [array.read_eq_read']
 
 lemma write_eq_write' (b : buffer α) (i : nat) (h : i < b.size) (v : α) :
   write b ⟨i, h⟩ v = write' b i v :=
-by cases b; unfold write write'; simp [array.write_eq_write']
+by cases b; dunfold write write' size; simp [array.write_eq_write']
 
 def to_list (b : buffer α) : list α :=
 b.to_array.to_list
