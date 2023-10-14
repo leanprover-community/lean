@@ -68,6 +68,10 @@ meta def is_psigma_mk : expr → tactic (expr × expr)
 | `(psigma.mk %%a %%b) := return (a, b)
 | _                    := failed
 
+meta def is_prod_mk : expr → tactic (expr × expr)
+| `(prod.mk %%a %%b) := return (a, b)
+| _                  := failed
+
 meta def process_lex : tactic unit → tactic unit
 | tac :=
   do t ← target >>= whnf,
@@ -79,6 +83,14 @@ meta def process_lex : tactic unit → tactic unit
         (is_def_eq a₁ b₁ >> `[apply psigma.lex.right] >> process_lex tac)
         <|>
         (`[apply psigma.lex.left] >> tac)
+  else if t.is_napp_of `prod.lex 6 then
+     let a := t.app_fn.app_arg in
+     let b := t.app_arg in
+     do (a₁, a₂) ← is_prod_mk a,
+        (b₁, b₂) ← is_prod_mk b,
+        (is_def_eq a₁ b₁ >> `[apply prod.lex.right] >> process_lex tac)
+        <|>
+        (`[apply prod.lex.left] >> tac)
   else
      tac
 
