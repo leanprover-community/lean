@@ -1058,10 +1058,21 @@ meta def find_same_type : expr → list expr → tactic expr
 meta def find_assumption (e : expr) : tactic expr :=
 do ctx ← local_context, find_same_type e ctx
 
-meta def assumption : tactic unit :=
+meta def is_implicit : expr → bool
+| (expr.pi _ binder_info.implicit _ _) := tt
+| _ := ff
+
+/-- Find a hypothesis matching the goal. `assumption tt` will print the goal that it found.
+    If the goal type starts with an implicit binder, prints an "@" in front. -/
+meta def assumption (trace_result : bool := ff) : tactic unit :=
 do { ctx ← local_context,
      t   ← target,
      H   ← find_same_type t ctx,
+     when trace_result $
+       do { pp_H ← pp H,
+         H_type ← tactic.infer_type H,
+         let H_format := if is_implicit H_type then ↑"@" ++ pp_H else pp_H,
+         trace ( ("Try this: exact " : format) ++ H_format) },
      exact H }
 <|> fail "assumption tactic failed"
 

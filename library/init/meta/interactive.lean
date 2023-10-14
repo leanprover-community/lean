@@ -245,15 +245,24 @@ Note that some holes may be implicit. The type of each hole must either be synth
 meta def refine (q : parse texpr) : tactic unit :=
 tactic.refine q
 
+precedence `?`:max
 /--
-This tactic looks in the local context for a hypothesis whose type is equal to the goal target. If it finds one, it uses it to prove the goal, and otherwise it fails.
+This tactic looks in the local context for a hypothesis whose type is equal to the goal target.
+If it finds one, it uses it to prove the goal, and otherwise it fails.
+`assumption?` will print the name of the goal that it found.
 -/
-meta def assumption : tactic unit :=
-tactic.assumption
+meta def assumption (trace_result : parse $ optional (tk "?")) :=
+tactic.assumption trace_result.is_some
+
 
 /-- Try to apply `assumption` to all goals. -/
 meta def assumption' : tactic unit :=
 tactic.any_goals' tactic.assumption
+
+
+/-- Try to apply `assumption` to all goals. -/
+meta def assumption'' : tactic unit :=
+tactic.assumption
 
 private meta def change_core (e : expr) : option expr → tactic unit
 | none     := tactic.change e
@@ -414,7 +423,7 @@ propagate_tags (rw_core q l cfg)
 `rewrite` followed by `assumption`.
 -/
 meta def rwa (q : parse rw_rules) (l : parse location) (cfg : rewrite_cfg := {}) : tactic unit :=
-rewrite q l cfg >> try assumption
+rewrite q l cfg >> try tactic.assumption
 
 /--
 A variant of `rewrite` that uses the unifier more aggressively, unfolding semireducible definitions.
@@ -1096,13 +1105,13 @@ If `q` is a proof of a statement of conclusion `t₁ = t₂`, then injection app
 Given `h : a::b = c::d`, the tactic `injection h` adds two new hypothesis with types `a = c` and `b = d` to the main goal. The tactic `injection h with h₁ h₂` uses the names `h₁` and `h₂` to name the new hypotheses.
 -/
 meta def injection (q : parse texpr) (hs : parse with_ident_list) : tactic unit :=
-do e ← i_to_expr q, tactic.injection_with e hs, try assumption
+do e ← i_to_expr q, tactic.injection_with e hs, try tactic.assumption
 
 /--
 `injections with h₁ ... hₙ` iteratively applies `injection` to hypotheses using the names `h₁ ... hₙ`.
 -/
 meta def injections (hs : parse with_ident_list) : tactic unit :=
-do tactic.injections_with hs, try assumption
+do tactic.injections_with hs, try tactic.assumption
 
 end interactive
 

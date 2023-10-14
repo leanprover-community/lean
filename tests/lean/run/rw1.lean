@@ -62,7 +62,7 @@ open tactic
 constant f : nat → nat
 constant p : nat → Prop
 /- The following lemma has an "auto_param", i.e., if `h` is not provided we
-   try to synthesize it using the `assumption` tactic -/
+   try to synthesize it using the `assumption''` tactic -/
 lemma f_lemma (a : nat) (h : p a . assumption) : f a = a :=
 sorry
 
