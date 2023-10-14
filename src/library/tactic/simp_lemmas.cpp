@@ -1010,8 +1010,11 @@ static simp_lemmas add_congr_core(type_context_old & ctx, simp_lemmas const & s,
                            << "' resulting type is not of the form (" << const_name(lhs_fn) << "  ...) "
                            << "~ (" << const_name(lhs_fn) << " ...), where ~ is '" << const_name(rel) << "'");
         }
-        for (expr const & lhs_arg : lhs_args) {
+        for (unsigned i = 0; i < lhs_args.size(); i++) {
+            expr const & lhs_arg = lhs_args[i], & rhs_arg = rhs_args[i];
             if (is_sort(lhs_arg))
+                continue;
+            if (!has_metavar(lhs_arg) && lhs_arg == rhs_arg)
                 continue;
             if (!is_metavar(lhs_arg) || found_mvars.contains(mlocal_name(lhs_arg))) {
                 report_failure(sstream() << "invalid congruence lemma, '" << n

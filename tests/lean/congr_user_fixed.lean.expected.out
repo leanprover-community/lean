@@ -1,0 +1,2 @@
+congr_user_fixed.lean:12:0: warning: declaration 'mod5.add' uses sorry
+congr_user_fixed.lean:15:0: warning: declaration 'mod5.congr' uses sorry
